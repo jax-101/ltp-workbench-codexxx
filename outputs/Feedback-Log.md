@@ -64,13 +64,13 @@ Estado: incorporado al PRD y al prototipo como seleccion multiple de nodos orige
 
 Feedback: cuando un elemento requiere una seleccion con dos letras, por ejemplo `AA`, la segunda letra no se interpreta como parte del hint y puede disparar otra accion, como crear un nuevo elemento.
 
-Estado: pendiente. Revisar el manejo de buffer de hints y evitar que teclas consumidas por hint mode lleguen a los atajos globales.
+Estado: implementado en la iteracion 1, pendiente de validacion de uso. Los hints visibles ahora forman un conjunto sin prefijos ambiguos y las teclas del modo hint no llegan a otros comandos.
 
 ### F-011: La vista salta al origen al usar hints o seleccionar elementos
 
 Feedback: si la vista se ha desplazado a otra zona del canvas, al pulsar `H` o seleccionar otro elemento la vista vuelve automaticamente al punto superior izquierdo.
 
-Estado: pendiente. La posicion de scroll/pan debe preservarse entre renders y cambios de seleccion.
+Estado: implementado en la iteracion 1, pendiente de validacion de uso. El viewport se captura antes de renderizar y se restaura despues de los cambios de seleccion o modo.
 
 ### F-012: Minimap para navegacion del canvas
 
@@ -112,13 +112,13 @@ Estado: pendiente. Mostrar arbol de frames, breadcrumbs o ambos.
 
 Feedback: los links entre entidades deberian verse como flechas, no solo lineas. Actualmente no se aprecia la punta de flecha.
 
-Estado: pendiente. Mejorar marcadores SVG y contraste/direccion visual de links.
+Estado: implementado en la iteracion 1, pendiente de validacion visual. Los links terminan en el borde del nodo y usan marcadores SVG de mayor contraste.
 
 ### F-019: Configuracion editable de atajos de teclado
 
 Feedback: en vez de hardcodear combinaciones de teclas, conviene plantear un archivo de configuracion donde modificarlas.
 
-Estado: pendiente. Definir mapa de comandos y atajos configurable, con defaults por tipo de diagrama o workspace.
+Estado: base implementada en la iteracion 1, pendiente de evolucion. Los comandos leen sus atajos desde `src/renderer/command-config.js`; la personalizacion desde la interfaz queda para una iteracion posterior.
 
 ### F-020: Zoom y desplazamiento solo con teclado
 
@@ -148,4 +148,4 @@ Estado: pendiente. Definir un registro/schema de diagramas con tipos de entidade
 
 Feedback: en algunos elementos el texto se corta. Idealmente el tamano de la entidad deberia poder controlarse, o al menos deberia abrirse un pop-up o vista ampliada para ver el texto completo.
 
-Estado: pendiente. Considerar resize manual de entidades, auto-height, tooltip/preview y editor ampliado.
+Estado: solucion minima implementada en la iteracion 1, pendiente de validacion de uso. El texto completo puede abrirse desde el inspector, con doble click o con la barra espaciadora.

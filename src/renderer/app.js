@@ -11,9 +11,12 @@ let hintBuffer = "";
 let hintEntries = [];
 let searchText = "";
 let statusText = "Loading prototype...";
+let previewNodeId = null;
+let viewportState = { left: 0, top: 0 };
 
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const commandBindings = window.LTP_COMMAND_BINDINGS || {};
 
 const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 const now = () => new Date().toISOString();
@@ -79,6 +82,31 @@ const setStatus = (message) => {
   statusText = message;
   const status = document.querySelector("[data-status]");
   if (status) status.textContent = message;
+};
+
+const captureViewport = () => {
+  const shell = app.querySelector(".canvas-shell");
+  if (!shell) return;
+  viewportState = { left: shell.scrollLeft, top: shell.scrollTop };
+};
+
+const updateViewState = () => {
+  const activeTree = tree();
+  if (!activeTree) return;
+  activeTree.viewState = {
+    ...(activeTree.viewState || {}),
+    activeFrameId,
+    selectedElementId,
+    mode,
+    pan: { x: viewportState.left, y: viewportState.top }
+  };
+};
+
+const restoreViewport = () => {
+  const shell = app.querySelector(".canvas-shell");
+  if (!shell) return;
+  shell.scrollLeft = viewportState.left;
+  shell.scrollTop = viewportState.top;
 };
 
 const persist = async () => {
@@ -161,11 +189,13 @@ const selectElement = async (id) => {
 
 const hintAlphabetForMode = () => (multiSelectMode && mode !== "connection" ? hintAlphabet.replace("L", "") : hintAlphabet);
 
-const generateHintLabel = (index, alphabet = hintAlphabetForMode()) => {
-  if (index < alphabet.length) return alphabet[index];
-  const first = Math.floor(index / alphabet.length) - 1;
-  const second = index % alphabet.length;
-  return `${alphabet[first]}${alphabet[second]}`;
+const generateHintLabels = (count, alphabet = hintAlphabetForMode()) => {
+  const labels = [...alphabet];
+  while (labels.length < count) {
+    const prefix = labels.shift();
+    labels.unshift(...[...alphabet].map((letter) => `${prefix}${letter}`));
+  }
+  return labels.slice(0, count);
 };
 
 const visibleHintEntries = () => {
@@ -198,7 +228,8 @@ const visibleHintEntries = () => {
   }
 
   const modeFilteredEntries = mode === "connection" || multiSelectMode ? entries.filter((entry) => entry.type === "node") : entries;
-  return modeFilteredEntries.map((entry, index) => ({ ...entry, hint: generateHintLabel(index) }));
+  const labels = generateHintLabels(modeFilteredEntries.length);
+  return modeFilteredEntries.map((entry, index) => ({ ...entry, hint: labels[index] }));
 };
 
 const showHints = () => {
@@ -667,7 +698,8 @@ const renderNodes = () =>
       const multiSelected = selectedElementIds.has(node.id) ? "multi-selected" : "";
       return `
         <button class="tree-node ${selected} ${multiSelected} node-${node.type}" data-element-id="${node.id}" data-element-type="node"
-          style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;">
+          style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;"
+          title="${escapeHtml(node.statement)}">
           <strong>${escapeHtml(nodeTypeLabel(node.type))}</strong>
           <span>${escapeHtml(node.statement)}</span>
           ${box.pinned ? "<em>Pinned</em>" : ""}
@@ -678,6 +710,27 @@ const renderNodes = () =>
 
 const centerOf = (box) => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
 
+const pointOnBoxEdge = (box, toward) => {
+  const center = centerOf(box);
+  const dx = toward.x - center.x;
+  const dy = toward.y - center.y;
+  if (!dx && !dy) return center;
+  const scale = 1 / Math.max(Math.abs(dx) / (box.width / 2), Math.abs(dy) / (box.height / 2));
+  return {
+    x: center.x + dx * scale,
+    y: center.y + dy * scale
+  };
+};
+
+const linkEndpoints = (sourceBox, targetBox) => {
+  const sourceCenter = centerOf(sourceBox);
+  const targetCenter = centerOf(targetBox);
+  return {
+    source: pointOnBoxEdge(sourceBox, targetCenter),
+    target: pointOnBoxEdge(targetBox, sourceCenter)
+  };
+};
+
 const renderLinks = () => {
   const activeTree = tree();
   const size = canvasSize();
@@ -685,11 +738,11 @@ const renderLinks = () => {
     .map((link) => {
       const sourceBox = layoutNode(link.sourceNodeId);
       const targetBox = layoutNode(link.targetNodeId);
-      const source = centerOf(sourceBox);
-      const target = centerOf(targetBox);
+      const { source, target } = linkEndpoints(sourceBox, targetBox);
       const selected = link.id === selectedElementId ? "selected" : "";
+      const marker = selected ? "arrow-selected" : "arrow";
       return `
-        <line class="tree-link-line ${selected}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" marker-end="url(#arrow)" />
+        <line class="tree-link-line ${selected}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" marker-end="url(#${marker})" />
       `;
     })
     .join("");
@@ -707,8 +760,11 @@ const renderLinks = () => {
   return `
     <svg class="links-svg" width="${size.width}" height="${size.height}" viewBox="0 0 ${size.width} ${size.height}">
       <defs>
-        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-          <path d="M0,0 L0,6 L9,3 z" fill="#59635f"></path>
+        <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L0,8 L11,4 z" fill="#3f4945"></path>
+        </marker>
+        <marker id="arrow-selected" markerWidth="13" markerHeight="13" refX="11" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L0,9 L12,4.5 z" fill="#9f4f45"></path>
         </marker>
       </defs>
       ${lines}
@@ -739,6 +795,37 @@ const breadcrumb = () => {
     frame = frames[frame.parentFrameId];
   }
   return [system()?.name, tree()?.name, ...parts].filter(Boolean).join(" / ");
+};
+
+const openNodePreview = (nodeId = selectedElementId) => {
+  if (!nodeById()[nodeId]) return;
+  previewNodeId = nodeId;
+  render();
+  app.querySelector("[data-action='close-node-preview']")?.focus();
+};
+
+const closeNodePreview = () => {
+  previewNodeId = null;
+  render();
+};
+
+const renderNodePreview = () => {
+  const node = nodeById()[previewNodeId];
+  if (!node) return "";
+  return `
+    <div class="node-preview-backdrop" data-action="close-node-preview">
+      <section class="node-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="node-preview-title">
+        <div class="node-preview-header">
+          <div>
+            <span>${escapeHtml(nodeTypeLabel(node.type))}</span>
+            <h2 id="node-preview-title">${escapeHtml(node.shortLabel || "Full statement")}</h2>
+          </div>
+          <button data-action="close-node-preview" aria-label="Close full statement">Close</button>
+        </div>
+        <p>${escapeHtml(node.statement)}</p>
+      </section>
+    </div>
+  `;
 };
 
 const renderCanvas = () => {
@@ -792,6 +879,7 @@ const renderInspector = () => {
         <select data-node-field="type" data-id="${node.id}">
           ${["goal", "criticalSuccessFactor", "necessaryCondition", "assumption"].map((type) => `<option value="${type}" ${node.type === type ? "selected" : ""}>${nodeTypeLabel(type)}</option>`).join("")}
         </select>
+        <button data-action="open-node-preview">View full statement</button>
         <button data-action="pin">Toggle pin</button>
       </aside>
     `;
@@ -846,6 +934,8 @@ const renderInspector = () => {
 };
 
 const render = () => {
+  captureViewport();
+  updateViewState();
   refreshMaps();
   app.innerHTML = `
     <div class="prototype-shell">
@@ -853,8 +943,10 @@ const render = () => {
       ${renderCanvas()}
       ${renderInspector()}
     </div>
+    ${renderNodePreview()}
   `;
   bindEvents();
+  restoreViewport();
 };
 
 const bindEvents = () => {
@@ -863,6 +955,12 @@ const bindEvents = () => {
       event.stopPropagation();
       selectElement(element.dataset.elementId);
     });
+    if (element.dataset.elementType === "node") {
+      element.addEventListener("dblclick", (event) => {
+        event.stopPropagation();
+        openNodePreview(element.dataset.elementId);
+      });
+    }
   });
 
   app.querySelectorAll("[data-node-field]").forEach((field) => {
@@ -886,15 +984,24 @@ const bindEvents = () => {
   });
 
   app.querySelectorAll("[data-action]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
       const action = button.dataset.action;
+      if (action === "close-node-preview" && button.classList.contains("node-preview-backdrop") && event.target !== button) return;
       if (action === "layout") runAutoLayout();
       if (action === "export") exportMarkdown();
       if (action === "hints") showHints();
       if (action === "pin") togglePin();
       if (action === "add-assumption") addAssumptionToSelectedLink();
       if (action === "enter-frame") enterSelectedFrame();
+      if (action === "open-node-preview") openNodePreview();
+      if (action === "close-node-preview") closeNodePreview();
     });
+  });
+
+  const canvasShell = app.querySelector(".canvas-shell");
+  canvasShell?.addEventListener("scroll", () => {
+    viewportState = { left: canvasShell.scrollLeft, top: canvasShell.scrollTop };
+    updateViewState();
   });
 
   const search = app.querySelector("[data-search]");
@@ -903,11 +1010,54 @@ const bindEvents = () => {
   });
 };
 
+const bindingMatchesEvent = (binding, event) => {
+  const primaryPressed = event.metaKey || event.ctrlKey;
+  if (Boolean(binding.primary) !== primaryPressed) return false;
+  if (Boolean(binding.alt) !== event.altKey) return false;
+  if (Object.hasOwn(binding, "shift") && binding.shift !== event.shiftKey) return false;
+  const expectedKey = binding.key.length === 1 ? binding.key.toLowerCase() : binding.key;
+  const eventKey = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  return expectedKey === eventKey;
+};
+
+const commandForEvent = (event) => {
+  for (const [command, bindings] of Object.entries(commandBindings)) {
+    if (bindings.some((binding) => bindingMatchesEvent(binding, event))) return command;
+  }
+  return null;
+};
+
+const executeCommand = (command) => {
+  const commands = {
+    commandPalette: () => setStatus("Command palette placeholder: use H, N, A, L, F, P, /"),
+    showHints,
+    toggleMultiSelect,
+    createNode,
+    createParentNode: () => createNode(selectedNode()?.frameId || activeFrameId, "necessaryCondition", "New parent/above condition"),
+    createSupportingNode,
+    focusInspector: () => app.querySelector(".inspector textarea, .inspector input, .inspector select")?.focus(),
+    beginConnection,
+    createFrame,
+    selectParentFrame,
+    enterSelectedFrame,
+    focusSearch: () => document.querySelector("[data-search]")?.focus(),
+    togglePin,
+    previewNode: openNodePreview,
+    runAutoLayout
+  };
+  commands[command]?.();
+};
+
 const handleKeydown = (event) => {
   const target = event.target;
   const isTextField = target?.matches?.("input, textarea, select");
 
   if (event.key === "Escape") {
+    if (previewNodeId) {
+      event.preventDefault();
+      closeNodePreview();
+      return;
+    }
     if (mode === "connection" || multiSelectMode || selectedElementIds.size) {
       mode = "navigation";
       connectionSourceId = null;
@@ -942,75 +1092,10 @@ const handleKeydown = (event) => {
     return;
   }
 
-  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "l") {
+  const command = commandForEvent(event);
+  if (command) {
     event.preventDefault();
-    runAutoLayout();
-    return;
-  }
-
-  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-    event.preventDefault();
-    setStatus("Command palette placeholder: use H, N, A, L, F, P, /");
-    return;
-  }
-
-  switch (event.key) {
-    case "H":
-    case "h":
-      event.preventDefault();
-      showHints();
-      break;
-    case "M":
-    case "m":
-      event.preventDefault();
-      toggleMultiSelect();
-      break;
-    case "N":
-    case "n":
-      event.preventDefault();
-      createNode();
-      break;
-    case "A":
-      event.preventDefault();
-      createNode(selectedNode()?.frameId || activeFrameId, "necessaryCondition", "New parent/above condition");
-      break;
-    case "a":
-      event.preventDefault();
-      createSupportingNode();
-      break;
-    case "Enter":
-      event.preventDefault();
-      app.querySelector(".inspector textarea, .inspector input, .inspector select")?.focus();
-      break;
-    case "L":
-    case "l":
-      event.preventDefault();
-      beginConnection();
-      break;
-    case "F":
-    case "f":
-      event.preventDefault();
-      createFrame();
-      break;
-    case "[":
-      event.preventDefault();
-      selectParentFrame();
-      break;
-    case "]":
-      event.preventDefault();
-      enterSelectedFrame();
-      break;
-    case "/":
-      event.preventDefault();
-      document.querySelector("[data-search]")?.focus();
-      break;
-    case "P":
-    case "p":
-      event.preventDefault();
-      togglePin();
-      break;
-    default:
-      break;
+    executeCommand(command);
   }
 };
 
@@ -1021,6 +1106,10 @@ const bootPromise = (async () => {
   const activeTree = tree();
   selectedElementId = activeTree.viewState?.selectedElementId || activeTree.nodes[0]?.id;
   activeFrameId = activeTree.viewState?.activeFrameId || activeTree.rootFrameId;
+  viewportState = {
+    left: activeTree.viewState?.pan?.x || 0,
+    top: activeTree.viewState?.pan?.y || 0
+  };
   selectedElementType = elementType(selectedElementId);
   statusText = "Prototype loaded";
   render();
@@ -1033,6 +1122,56 @@ window.__ltpSmokeTest = async () => {
   render();
   const activeTree = tree();
   hintEntries = visibleHintEntries();
+  const stressHintLabels = generateHintLabels(40);
+  const hintsArePrefixFree = stressHintLabels.every(
+    (label, index) => !stressHintLabels.some((candidate, candidateIndex) => candidateIndex !== index && candidate.startsWith(label))
+  );
+  const initialSelection = selectedElementId;
+  const initialNodeCount = activeTree.nodes.length;
+  const twoLetterTarget = activeTree.nodes[1]?.id;
+  hintEntries = stressHintLabels.map((hint, index) => ({
+    id: index === 0 ? twoLetterTarget : activeTree.nodes[index % activeTree.nodes.length].id,
+    type: "node",
+    x: 0,
+    y: 0,
+    label: hint,
+    hint
+  }));
+  hintsVisible = true;
+  hintBuffer = "";
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true }));
+  const firstHintLetterWaits = hintBuffer === "A" && selectedElementId === initialSelection;
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true }));
+  await Promise.resolve();
+  const twoLetterHintWorks =
+    firstHintLetterWaits && selectedElementId === twoLetterTarget && activeTree.nodes.length === initialNodeCount;
+  selectedElementId = initialSelection;
+  hintsVisible = false;
+  hintBuffer = "";
+  render();
+
+  const initialShell = document.querySelector(".canvas-shell");
+  initialShell.scrollLeft = Math.min(120, initialShell.scrollWidth - initialShell.clientWidth);
+  initialShell.dispatchEvent(new Event("scroll"));
+  const expectedScrollLeft = initialShell.scrollLeft;
+  showHints();
+  const viewportPreserved = expectedScrollLeft > 0 && document.querySelector(".canvas-shell").scrollLeft === expectedScrollLeft;
+  hideHints();
+
+  const firstLink = activeTree.links[0];
+  const linkLine = document.querySelector(".tree-link-line");
+  const targetBox = firstLink ? layoutNode(firstLink.targetNodeId) : null;
+  const arrowEndsAtEdge =
+    Boolean(linkLine && targetBox) &&
+    linkLine.getAttribute("marker-end") === "url(#arrow)" &&
+    (Number(linkLine.getAttribute("x2")) !== centerOf(targetBox).x ||
+      Number(linkLine.getAttribute("y2")) !== centerOf(targetBox).y);
+
+  openNodePreview(activeTree.nodes[0]?.id);
+  const fullTextPreviewWorks = document.querySelector(".node-preview-dialog p")?.textContent === activeTree.nodes[0]?.statement;
+  closeNodePreview();
+  hintEntries = visibleHintEntries();
+
   return {
     ok:
       Boolean(workspaceData) &&
@@ -1043,11 +1182,22 @@ window.__ltpSmokeTest = async () => {
       document.querySelectorAll(".tree-node").length >= 10 &&
       document.querySelectorAll(".tree-frame").length >= 4 &&
       document.querySelectorAll(".link-target").length >= 6 &&
+      hintsArePrefixFree &&
+      twoLetterHintWorks &&
+      viewportPreserved &&
+      arrowEndsAtEdge &&
+      fullTextPreviewWorks &&
+      Object.keys(commandBindings).length >= 10 &&
       Boolean(exportResult.path),
     nodes: activeTree.nodes.length,
     frames: activeTree.frames.length,
     links: activeTree.links.length,
     hints: hintEntries.length,
+    hintsArePrefixFree,
+    twoLetterHintWorks,
+    viewportPreserved,
+    arrowEndsAtEdge,
+    fullTextPreviewWorks,
     exportPath: exportResult.path
   };
 };
