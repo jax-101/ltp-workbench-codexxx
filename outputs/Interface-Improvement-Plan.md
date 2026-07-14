@@ -35,7 +35,7 @@ Criterios de aceptacion:
 
 Esta iteracion corta se valida antes de comenzar la iteracion 2.
 
-Estado: implementada; pendiente de validacion manual.
+Estado: implementada y validada por el usuario el 2026-07-15.
 
 Incluye:
 
