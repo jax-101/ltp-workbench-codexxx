@@ -1,0 +1,1034 @@
+{
+  "schemaVersion": "0.1",
+  "fixtureType": "single-file-workspace-example",
+  "createdAt": "2026-07-14T00:00:00+02:00",
+  "updatedAt": "2026-07-14T00:00:00+02:00",
+  "workspace": {
+    "id": "ws-ltp-demo",
+    "name": "LTP Demo Workspace",
+    "activeSystemId": "sys-problem-solving-app",
+    "settings": {
+      "keyboardFirst": true,
+      "defaultLayoutEngine": "elk",
+      "defaultExportFormat": "markdown"
+    },
+    "systems": [
+      {
+        "id": "sys-problem-solving-app",
+        "name": "Aplicacion LTP Workbench",
+        "path": "systems/sys-problem-solving-app/system.json",
+        "updatedAt": "2026-07-14T00:00:00+02:00"
+      }
+    ]
+  },
+  "systems": [
+    {
+      "schemaVersion": "0.1",
+      "id": "sys-problem-solving-app",
+      "name": "Aplicacion LTP Workbench",
+      "createdAt": "2026-07-14T00:00:00+02:00",
+      "updatedAt": "2026-07-14T00:00:00+02:00",
+      "profile": {
+        "description": "Aplicacion standalone para trabajar problemas complejos con LTP.",
+        "purpose": "Ayudar al usuario a razonar sobre sistemas complejos sin depender de herramientas de diagramacion genericas.",
+        "owner": {
+          "name": "Usuario principal",
+          "role": "Decision-maker del producto"
+        },
+        "boundary": {
+          "summary": "Incluye definicion del sistema, Goal Tree, canvas de arboles, teclado, frames, links con assumptions y guardado local.",
+          "inside": [
+            "Workspace local",
+            "System Profile",
+            "Goal Tree",
+            "Editor con teclado",
+            "Frames anidados",
+            "Links con assumptions",
+            "Auto-layout basico"
+          ],
+          "outside": [
+            "CRT completo",
+            "Evaporating Cloud",
+            "FRT",
+            "Exportaciones avanzadas",
+            "Colaboracion online"
+          ]
+        },
+        "spanOfControl": [
+          "Definir scope de fase 1",
+          "Elegir modelo de datos",
+          "Prototipar canvas"
+        ],
+        "sphereOfInfluence": [
+          "Eleccion de libreria de layout",
+          "Experiencia de usuario al construir arboles"
+        ],
+        "externalEnvironment": [
+          "Limitaciones de librerias de canvas",
+          "Rendimiento de Electron",
+          "Convenciones del sistema operativo"
+        ],
+        "stakeholders": [
+          {
+            "id": "stakeholder-user",
+            "name": "Usuario principal",
+            "role": "Analista y constructor de arboles"
+          }
+        ],
+        "constraints": [
+          "Debe funcionar standalone",
+          "Debe ser usable sin raton",
+          "Debe guardar localmente"
+        ],
+        "initialSymptoms": [
+          "Las herramientas de diagramacion generalistas fuerzan demasiado uso del raton",
+          "Los links suelen perder sus assumptions",
+          "Los arboles grandes se vuelven dificiles de navegar"
+        ],
+        "sourceIds": [
+          "source-prd-v02",
+          "source-ltp-notes"
+        ],
+        "completeness": "minimumComplete"
+      },
+      "relationships": {
+        "parentSystemIds": [],
+        "childSystemIds": []
+      },
+      "sources": [
+        {
+          "id": "source-prd-v02",
+          "type": "file",
+          "title": "PRD v0.2",
+          "path": "outputs/PRD-v0.2.md",
+          "citation": "",
+          "notes": "Producto y fase 1."
+        },
+        {
+          "id": "source-ltp-notes",
+          "type": "file",
+          "title": "LTP Source Notes",
+          "path": "outputs/LTP-Source-Notes.md",
+          "citation": "",
+          "notes": "Notas derivadas de transcripciones LTP."
+        }
+      ],
+      "benchmarks": [
+        {
+          "id": "benchmark-goal-tree-v1",
+          "type": "goalTree",
+          "treeId": "tree-goal-workbench-v1",
+          "status": "draft",
+          "isPrimary": true,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        }
+      ],
+      "perspectives": [
+        {
+          "id": "perspective-benchmark",
+          "name": "Benchmark",
+          "type": "benchmark",
+          "treeIds": [
+            "tree-goal-workbench-v1"
+          ],
+          "status": "active",
+          "origin": null
+        }
+      ]
+    }
+  ],
+  "trees": [
+    {
+      "schemaVersion": "0.1",
+      "id": "tree-goal-workbench-v1",
+      "systemId": "sys-problem-solving-app",
+      "perspectiveId": "perspective-benchmark",
+      "type": "goalTree",
+      "name": "Goal Tree - LTP Workbench",
+      "status": "draft",
+      "logicMode": "necessity",
+      "rootFrameId": "frame-goal-tree-root",
+      "createdAt": "2026-07-14T00:00:00+02:00",
+      "updatedAt": "2026-07-14T00:00:00+02:00",
+      "frames": [
+        {
+          "id": "frame-goal-tree-root",
+          "treeId": "tree-goal-workbench-v1",
+          "parentFrameId": null,
+          "name": "Goal Tree",
+          "semanticType": "goalTree",
+          "collapsed": false,
+          "childFrameIds": [
+            "frame-csf-thinking",
+            "frame-csf-keyboard",
+            "frame-csf-persistence"
+          ],
+          "nodeIds": [
+            "node-goal"
+          ],
+          "notes": "",
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "frame-csf-thinking",
+          "treeId": "tree-goal-workbench-v1",
+          "parentFrameId": "frame-goal-tree-root",
+          "name": "Rigor de pensamiento",
+          "semanticType": "csfBranch",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "node-csf-thinking",
+            "node-nc-system-profile",
+            "node-nc-goal-tree",
+            "node-nc-link-assumptions"
+          ],
+          "notes": "Branch for reasoning quality.",
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "frame-csf-keyboard",
+          "treeId": "tree-goal-workbench-v1",
+          "parentFrameId": "frame-goal-tree-root",
+          "name": "Flujo sin raton",
+          "semanticType": "csfBranch",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "node-csf-keyboard",
+            "node-nc-keyboard-hints",
+            "node-nc-command-palette",
+            "node-nc-frame-navigation"
+          ],
+          "notes": "Branch for keyboard-first interaction.",
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "frame-csf-persistence",
+          "treeId": "tree-goal-workbench-v1",
+          "parentFrameId": "frame-goal-tree-root",
+          "name": "Trabajo recuperable",
+          "semanticType": "csfBranch",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "node-csf-persistence",
+            "node-nc-json-files",
+            "node-nc-markdown-export",
+            "node-nc-layout-state"
+          ],
+          "notes": "Branch for local persistence.",
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        }
+      ],
+      "nodes": [
+        {
+          "id": "node-goal",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-goal-tree-root",
+          "type": "goal",
+          "statement": "LTP Workbench helps the user work through complex system problems with disciplined logical thinking.",
+          "shortLabel": "Disciplined LTP problem solving",
+          "status": "draft",
+          "tags": [
+            "benchmark"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-csf-thinking",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-thinking",
+          "type": "criticalSuccessFactor",
+          "statement": "The app preserves the logical meaning of the user's reasoning.",
+          "shortLabel": "Logical meaning preserved",
+          "status": "draft",
+          "tags": [
+            "csf"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-csf-keyboard",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-keyboard",
+          "type": "criticalSuccessFactor",
+          "statement": "The user can construct and edit the tree without using the mouse.",
+          "shortLabel": "Tree can be built without mouse",
+          "status": "draft",
+          "tags": [
+            "csf"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-csf-persistence",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-persistence",
+          "type": "criticalSuccessFactor",
+          "statement": "The user's work can be saved, inspected, reopened, and exported locally.",
+          "shortLabel": "Work is recoverable",
+          "status": "draft",
+          "tags": [
+            "csf"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-nc-system-profile",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-thinking",
+          "type": "necessaryCondition",
+          "statement": "Each system has a minimum System Profile.",
+          "shortLabel": "Minimum System Profile exists",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-nc-goal-tree",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-thinking",
+          "type": "necessaryCondition",
+          "statement": "The system benchmark is represented as a Goal Tree.",
+          "shortLabel": "Benchmark is Goal Tree",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [
+            "source-prd-v02",
+            "source-ltp-notes"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "high",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-nc-link-assumptions",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-thinking",
+          "type": "necessaryCondition",
+          "statement": "Each link can expose the assumptions that support it.",
+          "shortLabel": "Links expose assumptions",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-nc-keyboard-hints",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-keyboard",
+          "type": "necessaryCondition",
+          "statement": "Visible elements can be selected through keyboard hints.",
+          "shortLabel": "Keyboard hints select elements",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-nc-command-palette",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-keyboard",
+          "type": "necessaryCondition",
+          "statement": "Frequent actions are available through a command palette.",
+          "shortLabel": "Command palette exists",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-nc-frame-navigation",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-keyboard",
+          "type": "necessaryCondition",
+          "statement": "Frames can be entered, exited, collapsed, and expanded with the keyboard.",
+          "shortLabel": "Frames are keyboard navigable",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-nc-json-files",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-persistence",
+          "type": "necessaryCondition",
+          "statement": "Editable data is stored in local JSON files.",
+          "shortLabel": "Local JSON storage",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-nc-markdown-export",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-persistence",
+          "type": "necessaryCondition",
+          "statement": "A Goal Tree can be exported as Markdown.",
+          "shortLabel": "Markdown export exists",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "node-nc-layout-state",
+          "treeId": "tree-goal-workbench-v1",
+          "frameId": "frame-csf-persistence",
+          "type": "necessaryCondition",
+          "statement": "Frame and node positions are restored when the tree is reopened.",
+          "shortLabel": "Layout is restored",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "clarity": "ok",
+            "entityExistence": "unknown",
+            "singleIdea": "yes",
+            "completeSentence": "yes",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        }
+      ],
+      "links": [
+        {
+          "id": "link-csf-thinking-to-goal",
+          "treeId": "tree-goal-workbench-v1",
+          "sourceNodeId": "node-csf-thinking",
+          "targetNodeId": "node-goal",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Preserving logical meaning is necessary for disciplined LTP problem solving.",
+          "verbalization": "In order to achieve disciplined LTP problem solving, the app must preserve the logical meaning of the user's reasoning.",
+          "assumptionIds": [
+            "assumption-link-thinking-1"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "status": "draft",
+            "clarity": "ok",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": false,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 420,
+              "y": 180
+            }
+          },
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "link-csf-keyboard-to-goal",
+          "treeId": "tree-goal-workbench-v1",
+          "sourceNodeId": "node-csf-keyboard",
+          "targetNodeId": "node-goal",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Keyboard-first construction is necessary because mouse-heavy diagramming interrupts reasoning flow.",
+          "verbalization": "In order to achieve disciplined LTP problem solving, the user must be able to construct and edit the tree without using the mouse.",
+          "assumptionIds": [
+            "assumption-link-keyboard-1"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "status": "draft",
+            "clarity": "ok",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": false,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 720,
+              "y": 180
+            }
+          },
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "link-csf-persistence-to-goal",
+          "treeId": "tree-goal-workbench-v1",
+          "sourceNodeId": "node-csf-persistence",
+          "targetNodeId": "node-goal",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Recoverable local work is necessary for a standalone reasoning tool.",
+          "verbalization": "In order to achieve disciplined LTP problem solving, the user's work must be saved, inspected, reopened, and exported locally.",
+          "assumptionIds": [
+            "assumption-link-persistence-1"
+          ],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "status": "draft",
+            "clarity": "ok",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": false,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 1020,
+              "y": 180
+            }
+          },
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "link-profile-to-thinking",
+          "treeId": "tree-goal-workbench-v1",
+          "sourceNodeId": "node-nc-system-profile",
+          "targetNodeId": "node-csf-thinking",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "A minimum System Profile is necessary to anchor reasoning in a defined system.",
+          "verbalization": "In order to preserve logical meaning, each system must have a minimum System Profile.",
+          "assumptionIds": [],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "status": "draft",
+            "clarity": "ok",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": "Needs assumptions in later review."
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 250,
+              "y": 390
+            }
+          },
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "link-goal-tree-to-thinking",
+          "treeId": "tree-goal-workbench-v1",
+          "sourceNodeId": "node-nc-goal-tree",
+          "targetNodeId": "node-csf-thinking",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "A Goal Tree is necessary to define the benchmark before diagnosing reality.",
+          "verbalization": "In order to preserve logical meaning, the system benchmark must be represented as a Goal Tree.",
+          "assumptionIds": [],
+          "sourceIds": [
+            "source-ltp-notes"
+          ],
+          "validation": {
+            "status": "draft",
+            "clarity": "ok",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": "Can be reviewed against Dettmer material."
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 420,
+              "y": 390
+            }
+          },
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "link-link-assumptions-to-thinking",
+          "treeId": "tree-goal-workbench-v1",
+          "sourceNodeId": "node-nc-link-assumptions",
+          "targetNodeId": "node-csf-thinking",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Exposed assumptions are necessary to keep reasoning inspectable.",
+          "verbalization": "In order to preserve logical meaning, each link must expose the assumptions that support it.",
+          "assumptionIds": [],
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "validation": {
+            "status": "draft",
+            "clarity": "ok",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 590,
+              "y": 390
+            }
+          },
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        }
+      ],
+      "assumptions": [
+        {
+          "id": "assumption-link-thinking-1",
+          "treeId": "tree-goal-workbench-v1",
+          "linkId": "link-csf-thinking-to-goal",
+          "statement": "A tool that loses assumptions or link meaning cannot reliably support LTP reasoning.",
+          "status": "draft",
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "promotedNodeId": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "assumption-link-keyboard-1",
+          "treeId": "tree-goal-workbench-v1",
+          "linkId": "link-csf-keyboard-to-goal",
+          "statement": "Mouse-heavy construction creates enough friction to interrupt structured thinking.",
+          "status": "draft",
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "promotedNodeId": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        },
+        {
+          "id": "assumption-link-persistence-1",
+          "treeId": "tree-goal-workbench-v1",
+          "linkId": "link-csf-persistence-to-goal",
+          "statement": "A standalone reasoning tool must keep user work recoverable without relying on external services.",
+          "status": "draft",
+          "sourceIds": [
+            "source-prd-v02"
+          ],
+          "promotedNodeId": null,
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00"
+        }
+      ],
+      "layout": {
+        "engine": "elk",
+        "direction": "TB",
+        "lastRunAt": "2026-07-14T00:00:00+02:00",
+        "settings": {
+          "spacingNodeNode": 48,
+          "spacingLayer": 96,
+          "respectPinned": true,
+          "minimizeCrossings": true
+        },
+        "frames": {
+          "frame-goal-tree-root": {
+            "x": 80,
+            "y": 40,
+            "width": 1120,
+            "height": 620,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "frame-csf-thinking": {
+            "x": 140,
+            "y": 260,
+            "width": 320,
+            "height": 320,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "frame-csf-keyboard": {
+            "x": 500,
+            "y": 260,
+            "width": 320,
+            "height": 320,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "frame-csf-persistence": {
+            "x": 860,
+            "y": 260,
+            "width": 320,
+            "height": 320,
+            "pinned": false,
+            "layoutSource": "auto"
+          }
+        },
+        "nodes": {
+          "node-goal": {
+            "x": 440,
+            "y": 90,
+            "width": 400,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-csf-thinking": {
+            "x": 180,
+            "y": 300,
+            "width": 240,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-csf-keyboard": {
+            "x": 540,
+            "y": 300,
+            "width": 240,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-csf-persistence": {
+            "x": 900,
+            "y": 300,
+            "width": 240,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-nc-system-profile": {
+            "x": 180,
+            "y": 390,
+            "width": 240,
+            "height": 58,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-nc-goal-tree": {
+            "x": 180,
+            "y": 465,
+            "width": 240,
+            "height": 58,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-nc-link-assumptions": {
+            "x": 180,
+            "y": 540,
+            "width": 240,
+            "height": 58,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-nc-keyboard-hints": {
+            "x": 540,
+            "y": 390,
+            "width": 240,
+            "height": 58,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-nc-command-palette": {
+            "x": 540,
+            "y": 465,
+            "width": 240,
+            "height": 58,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-nc-frame-navigation": {
+            "x": 540,
+            "y": 540,
+            "width": 240,
+            "height": 58,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-nc-json-files": {
+            "x": 900,
+            "y": 390,
+            "width": 240,
+            "height": 58,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-nc-markdown-export": {
+            "x": 900,
+            "y": 465,
+            "width": 240,
+            "height": 58,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "node-nc-layout-state": {
+            "x": 900,
+            "y": 540,
+            "width": 240,
+            "height": 58,
+            "pinned": false,
+            "layoutSource": "auto"
+          }
+        },
+        "links": {
+          "link-csf-thinking-to-goal": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 420,
+              "y": 180
+            }
+          },
+          "link-csf-keyboard-to-goal": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 720,
+              "y": 180
+            }
+          },
+          "link-csf-persistence-to-goal": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 1020,
+              "y": 180
+            }
+          },
+          "link-profile-to-thinking": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 300,
+              "y": 378
+            }
+          },
+          "link-goal-tree-to-thinking": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 300,
+              "y": 452
+            }
+          },
+          "link-link-assumptions-to-thinking": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 300,
+              "y": 528
+            }
+          }
+        }
+      },
+      "viewState": {
+        "activeFrameId": "frame-goal-tree-root",
+        "selectedElementId": "node-goal",
+        "mode": "navigation",
+        "zoom": 1,
+        "pan": {
+          "x": 0,
+          "y": 0
+        },
+        "breadcrumb": [
+          "Aplicacion LTP Workbench",
+          "Benchmark",
+          "Goal Tree",
+          "Goal Tree"
+        ]
+      }
+    }
+  ],
+  "exports": [
+    {
+      "id": "export-goal-tree-markdown",
+      "type": "markdown",
+      "systemId": "sys-problem-solving-app",
+      "treeId": "tree-goal-workbench-v1",
+      "path": "systems/sys-problem-solving-app/exports/goal-tree.md",
+      "createdAt": "2026-07-14T00:00:00+02:00"
+    }
+  ]
+}

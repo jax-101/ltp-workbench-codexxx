@@ -1,0 +1,43 @@
+{
+  "name": "ltp-workbench",
+  "version": "0.1.0",
+  "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "LTP_SMOKE_TEST=1 LTP_USE_SAMPLE=1 electron .",
+    "test:prototype": "node scripts/test-prototype.js",
+    "validate:model": "node scripts/validate-model.js",
+    "package": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "keywords": [
+    "ltp",
+    "logical-thinking-process",
+    "electron"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.local.ltpworkbench",
+    "productName": "LTP Workbench",
+    "directories": {
+      "output": "outputs/dist"
+    },
+    "files": [
+      "src/**/*",
+      "outputs/sample-workspace-v0.1.json",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity"
+    }
+  },
+  "dependencies": {
+    "elkjs": "^0.11.1"
+  }
+}
