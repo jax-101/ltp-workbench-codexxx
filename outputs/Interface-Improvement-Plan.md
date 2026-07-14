@@ -1,6 +1,6 @@
 # Interface Improvement Plan
 
-Plan de evolucion del prototipo a partir del feedback F-010 a F-024. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
+Plan de evolucion del prototipo a partir del feedback F-010 a F-028. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
 
 ## Principios de ejecucion
 
@@ -28,6 +28,24 @@ Criterios de aceptacion:
 - Cada link muestra claramente su direccion y termina en el borde del nodo destino.
 - El texto completo de un nodo puede abrirse con raton o teclado.
 - Los atajos se leen desde un mapa de comandos separado del controlador de teclado.
+
+## Iteracion 1.1: flujo de edicion con teclado
+
+Esta iteracion corta se valida antes de comenzar la iteracion 2.
+
+Incluye:
+
+- F-025: `Enter` confirma la edicion y `Shift+Enter` crea una linea.
+- F-026: `Espacio` alterna el pop-up y `Enter` continua la edicion en el inspector.
+- F-027: los nodos nuevos aparecen dentro del viewport actual.
+- F-028: `Ctrl+G` cancela el contexto activo y puede limpiar la seleccion.
+
+Criterios de aceptacion:
+
+- El ciclo seleccionar -> editar -> confirmar puede completarse sin raton.
+- El pop-up puede abrirse, cerrarse y convertirse en edicion sin usar `Esc`.
+- Crear un nodo no obliga a buscarlo fuera de la zona visible.
+- La cancelacion tiene el mismo resultado tanto con `Ctrl+G` como con `Esc`, salvo que `Ctrl+G` puede limpiar la seleccion en navegacion.
 
 ## Iteracion 2: edicion y navegacion
 

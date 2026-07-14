@@ -64,13 +64,13 @@ Estado: incorporado al PRD y al prototipo como seleccion multiple de nodos orige
 
 Feedback: cuando un elemento requiere una seleccion con dos letras, por ejemplo `AA`, la segunda letra no se interpreta como parte del hint y puede disparar otra accion, como crear un nuevo elemento.
 
-Estado: implementado en la iteracion 1, pendiente de validacion de uso. Los hints visibles ahora forman un conjunto sin prefijos ambiguos y las teclas del modo hint no llegan a otros comandos.
+Estado: implementado en la iteracion 1, con validacion inicial positiva el 2026-07-14. Los hints visibles ahora forman un conjunto sin prefijos ambiguos y las teclas del modo hint no llegan a otros comandos.
 
 ### F-011: La vista salta al origen al usar hints o seleccionar elementos
 
 Feedback: si la vista se ha desplazado a otra zona del canvas, al pulsar `H` o seleccionar otro elemento la vista vuelve automaticamente al punto superior izquierdo.
 
-Estado: implementado en la iteracion 1, pendiente de validacion de uso. El viewport se captura antes de renderizar y se restaura despues de los cambios de seleccion o modo.
+Estado: implementado en la iteracion 1, con validacion inicial positiva el 2026-07-14. El viewport se captura antes de renderizar y se restaura despues de los cambios de seleccion o modo.
 
 ### F-012: Minimap para navegacion del canvas
 
@@ -112,7 +112,7 @@ Estado: pendiente. Mostrar arbol de frames, breadcrumbs o ambos.
 
 Feedback: los links entre entidades deberian verse como flechas, no solo lineas. Actualmente no se aprecia la punta de flecha.
 
-Estado: implementado en la iteracion 1, pendiente de validacion visual. Los links terminan en el borde del nodo y usan marcadores SVG de mayor contraste.
+Estado: implementado en la iteracion 1, con validacion inicial positiva el 2026-07-14. Los links terminan en el borde del nodo y usan marcadores SVG de mayor contraste.
 
 ### F-019: Configuracion editable de atajos de teclado
 
@@ -148,4 +148,54 @@ Estado: pendiente. Definir un registro/schema de diagramas con tipos de entidade
 
 Feedback: en algunos elementos el texto se corta. Idealmente el tamano de la entidad deberia poder controlarse, o al menos deberia abrirse un pop-up o vista ampliada para ver el texto completo.
 
-Estado: solucion minima implementada en la iteracion 1, pendiente de validacion de uso. El texto completo puede abrirse desde el inspector, con doble click o con la barra espaciadora.
+Estado: solucion minima implementada en la iteracion 1, con validacion inicial positiva el 2026-07-14. El texto completo puede abrirse desde el inspector, con doble click o con la barra espaciadora. El refinamiento del flujo queda recogido en F-026.
+
+### F-025: Enter confirma la edicion y Shift+Enter crea una linea
+
+Feedback: al seleccionar una entidad, el primer `Enter` debe comenzar la edicion. Un segundo `Enter` debe aceptar los cambios y volver al modo de navegacion. `Shift+Enter` debe insertar un salto de linea sin cerrar la edicion.
+
+Estado: pendiente. Definir el ciclo navegacion -> edicion -> confirmacion como comando explicito y evitar que el segundo `Enter` inserte una linea accidental.
+
+Criterios de aceptacion:
+
+- `Enter` sobre una entidad seleccionada enfoca su statement.
+- `Enter` dentro del statement guarda el valor y devuelve el foco al canvas.
+- `Shift+Enter` inserta un salto de linea y mantiene la edicion activa.
+
+### F-026: Flujo de teclado del pop-up de texto completo
+
+Feedback: la barra espaciadora debe alternar entre abrir y cerrar el pop-up. Al pulsar `Enter` dentro del pop-up, este debe cerrarse y la entidad debe quedar enfocada en el inspector, lista para continuar editandola.
+
+Estado: pendiente. Convertir la vista ampliada en un estado con acciones simetricas de apertura/cierre y transicion directa a edicion.
+
+Criterios de aceptacion:
+
+- `Espacio` abre el pop-up de la entidad seleccionada.
+- Un segundo `Espacio` lo cierra sin cambiar la seleccion.
+- `Enter` cierra el pop-up y enfoca el campo statement del inspector.
+- `Esc` sigue disponible como alternativa para cerrar.
+
+### F-027: Crear nodos dentro del viewport actual
+
+Feedback: al pulsar `N`, el nuevo nodo debe aparecer cerca de la esquina superior izquierda de la zona del canvas que el usuario esta viendo, no en la posicion por defecto del frame si esta fuera de pantalla.
+
+Estado: pendiente. Calcular la posicion inicial a partir del pan/scroll actual, transformada a coordenadas del canvas y limitada al frame activo.
+
+Criterios de aceptacion:
+
+- El nodo nuevo aparece visible sin mover automaticamente el viewport.
+- Varios nodos consecutivos se desplazan ligeramente para no solaparse por completo.
+- La posicion se mantiene dentro del frame activo cuando sea posible.
+
+### F-028: Ctrl+G como cancelacion comoda
+
+Feedback: se propone `Ctrl+G` como comando para cancelar la seleccion o el modo activo. El usuario valora esta combinacion como alternativa mas comoda que `Esc`.
+
+Estado: pendiente. Anadir `Ctrl+G` al mapa de comandos como alias de cancelacion, manteniendo `Esc`.
+
+Criterios de aceptacion:
+
+- `Ctrl+G` cierra hints, conexion, seleccion multiple o pop-up segun el contexto.
+- En navegacion normal limpia la seleccion actual.
+- No modifica ni elimina datos.
+- `Esc` conserva el comportamiento existente.

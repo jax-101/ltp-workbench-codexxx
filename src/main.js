@@ -3,7 +3,8 @@ const path = require("node:path");
 const fs = require("node:fs/promises");
 const ELK = require("elkjs/lib/elk.bundled.js");
 
-const prototypeDataPath = () => path.join(app.getPath("userData"), "prototype-workspace.json");
+const prototypeDataPath = () =>
+  path.join(app.getPath("userData"), process.env.LTP_MANUAL_TEST === "1" ? "manual-test-workspace.json" : "prototype-workspace.json");
 const sampleDataPath = () => path.join(app.getAppPath(), "outputs", "sample-workspace-v0.1.json");
 const exportPath = () => path.join(app.getAppPath(), "outputs", "prototype-goal-tree-export.md");
 
@@ -321,7 +322,7 @@ const createWindow = () => {
     height: 900,
     minWidth: 1120,
     minHeight: 720,
-    title: "LTP Workbench Prototype",
+    title: process.env.LTP_MANUAL_TEST === "1" ? "LTP Workbench - Manual Test" : "LTP Workbench Prototype",
     backgroundColor: "#f7f5ef",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
