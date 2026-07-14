@@ -1,4 +1,4 @@
-# Manual Test Guide: Interface Iteration 1
+# Manual Test Guide: Interface Iterations 1 and 1.1
 
 Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en un archivo de prueba separado. No modifica el workspace normal.
 
@@ -50,13 +50,42 @@ Resultado esperado: la punta es visible, termina en el borde del nodo destino y 
 
 1. Selecciona un nodo con texto largo.
 2. Pulsa la barra espaciadora.
-3. Cierra la vista con `Esc`.
+3. Cierra la vista pulsando de nuevo la barra espaciadora.
 4. Abrela de nuevo con doble click sobre el nodo.
-5. Prueba tambien el boton `View full statement` del inspector.
+5. Pulsa `Enter`.
+6. Comprueba que el pop-up se cierra y el statement queda enfocado en el inspector.
+7. Prueba tambien el boton `View full statement` del inspector y el cierre con `Esc`.
 
-Resultado esperado: los tres caminos muestran el texto completo y se pueden cerrar sin perder la posicion del canvas.
+Resultado esperado: el pop-up alterna con `Espacio`; `Enter` permite seguir editando y `Esc` sigue funcionando.
 
-## Prueba 5: regresion basica
+## Prueba 5: confirmar la edicion
+
+1. Selecciona un nodo.
+2. Pulsa `Enter`.
+3. Modifica el statement.
+4. Pulsa `Shift+Enter` y escribe una segunda linea.
+5. Pulsa `Enter` sin `Shift`.
+
+Resultado esperado: el primer `Enter` comienza la edicion, `Shift+Enter` crea una linea y el ultimo `Enter` guarda y devuelve el foco al canvas.
+
+## Prueba 6: crear dentro del viewport
+
+1. Desplaza el canvas hacia la derecha o hacia abajo.
+2. Pulsa `N`.
+3. Pulsa `N` otra vez.
+
+Resultado esperado: ambos nodos aparecen en la zona visible, cerca de su esquina superior izquierda, y sus posiciones estan ligeramente desplazadas.
+
+## Prueba 7: cancelar con Ctrl+G
+
+1. Selecciona un nodo y pulsa `Ctrl+G`.
+2. Activa hints con `H` y pulsa `Ctrl+G`.
+3. Abre el pop-up y pulsa `Ctrl+G`.
+4. Comprueba tambien que `Esc` mantiene su comportamiento.
+
+Resultado esperado: `Ctrl+G` limpia la seleccion en navegacion y cancela el contexto activo sin modificar datos.
+
+## Prueba 8: regresion basica
 
 Comprueba que siguen funcionando:
 

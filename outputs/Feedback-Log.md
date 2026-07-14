@@ -154,7 +154,7 @@ Estado: solucion minima implementada en la iteracion 1, con validacion inicial p
 
 Feedback: al seleccionar una entidad, el primer `Enter` debe comenzar la edicion. Un segundo `Enter` debe aceptar los cambios y volver al modo de navegacion. `Shift+Enter` debe insertar un salto de linea sin cerrar la edicion.
 
-Estado: pendiente. Definir el ciclo navegacion -> edicion -> confirmacion como comando explicito y evitar que el segundo `Enter` inserte una linea accidental.
+Estado: implementado en la iteracion 1.1, pendiente de validacion de uso. El inspector distingue entre confirmar con `Enter` y mantener la edicion con `Shift+Enter`.
 
 Criterios de aceptacion:
 
@@ -166,7 +166,7 @@ Criterios de aceptacion:
 
 Feedback: la barra espaciadora debe alternar entre abrir y cerrar el pop-up. Al pulsar `Enter` dentro del pop-up, este debe cerrarse y la entidad debe quedar enfocada en el inspector, lista para continuar editandola.
 
-Estado: pendiente. Convertir la vista ampliada en un estado con acciones simetricas de apertura/cierre y transicion directa a edicion.
+Estado: implementado en la iteracion 1.1, pendiente de validacion de uso. `Espacio` alterna la vista ampliada y `Enter` transfiere el foco al statement del inspector.
 
 Criterios de aceptacion:
 
@@ -179,7 +179,7 @@ Criterios de aceptacion:
 
 Feedback: al pulsar `N`, el nuevo nodo debe aparecer cerca de la esquina superior izquierda de la zona del canvas que el usuario esta viendo, no en la posicion por defecto del frame si esta fuera de pantalla.
 
-Estado: pendiente. Calcular la posicion inicial a partir del pan/scroll actual, transformada a coordenadas del canvas y limitada al frame activo.
+Estado: implementado en la iteracion 1.1, pendiente de validacion de uso. La posicion inicial se calcula desde el viewport y se mantiene dentro del frame activo cuando hay espacio visible suficiente.
 
 Criterios de aceptacion:
 
@@ -191,7 +191,7 @@ Criterios de aceptacion:
 
 Feedback: se propone `Ctrl+G` como comando para cancelar la seleccion o el modo activo. El usuario valora esta combinacion como alternativa mas comoda que `Esc`.
 
-Estado: pendiente. Anadir `Ctrl+G` al mapa de comandos como alias de cancelacion, manteniendo `Esc`.
+Estado: implementado en la iteracion 1.1, pendiente de validacion de uso. `Ctrl+G` se ha anadido al mapa de comandos como cancelacion contextual y `Esc` se conserva.
 
 Criterios de aceptacion:
 

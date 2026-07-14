@@ -12,6 +12,8 @@ Plan de evolucion del prototipo a partir del feedback F-010 a F-028. Estas son i
 
 ## Iteracion 1: estabilidad de seleccion y lectura
 
+Estado: implementada y validada inicialmente el 2026-07-14.
+
 Incluye:
 
 - F-010: hints de una o varias letras sin conflictos con otros comandos.
@@ -32,6 +34,8 @@ Criterios de aceptacion:
 ## Iteracion 1.1: flujo de edicion con teclado
 
 Esta iteracion corta se valida antes de comenzar la iteracion 2.
+
+Estado: implementada; pendiente de validacion manual.
 
 Incluye:
 

@@ -109,6 +109,22 @@ const restoreViewport = () => {
   shell.scrollTop = viewportState.top;
 };
 
+const focusCanvas = () => {
+  app.querySelector(".canvas")?.focus();
+};
+
+const focusPrimaryEditor = () => {
+  if (!selectedElementId || selectedElementType === "unknown") return;
+  mode = "editing";
+  setStatus("Editing selected element");
+  render();
+  const editor = app.querySelector("[data-primary-editor]");
+  editor?.focus();
+  if (editor?.setSelectionRange && typeof editor.value === "string") {
+    editor.setSelectionRange(editor.value.length, editor.value.length);
+  }
+};
+
 const persist = async () => {
   workspaceData.updatedAt = now();
   const activeTree = tree();
@@ -295,12 +311,65 @@ const updateAssumption = async (id, value) => {
   await persist();
 };
 
-const createNode = async (frameId = activeFrameId, type = "necessaryCondition", statement = "New necessary condition") => {
+const viewportNodePosition = (frame, width = 250, height = 72) => {
+  captureViewport();
+  const shell = app.querySelector(".canvas-shell");
+  const viewport = {
+    left: viewportState.left,
+    top: viewportState.top,
+    right: viewportState.left + (shell?.clientWidth || 720),
+    bottom: viewportState.top + (shell?.clientHeight || 560)
+  };
+  const frameBox = layoutFrame(frame.id);
+  const frameInner = {
+    left: frameBox.x + 28,
+    top: frameBox.y + 54,
+    right: frameBox.x + frameBox.width - 28,
+    bottom: frameBox.y + frameBox.height - 28
+  };
+  const intersection = {
+    left: Math.max(viewport.left + 42, frameInner.left),
+    top: Math.max(viewport.top + 52, frameInner.top),
+    right: Math.min(viewport.right - 42, frameInner.right),
+    bottom: Math.min(viewport.bottom - 42, frameInner.bottom)
+  };
+  const fitsActiveFrame = intersection.right - intersection.left >= width && intersection.bottom - intersection.top >= height;
+  const base = fitsActiveFrame
+    ? { x: intersection.left, y: intersection.top }
+    : { x: viewport.left + 42, y: viewport.top + 52 };
+  const existingBoxes = Object.values(tree()?.layout?.nodes || {});
+
+  for (let index = 0; index < 24; index += 1) {
+    const candidate = {
+      x: Math.round(base.x + (index % 6) * 18),
+      y: Math.round(base.y + Math.floor(index / 6) * 18),
+      width,
+      height
+    };
+    const positionOccupied = existingBoxes.some(
+      (box) => Math.abs(candidate.x - box.x) < 12 && Math.abs(candidate.y - box.y) < 12
+    );
+    if (!positionOccupied) return candidate;
+  }
+
+  return { x: Math.round(base.x), y: Math.round(base.y), width, height };
+};
+
+const createNode = async (
+  frameId = activeFrameId,
+  type = "necessaryCondition",
+  statement = "New necessary condition",
+  options = {}
+) => {
   const activeTree = tree();
   const id = uid("node");
   const frame = frameById()[frameId] || frameById()[activeTree.rootFrameId];
   const frameBox = layoutFrame(frame.id);
   const offset = frame.nodeIds.length * 18;
+  const position =
+    options.placement === "viewport"
+      ? viewportNodePosition(frame)
+      : { x: frameBox.x + 48 + offset, y: frameBox.y + 80 + offset, width: 250, height: 72 };
   const node = {
     id,
     treeId: activeTree.id,
@@ -327,10 +396,7 @@ const createNode = async (frameId = activeFrameId, type = "necessaryCondition", 
   activeTree.nodes.push(node);
   frame.nodeIds.push(id);
   activeTree.layout.nodes[id] = {
-    x: frameBox.x + 48 + offset,
-    y: frameBox.y + 80 + offset,
-    width: 250,
-    height: 72,
+    ...position,
     pinned: false,
     layoutSource: "manual"
   };
@@ -342,6 +408,9 @@ const createNode = async (frameId = activeFrameId, type = "necessaryCondition", 
   render();
   return id;
 };
+
+const createNodeInViewport = () =>
+  createNode(activeFrameId, "necessaryCondition", "New necessary condition", { placement: "viewport" });
 
 const createSupportingNode = async () => {
   const target = selectedNode();
@@ -799,14 +868,71 @@ const breadcrumb = () => {
 
 const openNodePreview = (nodeId = selectedElementId) => {
   if (!nodeById()[nodeId]) return;
+  selectedElementId = nodeId;
+  selectedElementType = "node";
   previewNodeId = nodeId;
   render();
   app.querySelector("[data-action='close-node-preview']")?.focus();
 };
 
-const closeNodePreview = () => {
+const closeNodePreview = (options = {}) => {
+  const nodeId = previewNodeId;
   previewNodeId = null;
+  if (options.continueEditing && nodeById()[nodeId]) {
+    selectedElementId = nodeId;
+    selectedElementType = "node";
+    focusPrimaryEditor();
+    return;
+  }
   render();
+};
+
+const toggleNodePreview = () => {
+  if (previewNodeId) {
+    closeNodePreview();
+    return;
+  }
+  openNodePreview();
+};
+
+const cancelContext = (options = {}) => {
+  if (previewNodeId) {
+    closeNodePreview();
+    setStatus("Preview closed");
+    return;
+  }
+
+  if (mode === "connection" || mode === "editing" || multiSelectMode || selectedElementIds.size) {
+    mode = "navigation";
+    connectionSourceId = null;
+    multiSelectMode = false;
+    selectedElementIds.clear();
+    hintsVisible = false;
+    setStatus("Current mode cancelled");
+    render();
+    focusCanvas();
+    return;
+  }
+
+  if (hintsVisible) {
+    hideHints();
+    setStatus("Hints closed");
+    return;
+  }
+
+  if (options.clearSelection && selectedElementId) {
+    selectedElementId = null;
+    selectedElementType = "unknown";
+    setStatus("Selection cleared");
+    render();
+    focusCanvas();
+    return;
+  }
+
+  mode = "navigation";
+  connectionSourceId = null;
+  render();
+  focusCanvas();
 };
 
 const renderNodePreview = () => {
@@ -872,7 +998,7 @@ const renderInspector = () => {
       <aside class="inspector">
         <h2>${escapeHtml(nodeTypeLabel(node.type))}</h2>
         <label>Statement</label>
-        <textarea data-node-field="statement" data-id="${node.id}">${escapeHtml(node.statement)}</textarea>
+        <textarea data-primary-editor data-node-field="statement" data-id="${node.id}">${escapeHtml(node.statement)}</textarea>
         <label>Short label</label>
         <input data-node-field="shortLabel" data-id="${node.id}" value="${escapeHtml(node.shortLabel || "")}" />
         <label>Type</label>
@@ -890,7 +1016,7 @@ const renderInspector = () => {
       <aside class="inspector">
         <h2>Frame</h2>
         <label>Name</label>
-        <input data-frame-field="name" data-id="${frame.id}" value="${escapeHtml(frame.name)}" />
+        <input data-primary-editor data-frame-field="name" data-id="${frame.id}" value="${escapeHtml(frame.name)}" />
         <label>Semantic type</label>
         <input data-frame-field="semanticType" data-id="${frame.id}" value="${escapeHtml(frame.semanticType || "")}" />
         <label>Notes</label>
@@ -907,7 +1033,7 @@ const renderInspector = () => {
       <aside class="inspector">
         <h2>Link</h2>
         <label>Meaning</label>
-        <textarea data-link-field="meaning" data-id="${link.id}">${escapeHtml(link.meaning || "")}</textarea>
+        <textarea data-primary-editor data-link-field="meaning" data-id="${link.id}">${escapeHtml(link.meaning || "")}</textarea>
         <label>Verbalization</label>
         <textarea data-link-field="verbalization" data-id="${link.id}">${escapeHtml(link.verbalization || "")}</textarea>
         <div class="inspector-row">
@@ -949,6 +1075,19 @@ const render = () => {
   restoreViewport();
 };
 
+const commitInspectorField = async (field) => {
+  mode = "navigation";
+  const { id, nodeField, frameField, linkField, assumptionId } = field.dataset;
+
+  if (nodeField) await updateNode(id, nodeField, field.value);
+  if (frameField) await updateFrame(id, frameField, field.value || null);
+  if (linkField) await updateLink(id, linkField, field.value);
+  if (assumptionId) await updateAssumption(assumptionId, field.value);
+
+  setStatus("Changes accepted");
+  focusCanvas();
+};
+
 const bindEvents = () => {
   app.querySelectorAll("[data-element-id]").forEach((element) => {
     element.addEventListener("click", (event) => {
@@ -977,6 +1116,14 @@ const bindEvents = () => {
 
   app.querySelectorAll("[data-assumption-id]").forEach((field) => {
     field.addEventListener("change", () => updateAssumption(field.dataset.assumptionId, field.value));
+  });
+
+  app.querySelectorAll(".inspector input, .inspector textarea, .inspector select").forEach((field) => {
+    field.addEventListener("focus", () => {
+      mode = "editing";
+      updateViewState();
+      setStatus("Editing selected element");
+    });
   });
 
   app.querySelectorAll("[data-promote-assumption]").forEach((button) => {
@@ -1012,7 +1159,13 @@ const bindEvents = () => {
 
 const bindingMatchesEvent = (binding, event) => {
   const primaryPressed = event.metaKey || event.ctrlKey;
-  if (Boolean(binding.primary) !== primaryPressed) return false;
+  if (binding.primary) {
+    if (!primaryPressed) return false;
+  } else if (binding.control) {
+    if (!event.ctrlKey || event.metaKey) return false;
+  } else if (primaryPressed) {
+    return false;
+  }
   if (Boolean(binding.alt) !== event.altKey) return false;
   if (Object.hasOwn(binding, "shift") && binding.shift !== event.shiftKey) return false;
   const expectedKey = binding.key.length === 1 ? binding.key.toLowerCase() : binding.key;
@@ -1032,49 +1185,58 @@ const executeCommand = (command) => {
     commandPalette: () => setStatus("Command palette placeholder: use H, N, A, L, F, P, /"),
     showHints,
     toggleMultiSelect,
-    createNode,
+    createNode: createNodeInViewport,
     createParentNode: () => createNode(selectedNode()?.frameId || activeFrameId, "necessaryCondition", "New parent/above condition"),
     createSupportingNode,
-    focusInspector: () => app.querySelector(".inspector textarea, .inspector input, .inspector select")?.focus(),
+    focusInspector: focusPrimaryEditor,
     beginConnection,
     createFrame,
     selectParentFrame,
     enterSelectedFrame,
     focusSearch: () => document.querySelector("[data-search]")?.focus(),
     togglePin,
-    previewNode: openNodePreview,
+    previewNode: toggleNodePreview,
+    cancelContext: () => cancelContext({ clearSelection: true }),
     runAutoLayout
   };
-  commands[command]?.();
+  return commands[command]?.();
 };
 
-const handleKeydown = (event) => {
+const handleKeydown = async (event) => {
   const target = event.target;
   const isTextField = target?.matches?.("input, textarea, select");
+  const isInspectorField = Boolean(isTextField && target.closest?.(".inspector"));
 
   if (event.key === "Escape") {
-    if (previewNodeId) {
-      event.preventDefault();
-      closeNodePreview();
-      return;
-    }
-    if (mode === "connection" || multiSelectMode || selectedElementIds.size) {
-      mode = "navigation";
-      connectionSourceId = null;
-      multiSelectMode = false;
-      selectedElementIds.clear();
-      hintsVisible = false;
-      setStatus("Selection mode cancelled");
-      render();
-      return;
-    }
-    if (hintsVisible) {
-      hideHints();
-      return;
-    }
-    mode = "navigation";
-    connectionSourceId = null;
-    render();
+    event.preventDefault();
+    cancelContext();
+    return;
+  }
+
+  if (previewNodeId && event.key === " ") {
+    event.preventDefault();
+    closeNodePreview();
+    setStatus("Preview closed");
+    return;
+  }
+
+  if (previewNodeId && event.key === "Enter") {
+    event.preventDefault();
+    closeNodePreview({ continueEditing: true });
+    return;
+  }
+
+  const command = commandForEvent(event);
+  if (command === "cancelContext") {
+    event.preventDefault();
+    executeCommand(command);
+    return;
+  }
+
+  if (isInspectorField && event.key === "Enter") {
+    if (event.shiftKey && target.matches("textarea")) return;
+    event.preventDefault();
+    await commitInspectorField(target);
     return;
   }
 
@@ -1092,10 +1254,9 @@ const handleKeydown = (event) => {
     return;
   }
 
-  const command = commandForEvent(event);
   if (command) {
     event.preventDefault();
-    executeCommand(command);
+    await executeCommand(command);
   }
 };
 
@@ -1117,6 +1278,13 @@ const bootPromise = (async () => {
 
 window.__ltpSmokeTest = async () => {
   await bootPromise;
+  const waitFor = async (predicate, timeoutMs = 2000) => {
+    const startedAt = Date.now();
+    while (!predicate() && Date.now() - startedAt < timeoutMs) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    return predicate();
+  };
   workspaceData = await window.ltpPrototype.runLayout(workspaceData);
   const exportResult = await window.ltpPrototype.exportMarkdown(workspaceData);
   render();
@@ -1170,15 +1338,68 @@ window.__ltpSmokeTest = async () => {
   openNodePreview(activeTree.nodes[0]?.id);
   const fullTextPreviewWorks = document.querySelector(".node-preview-dialog p")?.textContent === activeTree.nodes[0]?.statement;
   closeNodePreview();
+
+  selectedElementId = tree().nodes[0]?.id;
+  selectedElementType = "node";
+  mode = "navigation";
+  render();
+  focusCanvas();
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+  const primaryEditor = document.activeElement;
+  const enterStartsEditing = mode === "editing" && primaryEditor?.matches?.("[data-primary-editor]");
+  const originalStatement = nodeById()[selectedElementId].statement;
+  primaryEditor.value = `${originalStatement}\nSmoke test edit`;
+  primaryEditor.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true, cancelable: true }));
+  const shiftEnterKeepsEditing = mode === "editing" && nodeById()[selectedElementId].statement === originalStatement;
+  primaryEditor.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+  const enterCommitsEditing = await waitFor(
+    () => mode === "navigation" && nodeById()[selectedElementId]?.statement.endsWith("Smoke test edit")
+  );
+
+  focusCanvas();
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }));
+  const previewOpenedWithSpace = Boolean(previewNodeId);
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }));
+  const previewClosedWithSpace = !previewNodeId;
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }));
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+  const previewEnterContinuesEditing =
+    !previewNodeId && mode === "editing" && document.activeElement?.matches?.("[data-primary-editor]");
+  cancelContext();
+
+  selectedElementId = tree().nodes[0]?.id;
+  selectedElementType = "node";
+  mode = "navigation";
+  render();
+  focusCanvas();
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "g", ctrlKey: true, bubbles: true, cancelable: true }));
+  const ctrlGClearsSelection = selectedElementId === null && mode === "navigation";
+
+  const placementShell = document.querySelector(".canvas-shell");
+  placementShell.scrollLeft = Math.min(140, placementShell.scrollWidth - placementShell.clientWidth);
+  placementShell.dispatchEvent(new Event("scroll"));
+  const placementViewportLeft = placementShell.scrollLeft;
+  const placementViewportRight = placementViewportLeft + placementShell.clientWidth;
+  const viewportNodeId = await createNodeInViewport();
+  const viewportNodeBox = layoutNode(viewportNodeId);
+  const secondViewportNodeId = await createNodeInViewport();
+  const secondViewportNodeBox = layoutNode(secondViewportNodeId);
+  const nodeCreatedInViewport =
+    viewportNodeBox.x >= placementViewportLeft &&
+    viewportNodeBox.x + viewportNodeBox.width <= placementViewportRight;
+  const consecutiveNodesAreOffset =
+    viewportNodeBox.x !== secondViewportNodeBox.x || viewportNodeBox.y !== secondViewportNodeBox.y;
+
   hintEntries = visibleHintEntries();
+  const finalTree = tree();
 
   return {
     ok:
       Boolean(workspaceData) &&
-      activeTree.nodes.length >= 10 &&
-      activeTree.frames.length >= 4 &&
-      activeTree.links.length >= 6 &&
-      hintEntries.length >= activeTree.nodes.length &&
+      finalTree.nodes.length >= 10 &&
+      finalTree.frames.length >= 4 &&
+      finalTree.links.length >= 6 &&
+      hintEntries.length >= finalTree.nodes.length &&
       document.querySelectorAll(".tree-node").length >= 10 &&
       document.querySelectorAll(".tree-frame").length >= 4 &&
       document.querySelectorAll(".link-target").length >= 6 &&
@@ -1187,17 +1408,35 @@ window.__ltpSmokeTest = async () => {
       viewportPreserved &&
       arrowEndsAtEdge &&
       fullTextPreviewWorks &&
+      enterStartsEditing &&
+      shiftEnterKeepsEditing &&
+      enterCommitsEditing &&
+      previewOpenedWithSpace &&
+      previewClosedWithSpace &&
+      previewEnterContinuesEditing &&
+      ctrlGClearsSelection &&
+      nodeCreatedInViewport &&
+      consecutiveNodesAreOffset &&
       Object.keys(commandBindings).length >= 10 &&
       Boolean(exportResult.path),
-    nodes: activeTree.nodes.length,
-    frames: activeTree.frames.length,
-    links: activeTree.links.length,
+    nodes: finalTree.nodes.length,
+    frames: finalTree.frames.length,
+    links: finalTree.links.length,
     hints: hintEntries.length,
     hintsArePrefixFree,
     twoLetterHintWorks,
     viewportPreserved,
     arrowEndsAtEdge,
     fullTextPreviewWorks,
+    enterStartsEditing,
+    shiftEnterKeepsEditing,
+    enterCommitsEditing,
+    previewOpenedWithSpace,
+    previewClosedWithSpace,
+    previewEnterContinuesEditing,
+    ctrlGClearsSelection,
+    nodeCreatedInViewport,
+    consecutiveNodesAreOffset,
     exportPath: exportResult.path
   };
 };

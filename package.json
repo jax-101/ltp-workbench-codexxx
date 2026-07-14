@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "test:manual": "LTP_MANUAL_TEST=1 LTP_USE_SAMPLE=1 electron .",
-    "smoke": "LTP_SMOKE_TEST=1 LTP_USE_SAMPLE=1 electron .",
+    "smoke": "LTP_SMOKE_TEST=1 LTP_USE_SAMPLE=1 LTP_MANUAL_TEST=1 electron .",
     "test:prototype": "node scripts/test-prototype.js",
     "validate:model": "node scripts/validate-model.js",
     "package": "electron-builder --dir",

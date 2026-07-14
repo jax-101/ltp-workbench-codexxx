@@ -13,5 +13,6 @@ window.LTP_COMMAND_BINDINGS = Object.freeze({
   focusSearch: [{ key: "/" }],
   togglePin: [{ key: "p" }],
   previewNode: [{ key: " " }],
+  cancelContext: [{ key: "g", control: true }],
   runAutoLayout: [{ key: "l", primary: true, shift: true }]
 });
