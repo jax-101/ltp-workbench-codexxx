@@ -1,6 +1,6 @@
 # Interface Improvement Plan
 
-Plan de evolucion del prototipo a partir del feedback F-010 a F-028. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
+Plan de evolucion del prototipo a partir del feedback F-010 a F-035. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
 
 ## Principios de ejecucion
 
@@ -88,6 +88,28 @@ Criterios de aceptacion:
 - El minimapa no cambia de posicion durante zoom.
 - Su rectangulo representa correctamente el area logica visible.
 
+## Iteracion 2.2: interaccion, pertenencia y layout visible
+
+Estado: implementada; pendiente de validacion manual.
+
+Incluye:
+
+- F-032: segunda correccion del tamano visible del viewport del minimapa.
+- F-033: desplazamiento con flechas y con `Ctrl+P/N/F/B`.
+- F-034: apertura temporal del inspector durante la edicion.
+- F-035: entrada y salida de entidades mediante arrastre o selector de frame.
+- F-021: transicion animada de nodos, frames y links al ejecutar Layout.
+- F-022: direccion de layout configurable, con Goal Tree de arriba abajo por defecto.
+
+Criterios de aceptacion:
+
+- El rectangulo del minimapa cambia de tamano de forma claramente visible al variar el zoom.
+- La navegacion alternativa funciona sin interferir con la edicion ni los hints.
+- El inspector recupera exactamente su estado previo al terminar de editar.
+- Cambiar una entidad de frame conserva sus conexiones y actualiza ambas listas de pertenencia.
+- El auto-layout muestra el recorrido de los elementos y las flechas lo acompanan.
+- ELK respeta la direccion elegida para el arbol.
+
 ## Iteracion 3: frames jerarquicos
 
 Incluye:
@@ -106,9 +128,9 @@ Criterios de aceptacion:
 
 Incluye:
 
-- F-021: transicion animada del auto-layout.
-- F-022: direccion preferente segun el tipo de diagrama.
-- Layout por frame, respeto de posiciones fijadas y soporte de frames anidados.
+- Layout compuesto por frame y soporte completo de frames anidados.
+- Refinamiento de posiciones fijadas, espaciado y rutas de links.
+- Los fundamentos F-021 y F-022 ya entregados en la iteracion 2.2.
 
 ## Iteracion 5: diagramas extensibles
 

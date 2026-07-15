@@ -130,13 +130,13 @@ Estado: implementado en la iteracion 2; la validacion de uso ha identificado las
 
 Feedback: seria valioso ver como los elementos se mueven a su nueva posicion cuando se ejecuta Layout, en vez de saltar instantaneamente.
 
-Estado: pendiente. Animar transiciones de nodos, frames y links despues de recibir posiciones de ELK.
+Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. El resultado de ELK se interpola durante una transicion breve; nodos, frames, flechas y puntos de interaccion se actualizan durante el movimiento.
 
 ### F-022: Direccion preferente por tipo de diagrama
 
 Feedback: cada diagrama tiene una direccion preferente de flechas. Por ejemplo, el Goal Tree es de arriba a abajo.
 
-Estado: pendiente. Mover direccion de layout desde una regla global a configuracion del tipo de diagrama.
+Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. Goal Tree usa `TB` por defecto y cada arbol puede elegir `TB`, `BT`, `LR` o `RL` antes de ejecutar Layout.
 
 ### F-023: Infraestructura extensible para tipos de diagrama
 
@@ -242,7 +242,7 @@ Criterios de aceptacion:
 
 Feedback: el rectangulo que representa la pantalla visible mantiene el mismo tamano en el minimapa al cambiar el zoom.
 
-Estado: implementado en la iteracion 2.1, pendiente de validacion de uso. El rectangulo se recalcula en coordenadas logicas despues de zoom, pan y render.
+Estado: reabierto tras la validacion visual del usuario y corregido de nuevo en la iteracion 2.2. La primera formula cambiaba numericamente pero no producia una diferencia visual suficiente. La nueva version calcula el rectangulo desde la proporcion real entre area visible y area desplazable, y exige un cambio visible en la prueba automatizada. Pendiente de nueva validacion manual.
 
 Criterios de aceptacion:
 
@@ -250,3 +250,42 @@ Criterios de aceptacion:
 - Al alejar, el rectangulo se hace mas grande.
 - El rectangulo mantiene una posicion coherente con la zona visible.
 - Click, arrastre, zoom y pan mantienen minimapa y canvas sincronizados.
+
+### F-033: Desplazamiento con flechas y atajos Ctrl
+
+Feedback: el canvas debe poder desplazarse con las flechas o con `Ctrl+P` arriba, `Ctrl+N` abajo, `Ctrl+F` derecha y `Ctrl+B` izquierda.
+
+Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. Ambos juegos de teclas usan los mismos comandos de pan y no se ejecutan mientras el foco esta en un campo de texto.
+
+Criterios de aceptacion:
+
+- Las cuatro flechas desplazan el viewport en su direccion.
+- Los cuatro atajos `Ctrl` producen el mismo resultado.
+- Los atajos no modifican el texto durante la edicion.
+- Los hints no capturan las letras cuando se mantiene pulsado `Ctrl`.
+
+### F-034: Apertura temporal del inspector al editar
+
+Feedback: al editar una entidad, el panel derecho debe abrirse automaticamente. Al confirmar con `Enter`, debe recuperar su estado anterior.
+
+Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. El editor recuerda si el inspector estaba abierto antes de comenzar y restaura ese estado al aceptar o cancelar.
+
+Criterios de aceptacion:
+
+- `Enter` abre el inspector si estaba cerrado y enfoca el campo principal.
+- Confirmar con `Enter` vuelve a cerrarlo si inicialmente estaba cerrado.
+- Si ya estaba abierto, permanece abierto al terminar.
+- Cancelar la edicion tambien restaura el estado anterior.
+
+### F-035: Mover entidades entre frames
+
+Feedback: debe ser posible introducir entidades en un frame y extraerlas posteriormente.
+
+Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. Los nodos se pueden arrastrar entre frames o reasignar con el selector `Frame` del inspector.
+
+Criterios de aceptacion:
+
+- Al soltar un nodo, el frame de destino se resalta y pasa a contenerlo.
+- Soltarlo fuera de un frame hijo permite devolverlo al frame raiz o padre visible.
+- El selector del inspector ofrece una alternativa precisa al arrastre.
+- Cambiar la pertenencia conserva links, assumptions y el resto de datos de la entidad.

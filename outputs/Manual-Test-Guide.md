@@ -1,4 +1,4 @@
-# Manual Test Guide: Interface Iterations 1, 1.1 and 2
+# Manual Test Guide: Interface Iterations 1, 1.1, 2, 2.1 and 2.2
 
 Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en un archivo de prueba separado. No modifica el workspace normal.
 
@@ -89,21 +89,25 @@ Resultado esperado: `Ctrl+G` limpia la seleccion en navegacion y cancela el cont
 
 1. Usa `Cmd+=` y `Cmd+-` para acercar y alejar.
 2. Usa las flechas para desplazar el canvas.
-3. Selecciona un elemento y pulsa `C` para centrarlo.
-4. Pulsa `Cmd+0` para volver al 100%.
-5. Pulsa `Cmd+1` para ajustar todo el diagrama a la ventana.
-6. Activa `H` en varios niveles de zoom.
+3. Repite usando `Ctrl+P`, `Ctrl+N`, `Ctrl+B` y `Ctrl+F`.
+4. Selecciona un elemento y pulsa `C` para centrarlo.
+5. Pulsa `Cmd+0` para volver al 100%.
+6. Pulsa `Cmd+1` para ajustar todo el diagrama a la ventana.
+7. Activa `H` en varios niveles de zoom.
 
-Resultado esperado: el zoom mantiene el centro de trabajo, las flechas desplazan la vista y los hints visibles conservan tamano legible y secuencias validas.
+Resultado esperado: el zoom mantiene el centro de trabajo, ambos juegos de teclas desplazan la vista y los hints visibles conservan tamano legible y secuencias validas.
 
 ## Prueba 9: paneles laterales
 
 1. Oculta y muestra el panel izquierdo usando su boton.
 2. Repite con el inspector derecho.
 3. Prueba `Alt+[` y `Alt+]`.
-4. Cierra y vuelve a abrir el modo de prueba.
+4. Deja cerrado el panel derecho, selecciona una entidad y pulsa `Enter`.
+5. Confirma sin `Shift` pulsando `Enter` otra vez.
+6. Repite empezando con el panel derecho abierto.
+7. Cierra y vuelve a abrir el modo de prueba.
 
-Resultado esperado: los paneles se pliegan a un control estrecho y recuperan su estado al reabrir.
+Resultado esperado: los paneles se pliegan y recuperan su estado. Editar abre temporalmente el inspector cerrado; al confirmar vuelve a cerrarse, mientras que un inspector inicialmente abierto permanece abierto.
 
 ## Prueba 10: minimapa
 
@@ -134,7 +138,26 @@ Resultado esperado: los circulos `L` estan ocultos normalmente, aparecen de form
 
 Resultado esperado: siempre aparece confirmacion, cancelar no cambia datos y confirmar elimina tambien las relaciones dependientes. El frame raiz permanece protegido.
 
-## Prueba 13: regresion basica
+## Prueba 13: layout animado y direccion
+
+1. Mueve varios nodos para que el diagrama quede claramente desordenado.
+2. Elige `Top to bottom` y pulsa `Layout`.
+3. Observa los nodos, los frames y las flechas durante la recolocacion.
+4. Repite con `Left to right`.
+
+Resultado esperado: los elementos recorren visualmente el camino hacia su nueva posicion, las flechas los acompanan durante toda la transicion y la organizacion final respeta la direccion elegida.
+
+## Prueba 14: mover entidades entre frames
+
+1. Selecciona un nodo de un frame hijo.
+2. Arrastralo a otro frame y observa el resaltado del destino.
+3. Arrastralo fuera del frame hijo para devolverlo al frame raiz.
+4. Abre el inspector y repite el cambio usando el selector `Frame`.
+5. Comprueba cualquier link que entre o salga del nodo.
+
+Resultado esperado: la entidad cambia de pertenencia en ambos sentidos, conserva sus links y puede reasignarse tanto con arrastre como con el selector.
+
+## Prueba 15: regresion basica
 
 Comprueba que siguen funcionando:
 

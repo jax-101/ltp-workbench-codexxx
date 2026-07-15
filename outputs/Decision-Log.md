@@ -149,3 +149,29 @@ Razon: las etiquetas deben conservar legibilidad y tamano estable con cualquier 
 Decision: el minimapa se posiciona respecto al viewport fijo del editor. Solo su rectangulo interno cambia con zoom y pan.
 
 Razon: escalar el diagrama no debe desplazar los controles de navegacion; el minimapa representa el canvas, pero no forma parte de el.
+
+## 2026-07-15
+
+### D-025: Viewport del minimapa basado en el area desplazable real
+
+Decision: el rectangulo del minimapa se calcula con la proporcion entre el tamano visible del editor y su superficie real de scroll.
+
+Razon: una conversion basada solo en coordenadas logicas puede cambiar numericamente sin comunicar de forma visible cuanto diagrama cabe en pantalla. La geometria real del scroll refleja directamente zoom, paneles y tamano de ventana.
+
+### D-026: El inspector abierto para editar es un estado temporal
+
+Decision: comenzar una edicion puede abrir el inspector, pero al aceptar o cancelar se restaura el estado que tenia antes.
+
+Razon: la edicion necesita un campo visible y enfocado sin convertir una ayuda temporal en un cambio permanente de la disposicion elegida por el usuario.
+
+### D-027: Direccion persistente y transicion local del layout
+
+Decision: cada arbol guarda su direccion de layout. ELK calcula el resultado final y el renderer interpola localmente desde las posiciones actuales.
+
+Razon: la direccion pertenece al diagrama, mientras que la animacion es una presentacion efimera. Separarlas mantiene el modelo limpio y permite que flechas, frames y nodos se muevan de forma sincronizada.
+
+### D-028: La pertenencia a frames se actualiza como una operacion explicita
+
+Decision: mover una entidad a otro frame actualiza tanto `node.frameId` como las listas `frame.nodeIds`. El arrastre y el selector del inspector ejecutan la misma operacion.
+
+Razon: la posicion visual no basta para definir pertenencia. Una unica operacion de dominio evita discrepancias y conserva links y assumptions al reorganizar el diagrama.

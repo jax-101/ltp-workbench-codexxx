@@ -18,6 +18,11 @@ let zoomLevel = 1;
 let panelState = { leftOpen: true, rightOpen: true };
 let deleteCandidateId = null;
 let viewPersistTimer = null;
+let editingRightPanelWasOpen = null;
+let layoutAnimating = false;
+let layoutAnimationFrameCount = 0;
+let layoutAnimationMovedElements = 0;
+let layoutAnimationConnectionsTracked = false;
 
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -197,13 +202,24 @@ const togglePanel = (side) => {
   scheduleViewStatePersist();
 };
 
+const beginInspectorEditing = () => {
+  if (mode !== "editing") editingRightPanelWasOpen = panelState.rightOpen;
+  panelState.rightOpen = true;
+  mode = "editing";
+};
+
+const restoreInspectorAfterEditing = () => {
+  if (editingRightPanelWasOpen !== null) panelState.rightOpen = editingRightPanelWasOpen;
+  editingRightPanelWasOpen = null;
+};
+
 const focusCanvas = () => {
   app.querySelector(".canvas")?.focus();
 };
 
 const focusPrimaryEditor = () => {
   if (!selectedElementId || selectedElementType === "unknown") return;
-  mode = "editing";
+  beginInspectorEditing();
   setStatus("Editing selected element");
   render();
   const editor = app.querySelector("[data-primary-editor]");
@@ -592,6 +608,79 @@ const createFrame = async () => {
   render();
 };
 
+const frameDepth = (frameId) => {
+  const frames = frameById();
+  let depth = 0;
+  let frame = frames[frameId];
+  while (frame?.parentFrameId) {
+    depth += 1;
+    frame = frames[frame.parentFrameId];
+  }
+  return depth;
+};
+
+const frameAtPoint = (point) => {
+  const candidates = tree().frames.filter((frame) => {
+    const box = layoutFrame(frame.id);
+    return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
+  });
+  candidates.sort((left, right) => {
+    const depthDifference = frameDepth(right.id) - frameDepth(left.id);
+    if (depthDifference) return depthDifference;
+    const leftBox = layoutFrame(left.id);
+    const rightBox = layoutFrame(right.id);
+    return leftBox.width * leftBox.height - rightBox.width * rightBox.height;
+  });
+  return candidates[0] || frameById()[tree().rootFrameId];
+};
+
+const moveNodeToFrame = async (nodeId, targetFrameId, position = null) => {
+  const node = nodeById()[nodeId];
+  const targetFrame = frameById()[targetFrameId];
+  if (!node || !targetFrame) return;
+
+  for (const frame of tree().frames) {
+    frame.nodeIds = frame.nodeIds.filter((id) => id !== nodeId);
+  }
+  if (!targetFrame.nodeIds.includes(nodeId)) targetFrame.nodeIds.push(nodeId);
+  const previousFrameId = node.frameId;
+  node.frameId = targetFrame.id;
+  node.updatedAt = now();
+
+  const box = tree().layout.nodes[nodeId];
+  if (position) {
+    box.x = Math.round(position.x);
+    box.y = Math.round(position.y);
+  } else {
+    const targetBox = layoutFrame(targetFrame.id);
+    const fitsTarget =
+      box.x >= targetBox.x + 18 &&
+      box.y >= targetBox.y + 48 &&
+      box.x + box.width <= targetBox.x + targetBox.width - 18 &&
+      box.y + box.height <= targetBox.y + targetBox.height - 18;
+    if (!fitsTarget) {
+      box.x = Math.round(targetBox.x + 36);
+      box.y = Math.round(targetBox.y + 62);
+    }
+  }
+  box.layoutSource = "manual";
+  for (const link of tree().links.filter((item) => item.sourceNodeId === nodeId || item.targetNodeId === nodeId)) {
+    const source = centerOf(layoutNode(link.sourceNodeId));
+    const target = centerOf(layoutNode(link.targetNodeId));
+    tree().layout.links[link.id] = {
+      ...layoutLink(link.id),
+      labelPosition: {
+        x: Math.round((source.x + target.x) / 2),
+        y: Math.round((source.y + target.y) / 2)
+      }
+    };
+  }
+
+  await persist();
+  setStatus(previousFrameId === targetFrame.id ? "Entity moved" : `Entity moved to ${targetFrame.name}`);
+  render();
+};
+
 const createLink = async (sourceNodeId, targetNodeId, options = {}) => {
   const { selectCreated = true, persistAfter = true, renderAfter = true } = options;
   const activeTree = tree();
@@ -751,12 +840,114 @@ const togglePin = async () => {
   render();
 };
 
-const runAutoLayout = async () => {
-  setStatus("Running ELK layout...");
-  workspaceData = await window.ltpPrototype.runLayout(workspaceData);
-  await persist();
-  setStatus("Layout updated with ELK.js");
+const interpolatedBoxMap = (startMap = {}, targetMap = {}, progress) =>
+  Object.fromEntries(
+    Object.entries(targetMap).map(([id, target]) => {
+      const start = startMap[id] || target;
+      const interpolate = (field) => (start[field] || 0) + ((target[field] || 0) - (start[field] || 0)) * progress;
+      return [
+        id,
+        {
+          ...target,
+          x: interpolate("x"),
+          y: interpolate("y"),
+          width: interpolate("width"),
+          height: interpolate("height")
+        }
+      ];
+    })
+  );
+
+const interpolatedLinkMap = (startMap = {}, targetMap = {}, progress) =>
+  Object.fromEntries(
+    Object.entries(targetMap).map(([id, target]) => {
+      const start = startMap[id] || target;
+      const startLabel = start.labelPosition || target.labelPosition || { x: 0, y: 0 };
+      const targetLabel = target.labelPosition || startLabel;
+      return [
+        id,
+        {
+          ...target,
+          labelPosition: {
+            x: startLabel.x + (targetLabel.x - startLabel.x) * progress,
+            y: startLabel.y + (targetLabel.y - startLabel.y) * progress
+          }
+        }
+      ];
+    })
+  );
+
+const animateToLayout = async (nextWorkspace) => {
+  const activeTree = tree();
+  const nextTree = nextWorkspace.trees[0];
+  const startLayout = structuredClone(activeTree.layout);
+  const targetLayout = nextTree.layout;
+  const moved = [...Object.keys(targetLayout.nodes || {}), ...Object.keys(targetLayout.frames || {})].filter((id) => {
+    const start = startLayout.nodes?.[id] || startLayout.frames?.[id];
+    const target = targetLayout.nodes?.[id] || targetLayout.frames?.[id];
+    return start && target && (Math.abs(start.x - target.x) > 1 || Math.abs(start.y - target.y) > 1);
+  });
+  layoutAnimationMovedElements = moved.length;
+  layoutAnimationFrameCount = 0;
+  layoutAnimationConnectionsTracked = nextTree.links.length > 0;
+
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  if (!moved.length || reduceMotion) {
+    workspaceData = nextWorkspace;
+    render();
+    return;
+  }
+
+  const duration = 620;
+  await new Promise((resolve) => {
+    const startedAt = performance.now();
+    const step = (timestamp) => {
+      const linearProgress = clamp((timestamp - startedAt) / duration, 0, 1);
+      const progress = 1 - Math.pow(1 - linearProgress, 3);
+      activeTree.layout = {
+        ...targetLayout,
+        nodes: interpolatedBoxMap(startLayout.nodes, targetLayout.nodes, progress),
+        frames: interpolatedBoxMap(startLayout.frames, targetLayout.frames, progress),
+        links: interpolatedLinkMap(startLayout.links, targetLayout.links, progress)
+      };
+      layoutAnimationFrameCount += 1;
+      render();
+      const firstLink = activeTree.links[0];
+      if (firstLink) {
+        const line = app.querySelector(`[data-link-id="${firstLink.id}"]`);
+        const endpoints = linkEndpoints(layoutNode(firstLink.sourceNodeId), layoutNode(firstLink.targetNodeId));
+        layoutAnimationConnectionsTracked =
+          layoutAnimationConnectionsTracked &&
+          Math.abs(Number(line?.getAttribute("x1")) - endpoints.source.x) < 0.01 &&
+          Math.abs(Number(line?.getAttribute("y2")) - endpoints.target.y) < 0.01;
+      }
+      if (linearProgress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        resolve();
+      }
+    };
+    requestAnimationFrame(step);
+  });
+
+  workspaceData = nextWorkspace;
   render();
+};
+
+const runAutoLayout = async () => {
+  if (layoutAnimating) return;
+  layoutAnimating = true;
+  setStatus("Running ELK layout...");
+  try {
+    const nextWorkspace = await window.ltpPrototype.runLayout(workspaceData);
+    setStatus("Repositioning diagram...");
+    await animateToLayout(nextWorkspace);
+    await persist();
+    setStatus("Layout updated with ELK.js");
+    render();
+  } finally {
+    layoutAnimating = false;
+  }
 };
 
 const exportMarkdown = async () => {
@@ -898,6 +1089,22 @@ const nodeTypeLabel = (type) =>
     assumption: "Assumption"
   })[type] || type;
 
+const layoutDirectionLabel = (direction) =>
+  ({
+    TB: "Top to bottom",
+    BT: "Bottom to top",
+    LR: "Left to right",
+    RL: "Right to left"
+  })[direction] || direction;
+
+const updateLayoutDirection = async (direction) => {
+  if (!["TB", "BT", "LR", "RL"].includes(direction)) return;
+  tree().layout.direction = direction;
+  await persist();
+  setStatus(`Layout direction: ${layoutDirectionLabel(direction)}`);
+  render();
+};
+
 const renderNodes = () =>
   tree()
     .nodes.map((node) => {
@@ -950,7 +1157,7 @@ const renderLinks = () => {
       const selected = link.id === selectedElementId ? "selected" : "";
       const marker = selected ? "arrow-selected" : "arrow";
       return `
-        <line class="tree-link-line ${selected}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" marker-end="url(#${marker})" />
+        <line class="tree-link-line ${selected}" data-link-id="${link.id}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" marker-end="url(#${marker})" />
       `;
     })
     .join("");
@@ -1020,11 +1227,19 @@ const minimapMetrics = () => {
 
 const minimapViewportStyle = () => {
   const metrics = minimapMetrics();
+  const shell = app.querySelector(".canvas-shell");
+  const scaledCanvas = canvasSize();
+  const scrollWidth = Math.max(1, shell?.scrollWidth || scaledCanvas.width * zoomLevel);
+  const scrollHeight = Math.max(1, shell?.scrollHeight || scaledCanvas.height * zoomLevel);
+  const clientWidth = shell?.clientWidth || viewportSize.width;
+  const clientHeight = shell?.clientHeight || viewportSize.height;
+  const width = clamp((clientWidth / scrollWidth) * metrics.width, 4, metrics.width);
+  const height = clamp((clientHeight / scrollHeight) * metrics.height, 4, metrics.height);
   return {
-    left: (viewportState.left / zoomLevel) * metrics.scale,
-    top: (viewportState.top / zoomLevel) * metrics.scale,
-    width: Math.min(metrics.width, (viewportSize.width / zoomLevel) * metrics.scale),
-    height: Math.min(metrics.height, (viewportSize.height / zoomLevel) * metrics.scale)
+    left: clamp((viewportState.left / scrollWidth) * metrics.width, 0, metrics.width - width),
+    top: clamp((viewportState.top / scrollHeight) * metrics.height, 0, metrics.height - height),
+    width,
+    height
   };
 };
 
@@ -1118,6 +1333,7 @@ const cancelContext = (options = {}) => {
   }
 
   if (mode === "connection" || mode === "editing" || multiSelectMode || selectedElementIds.size) {
+    if (mode === "editing") restoreInspectorAfterEditing();
     mode = "navigation";
     connectionSourceId = null;
     multiSelectMode = false;
@@ -1125,6 +1341,7 @@ const cancelContext = (options = {}) => {
     hintsVisible = false;
     setStatus("Current mode cancelled");
     render();
+    scheduleViewStatePersist();
     focusCanvas();
     return;
   }
@@ -1331,6 +1548,14 @@ const renderCanvas = () => {
             <button data-action="zoom-in" title="Zoom in">+</button>
             <button data-action="fit-view" title="Fit diagram">Fit</button>
           </div>
+          <select class="direction-select" data-layout-direction title="Preferred layout direction" aria-label="Preferred layout direction">
+            ${["TB", "BT", "LR", "RL"]
+              .map(
+                (direction) =>
+                  `<option value="${direction}" ${tree()?.layout?.direction === direction ? "selected" : ""}>${layoutDirectionLabel(direction)}</option>`
+              )
+              .join("")}
+          </select>
           <button data-action="hints">Hints</button>
           <button data-action="layout">Layout</button>
         </div>
@@ -1382,6 +1607,15 @@ const renderInspector = () => {
         <label>Type</label>
         <select data-node-field="type" data-id="${node.id}">
           ${["goal", "criticalSuccessFactor", "necessaryCondition", "assumption"].map((type) => `<option value="${type}" ${node.type === type ? "selected" : ""}>${nodeTypeLabel(type)}</option>`).join("")}
+        </select>
+        <label>Frame</label>
+        <select data-node-frame data-id="${node.id}">
+          ${tree()
+            .frames.map(
+              (frame) =>
+                `<option value="${frame.id}" ${node.frameId === frame.id ? "selected" : ""}>${escapeHtml(frame.name)}</option>`
+            )
+            .join("")}
         </select>
         <button data-action="open-node-preview">View full statement</button>
         <button data-action="pin">Toggle pin</button>
@@ -1470,8 +1704,83 @@ const commitInspectorField = async (field) => {
   if (linkField) await updateLink(id, linkField, field.value);
   if (assumptionId) await updateAssumption(assumptionId, field.value);
 
+  restoreInspectorAfterEditing();
   setStatus("Changes accepted");
+  render();
+  scheduleViewStatePersist();
   focusCanvas();
+};
+
+const updateDraggedNodeVisual = (nodeId, nextBox) => {
+  const element = app.querySelector(`[data-element-id="${nodeId}"]`);
+  if (element) {
+    element.style.left = `${nextBox.x}px`;
+    element.style.top = `${nextBox.y}px`;
+  }
+
+  for (const link of tree().links.filter((item) => item.sourceNodeId === nodeId || item.targetNodeId === nodeId)) {
+    const sourceBox = link.sourceNodeId === nodeId ? nextBox : layoutNode(link.sourceNodeId);
+    const targetBox = link.targetNodeId === nodeId ? nextBox : layoutNode(link.targetNodeId);
+    const endpoints = linkEndpoints(sourceBox, targetBox);
+    const line = app.querySelector(`[data-link-id="${link.id}"]`);
+    line?.setAttribute("x1", endpoints.source.x);
+    line?.setAttribute("y1", endpoints.source.y);
+    line?.setAttribute("x2", endpoints.target.x);
+    line?.setAttribute("y2", endpoints.target.y);
+    const linkTarget = app.querySelector(`.link-target[data-element-id="${link.id}"]`);
+    if (linkTarget) {
+      linkTarget.style.left = `${(endpoints.source.x + endpoints.target.x) / 2 - 12}px`;
+      linkTarget.style.top = `${(endpoints.source.y + endpoints.target.y) / 2 - 12}px`;
+    }
+  }
+};
+
+const beginNodeDrag = (event, element) => {
+  if (event.button !== 0 || layoutAnimating) return;
+  const nodeId = element.dataset.elementId;
+  const startBox = { ...layoutNode(nodeId) };
+  const startPointer = { x: event.clientX, y: event.clientY };
+  let nextBox = startBox;
+  let dragging = false;
+  let targetFrame = frameById()[nodeById()[nodeId]?.frameId];
+
+  const move = (moveEvent) => {
+    const dx = (moveEvent.clientX - startPointer.x) / zoomLevel;
+    const dy = (moveEvent.clientY - startPointer.y) / zoomLevel;
+    if (!dragging && Math.hypot(dx, dy) < 5) return;
+    dragging = true;
+    moveEvent.preventDefault();
+    nextBox = { ...startBox, x: startBox.x + dx, y: startBox.y + dy };
+    targetFrame = frameAtPoint(centerOf(nextBox));
+    app.querySelectorAll(".tree-frame").forEach((frameElement) => {
+      frameElement.classList.toggle("drop-target", frameElement.dataset.elementId === targetFrame.id);
+    });
+    updateDraggedNodeVisual(nodeId, nextBox);
+  };
+
+  const finish = async () => {
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", finish);
+    document.removeEventListener("pointercancel", finish);
+    app.querySelectorAll(".tree-frame.drop-target").forEach((frameElement) => frameElement.classList.remove("drop-target"));
+    if (!dragging) return;
+    element.dataset.dragged = "true";
+    await moveNodeToFrame(nodeId, targetFrame?.id || tree().rootFrameId, nextBox);
+  };
+
+  element.addEventListener(
+    "click",
+    (clickEvent) => {
+      if (element.dataset.dragged !== "true") return;
+      clickEvent.preventDefault();
+      clickEvent.stopImmediatePropagation();
+      delete element.dataset.dragged;
+    },
+    { capture: true, once: true }
+  );
+  document.addEventListener("pointermove", move, { passive: false });
+  document.addEventListener("pointerup", finish);
+  document.addEventListener("pointercancel", finish);
 };
 
 const bindEvents = () => {
@@ -1481,6 +1790,7 @@ const bindEvents = () => {
       selectElement(element.dataset.elementId);
     });
     if (element.dataset.elementType === "node") {
+      element.addEventListener("pointerdown", (event) => beginNodeDrag(event, element));
       element.addEventListener("dblclick", (event) => {
         event.stopPropagation();
         openNodePreview(element.dataset.elementId);
@@ -1490,6 +1800,10 @@ const bindEvents = () => {
 
   app.querySelectorAll("[data-node-field]").forEach((field) => {
     field.addEventListener("change", () => updateNode(field.dataset.id, field.dataset.nodeField, field.value));
+  });
+
+  app.querySelectorAll("[data-node-frame]").forEach((field) => {
+    field.addEventListener("change", () => moveNodeToFrame(field.dataset.id, field.value));
   });
 
   app.querySelectorAll("[data-frame-field]").forEach((field) => {
@@ -1506,10 +1820,14 @@ const bindEvents = () => {
 
   app.querySelectorAll(".inspector input, .inspector textarea, .inspector select").forEach((field) => {
     field.addEventListener("focus", () => {
-      mode = "editing";
+      beginInspectorEditing();
       updateViewState();
       setStatus("Editing selected element");
     });
+  });
+
+  app.querySelector("[data-layout-direction]")?.addEventListener("change", (event) => {
+    updateLayoutDirection(event.target.value);
   });
 
   app.querySelectorAll("[data-promote-assumption]").forEach((button) => {
@@ -1695,7 +2013,7 @@ const handleKeydown = async (event) => {
     return;
   }
 
-  if (hintsVisible && /^[a-z]$/i.test(event.key)) {
+  if (hintsVisible && !event.ctrlKey && !event.metaKey && !event.altKey && /^[a-z]$/i.test(event.key)) {
     event.preventDefault();
     handleHintKey(event.key);
     return;
@@ -1808,6 +2126,18 @@ window.__ltpSmokeTest = async () => {
     () => mode === "navigation" && nodeById()[selectedElementId]?.statement.endsWith("Smoke test edit")
   );
 
+  panelState.rightOpen = false;
+  mode = "navigation";
+  render();
+  focusCanvas();
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+  const closedInspectorOpensForEditing =
+    panelState.rightOpen && mode === "editing" && document.activeElement?.matches?.("[data-primary-editor]");
+  document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+  const inspectorStateRestoredAfterEditing = await waitFor(() => mode === "navigation" && !panelState.rightOpen);
+  panelState.rightOpen = true;
+  render();
+
   focusCanvas();
   document.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }));
   const previewOpenedWithSpace = Boolean(previewNodeId);
@@ -1868,7 +2198,8 @@ window.__ltpSmokeTest = async () => {
     Math.abs(minimapRectBeforeZoom.right - minimapRectAfterZoom.right) < 1 &&
     Math.abs(minimapRectBeforeZoom.bottom - minimapRectAfterZoom.bottom) < 1;
   const minimapViewportScalesWithZoom =
-    minimapViewportWidthAfterZoom < minimapViewportWidthBeforeZoom;
+    minimapViewportWidthAfterZoom < minimapViewportWidthBeforeZoom &&
+    minimapViewportWidthBeforeZoom - minimapViewportWidthAfterZoom >= 12;
   hideHints();
 
   setZoom(1.25, { persist: false });
@@ -1876,8 +2207,14 @@ window.__ltpSmokeTest = async () => {
     zoomLevel === 1.25 && document.querySelector(".canvas-content")?.style.transform === "scale(1.25)";
   setViewportPosition(0, 0, { persist: false });
   const panStart = document.querySelector(".canvas-shell").scrollLeft;
-  panViewport(80, 0);
+  focusCanvas();
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
   const keyboardPanWorks = document.querySelector(".canvas-shell").scrollLeft > panStart;
+  setViewportPosition(0, 0, { persist: false });
+  document.dispatchEvent(
+    new KeyboardEvent("keydown", { key: "f", ctrlKey: true, bubbles: true, cancelable: true })
+  );
+  const alternativeKeyboardPanWorks = document.querySelector(".canvas-shell").scrollLeft > 0;
   const minimapViewportBefore = document.querySelector(".minimap-viewport")?.style.left;
   panViewport(80, 0);
   const minimapWorks =
@@ -1892,6 +2229,34 @@ window.__ltpSmokeTest = async () => {
     !panelState.leftOpen && document.querySelector(".prototype-shell")?.classList.contains("left-collapsed");
   togglePanel("left");
   togglePanel("right");
+
+  const directionTestTree = tree();
+  directionTestTree.layout.direction = "LR";
+  const leftToRightWorkspace = await window.ltpPrototype.runLayout(workspaceData);
+  const leftToRightTree = leftToRightWorkspace.trees[0];
+  const directionTestLink = leftToRightTree.links[0];
+  const directionSource = leftToRightTree.layout.nodes[directionTestLink.sourceNodeId];
+  const directionTarget = leftToRightTree.layout.nodes[directionTestLink.targetNodeId];
+  const diagramDirectionIsAdjustable =
+    leftToRightTree.layout.direction === "LR" &&
+    directionSource.x + directionSource.width / 2 < directionTarget.x + directionTarget.width / 2;
+  workspaceData = leftToRightWorkspace;
+  tree().layout.direction = "TB";
+  workspaceData = await window.ltpPrototype.runLayout(workspaceData);
+  render();
+
+  const animationNode = tree().nodes.find((node) => !layoutNode(node.id).pinned);
+  const animationBox = tree().layout.nodes[animationNode.id];
+  animationBox.x += 260;
+  animationBox.y += 110;
+  const animationStart = { x: animationBox.x, y: animationBox.y };
+  await runAutoLayout();
+  const animationEnd = layoutNode(animationNode.id);
+  const animatedLayoutWorks =
+    layoutAnimationMovedElements > 0 &&
+    layoutAnimationFrameCount > 2 &&
+    layoutAnimationConnectionsTracked &&
+    (Math.abs(animationStart.x - animationEnd.x) > 1 || Math.abs(animationStart.y - animationEnd.y) > 1);
   const rightPanelCollapses =
     !panelState.rightOpen && document.querySelector(".prototype-shell")?.classList.contains("right-collapsed");
   togglePanel("right");
@@ -1932,6 +2297,41 @@ window.__ltpSmokeTest = async () => {
   const temporaryFrameId = selectedElementId;
   const frameNodeId = await createNode(temporaryFrameId, "necessaryCondition", "Temporary frame node");
   const frameLinkId = await createLink(frameNodeId, tree().nodes[0].id);
+  const linkCountBeforeFrameMove = tree().links.length;
+  const dragElement = document.querySelector(`[data-element-id="${frameNodeId}"]`);
+  const dragStartBox = layoutNode(frameNodeId);
+  const rootBox = layoutFrame(tree().rootFrameId);
+  const dragTarget = { x: rootBox.x + 18, y: rootBox.y + 18 };
+  const dragStart = { x: 120, y: 120 };
+  dragElement.dispatchEvent(
+    new PointerEvent("pointerdown", {
+      button: 0,
+      clientX: dragStart.x,
+      clientY: dragStart.y,
+      bubbles: true,
+      cancelable: true
+    })
+  );
+  document.dispatchEvent(
+    new PointerEvent("pointermove", {
+      clientX: dragStart.x + (dragTarget.x - centerOf(dragStartBox).x) * zoomLevel,
+      clientY: dragStart.y + (dragTarget.y - centerOf(dragStartBox).y) * zoomLevel,
+      bubbles: true,
+      cancelable: true
+    })
+  );
+  document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true }));
+  await waitFor(() => nodeById()[frameNodeId]?.frameId === tree().rootFrameId);
+  const entityCanLeaveFrame =
+    nodeById()[frameNodeId].frameId === tree().rootFrameId &&
+    frameById()[tree().rootFrameId].nodeIds.includes(frameNodeId) &&
+    !frameById()[temporaryFrameId].nodeIds.includes(frameNodeId);
+  await moveNodeToFrame(frameNodeId, temporaryFrameId);
+  const entityCanEnterFrame =
+    nodeById()[frameNodeId].frameId === temporaryFrameId &&
+    frameById()[temporaryFrameId].nodeIds.includes(frameNodeId) &&
+    tree().links.length === linkCountBeforeFrameMove &&
+    Boolean(linkById()[frameLinkId]);
   requestDeleteSelection(temporaryFrameId);
   await confirmDeletion();
   const frameDeletionCascades =
@@ -1965,6 +2365,8 @@ window.__ltpSmokeTest = async () => {
       enterStartsEditing &&
       shiftEnterKeepsEditing &&
       enterCommitsEditing &&
+      closedInspectorOpensForEditing &&
+      inspectorStateRestoredAfterEditing &&
       previewOpenedWithSpace &&
       previewClosedWithSpace &&
       previewEnterContinuesEditing &&
@@ -1978,15 +2380,20 @@ window.__ltpSmokeTest = async () => {
       minimapViewportScalesWithZoom &&
       zoomWorks &&
       keyboardPanWorks &&
+      alternativeKeyboardPanWorks &&
       minimapWorks &&
       fitViewWorks &&
       leftPanelCollapses &&
       rightPanelCollapses &&
+      diagramDirectionIsAdjustable &&
+      animatedLayoutWorks &&
       deleteConfirmationWorks &&
       deleteCancellationWorks &&
       linkDeletionCleansReferences &&
       nodeDeletionCascades &&
       frameDeletionCascades &&
+      entityCanLeaveFrame &&
+      entityCanEnterFrame &&
       rootFrameIsProtected &&
       Object.keys(commandBindings).length >= 10 &&
       Boolean(exportResult.path),
@@ -2002,6 +2409,8 @@ window.__ltpSmokeTest = async () => {
     enterStartsEditing,
     shiftEnterKeepsEditing,
     enterCommitsEditing,
+    closedInspectorOpensForEditing,
+    inspectorStateRestoredAfterEditing,
     previewOpenedWithSpace,
     previewClosedWithSpace,
     previewEnterContinuesEditing,
@@ -2015,15 +2424,20 @@ window.__ltpSmokeTest = async () => {
     minimapViewportScalesWithZoom,
     zoomWorks,
     keyboardPanWorks,
+    alternativeKeyboardPanWorks,
     minimapWorks,
     fitViewWorks,
     leftPanelCollapses,
     rightPanelCollapses,
+    diagramDirectionIsAdjustable,
+    animatedLayoutWorks,
     deleteConfirmationWorks,
     deleteCancellationWorks,
     linkDeletionCleansReferences,
     nodeDeletionCascades,
     frameDeletionCascades,
+    entityCanLeaveFrame,
+    entityCanEnterFrame,
     rootFrameIsProtected,
     exportPath: exportResult.path
   };

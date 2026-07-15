@@ -148,6 +148,19 @@ const saveWorkspace = async (workspace) => {
 
 const getActiveTree = (workspace) => workspace.trees[0];
 
+const defaultLayoutDirection = (treeType) =>
+  ({
+    goalTree: "TB"
+  })[treeType] || "TB";
+
+const elkDirection = (direction) =>
+  ({
+    TB: "DOWN",
+    BT: "UP",
+    LR: "RIGHT",
+    RL: "LEFT"
+  })[direction] || "DOWN";
+
 const nodeSize = (tree, nodeId) => {
   const existing = tree.layout?.nodes?.[nodeId];
   return {
@@ -186,12 +199,13 @@ const runLayout = async (workspace) => {
   const nextWorkspace = structuredClone(workspace);
   const tree = getActiveTree(nextWorkspace);
   const elk = new ELK();
+  const direction = tree.layout?.direction || defaultLayoutDirection(tree.type);
 
   const graph = {
     id: "root",
     layoutOptions: {
       "elk.algorithm": "layered",
-      "elk.direction": "DOWN",
+      "elk.direction": elkDirection(direction),
       "elk.spacing.nodeNode": String(tree.layout?.settings?.spacingNodeNode || 48),
       "elk.layered.spacing.nodeNodeBetweenLayers": String(tree.layout?.settings?.spacingLayer || 96),
       "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP"
@@ -264,7 +278,7 @@ const runLayout = async (workspace) => {
   tree.layout = {
     ...tree.layout,
     engine: "elk",
-    direction: "TB",
+    direction,
     lastRunAt: new Date().toISOString(),
     nodes: nextNodeLayout,
     frames: nextFrameLayout,
