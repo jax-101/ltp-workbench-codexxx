@@ -362,9 +362,19 @@ Aprendizaje: cuando varios objetos comparten la apariencia convencional de selec
 
 Aplicacion futura: definir una seleccion canonica reutilizada por mover, copiar y borrar; convertirla a estados especializados al iniciar cada comando; y probar que teclado y raton producen el mismo conjunto operativo.
 
+### L-040: Una comprobacion de estado no sustituye la inspeccion geometrica
+
+Fecha: 2026-07-16
+
+Evidencia: la prueba automatizada confirmo que tres nodos cambiaban juntos de frame y conservaban sus distancias, pero la captura mostro que quedaban exactamente encima de entidades existentes.
+
+Aprendizaje: validar IDs, pertenencia y coordenadas relativas puede producir un falso positivo visual. Las operaciones espaciales necesitan invariantes de contencion, colision y legibilidad, ademas de evidencia renderizada.
+
+Aplicacion futura: combinar aserciones de dominio con deteccion geometrica y capturas; hacer fallar la prueba cuando haya solapamientos aunque la transaccion sea correcta; y revisar visualmente una muestra de los estados generados.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-040`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-041`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

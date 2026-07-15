@@ -28,6 +28,7 @@ let layoutAnimationMovedElements = 0;
 let layoutAnimationConnectionsTracked = false;
 let historyState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel: null, revision: 0 };
 let workspaceOperationQueue = Promise.resolve();
+let visualTestState = {};
 
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace("H", "");
@@ -3003,4 +3004,161 @@ window.__ltpSmokeTest = async () => {
     rootFrameIsProtected,
     exportPath: exportResult.path
   };
+};
+
+window.__ltpVisualTestStep = async (step) => {
+  await bootPromise;
+  await workspaceOperationQueue;
+  const activeTree = tree();
+  const activeCanvas = canvas();
+  const result = (title, ok, detail) => ({ title, ok: Boolean(ok), detail });
+  const waitFor = async (predicate, timeoutMs = 2500) => {
+    const startedAt = Date.now();
+    while (!predicate() && Date.now() - startedAt < timeoutMs) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    return predicate();
+  };
+
+  if (step === "baseline") {
+    multiSelectionMode = false;
+    connectionSourceIds.clear();
+    hintsVisible = false;
+    activeFrameId = activeTree.hostFrameId;
+    replaceSelection(null);
+    setStatus("Visual check: canvas and build identity");
+    render();
+    fitView();
+    const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
+    const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
+    return result("Build identity and composed canvas", buildInfo.id === "3A.5" && hostVisible && rootHidden, "Build 3A.5 is visible; Goal Tree is finite and Root remains conceptual.");
+  }
+
+  if (step === "frame-summary") {
+    await selectElement(activeTree.hostFrameId);
+    fitView();
+    const summary = document.querySelector(".frame-inventory")?.textContent || "";
+    const ok = ["Goal:", "CSF:", "NC:", "Frames:", "Links:"].every((label) => summary.includes(label));
+    return result("Semantic Goal Tree summary", ok, "Selecting Goal Tree exposes type, frame and internal-link counts.");
+  }
+
+  if (step === "multi-open") {
+    const sourceFrame = activeCanvas.frames.find((frame) => frame.treeId === activeTree.id && frame.nodeIds.length >= 3);
+    const targetFrame = activeCanvas.frames.find(
+      (frame) =>
+        frame.treeId === activeTree.id &&
+        frame.id !== sourceFrame?.id &&
+        frame.parentFrameId === sourceFrame?.parentFrameId &&
+        frame.nodeIds.length > 0
+    );
+    const nodeIds = sourceFrame?.nodeIds.slice(0, 3) || [];
+    visualTestState = {
+      sourceFrameId: sourceFrame?.id,
+      targetFrameId: targetFrame?.id,
+      nodeIds,
+      originalPositions: Object.fromEntries(nodeIds.map((id) => [id, { ...layoutNode(id) }]))
+    };
+    replaceSelection(nodeIds[0]);
+    toggleMultiSelect();
+    fitView();
+    return result("Open keyboard multi-selection", multiSelectionMode && hintsVisible && hintEntries.length > 0, "M opens hints while preserving the first selected node.");
+  }
+
+  if (step === "multi-selected") {
+    for (const id of visualTestState.nodeIds.slice(1)) await selectElement(id);
+    const allSelected = visualTestState.nodeIds.every((id) => selectionRootIds.has(id));
+    return result("Select three nodes by hints", allSelected && multiSelectionMode && hintsVisible, "All three nodes are explicit members of the general selection.");
+  }
+
+  if (step === "multi-closed") {
+    toggleMultiSelect();
+    const retained = visualTestState.nodeIds.every((id) => selectionRootIds.has(id));
+    return result("Close multi-selection with M", retained && !multiSelectionMode && !hintsVisible, "The second M hides hints without clearing the selected group.");
+  }
+
+  if (step === "group-moved") {
+    const draggedId = visualTestState.nodeIds[0];
+    const draggedElement = document.querySelector(`[data-element-id="${draggedId}"]`);
+    const startBox = layoutNode(draggedId);
+    const targetBox = layoutFrame(visualTestState.targetFrameId);
+    const destination = { x: targetBox.x + targetBox.width / 2, y: targetBox.y + Math.min(100, targetBox.height / 2) };
+    const startPointer = { x: 320, y: 280 };
+    draggedElement.dispatchEvent(new PointerEvent("pointerdown", { button: 0, clientX: startPointer.x, clientY: startPointer.y, bubbles: true, cancelable: true }));
+    document.dispatchEvent(
+      new PointerEvent("pointermove", {
+        clientX: startPointer.x + (destination.x - centerOf(startBox).x) * zoomLevel,
+        clientY: startPointer.y + (destination.y - centerOf(startBox).y) * zoomLevel,
+        bubbles: true,
+        cancelable: true
+      })
+    );
+    document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true }));
+    const moved = await waitFor(() =>
+      visualTestState.nodeIds.every((id) => nodeById()[id]?.frameId === visualTestState.targetFrameId)
+    );
+    const [firstId, secondId] = visualTestState.nodeIds;
+    const relativePositionPreserved =
+      Math.abs(
+        (layoutNode(secondId).x - layoutNode(firstId).x) -
+          (visualTestState.originalPositions[secondId].x - visualTestState.originalPositions[firstId].x)
+      ) < 1;
+    const targetFrameBox = layoutFrame(visualTestState.targetFrameId);
+    const movedBoxes = visualTestState.nodeIds.map((id) => layoutNode(id));
+    const stationaryBoxes = activeTree.nodes
+      .filter(
+        (node) =>
+          node.frameId === visualTestState.targetFrameId && !visualTestState.nodeIds.includes(node.id)
+      )
+      .map((node) => layoutNode(node.id));
+    const overlaps = (left, right) =>
+      left.x < right.x + right.width &&
+      left.x + left.width > right.x &&
+      left.y < right.y + right.height &&
+      left.y + left.height > right.y;
+    const contained = movedBoxes.every(
+      (box) =>
+        box.x >= targetFrameBox.x &&
+        box.y >= targetFrameBox.y &&
+        box.x + box.width <= targetFrameBox.x + targetFrameBox.width &&
+        box.y + box.height <= targetFrameBox.y + targetFrameBox.height
+    );
+    const collisionFree = movedBoxes.every((box) => stationaryBoxes.every((stationary) => !overlaps(box, stationary)));
+    const ok = moved && relativePositionPreserved && contained && collisionFree;
+    return result(
+      "Drag the selected group",
+      ok,
+      ok
+        ? "The group moves in one transaction, preserves relative positions and fits without collisions."
+        : `Functional move passed, but geometry failed: contained=${contained}, collisionFree=${collisionFree}.`
+    );
+  }
+
+  if (step === "group-undo") {
+    await moveHistory("undo");
+    const restored = visualTestState.nodeIds.every((id) => nodeById()[id]?.frameId === visualTestState.sourceFrameId);
+    return result("Undo collective movement", restored, "One Cmd+Z-equivalent operation returns the complete group to its source frame.");
+  }
+
+  if (step === "group-redo") {
+    await moveHistory("redo");
+    const restored = visualTestState.nodeIds.every((id) => nodeById()[id]?.frameId === visualTestState.targetFrameId);
+    return result("Redo collective movement", restored, "One redo operation moves the complete group back to the destination frame.");
+  }
+
+  if (step === "multi-connect") {
+    const targetId = activeTree.nodes.find(
+      (node) =>
+        !visualTestState.nodeIds.includes(node.id) &&
+        !activeTree.links.some(
+          (link) => visualTestState.nodeIds.includes(link.sourceNodeId) && link.targetNodeId === node.id
+        )
+    )?.id;
+    const before = activeTree.links.length;
+    beginConnection();
+    await selectElement(targetId);
+    const created = activeTree.links.length - before;
+    return result("Connect the general selection", created === visualTestState.nodeIds.length, "L converts the selected nodes into link sources and creates one link per source.");
+  }
+
+  return result(`Unknown step: ${step}`, false, "The requested visual test step is not registered.");
 };

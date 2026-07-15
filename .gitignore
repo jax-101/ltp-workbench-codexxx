@@ -5,6 +5,7 @@ node_modules/
 
 # Build artifacts
 outputs/dist/
+outputs/test-evidence/
 
 # Local scratch/user workspace data
 work/

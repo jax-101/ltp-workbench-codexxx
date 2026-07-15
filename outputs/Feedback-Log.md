@@ -325,6 +325,8 @@ Validacion 3A.1: confirmado visualmente que una entidad puede quedar encima de u
 
 Validacion 3A.4: confirmado tambien el caso inverso: una entidad pertenece correctamente a `Goal Tree` y entra en su seleccion estructural, pero queda dibujada fuera del rectangulo. La pertenencia no debe alterarse por coordenadas; 3B ajustara la geometria del frame y su contenido.
 
+Prueba visual automatizada 3A.5: el arrastre colectivo mueve correctamente tres nodos y conserva sus distancias, pero los superpone con entidades existentes en el frame destino. El escenario queda marcado como fallo hasta que 3B pueda ampliar el frame o desplazar contenido sin colisiones.
+
 Criterios de aceptacion:
 
 - Cada entidad queda completamente dentro del frame al que pertenece directamente.

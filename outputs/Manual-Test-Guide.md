@@ -16,6 +16,16 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
+## Prueba visual automatizada
+
+La regresion visual puede ejecutarse sin intervencion manual:
+
+```bash
+npm run test:visual
+```
+
+El comando abre un workspace aislado, ejecuta seleccion, arrastre, Undo/Redo y conexion, y guarda nueve capturas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional o geometrica. En el build 3A.5 se espera un fallo conocido de F-036: el grupo movido puede colisionar con entidades existentes en el frame destino.
+
 ## Prueba 1: hint de dos letras
 
 1. Pulsa `N` cuatro veces para superar los 26 elementos seleccionables.

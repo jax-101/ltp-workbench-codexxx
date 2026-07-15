@@ -25,6 +25,7 @@ const prototypeDataPath = () => {
   let fileName = "prototype-workspace.json";
   if (process.env.LTP_MANUAL_TEST === "1") fileName = "manual-test-workspace-v2.json";
   if (process.env.LTP_SMOKE_TEST === "1") fileName = "smoke-test-workspace.json";
+  if (process.env.LTP_VISUAL_TEST === "1") fileName = "visual-test-workspace.json";
   return path.join(app.getPath("userData"), fileName);
 };
 const sampleDataPath = () => path.join(app.getAppPath(), "outputs", "sample-workspace-v0.1.json");
@@ -104,7 +105,7 @@ const fallbackWorkspace = () => ({
 const readJson = async (filePath) => JSON.parse(await fs.readFile(filePath, "utf8"));
 
 const loadWorkspace = async () => {
-  if (process.env.LTP_SMOKE_TEST === "1") {
+  if (process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1") {
     try {
       return await readJson(sampleDataPath());
     } catch {
@@ -162,7 +163,7 @@ const getWorkspaceEngine = async () => {
         ...initialWorkspace,
         revision: workspaceRevision(initialWorkspace)
       };
-      const persistedWorkspace = process.env.LTP_SMOKE_TEST === "1"
+      const persistedWorkspace = process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1"
         ? await repository.reset(normalizedWorkspace)
         : await repository.initialize(normalizedWorkspace);
       const migration = migrateWorkspace(persistedWorkspace);
@@ -422,6 +423,60 @@ const exportMarkdown = async (workspace) => {
   return { path: exportPath(), markdown: lines.join("\n") };
 };
 
+const runVisualTest = async (mainWindow) => {
+  const steps = [
+    "baseline",
+    "frame-summary",
+    "multi-open",
+    "multi-selected",
+    "multi-closed",
+    "group-moved",
+    "group-undo",
+    "group-redo",
+    "multi-connect"
+  ];
+  const evidenceDirectory = path.join(app.getAppPath(), "outputs", "test-evidence", buildInfo.id);
+  await fs.mkdir(evidenceDirectory, { recursive: true });
+  const results = [];
+
+  for (let index = 0; index < steps.length; index += 1) {
+    const step = steps[index];
+    const result = await mainWindow.webContents.executeJavaScript(
+      `window.__ltpVisualTestStep && window.__ltpVisualTestStep(${JSON.stringify(step)})`
+    );
+    await new Promise((resolve) => setTimeout(resolve, 180));
+    const image = await mainWindow.webContents.capturePage();
+    const fileName = `${String(index + 1).padStart(2, "0")}-${step}.png`;
+    await fs.writeFile(path.join(evidenceDirectory, fileName), image.toPNG());
+    results.push({ ...result, step, screenshot: fileName });
+  }
+
+  const report = {
+    build: buildInfo,
+    generatedAt: new Date().toISOString(),
+    ok: results.every((result) => result.ok),
+    results
+  };
+  const markdown = [
+    `# Visual test report - build ${buildInfo.id}`,
+    "",
+    `Result: ${report.ok ? "PASS" : "FAIL"}`,
+    "",
+    ...results.flatMap((result, index) => [
+      `## ${index + 1}. ${result.title}`,
+      "",
+      `- Result: ${result.ok ? "PASS" : "FAIL"}`,
+      `- Check: ${result.detail}`,
+      `- Screenshot: ${result.screenshot}`,
+      ""
+    ])
+  ].join("\n");
+  await fs.writeFile(path.join(evidenceDirectory, "report.json"), `${JSON.stringify(report, null, 2)}\n`);
+  await fs.writeFile(path.join(evidenceDirectory, "report.md"), markdown);
+  console.log(JSON.stringify({ ok: report.ok, evidenceDirectory, results }));
+  return report;
+};
+
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 1400,
@@ -449,6 +504,18 @@ const createWindow = () => {
         const result = await mainWindow.webContents.executeJavaScript("window.__ltpSmokeTest && window.__ltpSmokeTest()");
         console.log(JSON.stringify(result));
         app.exit(result?.ok ? 0 : 1);
+      } catch (error) {
+        console.error(error);
+        app.exit(1);
+      }
+    });
+  }
+
+  if (process.env.LTP_VISUAL_TEST === "1") {
+    mainWindow.webContents.once("did-finish-load", async () => {
+      try {
+        const result = await runVisualTest(mainWindow);
+        app.exit(result.ok ? 0 : 1);
       } catch (error) {
         console.error(error);
         app.exit(1);
