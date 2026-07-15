@@ -491,7 +491,7 @@ Criterios de aceptacion:
 
 Feedback: al alejar suficientemente el zoom, el rectangulo del viewport cambia de tamano, pero el resto del diagrama conserva el mismo tamano en el minimapa. Se espera que el diagrama se vea mas pequeno para representar que ocupa solo una parte de la pantalla real.
 
-Estado: pendiente para la iteracion 2.4, antes de integrar la serie 2.x. El dominio del minimapa debe abarcar tanto el contenido como la extension logica del viewport.
+Estado: implementado en la iteracion 2.4, pendiente de validacion manual. El dominio del minimapa abarca tanto el contenido como la extension logica del viewport y aplica una unica transformacion a todos sus elementos.
 
 Criterios de aceptacion:
 

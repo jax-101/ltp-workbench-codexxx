@@ -1266,29 +1266,35 @@ const breadcrumb = () => {
 
 const minimapMetrics = () => {
   const size = canvasSize();
+  const shell = app.querySelector(".canvas-shell");
   const maxWidth = 180;
   const maxHeight = 120;
-  const scale = Math.min(maxWidth / size.width, maxHeight / size.height);
+  const clientWidth = shell?.clientWidth || viewportSize.width;
+  const clientHeight = shell?.clientHeight || viewportSize.height;
+  const domain = {
+    x: 0,
+    y: 0,
+    width: Math.max(size.width, clientWidth / zoomLevel),
+    height: Math.max(size.height, clientHeight / zoomLevel)
+  };
+  const scale = Math.min(maxWidth / domain.width, maxHeight / domain.height);
   return {
     scale,
-    width: Math.max(1, Math.round(size.width * scale)),
-    height: Math.max(1, Math.round(size.height * scale))
+    domain,
+    width: Math.max(1, Math.round(domain.width * scale)),
+    height: Math.max(1, Math.round(domain.height * scale))
   };
 };
 
-const minimapViewportStyle = () => {
-  const metrics = minimapMetrics();
+const minimapViewportStyle = (metrics = minimapMetrics()) => {
   const shell = app.querySelector(".canvas-shell");
-  const scaledCanvas = canvasSize();
-  const scrollWidth = Math.max(1, shell?.scrollWidth || scaledCanvas.width * zoomLevel);
-  const scrollHeight = Math.max(1, shell?.scrollHeight || scaledCanvas.height * zoomLevel);
   const clientWidth = shell?.clientWidth || viewportSize.width;
   const clientHeight = shell?.clientHeight || viewportSize.height;
-  const width = clamp((clientWidth / scrollWidth) * metrics.width, 4, metrics.width);
-  const height = clamp((clientHeight / scrollHeight) * metrics.height, 4, metrics.height);
+  const width = clamp((clientWidth / zoomLevel) * metrics.scale, 4, metrics.width);
+  const height = clamp((clientHeight / zoomLevel) * metrics.scale, 4, metrics.height);
   return {
-    left: clamp((viewportState.left / scrollWidth) * metrics.width, 0, metrics.width - width),
-    top: clamp((viewportState.top / scrollHeight) * metrics.height, 0, metrics.height - height),
+    left: clamp((viewportState.left / zoomLevel - metrics.domain.x) * metrics.scale, 0, metrics.width - width),
+    top: clamp((viewportState.top / zoomLevel - metrics.domain.y) * metrics.scale, 0, metrics.height - height),
     width,
     height
   };
@@ -1304,36 +1310,59 @@ const updateMinimapViewport = () => {
   viewport.style.height = `${style.height}px`;
 };
 
-const renderMinimap = () => {
-  const metrics = minimapMetrics();
-  const viewport = minimapViewportStyle();
+const renderMinimapContents = (metrics) => {
+  const viewport = minimapViewportStyle(metrics);
+  const mapX = (value) => (value - metrics.domain.x) * metrics.scale;
+  const mapY = (value) => (value - metrics.domain.y) * metrics.scale;
   const linkLines = tree()
     .links.map((link) => {
       const source = centerOf(layoutNode(link.sourceNodeId));
       const target = centerOf(layoutNode(link.targetNodeId));
-      return `<line x1="${source.x * metrics.scale}" y1="${source.y * metrics.scale}" x2="${target.x * metrics.scale}" y2="${target.y * metrics.scale}" />`;
+      return `<line x1="${mapX(source.x)}" y1="${mapY(source.y)}" x2="${mapX(target.x)}" y2="${mapY(target.y)}" />`;
     })
     .join("");
   const frames = tree()
     .frames.map((frame) => {
       const box = layoutFrame(frame.id);
-      return `<div class="minimap-frame" style="left:${box.x * metrics.scale}px;top:${box.y * metrics.scale}px;width:${box.width * metrics.scale}px;height:${box.height * metrics.scale}px;"></div>`;
+      return `<div class="minimap-frame" style="left:${mapX(box.x)}px;top:${mapY(box.y)}px;width:${box.width * metrics.scale}px;height:${box.height * metrics.scale}px;"></div>`;
     })
     .join("");
   const nodes = tree()
     .nodes.map((node) => {
       const box = layoutNode(node.id);
-      return `<div class="minimap-node minimap-node-${node.type}" style="left:${box.x * metrics.scale}px;top:${box.y * metrics.scale}px;width:${Math.max(3, box.width * metrics.scale)}px;height:${Math.max(2, box.height * metrics.scale)}px;"></div>`;
+      return `<div class="minimap-node minimap-node-${node.type}" style="left:${mapX(box.x)}px;top:${mapY(box.y)}px;width:${Math.max(3, box.width * metrics.scale)}px;height:${Math.max(2, box.height * metrics.scale)}px;"></div>`;
     })
     .join("");
 
   return `
+    <svg viewBox="0 0 ${metrics.width} ${metrics.height}" width="${metrics.width}" height="${metrics.height}">${linkLines}</svg>
+    ${frames}
+    ${nodes}
+    <div class="minimap-viewport" style="left:${viewport.left}px;top:${viewport.top}px;width:${viewport.width}px;height:${viewport.height}px;"></div>
+  `;
+};
+
+const updateMinimapGeometry = () => {
+  const map = app.querySelector("[data-minimap-map]");
+  if (!map) return;
+  const metrics = minimapMetrics();
+  map.dataset.scale = metrics.scale;
+  map.dataset.originX = metrics.domain.x;
+  map.dataset.originY = metrics.domain.y;
+  map.dataset.domainWidth = metrics.domain.width;
+  map.dataset.domainHeight = metrics.domain.height;
+  map.style.width = `${metrics.width}px`;
+  map.style.height = `${metrics.height}px`;
+  map.innerHTML = renderMinimapContents(metrics);
+};
+
+const renderMinimap = () => {
+  const metrics = minimapMetrics();
+
+  return `
     <div class="minimap" aria-label="Diagram minimap">
-      <div class="minimap-map" data-minimap-map data-scale="${metrics.scale}" style="width:${metrics.width}px;height:${metrics.height}px;">
-        <svg viewBox="0 0 ${metrics.width} ${metrics.height}" width="${metrics.width}" height="${metrics.height}">${linkLines}</svg>
-        ${frames}
-        ${nodes}
-        <div class="minimap-viewport" style="left:${viewport.left}px;top:${viewport.top}px;width:${viewport.width}px;height:${viewport.height}px;"></div>
+      <div class="minimap-map" data-minimap-map data-scale="${metrics.scale}" data-origin-x="${metrics.domain.x}" data-origin-y="${metrics.domain.y}" data-domain-width="${metrics.domain.width}" data-domain-height="${metrics.domain.height}" style="width:${metrics.width}px;height:${metrics.height}px;">
+        ${renderMinimapContents(metrics)}
       </div>
     </div>
   `;
@@ -1743,7 +1772,7 @@ const render = () => {
   bindEvents();
   restoreViewport();
   captureViewport();
-  updateMinimapViewport();
+  updateMinimapGeometry();
 };
 
 const commitInspectorField = async (field) => {
@@ -1923,9 +1952,11 @@ const bindEvents = () => {
   const navigateFromMinimap = (event) => {
     const rect = minimap.getBoundingClientRect();
     const scale = Number(minimap.dataset.scale);
+    const originX = Number(minimap.dataset.originX || 0);
+    const originY = Number(minimap.dataset.originY || 0);
     const logicalPoint = {
-      x: (event.clientX - rect.left) / scale,
-      y: (event.clientY - rect.top) / scale
+      x: originX + (event.clientX - rect.left) / scale,
+      y: originY + (event.clientY - rect.top) / scale
     };
     const shell = app.querySelector(".canvas-shell");
     setViewportPosition(
@@ -2294,6 +2325,18 @@ window.__ltpSmokeTest = async () => {
     minimapViewportWidthBeforeZoom - minimapViewportWidthAfterZoom >= 12;
   hideHints();
 
+  setZoom(1, { persist: false });
+  const normalMinimapScale = Number(document.querySelector("[data-minimap-map]")?.dataset.scale || 0);
+  setZoom(0.35, { persist: false });
+  const farMinimap = document.querySelector("[data-minimap-map]");
+  const farMinimapScale = Number(farMinimap?.dataset.scale || 0);
+  const farDomainWidth = Number(farMinimap?.dataset.domainWidth || 0);
+  const farDomainHeight = Number(farMinimap?.dataset.domainHeight || 0);
+  const farCanvasSize = canvasSize();
+  const minimapContentScalesWhenZoomedOut =
+    (farDomainWidth > farCanvasSize.width || farDomainHeight > farCanvasSize.height) &&
+    farMinimapScale < normalMinimapScale;
+
   setZoom(1.25, { persist: false });
   const zoomWorks =
     zoomLevel === 1.25 && document.querySelector(".canvas-content")?.style.transform === "scale(1.25)";
@@ -2473,6 +2516,7 @@ window.__ltpSmokeTest = async () => {
       linkIndicatorsFollowHintMode &&
       minimapStaysAnchored &&
       minimapViewportScalesWithZoom &&
+      minimapContentScalesWhenZoomedOut &&
       zoomWorks &&
       keyboardPanWorks &&
       alternativeKeyboardPanWorks &&
@@ -2520,6 +2564,7 @@ window.__ltpSmokeTest = async () => {
     linkIndicatorsFollowHintMode,
     minimapStaysAnchored,
     minimapViewportScalesWithZoom,
+    minimapContentScalesWhenZoomedOut,
     zoomWorks,
     keyboardPanWorks,
     alternativeKeyboardPanWorks,

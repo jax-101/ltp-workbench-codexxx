@@ -129,7 +129,7 @@ Criterios de aceptacion:
 
 ## Iteracion 2.4: escala contextual del minimapa
 
-Estado: planificada como correccion corta antes de integrar la serie 2.x en `main`.
+Estado: implementada; pendiente de validacion manual.
 
 Incluye:
 

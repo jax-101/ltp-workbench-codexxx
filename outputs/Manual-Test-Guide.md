@@ -116,8 +116,10 @@ Resultado esperado: los paneles se pliegan y recuperan su estado. Editar abre te
 3. Haz click en otra zona del minimapa.
 4. Arrastra dentro del minimapa.
 5. Acerca y aleja varias veces observando tanto el minimapa como su rectangulo rojo.
+6. Aleja hasta el 35% y comprueba que el diagrama se hace mas pequeno dentro del minimapa, dejando visible la proporcion de espacio que lo rodea en el canvas.
+7. Repite con los paneles laterales abiertos y cerrados.
 
-Resultado esperado: el minimapa permanece fijo; el rectangulo se hace pequeno al acercar, grande al alejar y sigue la zona visible.
+Resultado esperado: el minimapa permanece fijo; el rectangulo se hace pequeno al acercar, grande al alejar y sigue la zona visible. Al alejar mas alla del contenido, el propio diagrama se reduce y mantiene la misma escala espacial que el rectangulo.
 
 ## Prueba 11: indicadores de link
 
