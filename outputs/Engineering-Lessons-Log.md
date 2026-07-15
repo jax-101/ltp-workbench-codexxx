@@ -302,9 +302,29 @@ Aprendizaje: cuando una operacion deriva elementos automaticamente, un total agr
 
 Aplicacion futura: mostrar por separado entradas explicitas y resultados derivados; usar etiquetas de dominio y comprobar que los recuentos ayudan a reconstruir la regla.
 
+### L-034: Una raiz estructural no debe representar tambien contenido de dominio
+
+Fecha: 2026-07-16
+
+Evidencia: usar el frame Goal Tree como root infinito funcionaba con un unico arbol, pero impedia colocar varios arboles con frames propios en el mismo espacio.
+
+Aprendizaje: una raiz tecnica define alcance y pertenencia; un contenedor de dominio tiene identidad, limites y comportamiento visibles. Fusionarlos crea restricciones ocultas al crecer el producto.
+
+Aplicacion futura: separar root, contenedores y contenido referenciado; probar pronto composicion de dos elementos hermanos aunque el MVP solo muestre uno.
+
+### L-035: Un keymap editable necesita semantica, no solo un archivo
+
+Fecha: 2026-07-16
+
+Evidencia: centralizar bindings en un archivo elimino hardcoding disperso, pero no resolvio colisiones, diferencias de plataforma ni conflictos entre canvas y campos de texto.
+
+Aprendizaje: configurabilidad segura requiere normalizacion, ambitos, validacion y una ruta de recuperacion; leer JSON es solo transporte.
+
+Aplicacion futura: validar overrides contra un registro de comandos, detectar colisiones por contexto y conservar defaults utilizables cuando la configuracion falla.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-034`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-036`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

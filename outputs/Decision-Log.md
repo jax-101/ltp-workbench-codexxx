@@ -350,3 +350,21 @@ Razon: mantiene separados ambos estados internos y, a la vez, respeta la expecta
 Decision: `Selected` cuenta las raices elegidas por el usuario e `Included` cuenta frames descendientes, entidades y links anadidos por las reglas de cierre. El segundo click sobre un frame seleccionado limpia la seleccion, pero no su contexto activo.
 
 Razon: un total unico parecia contar el frame dos veces conceptualmente y ocultaba por que aparecian mas elementos. Separar intencion y consecuencia hace el modelo verificable.
+
+### D-057: Root de canvas y frame de arbol son conceptos distintos
+
+Decision: el root conceptual pertenece al canvas compartido. Cada arbol se presenta mediante un frame anfitrion explicito, visible y finito que puede colocarse en el root o dentro de otro frame. Esta decision sustituye la parte de D-006 que trataba el frame principal del arbol como raiz total.
+
+Razon: sobrecargar el root impide componer varios arboles y mezcla limites de navegacion con limites semanticos. La separacion permite jerarquia espacial global sin fusionar los grafos logicos.
+
+### D-058: Los atajos usan defaults, overrides y validacion por ambito
+
+Decision: el mapa integrado define defaults; un archivo de usuario declara overrides. Un motor normaliza combinaciones por plataforma y detecta colisiones dentro de ambitos como global, canvas, editor y modal.
+
+Razon: un archivo editable sin validacion puede dejar comandos inaccesibles o capturar texto. Los ambitos permiten reutilizar combinaciones cuando los contextos son mutuamente excluyentes.
+
+### D-059: El frame muestra un inventario semantico
+
+Decision: al seleccionar un frame, la interfaz muestra entidades agrupadas por los tipos declarados por el diagrama, junto con subframes y links internos. El propio frame no forma parte del inventario.
+
+Razon: `Selected` e `Included` describen el mecanismo de seleccion, pero no ayudan a comprender el contenido del frame.

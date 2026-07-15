@@ -143,7 +143,7 @@ Estado: implementado en la iteracion 1, con validacion inicial positiva el 2026-
 
 Feedback: en vez de hardcodear combinaciones de teclas, conviene plantear un archivo de configuracion donde modificarlas.
 
-Estado: base implementada en la iteracion 1, pendiente de evolucion. Los comandos leen sus atajos desde `src/renderer/command-config.js`; la personalizacion desde la interfaz queda para una iteracion posterior.
+Estado: base implementada en la iteracion 1, pendiente de evolucion. Los comandos y etiquetas leen sus atajos desde `src/renderer/command-config.js`, y el panel Keyboard se genera desde esa misma fuente. Falta un archivo de usuario, normalizacion por plataforma, ambitos de comando, deteccion de colisiones y recuperacion ante configuracion invalida. Se completara al inicio de 3C antes de anadir mas operaciones colectivas.
 
 ### F-020: Zoom y desplazamiento solo con teclado
 
@@ -593,3 +593,32 @@ Criterios de aceptacion:
 - Los links se incluyen cuando ambos extremos quedan seleccionados, no por cruzar el rectangulo.
 - `Shift` o `Cmd` anaden al conjunto existente y el gesto simple lo sustituye.
 - El gesto no desplaza nodos ni navega el minimapa accidentalmente.
+
+### F-055: Root global y frame explicito por arbol
+
+Feedback: el root debe ser un frame global, ilimitado y permanente. Cada arbol debe tener ademas un frame explicito propio, de forma que varios arboles puedan colocarse en el root o dentro de otro frame.
+
+Estado: aceptado como correccion arquitectonica previa a 3B. El modelo actual usa el root del arbol como root infinito y no distingue un canvas compartido.
+
+Criterios de aceptacion:
+
+- El canvas tiene exactamente un root conceptual sin geometria finita.
+- Cada arbol tiene un frame anfitrion explicito, visible y finito.
+- Un frame anfitrion referencia el arbol que contiene.
+- Varios arboles pueden ser hermanos o estar anidados dentro de otro frame no root.
+- El selector de frame conserva el root y todos los frames explicitos como destinos validos.
+- La pertenencia de nodos y links al arbol no se confunde con la jerarquia espacial del canvas.
+
+### F-056: Resumen por categorias del frame seleccionado
+
+Feedback: en lugar de contadores genericos `Selected` e `Included`, al seleccionar un frame conviene mostrar un resumen de su contenido por categoria o tipo.
+
+Estado: planificado para 3A.4 junto con el frame explicito de cada arbol.
+
+Criterios de aceptacion:
+
+- El resumen excluye el propio frame seleccionado.
+- Muestra frames descendientes, links internos y entidades agrupadas por tipo declarativo.
+- Goal Tree muestra al menos Goal, CSF, NC y Assumption.
+- Las categorias con cero elementos pueden omitirse o mostrarse de forma secundaria.
+- Los recuentos proceden del mismo cierre de seleccion usado por las operaciones colectivas.

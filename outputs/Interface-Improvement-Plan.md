@@ -184,6 +184,25 @@ Criterios de aceptacion:
 - El frame raiz no impone limites visuales al canvas.
 - Goal Tree obtiene sus tipos y orden desde una definicion central.
 
+Antes de 3B se completa la siguiente correccion de modelo.
+
+## Iteracion 3A.4: canvas compuesto y resumen estructural
+
+Incluye:
+
+- F-055: root global ilimitado y frame anfitrion explicito por arbol.
+- F-056: resumen del frame por categorias y tipos.
+- Migracion compatible del ejemplo y del workspace manual.
+- Conservacion del selector de frame como control del contexto de creacion.
+
+Criterios de aceptacion:
+
+- Root global, frame de arbol y frames internos tienen identidades y responsabilidades distintas.
+- El Goal Tree actual aparece dentro de un frame finito propio.
+- La jerarquia admite varios frames de arbol sin duplicar el root conceptual.
+- Seleccionar el frame del arbol muestra el resumen de Goal, CSF, NC, Assumption, subframes y links internos.
+- Los datos actuales migran sin perder nodos, links, posiciones ni frame activo.
+
 ## Iteracion 3B: geometria de frames e insercion incremental
 
 Incluye:
@@ -215,6 +234,7 @@ Incluye:
 - F-040: copia y pegado de subgrafos con `Ctrl+C` y `Ctrl+V`.
 - F-042: ciclo de tipos con `Shift+Tab`.
 - F-054: seleccion por rectangulo con el raton.
+- F-019: archivo de atajos editable, ambitos y deteccion de colisiones.
 
 Criterios de aceptacion:
 
@@ -223,6 +243,7 @@ Criterios de aceptacion:
 - Borrar presenta un impacto agregado y mantiene protegido el frame raiz.
 - Cambiar tipos respeta la definicion y restricciones del diagrama.
 - Ningun atajo interfiere con la edicion de texto.
+- Una configuracion invalida informa de colisiones y conserva un keymap recuperable.
 
 ## Iteracion 3D: frames jerarquicos
 

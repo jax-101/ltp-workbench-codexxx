@@ -424,7 +424,45 @@ La exportacion Markdown de Goal Tree debe incluir:
 - assumptions relevantes;
 - fecha de exportacion.
 
-## 18. Pendiente para validacion tecnica
+## 18. Enmienda: canvas compuesto
+
+El modelo inicial sobrecargo `Tree.rootFrameId` con dos responsabilidades: raiz espacial ilimitada y frame principal visible del arbol. La iteracion 3A.4 los separa.
+
+### 18.1 Canvas
+
+Un canvas pertenece al workspace y puede presentar varios diagramas o arboles.
+
+Campos previstos:
+
+- `id`.
+- `systemId`.
+- `rootFrameId`: frame conceptual unico, sin limites finitos.
+- `frames`: jerarquia espacial compartida.
+- `layout`.
+- `viewState`.
+
+### 18.2 Frame anfitrion de diagrama
+
+Cada Tree conserva su identidad semantica y referencia un frame anfitrion mediante `hostFrameId`. Ese frame:
+
+- es visible y finito;
+- tiene `kind: diagram`;
+- referencia `diagramId` o `treeId`;
+- puede ser hijo del root o de otro frame;
+- contiene los frames internos y entidades visibles del arbol.
+
+Los frames genericos usan `kind: container`. El root usa `kind: root` y no participa en calculos de contencion finita.
+
+### 18.3 Separacion de responsabilidades
+
+- El canvas posee la jerarquia espacial.
+- Tree posee nodos, links, assumptions y reglas del tipo de diagrama.
+- El frame anfitrion coloca el Tree dentro del canvas.
+- `activeFrameId` indica donde crear o pegar, sin sustituir al arbol activo.
+
+Esta separacion permite varios arboles en un canvas sin mezclar sus grafos logicos y prepara foco, minimizacion y composicion futura.
+
+## 19. Pendiente para validacion tecnica
 
 - Comprobar si ELK.js representa frames anidados como compound nodes con suficiente calidad.
 - Comprobar si hints sobre links son legibles cuando hay muchas conexiones.
