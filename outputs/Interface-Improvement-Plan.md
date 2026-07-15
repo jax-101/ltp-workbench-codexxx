@@ -144,7 +144,7 @@ Criterios de aceptacion:
 
 ## Iteracion 3.0: nucleo transaccional y acceso headless
 
-Estado: infraestructura inicial implementada; pendiente de validacion manual de Undo/Redo.
+Estado: infraestructura inicial implementada y validada por el usuario el 2026-07-15.
 
 Incluye:
 
@@ -192,6 +192,7 @@ Incluye:
 - F-038: insercion direccional sin alterar la forma existente.
 - F-043: rutas de links con minimizacion de cruces y evitacion de obstaculos.
 - F-047: indicacion de direccion pendiente de aplicar.
+- F-052: transiciones animadas al deshacer y rehacer operaciones espaciales.
 - Completar F-035 con garantias espaciales al mover entidades entre frames.
 - Layout compuesto por frames y soporte de frames anidados.
 
@@ -204,6 +205,7 @@ Criterios de aceptacion:
 - Los tests verifican contencion, exclusion y preservacion de distancias relativas.
 - Las rutas no atraviesan entidades y minimizan cruces dentro de las restricciones del diagrama.
 - Cambiar la direccion deja claro que Layout debe ejecutarse y limpia el estado al completarse.
+- Undo/Redo de Layout y otras operaciones espaciales reutiliza la animacion sin crear nuevas entradas de historial.
 
 ## Iteracion 3C: operaciones sobre selecciones
 

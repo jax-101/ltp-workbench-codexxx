@@ -104,11 +104,13 @@ Aplicacion futura: guardar el estado previo al entrar en un flujo modal o asisti
 
 ### L-011: La animacion funcional explica causalidad
 
-Evidencia: la transicion de Layout se considero necesaria para entender como se recolocaban nodos, frames y flechas.
+Revision: 2026-07-15.
+
+Evidencia: la transicion de Layout se considero necesaria para entender como se recolocaban nodos, frames y flechas. La validacion de Undo/Redo mostro que la misma continuidad se espera al recorrer el cambio en sentido inverso o volver a aplicarlo.
 
 Aprendizaje: animar no es solo decorar. En operaciones espaciales, la continuidad visual permite relacionar estado anterior y posterior.
 
-Aplicacion futura: animar la transformacion completa, incluidas dependencias como links; respetar `prefers-reduced-motion`; mantener un resultado final determinista.
+Aplicacion futura: animar la transformacion completa, incluidas dependencias como links, tanto al ejecutar como al recorrer el historial; etiquetar transacciones espaciales explicitamente; respetar `prefers-reduced-motion`; mantener un resultado final determinista.
 
 ### L-012: Separar insercion incremental y reorganizacion global
 

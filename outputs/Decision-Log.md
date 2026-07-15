@@ -296,3 +296,9 @@ Razon: una UI y un agente pueden operar en procesos diferentes. Las revisiones e
 Decision: zoom, pan, paneles, hints y seleccion se persisten fuera de la pila de Undo/Redo. Al aplicar parches historicos se conserva el `ViewState` actual.
 
 Razon: deshacer una edicion no debe transportar al usuario a otra zona del canvas ni cambiar la disposicion de trabajo elegida.
+
+### D-048: Las transacciones declaran si su efecto es espacial
+
+Decision: las entradas de historial incluyen metadatos de categoria. Undo/Redo reutiliza la transicion de Layout cuando la categoria es espacial, sin registrar la animacion como una nueva transaccion.
+
+Razon: deducir el comportamiento visual desde una etiqueta como `Apply layout` es fragil y no escala a mover frames, pegar subgrafos u otras operaciones geometricas.

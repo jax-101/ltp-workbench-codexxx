@@ -520,7 +520,7 @@ Criterios de aceptacion:
 
 Feedback: la herramienta debe contemplar opciones de deshacer y rehacer como capacidad transversal.
 
-Estado: infraestructura inicial implementada en la iteracion 3.0, pendiente de validacion manual. Las operaciones existentes quedan cubiertas mediante transacciones compatibles y la edicion de nodos ya usa un comando granular.
+Estado: infraestructura inicial implementada en la iteracion 3.0 y validada por el usuario el 2026-07-15. Las operaciones existentes quedan cubiertas mediante transacciones compatibles y la edicion de nodos ya usa un comando granular.
 
 Criterios de aceptacion:
 
@@ -536,7 +536,7 @@ Criterios de aceptacion:
 
 Feedback: en una fase posterior se debe poder consultar y modificar arboles desde terminal, con garantias suficientes para que agentes de IA trabajen sin interfaz grafica.
 
-Estado: arquitectura base implementada en la iteracion 3.0. Existe una CLI inicial para validar, listar arboles, actualizar nodos y aplicar comandos JSON con `--dry-run`. La cobertura completa de comandos, permisos, auditoria duradera y MCP queda planificada para fases posteriores.
+Estado: arquitectura base implementada en la iteracion 3.0 y aceptada junto con esa iteracion el 2026-07-15. Existe una CLI inicial para validar, listar arboles, actualizar nodos y aplicar comandos JSON con `--dry-run`. La cobertura completa de comandos, permisos, auditoria duradera y MCP queda planificada para fases posteriores.
 
 Criterios de aceptacion:
 
@@ -547,3 +547,18 @@ Criterios de aceptacion:
 - Los errores y consultas tienen una representacion JSON estable.
 - Un agente puede previsualizar el resultado y las invariantes sin modificar archivos.
 - Ningun adaptador necesita modificar directamente el JSON para ejecutar operaciones soportadas.
+
+### F-052: Animar Undo/Redo de operaciones espaciales
+
+Feedback: al deshacer o rehacer un Layout se debe poder ver tambien la transicion de vuelta o hacia delante, en lugar de saltar instantaneamente entre geometrias.
+
+Estado: pendiente para la iteracion 3B, donde se consolidaran las operaciones espaciales y la geometria compuesta.
+
+Criterios de aceptacion:
+
+- Deshacer Layout interpola desde la geometria actual hasta la anterior.
+- Rehacer Layout reproduce la transicion hacia la geometria restaurada.
+- Nodos, frames, links y puntas de flecha permanecen sincronizados durante el movimiento.
+- La animacion no crea una nueva entrada en Undo/Redo.
+- Las transacciones declaran su categoria espacial; el renderer no la deduce del texto de la etiqueta.
+- `prefers-reduced-motion` mantiene un cambio inmediato y correcto.
