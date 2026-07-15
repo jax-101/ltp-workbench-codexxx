@@ -412,6 +412,20 @@ const selectElement = async (id, options = {}) => {
     return;
   }
 
+  if (
+    nextType === "frame" &&
+    !options.additive &&
+    selectionRootIds.size === 1 &&
+    selectionRootIds.has(id)
+  ) {
+    activeFrameId = id;
+    replaceSelection(null);
+    hintsVisible = false;
+    setStatus(`Selection cleared; creation frame remains ${frameById()[id].name}`);
+    render();
+    return;
+  }
+
   if (nextType === "frame") activeFrameId = id;
   if (options.additive) toggleSelectionRoot(id);
   else replaceSelection(id);
@@ -1244,14 +1258,17 @@ const renderSidebar = () => {
           <dd>${escapeHtml(activeTree?.logicMode)}</dd>
           <dt>Active frame</dt>
           <dd>
-            <select class="frame-context-select" data-active-frame aria-label="Creation frame">
-              ${activeTree.frames
-                .map(
-                  (frame) =>
-                    `<option value="${frame.id}" ${frame.id === activeFrameId ? "selected" : ""}>${escapeHtml(frame.name)}${frame.id === activeTree.rootFrameId ? " (root)" : ""}</option>`
-                )
-                .join("")}
-            </select>
+            <div class="frame-context-row">
+              <select class="frame-context-select" data-active-frame aria-label="Creation frame">
+                ${activeTree.frames
+                  .map(
+                    (frame) =>
+                      `<option value="${frame.id}" ${frame.id === activeFrameId ? "selected" : ""}>${escapeHtml(frame.name)}${frame.id === activeTree.rootFrameId ? " (root)" : ""}</option>`
+                  )
+                  .join("")}
+              </select>
+              <button class="frame-root-action" data-action="activate-root-frame" title="Use root as creation frame">Root</button>
+            </div>
           </dd>
         </dl>
       </section>
@@ -1827,10 +1844,10 @@ const renderCanvas = () => {
       <div class="canvas-shell">
         <div class="canvas-status">
           <span>Mode: <strong>${escapeHtml(mode)}</strong></span>
-          <span>Selected: <strong>${escapeHtml(selectedElementId || "none")}</strong></span>
-          <span>Selection: <strong>${selectionIds.size}</strong></span>
+          <span>Selected: <strong>${selectionRootIds.size}</strong></span>
+          <span>Included: <strong>${Math.max(0, selectionIds.size - selectionRootIds.size)}</strong></span>
           <span>Sources: <strong>${connectionSourceIds.size}</strong></span>
-          <span>Frame: <strong>${escapeHtml(frameById()[activeFrameId]?.name || "none")}</strong></span>
+          <span>Frame: <strong>${escapeHtml(frameById()[activeFrameId]?.name || "none")}${activeFrameId === tree().rootFrameId ? " (root)" : ""}</strong></span>
           <span>Zoom: <strong>${Math.round(zoomLevel * 100)}%</strong></span>
           <span data-status>${escapeHtml(statusText)}</span>
         </div>
@@ -2124,6 +2141,7 @@ const bindEvents = () => {
       if (action === "fit-view") fitView();
       if (action === "toggle-left-panel") togglePanel("left");
       if (action === "toggle-right-panel") togglePanel("right");
+      if (action === "activate-root-frame") setActiveFrame(tree().rootFrameId);
       if (action === "delete-selection") requestDeleteSelection();
       if (action === "cancel-delete") cancelContext();
       if (action === "confirm-delete") confirmDeletion();
@@ -2389,13 +2407,19 @@ window.__ltpSmokeTest = async () => {
     )
     .every((link) => !selectionIds.has(link.id));
   connectionSourceIds.add(activeTree.nodes[0].id);
-  await selectElement(selectedTestFrame.id);
   const connectionSourcesStayIndependent =
     connectionSourceIds.has(activeTree.nodes[0].id) && selectionIds.has(selectedTestFrame.id);
+  await selectElement(selectedTestFrame.id);
+  const selectedFrameTogglesOff =
+    selectionIds.size === 0 && selectionRootIds.size === 0 && activeFrameId === selectedTestFrame.id;
   connectionSourceIds.clear();
   const frameContextControlAvailable =
     document.querySelectorAll("[data-active-frame] option").length === activeTree.frames.length &&
-    document.querySelector(`[data-active-frame] option[value="${activeTree.rootFrameId}"]`)?.textContent.includes("root");
+    document.querySelector(`[data-active-frame] option[value="${activeTree.rootFrameId}"]`)?.textContent.includes("root") &&
+    Boolean(document.querySelector("[data-action='activate-root-frame']"));
+  const selectionCountersAreSeparated =
+    [...document.querySelectorAll(".canvas-status span")].some((item) => item.textContent.includes("Selected: 0")) &&
+    [...document.querySelectorAll(".canvas-status span")].some((item) => item.textContent.includes("Included: 0"));
   replaceSelection(activeTree.nodes[0].id);
   toggleSelectionRoot(activeTree.nodes[1].id);
   beginConnection();
@@ -2785,7 +2809,9 @@ window.__ltpSmokeTest = async () => {
       frameSelectionIsDistinct &&
       externalLinksStayOutsideFrameSelection &&
       connectionSourcesStayIndependent &&
+      selectedFrameTogglesOff &&
       frameContextControlAvailable &&
+      selectionCountersAreSeparated &&
       generalSelectionSeedsConnection &&
       twoLetterHintWorks &&
       keyboardHintsToggle &&
@@ -2845,7 +2871,9 @@ window.__ltpSmokeTest = async () => {
     frameSelectionIsDistinct,
     externalLinksStayOutsideFrameSelection,
     connectionSourcesStayIndependent,
+    selectedFrameTogglesOff,
     frameContextControlAvailable,
+    selectionCountersAreSeparated,
     generalSelectionSeedsConnection,
     twoLetterHintWorks,
     keyboardHintsToggle,

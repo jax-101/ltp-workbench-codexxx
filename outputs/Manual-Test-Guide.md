@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.2`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.3`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -216,7 +216,10 @@ Comprueba que siguen funcionando:
 5. Selecciona dos nodos con `Shift` o `Cmd`, pulsa `L` y elige un tercer nodo como destino.
 6. En `Tree > Active frame`, elige un frame hijo, selecciona uno de sus nodos y pulsa `N`.
 7. Elige despues `Goal Tree (root)` en el mismo selector y pulsa `N` de nuevo.
-8. Observa el canvas y el minimapa.
+8. Pulsa tambien el boton `Root` y comprueba que el estado del canvas muestra `Goal Tree (root)`.
+9. Selecciona un frame dos veces y comprueba que el segundo click limpia la seleccion, pero conserva ese frame como contexto de creacion.
+10. Observa que `Selected` cuenta solo elecciones explicitas e `Included` solo el contenido derivado.
+11. Observa el canvas y el minimapa.
 
 Resultado esperado: la seleccion estructural es determinista, `L` usa los nodos seleccionados como origenes, `N` crea siempre en el frame indicado sobre el canvas y el frame raiz no aparece como un rectangulo artificial.
 

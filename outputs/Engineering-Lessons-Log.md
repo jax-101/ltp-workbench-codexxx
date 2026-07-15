@@ -292,9 +292,19 @@ Aprendizaje: dos estados pueden conservar contratos distintos y aun ofrecer una 
 
 Aplicacion futura: mantener modelos internos separados, definir conversiones unidireccionales en comandos concretos y evitar sincronizaciones implicitas permanentes.
 
+### L-033: Los contadores deben explicar la procedencia del estado
+
+Fecha: 2026-07-16
+
+Evidencia: mostrar un unico total para un frame y todo su cierre hizo parecer que el frame se contaba incorrectamente a si mismo.
+
+Aprendizaje: cuando una operacion deriva elementos automaticamente, un total agregado oculta la diferencia entre intencion del usuario y efecto calculado.
+
+Aplicacion futura: mostrar por separado entradas explicitas y resultados derivados; usar etiquetas de dominio y comprobar que los recuentos ayudan a reconstruir la regla.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-033`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-034`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

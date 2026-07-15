@@ -335,7 +335,7 @@ Criterios de aceptacion:
 
 Feedback: siempre debe existir un frame base infinito. Crear una entidad con `N` requiere un frame de contexto seleccionado.
 
-Estado: refinado en el build 3A.2 y pendiente de nueva validacion manual. El frame raiz sigue existiendo en el modelo, pero no se dibuja ni entra en los limites del canvas o minimapa. Un selector en el panel izquierdo permite activar explicitamente cualquier frame, incluido el raiz, y el canvas muestra siempre el contexto usado por `N`.
+Estado: refinado en el build 3A.3 y pendiente de nueva validacion manual. El frame raiz sigue existiendo en el modelo, pero no se dibuja ni entra en los limites del canvas o minimapa. Un selector y un boton `Root` permiten activarlo explicitamente; el canvas muestra siempre el contexto usado por `N`.
 
 Criterios de aceptacion:
 
@@ -395,7 +395,7 @@ Criterios de aceptacion:
 
 Feedback: al seleccionar un frame deben quedar seleccionados tambien todos sus elementos y links internos.
 
-Estado: implementado en la iteracion 3A y pendiente de validacion final. La seleccion general admite nodos, links y frames; seleccionar un frame calcula en el nucleo sus descendientes, entidades y links internos. El build 3A.2 muestra ademas el recuento de nodos y links internos para distinguir un cierre correcto de un frame que no contiene conexiones internas.
+Estado: implementado en la iteracion 3A y pendiente de validacion final. La seleccion general admite nodos, links y frames; seleccionar un frame calcula en el nucleo sus descendientes, entidades y links internos. El build 3A.3 separa los contadores `Selected` e `Included` y un segundo click sobre el frame limpia la seleccion sin cambiar el frame activo.
 
 Criterios de aceptacion:
 
@@ -579,3 +579,17 @@ Criterios de aceptacion:
 - Version e identificador proceden de metadatos centrales del paquete.
 - La prueba smoke verifica el mismo texto que ve el usuario.
 - Cada entrega manual incrementa el identificador de build.
+
+### F-054: Seleccion por rectangulo
+
+Feedback: debe poder dibujarse un rectangulo con el raton para seleccionar todos los elementos que caigan dentro.
+
+Estado: pendiente para la iteracion 3C, junto con las operaciones colectivas sobre la seleccion.
+
+Criterios de aceptacion:
+
+- Arrastrar desde una zona vacia muestra un rectangulo de seleccion estable.
+- Los nodos y frames contenidos o intersectados siguen una regla visual unica y predecible.
+- Los links se incluyen cuando ambos extremos quedan seleccionados, no por cruzar el rectangulo.
+- `Shift` o `Cmd` anaden al conjunto existente y el gesto simple lo sustituye.
+- El gesto no desplaza nodos ni navega el minimapa accidentalmente.

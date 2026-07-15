@@ -214,6 +214,7 @@ Incluye:
 - F-039: borrado atomico con `Ctrl+D`.
 - F-040: copia y pegado de subgrafos con `Ctrl+C` y `Ctrl+V`.
 - F-042: ciclo de tipos con `Shift+Tab`.
+- F-054: seleccion por rectangulo con el raton.
 
 Criterios de aceptacion:
 

@@ -344,3 +344,9 @@ Razon: seleccionar un nodo no debe cambiar silenciosamente el destino de `N`, pe
 Decision: al pulsar `L`, los nodos elegidos explicitamente en la seleccion general se copian al conjunto separado de origenes. Seleccionar un frame no transfiere automaticamente todos sus descendientes.
 
 Razon: mantiene separados ambos estados internos y, a la vez, respeta la expectativa de conectar directamente una seleccion multiple de nodos.
+
+### D-056: La interfaz distingue seleccion explicita y cierre derivado
+
+Decision: `Selected` cuenta las raices elegidas por el usuario e `Included` cuenta frames descendientes, entidades y links anadidos por las reglas de cierre. El segundo click sobre un frame seleccionado limpia la seleccion, pero no su contexto activo.
+
+Razon: un total unico parecia contar el frame dos veces conceptualmente y ocultaba por que aparecian mas elementos. Separar intencion y consecuencia hace el modelo verificable.

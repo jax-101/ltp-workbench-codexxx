@@ -2,7 +2,7 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3A.2",
+    "id": "3A.3",
     "name": "Selection Context",
     "channel": "prototype"
   },
