@@ -76,19 +76,19 @@ Estado: implementado en la iteracion 1, con validacion inicial positiva el 2026-
 
 Feedback: se echa de menos una vista de minimapa para orientarse y navegar diagramas grandes.
 
-Estado: pendiente. Considerar minimap fijo en una esquina con viewport visible y navegacion por click/drag.
+Estado: implementado en la iteracion 2, pendiente de validacion de uso. El minimapa muestra frames, nodos, links y viewport, y permite navegar mediante click o arrastre.
 
 ### F-013: Paneles laterales plegables
 
 Feedback: los laterales izquierdo y derecho deberian poder ocultarse y desplegarse mediante boton o combinacion de teclado.
 
-Estado: pendiente. Definir estados de panel, atajos y persistencia de preferencia.
+Estado: implementado en la iteracion 2, pendiente de validacion de uso. Ambos paneles disponen de control visible, atajos y estado persistente.
 
 ### F-014: Borrado de links y entidades
 
 Feedback: no se pueden borrar links una vez creados ni entidades del diagrama.
 
-Estado: pendiente. Implementar borrado seguro con confirmacion o undo, incluyendo limpieza de relaciones, assumptions y layouts.
+Estado: implementado en la iteracion 2, pendiente de validacion de uso. El borrado exige confirmacion, protege el frame raiz y limpia en cascada relaciones, assumptions, jerarquias y layout.
 
 ### F-015: Frames colapsables con preservacion de conexiones
 
@@ -124,7 +124,7 @@ Estado: base implementada en la iteracion 1, pendiente de evolucion. Los comando
 
 Feedback: se echa de menos zoom y la posibilidad de desplazar la ventana/canvas usando solo el teclado.
 
-Estado: pendiente. Definir comandos de zoom, pan incremental, centrar seleccion y reset de vista.
+Estado: implementado en la iteracion 2, pendiente de validacion de uso. Se incluyen zoom, reset, ajuste completo, centrado de seleccion y pan incremental mediante teclado.
 
 ### F-021: Animacion del auto-layout
 

@@ -53,6 +53,8 @@ Criterios de aceptacion:
 
 ## Iteracion 2: edicion y navegacion
 
+Estado: implementada; pendiente de validacion manual.
+
 Incluye:
 
 - F-014: borrado seguro de links, entidades y frames.

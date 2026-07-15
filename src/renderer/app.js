@@ -13,6 +13,11 @@ let searchText = "";
 let statusText = "Loading prototype...";
 let previewNodeId = null;
 let viewportState = { left: 0, top: 0 };
+let viewportSize = { width: 720, height: 560 };
+let zoomLevel = 1;
+let panelState = { leftOpen: true, rightOpen: true };
+let deleteCandidateId = null;
+let viewPersistTimer = null;
 
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -88,6 +93,7 @@ const captureViewport = () => {
   const shell = app.querySelector(".canvas-shell");
   if (!shell) return;
   viewportState = { left: shell.scrollLeft, top: shell.scrollTop };
+  viewportSize = { width: shell.clientWidth, height: shell.clientHeight };
 };
 
 const updateViewState = () => {
@@ -98,8 +104,18 @@ const updateViewState = () => {
     activeFrameId,
     selectedElementId,
     mode,
-    pan: { x: viewportState.left, y: viewportState.top }
+    zoom: zoomLevel,
+    pan: { x: viewportState.left, y: viewportState.top },
+    panels: { ...panelState }
   };
+};
+
+const scheduleViewStatePersist = () => {
+  window.clearTimeout(viewPersistTimer);
+  viewPersistTimer = window.setTimeout(async () => {
+    updateViewState();
+    await window.ltpPrototype.saveWorkspace(workspaceData);
+  }, 300);
 };
 
 const restoreViewport = () => {
@@ -107,6 +123,76 @@ const restoreViewport = () => {
   if (!shell) return;
   shell.scrollLeft = viewportState.left;
   shell.scrollTop = viewportState.top;
+};
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+const setViewportPosition = (left, top, options = {}) => {
+  const shell = app.querySelector(".canvas-shell");
+  if (!shell) return;
+  shell.scrollLeft = clamp(left, 0, Math.max(0, shell.scrollWidth - shell.clientWidth));
+  shell.scrollTop = clamp(top, 0, Math.max(0, shell.scrollHeight - shell.clientHeight));
+  viewportState = { left: shell.scrollLeft, top: shell.scrollTop };
+  updateViewState();
+  updateMinimapViewport();
+  if (options.persist !== false) scheduleViewStatePersist();
+};
+
+const panViewport = (dx, dy) => {
+  captureViewport();
+  setViewportPosition(viewportState.left + dx, viewportState.top + dy);
+};
+
+const setZoom = (nextZoom, options = {}) => {
+  const shell = app.querySelector(".canvas-shell");
+  if (!shell) return;
+  captureViewport();
+  const logicalCenter = {
+    x: (viewportState.left + shell.clientWidth / 2) / zoomLevel,
+    y: (viewportState.top + shell.clientHeight / 2) / zoomLevel
+  };
+  zoomLevel = clamp(Math.round(nextZoom * 100) / 100, 0.35, 2.5);
+  render();
+  const nextShell = app.querySelector(".canvas-shell");
+  const left = logicalCenter.x * zoomLevel - nextShell.clientWidth / 2;
+  const top = logicalCenter.y * zoomLevel - nextShell.clientHeight / 2;
+  setViewportPosition(left, top, { persist: options.persist });
+  setStatus(`Zoom ${Math.round(zoomLevel * 100)}%`);
+};
+
+const resetZoom = () => setZoom(1);
+
+const fitView = () => {
+  const shell = app.querySelector(".canvas-shell");
+  if (!shell) return;
+  const size = canvasSize();
+  const fit = Math.min((shell.clientWidth - 40) / size.width, (shell.clientHeight - 64) / size.height, 1);
+  zoomLevel = clamp(Math.round(fit * 100) / 100, 0.35, 1);
+  viewportState = { left: 0, top: 0 };
+  render();
+  setViewportPosition(0, 0);
+  setStatus(`Diagram fitted at ${Math.round(zoomLevel * 100)}%`);
+};
+
+const centerSelection = () => {
+  let point = null;
+  if (selectedElementType === "node") point = centerOf(layoutNode(selectedElementId));
+  if (selectedElementType === "frame") point = centerOf(layoutFrame(selectedElementId));
+  if (selectedElementType === "link") point = layoutLink(selectedElementId).labelPosition;
+  if (!point) {
+    setStatus("Select an element to center it");
+    return;
+  }
+  const shell = app.querySelector(".canvas-shell");
+  setViewportPosition(point.x * zoomLevel - shell.clientWidth / 2, point.y * zoomLevel - shell.clientHeight / 2);
+  setStatus("Selection centered");
+};
+
+const togglePanel = (side) => {
+  if (side === "left") panelState.leftOpen = !panelState.leftOpen;
+  if (side === "right") panelState.rightOpen = !panelState.rightOpen;
+  render();
+  scheduleViewStatePersist();
 };
 
 const focusCanvas = () => {
@@ -315,10 +401,10 @@ const viewportNodePosition = (frame, width = 250, height = 72) => {
   captureViewport();
   const shell = app.querySelector(".canvas-shell");
   const viewport = {
-    left: viewportState.left,
-    top: viewportState.top,
-    right: viewportState.left + (shell?.clientWidth || 720),
-    bottom: viewportState.top + (shell?.clientHeight || 560)
+    left: viewportState.left / zoomLevel,
+    top: viewportState.top / zoomLevel,
+    right: (viewportState.left + (shell?.clientWidth || 720)) / zoomLevel,
+    bottom: (viewportState.top + (shell?.clientHeight || 560)) / zoomLevel
   };
   const frameBox = layoutFrame(frame.id);
   const frameInner = {
@@ -683,11 +769,19 @@ const toggleMultiSelect = () => {
 };
 
 const renderSidebar = () => {
+  if (!panelState.leftOpen) {
+    return `
+      <aside class="side-panel panel-collapsed">
+        <button class="panel-toggle" data-action="toggle-left-panel" title="Show left panel" aria-label="Show left panel">&gt;</button>
+      </aside>
+    `;
+  }
   const activeSystem = system();
   const activeTree = tree();
   const profile = activeSystem?.profile || {};
   return `
     <aside class="side-panel">
+      <button class="panel-toggle panel-toggle-end" data-action="toggle-left-panel" title="Hide left panel" aria-label="Hide left panel">&lt;</button>
       <div class="brand">
         <div class="brand-mark">LTP</div>
         <div>
@@ -866,6 +960,73 @@ const breadcrumb = () => {
   return [system()?.name, tree()?.name, ...parts].filter(Boolean).join(" / ");
 };
 
+const minimapMetrics = () => {
+  const size = canvasSize();
+  const maxWidth = 180;
+  const maxHeight = 120;
+  const scale = Math.min(maxWidth / size.width, maxHeight / size.height);
+  return {
+    scale,
+    width: Math.max(1, Math.round(size.width * scale)),
+    height: Math.max(1, Math.round(size.height * scale))
+  };
+};
+
+const minimapViewportStyle = () => {
+  const metrics = minimapMetrics();
+  return {
+    left: (viewportState.left / zoomLevel) * metrics.scale,
+    top: (viewportState.top / zoomLevel) * metrics.scale,
+    width: Math.min(metrics.width, (viewportSize.width / zoomLevel) * metrics.scale),
+    height: Math.min(metrics.height, (viewportSize.height / zoomLevel) * metrics.scale)
+  };
+};
+
+const updateMinimapViewport = () => {
+  const viewport = app.querySelector(".minimap-viewport");
+  if (!viewport) return;
+  const style = minimapViewportStyle();
+  viewport.style.left = `${style.left}px`;
+  viewport.style.top = `${style.top}px`;
+  viewport.style.width = `${style.width}px`;
+  viewport.style.height = `${style.height}px`;
+};
+
+const renderMinimap = () => {
+  const metrics = minimapMetrics();
+  const viewport = minimapViewportStyle();
+  const linkLines = tree()
+    .links.map((link) => {
+      const source = centerOf(layoutNode(link.sourceNodeId));
+      const target = centerOf(layoutNode(link.targetNodeId));
+      return `<line x1="${source.x * metrics.scale}" y1="${source.y * metrics.scale}" x2="${target.x * metrics.scale}" y2="${target.y * metrics.scale}" />`;
+    })
+    .join("");
+  const frames = tree()
+    .frames.map((frame) => {
+      const box = layoutFrame(frame.id);
+      return `<div class="minimap-frame" style="left:${box.x * metrics.scale}px;top:${box.y * metrics.scale}px;width:${box.width * metrics.scale}px;height:${box.height * metrics.scale}px;"></div>`;
+    })
+    .join("");
+  const nodes = tree()
+    .nodes.map((node) => {
+      const box = layoutNode(node.id);
+      return `<div class="minimap-node minimap-node-${node.type}" style="left:${box.x * metrics.scale}px;top:${box.y * metrics.scale}px;width:${Math.max(3, box.width * metrics.scale)}px;height:${Math.max(2, box.height * metrics.scale)}px;"></div>`;
+    })
+    .join("");
+
+  return `
+    <div class="minimap" aria-label="Diagram minimap">
+      <div class="minimap-map" data-minimap-map data-scale="${metrics.scale}" style="width:${metrics.width}px;height:${metrics.height}px;">
+        <svg viewBox="0 0 ${metrics.width} ${metrics.height}" width="${metrics.width}" height="${metrics.height}">${linkLines}</svg>
+        ${frames}
+        ${nodes}
+        <div class="minimap-viewport" style="left:${viewport.left}px;top:${viewport.top}px;width:${viewport.width}px;height:${viewport.height}px;"></div>
+      </div>
+    </div>
+  `;
+};
+
 const openNodePreview = (nodeId = selectedElementId) => {
   if (!nodeById()[nodeId]) return;
   selectedElementId = nodeId;
@@ -896,6 +1057,14 @@ const toggleNodePreview = () => {
 };
 
 const cancelContext = (options = {}) => {
+  if (deleteCandidateId) {
+    deleteCandidateId = null;
+    setStatus("Deletion cancelled");
+    render();
+    focusCanvas();
+    return;
+  }
+
   if (previewNodeId) {
     closeNodePreview();
     setStatus("Preview closed");
@@ -935,6 +1104,149 @@ const cancelContext = (options = {}) => {
   focusCanvas();
 };
 
+const deletionImpact = (id = deleteCandidateId) => {
+  const activeTree = tree();
+  const type = elementType(id);
+  if (type === "link") {
+    return { type, label: "link", nodes: 0, frames: 0, links: 1 };
+  }
+  if (type === "node") {
+    const node = nodeById()[id];
+    const links = activeTree.links.filter((link) => link.sourceNodeId === id || link.targetNodeId === id).length;
+    return { type, label: node?.shortLabel || node?.statement || "node", nodes: 1, frames: 0, links };
+  }
+  if (type === "frame") {
+    const frameIds = new Set();
+    const collectFrames = (frameId) => {
+      if (frameIds.has(frameId)) return;
+      frameIds.add(frameId);
+      for (const childId of frameById()[frameId]?.childFrameIds || []) collectFrames(childId);
+    };
+    collectFrames(id);
+    const nodeIds = new Set(activeTree.nodes.filter((node) => frameIds.has(node.frameId)).map((node) => node.id));
+    const links = activeTree.links.filter(
+      (link) => nodeIds.has(link.sourceNodeId) || nodeIds.has(link.targetNodeId)
+    ).length;
+    return {
+      type,
+      label: frameById()[id]?.name || "frame",
+      nodes: nodeIds.size,
+      frames: frameIds.size,
+      links
+    };
+  }
+  return { type: "unknown", label: "selection", nodes: 0, frames: 0, links: 0 };
+};
+
+const requestDeleteSelection = (id = selectedElementId) => {
+  const type = elementType(id);
+  if (type === "unknown") {
+    setStatus("Select a node, link, or frame to delete");
+    return;
+  }
+  if (type === "frame" && id === tree().rootFrameId) {
+    setStatus("The root frame cannot be deleted");
+    return;
+  }
+  previewNodeId = null;
+  deleteCandidateId = id;
+  render();
+  app.querySelector("[data-action='confirm-delete']")?.focus();
+};
+
+const removeLinks = (linkIds) => {
+  const activeTree = tree();
+  activeTree.links = activeTree.links.filter((link) => !linkIds.has(link.id));
+  activeTree.assumptions = activeTree.assumptions.filter((assumption) => !linkIds.has(assumption.linkId));
+  for (const linkId of linkIds) delete activeTree.layout.links[linkId];
+};
+
+const confirmDeletion = async () => {
+  const activeTree = tree();
+  const id = deleteCandidateId;
+  const type = elementType(id);
+  if (type === "unknown") {
+    deleteCandidateId = null;
+    render();
+    return;
+  }
+
+  if (type === "link") {
+    removeLinks(new Set([id]));
+  }
+
+  if (type === "node") {
+    const connectedLinkIds = new Set(
+      activeTree.links
+        .filter((link) => link.sourceNodeId === id || link.targetNodeId === id)
+        .map((link) => link.id)
+    );
+    removeLinks(connectedLinkIds);
+    activeTree.nodes = activeTree.nodes.filter((node) => node.id !== id);
+    for (const frame of activeTree.frames) frame.nodeIds = frame.nodeIds.filter((nodeId) => nodeId !== id);
+    for (const assumption of activeTree.assumptions) {
+      if (assumption.promotedNodeId === id) assumption.promotedNodeId = null;
+    }
+    delete activeTree.layout.nodes[id];
+  }
+
+  if (type === "frame" && id !== activeTree.rootFrameId) {
+    const frameIds = new Set();
+    const collectFrames = (frameId) => {
+      if (frameIds.has(frameId)) return;
+      frameIds.add(frameId);
+      for (const childId of frameById()[frameId]?.childFrameIds || []) collectFrames(childId);
+    };
+    collectFrames(id);
+    const nodeIds = new Set(activeTree.nodes.filter((node) => frameIds.has(node.frameId)).map((node) => node.id));
+    const connectedLinkIds = new Set(
+      activeTree.links
+        .filter((link) => nodeIds.has(link.sourceNodeId) || nodeIds.has(link.targetNodeId))
+        .map((link) => link.id)
+    );
+    removeLinks(connectedLinkIds);
+    activeTree.nodes = activeTree.nodes.filter((node) => !nodeIds.has(node.id));
+    activeTree.frames = activeTree.frames.filter((frame) => !frameIds.has(frame.id));
+    for (const frame of activeTree.frames) {
+      frame.childFrameIds = frame.childFrameIds.filter((frameId) => !frameIds.has(frameId));
+      frame.nodeIds = frame.nodeIds.filter((nodeId) => !nodeIds.has(nodeId));
+    }
+    for (const assumption of activeTree.assumptions) {
+      if (nodeIds.has(assumption.promotedNodeId)) assumption.promotedNodeId = null;
+    }
+    for (const nodeId of nodeIds) delete activeTree.layout.nodes[nodeId];
+    for (const frameId of frameIds) delete activeTree.layout.frames[frameId];
+    if (frameIds.has(activeFrameId)) activeFrameId = activeTree.rootFrameId;
+  }
+
+  deleteCandidateId = null;
+  selectedElementId = null;
+  selectedElementType = "unknown";
+  selectedElementIds.clear();
+  mode = "navigation";
+  await persist();
+  setStatus("Selection deleted");
+  render();
+  focusCanvas();
+};
+
+const renderDeleteConfirmation = () => {
+  if (!deleteCandidateId) return "";
+  const impact = deletionImpact();
+  return `
+    <div class="delete-backdrop" data-action="cancel-delete">
+      <section class="delete-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+        <h2 id="delete-title">Delete ${escapeHtml(impact.label)}?</h2>
+        <p>This removes ${impact.nodes} node(s), ${impact.frames} frame(s), and ${impact.links} link(s), including related assumptions and layout data.</p>
+        <div class="delete-actions">
+          <button data-action="cancel-delete">Cancel</button>
+          <button class="danger-action" data-action="confirm-delete">Delete</button>
+        </div>
+      </section>
+    </div>
+  `;
+};
+
 const renderNodePreview = () => {
   const node = nodeById()[previewNodeId];
   if (!node) return "";
@@ -956,6 +1268,8 @@ const renderNodePreview = () => {
 
 const renderCanvas = () => {
   const size = canvasSize();
+  const scaledWidth = Math.round(size.width * zoomLevel);
+  const scaledHeight = Math.round(size.height * zoomLevel);
   return `
     <main class="prototype-main">
       <header class="prototype-topbar">
@@ -965,6 +1279,12 @@ const renderCanvas = () => {
         </div>
         <div class="topbar-actions">
           <input class="search-input" data-search value="${escapeHtml(searchText)}" placeholder="Search (/)" />
+          <div class="zoom-controls" aria-label="Zoom controls">
+            <button data-action="zoom-out" title="Zoom out">-</button>
+            <button data-action="zoom-reset" title="Reset zoom">${Math.round(zoomLevel * 100)}%</button>
+            <button data-action="zoom-in" title="Zoom in">+</button>
+            <button data-action="fit-view" title="Fit diagram">Fit</button>
+          </div>
           <button data-action="hints">Hints</button>
           <button data-action="layout">Layout</button>
         </div>
@@ -975,20 +1295,31 @@ const renderCanvas = () => {
           <span>Mode: <strong>${escapeHtml(mode)}</strong></span>
           <span>Selected: <strong>${escapeHtml(selectedElementId || "none")}</strong></span>
           <span>Sources: <strong>${selectedElementIds.size}</strong></span>
+          <span>Zoom: <strong>${Math.round(zoomLevel * 100)}%</strong></span>
           <span data-status>${escapeHtml(statusText)}</span>
         </div>
-        <div class="canvas" tabindex="0" style="width:${size.width}px;height:${size.height}px;">
-          ${renderLinks()}
-          ${renderFrames()}
-          ${renderNodes()}
-          ${renderHints()}
+        <div class="canvas" tabindex="0" style="width:${scaledWidth}px;height:${scaledHeight}px;">
+          <div class="canvas-content" style="width:${size.width}px;height:${size.height}px;transform:scale(${zoomLevel});">
+            ${renderLinks()}
+            ${renderFrames()}
+            ${renderNodes()}
+            ${renderHints()}
+          </div>
         </div>
       </div>
+      ${renderMinimap()}
     </main>
   `;
 };
 
 const renderInspector = () => {
+  if (!panelState.rightOpen) {
+    return `
+      <aside class="inspector panel-collapsed">
+        <button class="panel-toggle" data-action="toggle-right-panel" title="Show inspector" aria-label="Show inspector">&lt;</button>
+      </aside>
+    `;
+  }
   const node = selectedNode();
   const frame = selectedFrame();
   const link = selectedLink();
@@ -996,6 +1327,7 @@ const renderInspector = () => {
   if (node) {
     return `
       <aside class="inspector">
+        <button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button>
         <h2>${escapeHtml(nodeTypeLabel(node.type))}</h2>
         <label>Statement</label>
         <textarea data-primary-editor data-node-field="statement" data-id="${node.id}">${escapeHtml(node.statement)}</textarea>
@@ -1007,6 +1339,7 @@ const renderInspector = () => {
         </select>
         <button data-action="open-node-preview">View full statement</button>
         <button data-action="pin">Toggle pin</button>
+        <button class="danger-action" data-action="delete-selection">Delete node</button>
       </aside>
     `;
   }
@@ -1014,6 +1347,7 @@ const renderInspector = () => {
   if (frame) {
     return `
       <aside class="inspector">
+        <button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button>
         <h2>Frame</h2>
         <label>Name</label>
         <input data-primary-editor data-frame-field="name" data-id="${frame.id}" value="${escapeHtml(frame.name)}" />
@@ -1023,6 +1357,7 @@ const renderInspector = () => {
         <textarea data-frame-field="notes" data-id="${frame.id}">${escapeHtml(frame.notes || "")}</textarea>
         <button data-action="enter-frame">Enter frame</button>
         <button data-action="pin">Toggle pin</button>
+        ${frame.id === tree().rootFrameId ? "" : '<button class="danger-action" data-action="delete-selection">Delete frame</button>'}
       </aside>
     `;
   }
@@ -1031,6 +1366,7 @@ const renderInspector = () => {
     const assumptions = assumptionsForLink(link.id);
     return `
       <aside class="inspector">
+        <button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button>
         <h2>Link</h2>
         <label>Meaning</label>
         <textarea data-primary-editor data-link-field="meaning" data-id="${link.id}">${escapeHtml(link.meaning || "")}</textarea>
@@ -1052,11 +1388,12 @@ const renderInspector = () => {
             )
             .join("")}
         </div>
+        <button class="danger-action" data-action="delete-selection">Delete link</button>
       </aside>
     `;
   }
 
-  return `<aside class="inspector"><h2>Inspector</h2><p>Select a node, frame, or link.</p></aside>`;
+  return `<aside class="inspector"><button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button><h2>Inspector</h2><p>Select a node, frame, or link.</p></aside>`;
 };
 
 const render = () => {
@@ -1064,15 +1401,18 @@ const render = () => {
   updateViewState();
   refreshMaps();
   app.innerHTML = `
-    <div class="prototype-shell">
+    <div class="prototype-shell ${panelState.leftOpen ? "" : "left-collapsed"} ${panelState.rightOpen ? "" : "right-collapsed"}">
       ${renderSidebar()}
       ${renderCanvas()}
       ${renderInspector()}
     </div>
     ${renderNodePreview()}
+    ${renderDeleteConfirmation()}
   `;
   bindEvents();
   restoreViewport();
+  captureViewport();
+  updateMinimapViewport();
 };
 
 const commitInspectorField = async (field) => {
@@ -1134,6 +1474,7 @@ const bindEvents = () => {
     button.addEventListener("click", (event) => {
       const action = button.dataset.action;
       if (action === "close-node-preview" && button.classList.contains("node-preview-backdrop") && event.target !== button) return;
+      if (action === "cancel-delete" && button.classList.contains("delete-backdrop") && event.target !== button) return;
       if (action === "layout") runAutoLayout();
       if (action === "export") exportMarkdown();
       if (action === "hints") showHints();
@@ -1142,13 +1483,47 @@ const bindEvents = () => {
       if (action === "enter-frame") enterSelectedFrame();
       if (action === "open-node-preview") openNodePreview();
       if (action === "close-node-preview") closeNodePreview();
+      if (action === "zoom-in") setZoom(zoomLevel + 0.1);
+      if (action === "zoom-out") setZoom(zoomLevel - 0.1);
+      if (action === "zoom-reset") resetZoom();
+      if (action === "fit-view") fitView();
+      if (action === "toggle-left-panel") togglePanel("left");
+      if (action === "toggle-right-panel") togglePanel("right");
+      if (action === "delete-selection") requestDeleteSelection();
+      if (action === "cancel-delete") cancelContext();
+      if (action === "confirm-delete") confirmDeletion();
     });
   });
 
   const canvasShell = app.querySelector(".canvas-shell");
   canvasShell?.addEventListener("scroll", () => {
     viewportState = { left: canvasShell.scrollLeft, top: canvasShell.scrollTop };
+    viewportSize = { width: canvasShell.clientWidth, height: canvasShell.clientHeight };
     updateViewState();
+    updateMinimapViewport();
+    scheduleViewStatePersist();
+  });
+
+  const minimap = app.querySelector("[data-minimap-map]");
+  const navigateFromMinimap = (event) => {
+    const rect = minimap.getBoundingClientRect();
+    const scale = Number(minimap.dataset.scale);
+    const logicalPoint = {
+      x: (event.clientX - rect.left) / scale,
+      y: (event.clientY - rect.top) / scale
+    };
+    const shell = app.querySelector(".canvas-shell");
+    setViewportPosition(
+      logicalPoint.x * zoomLevel - shell.clientWidth / 2,
+      logicalPoint.y * zoomLevel - shell.clientHeight / 2
+    );
+  };
+  minimap?.addEventListener("pointerdown", (event) => {
+    minimap.setPointerCapture(event.pointerId);
+    navigateFromMinimap(event);
+  });
+  minimap?.addEventListener("pointermove", (event) => {
+    if (minimap.hasPointerCapture(event.pointerId)) navigateFromMinimap(event);
   });
 
   const search = app.querySelector("[data-search]");
@@ -1197,6 +1572,18 @@ const executeCommand = (command) => {
     togglePin,
     previewNode: toggleNodePreview,
     cancelContext: () => cancelContext({ clearSelection: true }),
+    deleteSelection: requestDeleteSelection,
+    panUp: () => panViewport(0, -80),
+    panDown: () => panViewport(0, 80),
+    panLeft: () => panViewport(-80, 0),
+    panRight: () => panViewport(80, 0),
+    centerSelection,
+    zoomIn: () => setZoom(zoomLevel + 0.1),
+    zoomOut: () => setZoom(zoomLevel - 0.1),
+    resetZoom,
+    fitView,
+    toggleLeftPanel: () => togglePanel("left"),
+    toggleRightPanel: () => togglePanel("right"),
     runAutoLayout
   };
   return commands[command]?.();
@@ -1212,6 +1599,20 @@ const handleKeydown = async (event) => {
     cancelContext();
     return;
   }
+
+  if (deleteCandidateId && event.key === "Enter") {
+    event.preventDefault();
+    await confirmDeletion();
+    return;
+  }
+
+  if (deleteCandidateId && event.ctrlKey && !event.metaKey && event.key.toLowerCase() === "g") {
+    event.preventDefault();
+    cancelContext();
+    return;
+  }
+
+  if (deleteCandidateId) return;
 
   if (previewNodeId && event.key === " ") {
     event.preventDefault();
@@ -1270,6 +1671,11 @@ const bootPromise = (async () => {
   viewportState = {
     left: activeTree.viewState?.pan?.x || 0,
     top: activeTree.viewState?.pan?.y || 0
+  };
+  zoomLevel = clamp(activeTree.viewState?.zoom || 1, 0.35, 2.5);
+  panelState = {
+    leftOpen: activeTree.viewState?.panels?.leftOpen ?? true,
+    rightOpen: activeTree.viewState?.panels?.rightOpen ?? true
   };
   selectedElementType = elementType(selectedElementId);
   statusText = "Prototype loaded";
@@ -1390,6 +1796,79 @@ window.__ltpSmokeTest = async () => {
   const consecutiveNodesAreOffset =
     viewportNodeBox.x !== secondViewportNodeBox.x || viewportNodeBox.y !== secondViewportNodeBox.y;
 
+  setZoom(1.25, { persist: false });
+  const zoomWorks =
+    zoomLevel === 1.25 && document.querySelector(".canvas-content")?.style.transform === "scale(1.25)";
+  setViewportPosition(0, 0, { persist: false });
+  const panStart = document.querySelector(".canvas-shell").scrollLeft;
+  panViewport(80, 0);
+  const keyboardPanWorks = document.querySelector(".canvas-shell").scrollLeft > panStart;
+  const minimapViewportBefore = document.querySelector(".minimap-viewport")?.style.left;
+  panViewport(80, 0);
+  const minimapWorks =
+    Boolean(document.querySelector("[data-minimap-map]")) &&
+    document.querySelector(".minimap-viewport")?.style.left !== minimapViewportBefore;
+  fitView();
+  const fitViewWorks = zoomLevel <= 1 && viewportState.left === 0 && viewportState.top === 0;
+  setZoom(1, { persist: false });
+
+  togglePanel("left");
+  const leftPanelCollapses =
+    !panelState.leftOpen && document.querySelector(".prototype-shell")?.classList.contains("left-collapsed");
+  togglePanel("left");
+  togglePanel("right");
+  const rightPanelCollapses =
+    !panelState.rightOpen && document.querySelector(".prototype-shell")?.classList.contains("right-collapsed");
+  togglePanel("right");
+
+  const linkSourceId = viewportNodeId;
+  const linkTargetId = secondViewportNodeId;
+  const temporaryLinkId = await createLink(linkSourceId, linkTargetId);
+  await addAssumptionToSelectedLink();
+  const temporaryAssumptionId = selectedLink()?.assumptionIds.at(-1);
+  requestDeleteSelection(temporaryLinkId);
+  const deleteConfirmationWorks = Boolean(document.querySelector(".delete-dialog"));
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "g", ctrlKey: true, bubbles: true, cancelable: true }));
+  const deleteCancellationWorks = !deleteCandidateId && Boolean(linkById()[temporaryLinkId]);
+  requestDeleteSelection(temporaryLinkId);
+  await confirmDeletion();
+  const linkDeletionCleansReferences =
+    !linkById()[temporaryLinkId] &&
+    !tree().assumptions.some((assumption) => assumption.id === temporaryAssumptionId) &&
+    !tree().layout.links[temporaryLinkId];
+
+  const cascadeSourceId = await createNodeInViewport();
+  const cascadeTargetId = await createNodeInViewport();
+  const cascadeLinkId = await createLink(cascadeSourceId, cascadeTargetId);
+  await addAssumptionToSelectedLink();
+  const cascadeAssumptionId = selectedLink()?.assumptionIds.at(-1);
+  requestDeleteSelection(cascadeSourceId);
+  await confirmDeletion();
+  const nodeDeletionCascades =
+    !nodeById()[cascadeSourceId] &&
+    !linkById()[cascadeLinkId] &&
+    !tree().assumptions.some((assumption) => assumption.id === cascadeAssumptionId) &&
+    !tree().layout.nodes[cascadeSourceId] &&
+    tree().frames.every((frame) => !frame.nodeIds.includes(cascadeSourceId));
+  requestDeleteSelection(cascadeTargetId);
+  await confirmDeletion();
+
+  await createFrame();
+  const temporaryFrameId = selectedElementId;
+  const frameNodeId = await createNode(temporaryFrameId, "necessaryCondition", "Temporary frame node");
+  const frameLinkId = await createLink(frameNodeId, tree().nodes[0].id);
+  requestDeleteSelection(temporaryFrameId);
+  await confirmDeletion();
+  const frameDeletionCascades =
+    !frameById()[temporaryFrameId] &&
+    !nodeById()[frameNodeId] &&
+    !linkById()[frameLinkId] &&
+    !tree().layout.frames[temporaryFrameId] &&
+    !tree().layout.nodes[frameNodeId] &&
+    tree().frames.every((frame) => !frame.childFrameIds.includes(temporaryFrameId));
+  requestDeleteSelection(tree().rootFrameId);
+  const rootFrameIsProtected = deleteCandidateId === null && Boolean(frameById()[tree().rootFrameId]);
+
   hintEntries = visibleHintEntries();
   const finalTree = tree();
 
@@ -1417,6 +1896,18 @@ window.__ltpSmokeTest = async () => {
       ctrlGClearsSelection &&
       nodeCreatedInViewport &&
       consecutiveNodesAreOffset &&
+      zoomWorks &&
+      keyboardPanWorks &&
+      minimapWorks &&
+      fitViewWorks &&
+      leftPanelCollapses &&
+      rightPanelCollapses &&
+      deleteConfirmationWorks &&
+      deleteCancellationWorks &&
+      linkDeletionCleansReferences &&
+      nodeDeletionCascades &&
+      frameDeletionCascades &&
+      rootFrameIsProtected &&
       Object.keys(commandBindings).length >= 10 &&
       Boolean(exportResult.path),
     nodes: finalTree.nodes.length,
@@ -1437,6 +1928,18 @@ window.__ltpSmokeTest = async () => {
     ctrlGClearsSelection,
     nodeCreatedInViewport,
     consecutiveNodesAreOffset,
+    zoomWorks,
+    keyboardPanWorks,
+    minimapWorks,
+    fitViewWorks,
+    leftPanelCollapses,
+    rightPanelCollapses,
+    deleteConfirmationWorks,
+    deleteCancellationWorks,
+    linkDeletionCleansReferences,
+    nodeDeletionCascades,
+    frameDeletionCascades,
+    rootFrameIsProtected,
     exportPath: exportResult.path
   };
 };

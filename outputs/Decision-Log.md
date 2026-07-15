@@ -125,3 +125,15 @@ Razon: permite verbalizar el link como "In order to achieve TARGET, we must have
 Decision: los keyboard hints no se guardan en el modelo de datos.
 
 Razon: dependen de visibilidad, zoom, busqueda y densidad del canvas; deben generarse en runtime.
+
+### D-021: Borrado confirmado con limpieza en cascada
+
+Decision: borrar un link, nodo o frame requiere confirmacion. El borrado elimina tambien assumptions, links, referencias jerarquicas y datos de layout que dependan del elemento. El frame raiz no se puede borrar.
+
+Razon: los elementos visuales representan un grafo logico; dejar referencias huerfanas produciria diagramas incoherentes y archivos dificiles de recuperar.
+
+### D-022: Persistir el estado de navegacion
+
+Decision: zoom, pan y apertura de paneles forman parte de `ViewState` y se guardan de forma diferida al navegar.
+
+Razon: reabrir un arbol debe devolver al usuario al mismo contexto de trabajo sin convertir cada movimiento del viewport en una operacion visible de guardado.

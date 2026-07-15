@@ -372,9 +372,10 @@ Campos:
 - `mode`: `navigation`, `editing`, `connection`, `frame`, `command`.
 - `zoom`.
 - `pan`.
+- `panels.leftOpen`, `panels.rightOpen`.
 - `breadcrumb`.
 
-Los keyboard hints son efimeros y no se guardan.
+Los keyboard hints y la representacion calculada del minimapa son efimeros y no se guardan.
 
 ## 15. Sources
 

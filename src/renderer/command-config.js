@@ -14,5 +14,17 @@ window.LTP_COMMAND_BINDINGS = Object.freeze({
   togglePin: [{ key: "p" }],
   previewNode: [{ key: " " }],
   cancelContext: [{ key: "g", control: true }],
+  deleteSelection: [{ key: "Delete" }, { key: "Backspace" }],
+  panUp: [{ key: "ArrowUp" }],
+  panDown: [{ key: "ArrowDown" }],
+  panLeft: [{ key: "ArrowLeft" }],
+  panRight: [{ key: "ArrowRight" }],
+  centerSelection: [{ key: "c" }],
+  zoomIn: [{ key: "=", primary: true }, { key: "+", primary: true }],
+  zoomOut: [{ key: "-", primary: true }],
+  resetZoom: [{ key: "0", primary: true }],
+  fitView: [{ key: "1", primary: true }],
+  toggleLeftPanel: [{ key: "[", alt: true }],
+  toggleRightPanel: [{ key: "]", alt: true }],
   runAutoLayout: [{ key: "l", primary: true, shift: true }]
 });

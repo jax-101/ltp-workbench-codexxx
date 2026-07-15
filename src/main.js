@@ -3,8 +3,12 @@ const path = require("node:path");
 const fs = require("node:fs/promises");
 const ELK = require("elkjs/lib/elk.bundled.js");
 
-const prototypeDataPath = () =>
-  path.join(app.getPath("userData"), process.env.LTP_MANUAL_TEST === "1" ? "manual-test-workspace.json" : "prototype-workspace.json");
+const prototypeDataPath = () => {
+  let fileName = "prototype-workspace.json";
+  if (process.env.LTP_MANUAL_TEST === "1") fileName = "manual-test-workspace-v2.json";
+  if (process.env.LTP_SMOKE_TEST === "1") fileName = "smoke-test-workspace.json";
+  return path.join(app.getPath("userData"), fileName);
+};
 const sampleDataPath = () => path.join(app.getAppPath(), "outputs", "sample-workspace-v0.1.json");
 const exportPath = () => path.join(app.getAppPath(), "outputs", "prototype-goal-tree-export.md");
 
@@ -82,6 +86,30 @@ const fallbackWorkspace = () => ({
 const readJson = async (filePath) => JSON.parse(await fs.readFile(filePath, "utf8"));
 
 const loadWorkspace = async () => {
+  if (process.env.LTP_SMOKE_TEST === "1") {
+    try {
+      return await readJson(sampleDataPath());
+    } catch {
+      return fallbackWorkspace();
+    }
+  }
+
+  if (process.env.LTP_MANUAL_TEST === "1") {
+    try {
+      return await readJson(prototypeDataPath());
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+      let workspace;
+      try {
+        workspace = await readJson(sampleDataPath());
+      } catch {
+        workspace = fallbackWorkspace();
+      }
+      await saveWorkspace(workspace);
+      return workspace;
+    }
+  }
+
   if (process.env.LTP_USE_SAMPLE === "1") {
     try {
       return await readJson(sampleDataPath());

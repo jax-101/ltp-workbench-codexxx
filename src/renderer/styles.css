@@ -41,13 +41,24 @@ button {
 }
 
 .prototype-shell {
+  --left-panel-width: 292px;
+  --right-panel-width: 340px;
   display: grid;
-  grid-template-columns: 292px minmax(620px, 1fr) 340px;
+  grid-template-columns: var(--left-panel-width) minmax(620px, 1fr) var(--right-panel-width);
   min-height: 100vh;
+}
+
+.prototype-shell.left-collapsed {
+  --left-panel-width: 44px;
+}
+
+.prototype-shell.right-collapsed {
+  --right-panel-width: 44px;
 }
 
 .side-panel,
 .inspector {
+  position: relative;
   background: var(--panel);
   border-right: 1px solid var(--line);
   padding: 18px;
@@ -57,6 +68,32 @@ button {
 .inspector {
   border-right: 0;
   border-left: 1px solid var(--line);
+}
+
+.panel-collapsed {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px 4px;
+  overflow: hidden;
+}
+
+.panel-toggle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--wash);
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.panel-toggle-end {
+  margin-left: auto;
+  margin-bottom: 8px;
 }
 
 .brand {
@@ -159,6 +196,7 @@ kbd {
 }
 
 .prototype-main {
+  position: relative;
   min-width: 0;
   display: grid;
   grid-template-rows: auto 1fr;
@@ -166,6 +204,7 @@ kbd {
 
 .prototype-topbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
@@ -187,14 +226,26 @@ kbd {
 }
 
 .topbar-actions {
+  flex: 1 1 520px;
   display: grid;
-  grid-template-columns: minmax(180px, 260px) 86px 86px;
+  grid-template-columns: minmax(160px, 240px) auto 76px 76px;
   gap: 8px;
   align-items: center;
 }
 
 .topbar-actions button {
   width: auto;
+}
+
+.zoom-controls {
+  display: grid;
+  grid-template-columns: 34px 62px 34px 44px;
+  gap: 4px;
+}
+
+.zoom-controls button {
+  min-width: 0;
+  padding: 6px;
 }
 
 .search-input,
@@ -230,6 +281,7 @@ kbd {
   top: 0;
   z-index: 20;
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--line);
@@ -246,6 +298,12 @@ kbd {
   position: relative;
   min-width: 100%;
   min-height: 100%;
+}
+
+.canvas-content {
+  position: absolute;
+  inset: 0 auto auto 0;
+  transform-origin: top left;
 }
 
 .links-svg {
@@ -419,6 +477,73 @@ kbd {
   background: #9ed6c8;
 }
 
+.minimap {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 196px;
+  height: 136px;
+  border: 1px solid #aaa69d;
+  border-radius: 8px;
+  background: rgba(255, 254, 250, 0.96);
+  box-shadow: 0 8px 22px rgba(37, 43, 42, 0.18);
+}
+
+.minimap-map {
+  position: relative;
+  overflow: hidden;
+  background: #f1eee6;
+  cursor: crosshair;
+}
+
+.minimap-map svg,
+.minimap-frame,
+.minimap-node,
+.minimap-viewport {
+  position: absolute;
+}
+
+.minimap-map svg {
+  inset: 0;
+}
+
+.minimap-map svg line {
+  stroke: #7c827e;
+  stroke-width: 0.7;
+}
+
+.minimap-frame {
+  border: 1px solid rgba(15, 107, 104, 0.62);
+  background: rgba(15, 107, 104, 0.06);
+}
+
+.minimap-node {
+  border-radius: 1px;
+  background: var(--green);
+}
+
+.minimap-node-goal {
+  background: var(--accent);
+}
+
+.minimap-node-criticalSuccessFactor {
+  background: var(--blue);
+}
+
+.minimap-node-assumption {
+  background: var(--gold);
+}
+
+.minimap-viewport {
+  z-index: 5;
+  border: 2px solid var(--red);
+  background: rgba(159, 79, 69, 0.1);
+  cursor: grab;
+}
+
 .inspector {
   display: flex;
   flex-direction: column;
@@ -467,6 +592,59 @@ kbd {
 
 .assumption-item button {
   min-height: 32px;
+}
+
+.danger-action {
+  border-color: var(--red) !important;
+  background: #fff5f3 !important;
+  color: var(--red) !important;
+}
+
+.delete-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(32, 33, 36, 0.48);
+}
+
+.delete-dialog {
+  width: min(480px, calc(100vw - 48px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px;
+  background: var(--panel);
+  box-shadow: 0 18px 48px rgba(32, 33, 36, 0.28);
+}
+
+.delete-dialog h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0;
+}
+
+.delete-dialog p {
+  margin: 12px 0 20px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.delete-actions button {
+  min-width: 92px;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--wash);
+  color: var(--ink);
+  font-weight: 800;
 }
 
 .node-preview-backdrop {
