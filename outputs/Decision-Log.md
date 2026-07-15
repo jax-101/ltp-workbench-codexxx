@@ -320,3 +320,15 @@ Razon: borrar, copiar, CLI y UI deben obtener exactamente el mismo conjunto. Car
 Decision: Layout espera a que termine la cola de operaciones y bloquea guardados de ViewState durante su animacion. Solo se confirma el estado espacial final.
 
 Razon: los renders intermedios pueden generar eventos de scroll y guardar una revision mientras el layout nuevo aun parte de la anterior. Esos estados son presentacion temporal, no intenciones persistibles.
+
+### D-052: Cada entrega manual tiene identidad visible
+
+Decision: la aplicacion muestra la version de producto y un identificador de build de prueba en la barra superior y en el titulo de la ventana. Ambos proceden de `package.json` mediante una consulta de solo lectura.
+
+Razon: una version SemVer puede abarcar varias entregas internas. Un build visible permite confirmar de inmediato que la ventana abierta contiene la correccion que se pretende validar.
+
+### D-053: La inicializacion asincrona comparte una promesa
+
+Decision: el motor del workspace conserva tanto la instancia resuelta como la promesa de inicializacion en curso. Todas las solicitudes concurrentes esperan esa misma promesa.
+
+Razon: comprobar solo si existe la instancia deja una ventana de carrera antes de asignarla. Dos llamadas iniciales pueden crear o reiniciar el mismo repositorio simultaneamente.

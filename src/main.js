@@ -6,8 +6,19 @@ const ELK = require("elkjs/lib/elk.bundled.js");
 const { TransactionEngine, workspaceRevision } = require("./core/transaction-engine");
 const { WorkspaceRepository } = require("./core/workspace-repository");
 const { getDiagramDefinition } = require("./core/diagram-registry");
+const packageMetadata = require("../package.json");
 
 let workspaceEngine = null;
+let workspaceEnginePromise = null;
+
+const buildInfo = Object.freeze({
+  version: packageMetadata.version,
+  id: packageMetadata.ltpBuild?.id || "local",
+  name: packageMetadata.ltpBuild?.name || "Development Build",
+  channel: packageMetadata.ltpBuild?.channel || "development"
+});
+
+const buildLabel = () => `v${buildInfo.version} - build ${buildInfo.id} - ${buildInfo.name}`;
 
 const prototypeDataPath = () => {
   let fileName = "prototype-workspace.json";
@@ -142,19 +153,27 @@ const loadWorkspace = async () => {
 
 const getWorkspaceEngine = async () => {
   if (workspaceEngine) return workspaceEngine;
-  const initialWorkspace = await loadWorkspace();
-  const repository = new WorkspaceRepository(prototypeDataPath());
-  const normalizedWorkspace = {
-    ...initialWorkspace,
-    revision: workspaceRevision(initialWorkspace)
-  };
-  const persistedWorkspace = process.env.LTP_SMOKE_TEST === "1"
-    ? await repository.reset(normalizedWorkspace)
-    : await repository.initialize(normalizedWorkspace);
-  workspaceEngine = new TransactionEngine(persistedWorkspace, {
-    persist: (workspace, metadata) => repository.commit(workspace, metadata)
-  });
-  return workspaceEngine;
+  if (!workspaceEnginePromise) {
+    workspaceEnginePromise = (async () => {
+      const initialWorkspace = await loadWorkspace();
+      const repository = new WorkspaceRepository(prototypeDataPath());
+      const normalizedWorkspace = {
+        ...initialWorkspace,
+        revision: workspaceRevision(initialWorkspace)
+      };
+      const persistedWorkspace = process.env.LTP_SMOKE_TEST === "1"
+        ? await repository.reset(normalizedWorkspace)
+        : await repository.initialize(normalizedWorkspace);
+      workspaceEngine = new TransactionEngine(persistedWorkspace, {
+        persist: (workspace, metadata) => repository.commit(workspace, metadata)
+      });
+      return workspaceEngine;
+    })().catch((error) => {
+      workspaceEnginePromise = null;
+      throw error;
+    });
+  }
+  return workspaceEnginePromise;
 };
 
 const saveWorkspaceTransaction = async (workspace, options = {}) => {
@@ -404,7 +423,7 @@ const createWindow = () => {
     height: 900,
     minWidth: 1120,
     minHeight: 720,
-    title: process.env.LTP_MANUAL_TEST === "1" ? "LTP Workbench - Manual Test" : "LTP Workbench Prototype",
+    title: `LTP Workbench - ${buildLabel()}${process.env.LTP_MANUAL_TEST === "1" ? " - Manual Test" : ""}`,
     backgroundColor: "#f7f5ef",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -434,6 +453,7 @@ const createWindow = () => {
 };
 
 ipcMain.handle("workspace:load", async () => (await getWorkspaceEngine()).getSnapshot());
+ipcMain.handle("app:build-info", async () => buildInfo);
 ipcMain.handle("workspace:save", async (_event, workspace, options) => saveWorkspaceTransaction(workspace, options));
 ipcMain.handle("workspace:save-view", async (_event, treeId, viewState) => saveViewStateTransaction(treeId, viewState));
 ipcMain.handle("workspace:execute", async (_event, command, options) => (await getWorkspaceEngine()).execute(command, options));

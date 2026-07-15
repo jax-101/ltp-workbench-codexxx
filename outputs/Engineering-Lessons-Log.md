@@ -262,9 +262,29 @@ Aprendizaje: las reglas puras pueden publicarse en un formato compatible con Nod
 
 Aplicacion futura: mantener los modulos compartidos sin DOM ni Electron, ofrecer export CommonJS y global de navegador, y verificar que el preload conserva su superficie minima.
 
+### L-030: Una prueba manual necesita identidad observable del build
+
+Fecha: 2026-07-15
+
+Evidencia: una aplicacion Electron anterior podia permanecer abierta mientras se publicaba una correccion nueva, sin una forma visual de distinguir ambas ventanas.
+
+Aprendizaje: la trazabilidad de una validacion no puede depender de recordar cuando se abrio el proceso. La identidad ejecutada debe formar parte de la propia interfaz.
+
+Aplicacion futura: mostrar version, build y canal desde una fuente central; incluirlos en capturas e informes de fallos; comprobar su presencia en smoke tests.
+
+### L-031: Un singleton asincrono debe cachear la promesa en curso
+
+Fecha: 2026-07-15
+
+Evidencia: cargar workspace, historial e identidad en paralelo hizo que dos handlers vieran el motor aun vacio y reiniciaran el mismo archivo temporal simultaneamente.
+
+Aprendizaje: cachear solo el resultado resuelto no protege el intervalo entre comenzar y terminar una inicializacion asincrona.
+
+Aplicacion futura: asignar inmediatamente una promesa compartida, hacer que todos los consumidores la esperen y limpiarla al fallar para permitir un reintento controlado.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-030`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-032`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

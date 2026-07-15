@@ -1,6 +1,11 @@
 {
   "name": "ltp-workbench",
   "version": "0.1.0",
+  "ltpBuild": {
+    "id": "3A.1",
+    "name": "Selection Context",
+    "channel": "prototype"
+  },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
   "main": "src/main.js",
   "bin": {

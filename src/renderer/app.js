@@ -1,4 +1,5 @@
 let workspaceData = null;
+let buildInfo = { version: "0.0.0", id: "loading", name: "Loading build" };
 let selectedElementId = null;
 let selectedElementType = "node";
 let selectionRootIds = new Set();
@@ -1757,7 +1758,10 @@ const renderCanvas = () => {
     <main class="prototype-main">
       <header class="prototype-topbar">
         <div>
-          <h2>${escapeHtml(tree()?.name)}</h2>
+          <div class="topbar-title-row">
+            <h2>${escapeHtml(tree()?.name)}</h2>
+            <span class="build-identity" title="${escapeHtml(buildInfo.name)}">v${escapeHtml(buildInfo.version)} | build ${escapeHtml(buildInfo.id)}</span>
+          </div>
           <p>${escapeHtml(breadcrumb())}</p>
         </div>
         <div class="topbar-actions">
@@ -2265,8 +2269,11 @@ const handleKeydown = async (event) => {
 document.addEventListener("keydown", handleKeydown);
 
 const bootPromise = (async () => {
-  workspaceData = await window.ltpPrototype.loadWorkspace();
-  historyState = await window.ltpPrototype.getHistoryState();
+  [workspaceData, historyState, buildInfo] = await Promise.all([
+    window.ltpPrototype.loadWorkspace(),
+    window.ltpPrototype.getHistoryState(),
+    window.ltpPrototype.getBuildInfo()
+  ]);
   const activeTree = tree();
   selectedElementId = activeTree.viewState?.selectedElementId || activeTree.nodes[0]?.id;
   selectionRootIds = new Set(
@@ -2308,6 +2315,8 @@ window.__ltpSmokeTest = async () => {
   const rootFrameIsConceptual =
     !document.querySelector(`[data-element-id="${activeTree.rootFrameId}"]`) &&
     document.querySelectorAll(".minimap-frame").length === activeTree.frames.length - 1;
+  const buildIdentityVisible =
+    document.querySelector(".build-identity")?.textContent === `v${buildInfo.version} | build ${buildInfo.id}`;
   const registryDrivesGoalTree =
     diagramDefinition().defaultDirection === "TB" &&
     diagramNodeTypes().map((type) => type.id).join(",") ===
@@ -2718,6 +2727,7 @@ window.__ltpSmokeTest = async () => {
       document.querySelectorAll(".tree-frame").length === finalTree.frames.length - 1 &&
       document.querySelectorAll(".link-target").length >= 6 &&
       hintsArePrefixFree &&
+      buildIdentityVisible &&
       rootFrameIsConceptual &&
       registryDrivesGoalTree &&
       frameSelectionIsTransitive &&
@@ -2775,6 +2785,7 @@ window.__ltpSmokeTest = async () => {
     links: finalTree.links.length,
     hints: hintEntries.length,
     hintsArePrefixFree,
+    buildIdentityVisible,
     rootFrameIsConceptual,
     registryDrivesGoalTree,
     frameSelectionIsTransitive,

@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que la ventana se titula `LTP Workbench - Manual Test`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.1`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 

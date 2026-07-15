@@ -562,3 +562,16 @@ Criterios de aceptacion:
 - La animacion no crea una nueva entrada en Undo/Redo.
 - Las transacciones declaran su categoria espacial; el renderer no la deduce del texto de la etiqueta.
 - `prefers-reduced-motion` mantiene un cambio inmediato y correcto.
+
+### F-053: Identidad visible de la version en pruebas
+
+Feedback: debe poder verse dentro de la aplicacion que version se esta probando para evitar validar por error una ventana o build anterior.
+
+Estado: implementado como build `3A.1` y pendiente de validacion manual. La barra superior muestra version e identificador de build; el titulo de la ventana anade tambien el nombre descriptivo.
+
+Criterios de aceptacion:
+
+- La identidad es visible aunque los paneles laterales esten cerrados.
+- Version e identificador proceden de metadatos centrales del paquete.
+- La prueba smoke verifica el mismo texto que ve el usuario.
+- Cada entrega manual incrementa el identificador de build.
