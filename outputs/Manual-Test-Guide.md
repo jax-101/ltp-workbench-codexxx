@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.4`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.5`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -220,6 +220,18 @@ Comprueba que siguen funcionando:
 9. Selecciona un frame dos veces y comprueba que el segundo click limpia la seleccion, pero conserva ese frame como contexto de creacion.
 
 Resultado esperado: `Root` es el espacio global ilimitado, `Goal Tree` es un frame explicito y finito, el inventario explica su contenido y la seleccion estructural sigue siendo determinista.
+
+## Prueba 20: seleccion multiple y arrastre colectivo
+
+1. Pulsa `M` y comprueba que aparecen hints para nodos, links y frames.
+2. Elige dos o tres nodos mediante sus letras.
+3. Pulsa `M` de nuevo y comprueba que los hints desaparecen sin perder la seleccion.
+4. Arrastra uno de los nodos seleccionados a otro frame.
+5. Comprueba que todos los nodos seleccionados se desplazan juntos y conservan sus distancias relativas.
+6. Pulsa `Cmd+Z` y comprueba que todo el grupo vuelve en una sola operacion.
+7. Repite la seleccion, pulsa `L` y elige un nodo destino.
+
+Resultado esperado: `M` representa una seleccion general reutilizable; el arrastre afecta al grupo completo y `L` usa sus nodos como fuentes sin mezclar ambos estados.
 
 ## Registro de resultados
 

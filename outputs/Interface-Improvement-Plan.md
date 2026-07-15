@@ -215,6 +215,7 @@ Incluye:
 - F-047: indicacion de direccion pendiente de aplicar.
 - F-052: transiciones animadas al deshacer y rehacer operaciones espaciales.
 - F-057: mover seleccion al padre con `Cmd+P` o a un frame elegido con `Cmd+F`.
+- Completar F-058 con contencion geometrica del arrastre colectivo.
 - Completar F-035 con garantias espaciales al mover entidades entre frames.
 - Layout compuesto por frames y soporte de frames anidados.
 

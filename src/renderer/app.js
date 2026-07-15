@@ -5,7 +5,7 @@ let selectedElementType = "node";
 let selectionRootIds = new Set();
 let selectionIds = new Set();
 let connectionSourceIds = new Set();
-let sourceSelectionMode = false;
+let multiSelectionMode = false;
 let activeFrameId = null;
 let mode = "navigation";
 let connectionSourceId = null;
@@ -387,30 +387,19 @@ const selectElement = async (id, options = {}) => {
     mode = "navigation";
     connectionSourceId = null;
     connectionSourceIds.clear();
-    sourceSelectionMode = false;
+    multiSelectionMode = false;
     hintsVisible = false;
     setStatus(`${sourceIds.length} source link${sourceIds.length === 1 ? "" : "s"} ready for this target`);
     render();
     return;
   }
 
-  if (sourceSelectionMode) {
-    if (nextType !== "node") {
-      hintsVisible = true;
-      setStatus("Multi-select marks source nodes only");
-      render();
-      return;
-    }
-
-    replaceSelection(id);
-    if (connectionSourceIds.has(id)) {
-      connectionSourceIds.delete(id);
-    } else {
-      connectionSourceIds.add(id);
-    }
+  if (multiSelectionMode) {
+    if (nextType === "frame") activeFrameId = id;
+    toggleSelectionRoot(id);
     hintsVisible = true;
     hintEntries = visibleHintEntries();
-    setStatus(`${connectionSourceIds.size} source node${connectionSourceIds.size === 1 ? "" : "s"} marked. Press L to choose the target.`);
+    setStatus(`${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected. Press L to connect selected nodes.`);
     render();
     return;
   }
@@ -443,7 +432,8 @@ const selectElement = async (id, options = {}) => {
   render();
 };
 
-const hintAlphabetForMode = () => (sourceSelectionMode && mode !== "connection" ? hintAlphabet.replace("L", "") : hintAlphabet);
+const hintAlphabetForMode = () =>
+  multiSelectionMode && mode !== "connection" ? hintAlphabet.replace("L", "").replace("M", "") : hintAlphabet;
 
 const generateHintLabels = (count, alphabet = hintAlphabetForMode()) => {
   const labels = [...alphabet];
@@ -517,7 +507,7 @@ const visibleHintEntries = () => {
     }
   }
 
-  const modeFilteredEntries = mode === "connection" || sourceSelectionMode ? entries.filter((entry) => entry.type === "node") : entries;
+  const modeFilteredEntries = mode === "connection" ? entries.filter((entry) => entry.type === "node") : entries;
   const labels = generateHintLabels(modeFilteredEntries.length);
   return modeFilteredEntries.map((entry, index) => ({ ...entry, hint: labels[index] }));
 };
@@ -700,7 +690,7 @@ const createNode = async (
   };
   replaceSelection(id);
   connectionSourceIds.clear();
-  sourceSelectionMode = false;
+  multiSelectionMode = false;
   await persist("Create node");
   render();
   return id;
@@ -766,7 +756,7 @@ const createFrame = async () => {
   activeFrameId = id;
   replaceSelection(id);
   connectionSourceIds.clear();
-  sourceSelectionMode = false;
+  multiSelectionMode = false;
   await persist("Create frame");
   render();
 };
@@ -798,37 +788,43 @@ const frameAtPoint = (point) => {
   return candidates[0] || frameById()[rootFrameId()];
 };
 
-const moveNodeToFrame = async (nodeId, targetFrameId, position = null) => {
-  const node = nodeById()[nodeId];
+const moveNodesToFrame = async (nodeIds, targetFrameId, positions = {}) => {
+  const nodes = nodeIds.map((nodeId) => nodeById()[nodeId]).filter(Boolean);
   const targetFrame = frameById()[targetFrameId];
-  if (!node || !targetFrame) return;
+  if (!nodes.length || !targetFrame) return;
+  const movedNodeIds = new Set(nodes.map((node) => node.id));
+  const previousFrameIds = new Set(nodes.map((node) => node.frameId));
 
   for (const frame of canvas().frames) {
-    frame.nodeIds = frame.nodeIds.filter((id) => id !== nodeId);
+    frame.nodeIds = frame.nodeIds.filter((id) => !movedNodeIds.has(id));
   }
-  if (!targetFrame.nodeIds.includes(nodeId)) targetFrame.nodeIds.push(nodeId);
-  const previousFrameId = node.frameId;
-  node.frameId = targetFrame.id;
-  node.updatedAt = now();
+  for (const node of nodes) {
+    if (!targetFrame.nodeIds.includes(node.id)) targetFrame.nodeIds.push(node.id);
+    node.frameId = targetFrame.id;
+    node.updatedAt = now();
 
-  const box = tree().layout.nodes[nodeId];
-  if (position) {
-    box.x = Math.round(position.x);
-    box.y = Math.round(position.y);
-  } else {
-    const targetBox = layoutFrame(targetFrame.id);
-    const fitsTarget =
-      box.x >= targetBox.x + 18 &&
-      box.y >= targetBox.y + 48 &&
-      box.x + box.width <= targetBox.x + targetBox.width - 18 &&
-      box.y + box.height <= targetBox.y + targetBox.height - 18;
-    if (!fitsTarget) {
-      box.x = Math.round(targetBox.x + 36);
-      box.y = Math.round(targetBox.y + 62);
+    const box = tree().layout.nodes[node.id];
+    const position = positions[node.id];
+    if (position) {
+      box.x = Math.round(position.x);
+      box.y = Math.round(position.y);
+    } else {
+      const targetBox = layoutFrame(targetFrame.id);
+      const fitsTarget =
+        box.x >= targetBox.x + 18 &&
+        box.y >= targetBox.y + 48 &&
+        box.x + box.width <= targetBox.x + targetBox.width - 18 &&
+        box.y + box.height <= targetBox.y + targetBox.height - 18;
+      if (!fitsTarget) {
+        const index = nodes.indexOf(node);
+        box.x = Math.round(targetBox.x + 36 + index * 18);
+        box.y = Math.round(targetBox.y + 62 + index * 18);
+      }
     }
+    box.layoutSource = "manual";
   }
-  box.layoutSource = "manual";
-  for (const link of tree().links.filter((item) => item.sourceNodeId === nodeId || item.targetNodeId === nodeId)) {
+
+  for (const link of tree().links.filter((item) => movedNodeIds.has(item.sourceNodeId) || movedNodeIds.has(item.targetNodeId))) {
     const source = centerOf(layoutNode(link.sourceNodeId));
     const target = centerOf(layoutNode(link.targetNodeId));
     tree().layout.links[link.id] = {
@@ -840,10 +836,18 @@ const moveNodeToFrame = async (nodeId, targetFrameId, position = null) => {
     };
   }
 
-  await persist("Move entity");
-  setStatus(previousFrameId === targetFrame.id ? "Entity moved" : `Entity moved to ${targetFrame.name}`);
+  await persist(nodes.length === 1 ? "Move entity" : "Move selected entities");
+  const changedFrame = previousFrameIds.size !== 1 || !previousFrameIds.has(targetFrame.id);
+  setStatus(
+    changedFrame
+      ? `${nodes.length} ${nodes.length === 1 ? "entity" : "entities"} moved to ${targetFrame.name}`
+      : `${nodes.length} ${nodes.length === 1 ? "entity" : "entities"} moved`
+  );
   render();
 };
+
+const moveNodeToFrame = (nodeId, targetFrameId, position = null) =>
+  moveNodesToFrame([nodeId], targetFrameId, position ? { [nodeId]: position } : {});
 
 const createLink = async (sourceNodeId, targetNodeId, options = {}) => {
   const { selectCreated = true, persistAfter = true, renderAfter = true } = options;
@@ -980,7 +984,7 @@ const promoteAssumption = async (assumptionId) => {
   assumption.promotedNodeId = nodeId;
   replaceSelection(nodeId);
   connectionSourceIds.clear();
-  sourceSelectionMode = false;
+  multiSelectionMode = false;
   await persist("Promote assumption");
   render();
 };
@@ -1164,6 +1168,7 @@ const beginConnection = () => {
     return;
   }
   connectionSourceIds = new Set(sourceIds);
+  multiSelectionMode = false;
   mode = "connection";
   connectionSourceId = sourceIds[0];
   showHints();
@@ -1171,21 +1176,19 @@ const beginConnection = () => {
 };
 
 const toggleMultiSelect = () => {
-  sourceSelectionMode = !sourceSelectionMode;
+  multiSelectionMode = !multiSelectionMode;
   mode = "navigation";
   connectionSourceId = null;
   hintBuffer = "";
 
-  if (sourceSelectionMode) {
-    if (selectedNode()) connectionSourceIds.add(selectedElementId);
+  if (multiSelectionMode) {
     showHints();
-    setStatus(`${connectionSourceIds.size} source node${connectionSourceIds.size === 1 ? "" : "s"} marked. Choose more nodes, then press L.`);
+    setStatus(`${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected. Choose more, then press M to finish.`);
     return;
   }
 
-  connectionSourceIds.clear();
   hintsVisible = false;
-  setStatus("Multi-select cleared");
+  setStatus(`Multi-select finished: ${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected`);
   render();
 };
 
@@ -1639,11 +1642,11 @@ const cancelContext = (options = {}) => {
     return;
   }
 
-  if (mode === "connection" || mode === "editing" || sourceSelectionMode || connectionSourceIds.size) {
+  if (mode === "connection" || mode === "editing" || multiSelectionMode || connectionSourceIds.size) {
     if (mode === "editing") restoreInspectorAfterEditing();
     mode = "navigation";
     connectionSourceId = null;
-    sourceSelectionMode = false;
+    multiSelectionMode = false;
     connectionSourceIds.clear();
     hintsVisible = false;
     setStatus("Current mode cancelled");
@@ -2029,7 +2032,7 @@ const commitInspectorField = async (field) => {
   focusCanvas();
 };
 
-const updateDraggedNodeVisual = (nodeId, nextBox) => {
+const updateDraggedNodeVisual = (nodeId, nextBox, boxOverrides = {}) => {
   const element = app.querySelector(`[data-element-id="${nodeId}"]`);
   if (element) {
     element.style.left = `${nextBox.x}px`;
@@ -2037,8 +2040,8 @@ const updateDraggedNodeVisual = (nodeId, nextBox) => {
   }
 
   for (const link of tree().links.filter((item) => item.sourceNodeId === nodeId || item.targetNodeId === nodeId)) {
-    const sourceBox = link.sourceNodeId === nodeId ? nextBox : layoutNode(link.sourceNodeId);
-    const targetBox = link.targetNodeId === nodeId ? nextBox : layoutNode(link.targetNodeId);
+    const sourceBox = boxOverrides[link.sourceNodeId] || layoutNode(link.sourceNodeId);
+    const targetBox = boxOverrides[link.targetNodeId] || layoutNode(link.targetNodeId);
     const endpoints = linkEndpoints(sourceBox, targetBox);
     const line = app.querySelector(`[data-link-id="${link.id}"]`);
     line?.setAttribute("x1", endpoints.source.x);
@@ -2056,9 +2059,13 @@ const updateDraggedNodeVisual = (nodeId, nextBox) => {
 const beginNodeDrag = (event, element) => {
   if (event.button !== 0 || layoutAnimating) return;
   const nodeId = element.dataset.elementId;
-  const startBox = { ...layoutNode(nodeId) };
+  const draggedNodeIds = selectionRootIds.has(nodeId)
+    ? [...selectionRootIds].filter((id) => Boolean(nodeById()[id]))
+    : [nodeId];
+  const startBoxes = Object.fromEntries(draggedNodeIds.map((id) => [id, { ...layoutNode(id) }]));
+  const startBox = startBoxes[nodeId];
   const startPointer = { x: event.clientX, y: event.clientY };
-  let nextBox = startBox;
+  let nextBoxes = structuredClone(startBoxes);
   let dragging = false;
   let targetFrame = frameById()[nodeById()[nodeId]?.frameId];
 
@@ -2068,12 +2075,14 @@ const beginNodeDrag = (event, element) => {
     if (!dragging && Math.hypot(dx, dy) < 5) return;
     dragging = true;
     moveEvent.preventDefault();
-    nextBox = { ...startBox, x: startBox.x + dx, y: startBox.y + dy };
-    targetFrame = frameAtPoint(centerOf(nextBox));
+    nextBoxes = Object.fromEntries(
+      draggedNodeIds.map((id) => [id, { ...startBoxes[id], x: startBoxes[id].x + dx, y: startBoxes[id].y + dy }])
+    );
+    targetFrame = frameAtPoint(centerOf(nextBoxes[nodeId]));
     app.querySelectorAll(".tree-frame").forEach((frameElement) => {
       frameElement.classList.toggle("drop-target", frameElement.dataset.elementId === targetFrame.id);
     });
-    updateDraggedNodeVisual(nodeId, nextBox);
+    for (const id of draggedNodeIds) updateDraggedNodeVisual(id, nextBoxes[id], nextBoxes);
   };
 
   const finish = async () => {
@@ -2083,7 +2092,7 @@ const beginNodeDrag = (event, element) => {
     app.querySelectorAll(".tree-frame.drop-target").forEach((frameElement) => frameElement.classList.remove("drop-target"));
     if (!dragging) return;
     element.dataset.dragged = "true";
-    await moveNodeToFrame(nodeId, targetFrame?.id || rootFrameId(), nextBox);
+    await moveNodesToFrame(draggedNodeIds, targetFrame?.id || rootFrameId(), nextBoxes);
   };
 
   element.addEventListener(
@@ -2342,7 +2351,17 @@ const handleKeydown = async (event) => {
     return;
   }
 
-  if (sourceSelectionMode && mode !== "connection" && hintsVisible && event.key.toLowerCase() === "l" && connectionSourceIds.size) {
+  if (command === "toggleMultiSelect") {
+    event.preventDefault();
+    toggleMultiSelect();
+    return;
+  }
+
+  if (
+    multiSelectionMode &&
+    command === "beginConnection" &&
+    [...selectionRootIds].some((id) => Boolean(nodeById()[id]))
+  ) {
     event.preventDefault();
     beginConnection();
     return;
@@ -2517,6 +2536,11 @@ window.__ltpSmokeTest = async () => {
     !hintsVisible &&
     hintBuffer === "" &&
     document.querySelector("[data-action='hints']")?.getAttribute("aria-pressed") === "false";
+  replaceSelection(activeTree.nodes[0].id);
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true }));
+  const multiSelectOpens = multiSelectionMode && hintsVisible;
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true }));
+  const multiSelectToggles = multiSelectOpens && !multiSelectionMode && !hintsVisible;
 
   panelState.leftOpen = true;
   render();
@@ -2778,10 +2802,14 @@ window.__ltpSmokeTest = async () => {
   await createFrame();
   const temporaryFrameId = selectedElementId;
   const frameNodeId = await createNode(temporaryFrameId, "necessaryCondition", "Temporary frame node");
+  const companionFrameNodeId = await createNode(temporaryFrameId, "necessaryCondition", "Companion frame node");
   const frameLinkId = await createLink(frameNodeId, tree().nodes[0].id);
   const linkCountBeforeFrameMove = tree().links.length;
+  replaceSelection(frameNodeId);
+  toggleSelectionRoot(companionFrameNodeId);
   const dragElement = document.querySelector(`[data-element-id="${frameNodeId}"]`);
-  const dragStartBox = layoutNode(frameNodeId);
+  const dragStartBox = { ...layoutNode(frameNodeId) };
+  const companionStartBox = { ...layoutNode(companionFrameNodeId) };
   const dragTarget = { x: 12, y: 12 };
   const dragStart = { x: 120, y: 120 };
   dragElement.dispatchEvent(
@@ -2802,14 +2830,25 @@ window.__ltpSmokeTest = async () => {
     })
   );
   document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true }));
-  await waitFor(() => nodeById()[frameNodeId]?.frameId === rootFrameId());
+  await waitFor(
+    () =>
+      nodeById()[frameNodeId]?.frameId === rootFrameId() &&
+      nodeById()[companionFrameNodeId]?.frameId === rootFrameId()
+  );
   const entityCanLeaveFrame =
     nodeById()[frameNodeId].frameId === rootFrameId() &&
     frameById()[rootFrameId()].nodeIds.includes(frameNodeId) &&
     !frameById()[temporaryFrameId].nodeIds.includes(frameNodeId);
-  await moveNodeToFrame(frameNodeId, temporaryFrameId);
+  const groupDragPreservesSelection =
+    frameById()[rootFrameId()].nodeIds.includes(companionFrameNodeId) &&
+    Math.abs(
+      (layoutNode(companionFrameNodeId).x - layoutNode(frameNodeId).x) -
+        (companionStartBox.x - dragStartBox.x)
+    ) < 1;
+  await moveNodesToFrame([frameNodeId, companionFrameNodeId], temporaryFrameId);
   const entityCanEnterFrame =
     nodeById()[frameNodeId].frameId === temporaryFrameId &&
+    nodeById()[companionFrameNodeId].frameId === temporaryFrameId &&
     frameById()[temporaryFrameId].nodeIds.includes(frameNodeId) &&
     tree().links.length === linkCountBeforeFrameMove &&
     Boolean(linkById()[frameLinkId]);
@@ -2818,6 +2857,7 @@ window.__ltpSmokeTest = async () => {
   const frameDeletionCascades =
     !frameById()[temporaryFrameId] &&
     !nodeById()[frameNodeId] &&
+    !nodeById()[companionFrameNodeId] &&
     !linkById()[frameLinkId] &&
     !canvas().layout.frames[temporaryFrameId] &&
     !tree().layout.nodes[frameNodeId] &&
@@ -2854,6 +2894,7 @@ window.__ltpSmokeTest = async () => {
       twoLetterHintWorks &&
       keyboardHintsToggle &&
       hintButtonToggles &&
+      multiSelectToggles &&
       allShortcutsListed &&
       viewportPreserved &&
       arrowEndsAtEdge &&
@@ -2894,6 +2935,7 @@ window.__ltpSmokeTest = async () => {
       frameDeletionCascades &&
       entityCanLeaveFrame &&
       entityCanEnterFrame &&
+      groupDragPreservesSelection &&
       rootFrameIsProtected &&
       Object.keys(commandBindings).length >= 10 &&
       Boolean(exportResult.path),
@@ -2916,6 +2958,7 @@ window.__ltpSmokeTest = async () => {
     twoLetterHintWorks,
     keyboardHintsToggle,
     hintButtonToggles,
+    multiSelectToggles,
     allShortcutsListed,
     viewportPreserved,
     arrowEndsAtEdge,
@@ -2956,6 +2999,7 @@ window.__ltpSmokeTest = async () => {
     frameDeletionCascades,
     entityCanLeaveFrame,
     entityCanEnterFrame,
+    groupDragPreservesSelection,
     rootFrameIsProtected,
     exportPath: exportResult.path
   };

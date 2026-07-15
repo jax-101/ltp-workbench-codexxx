@@ -382,3 +382,9 @@ Razon: reutilizar `L` para conectar o mover segun el tipo del target haria posib
 Decision: mover una entidad o frame cambia su ubicacion en la jerarquia del canvas sin cambiar automaticamente `treeId` ni su pertenencia semantica al diagrama. El root puede actuar como area espacial sin frame finito.
 
 Razon: esta separacion permite sacar temporalmente elementos de un frame, componer varios arboles y preservar las reglas de cada grafo. Mover contenido a otro arbol requerira una operacion semantica distinta.
+
+### D-062: M activa seleccion general, no fuentes de links
+
+Decision: `M` alterna un modo de seleccion multiple sobre los elementos generales. Al pulsar `L`, los nodos de esa seleccion se copian al estado separado de fuentes de conexion.
+
+Razon: la apariencia de seleccion hacia esperar que copiar, borrar o arrastrar afectara al grupo. Reservar internamente `M` solo para fuentes de links creaba un estado visualmente amplio pero funcionalmente estrecho.

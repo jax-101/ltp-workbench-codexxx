@@ -352,9 +352,19 @@ Aprendizaje: una migracion compatible no es una utilidad aislada. Debe ser idemp
 
 Aplicacion futura: probar schema antiguo, schema actual y doble migracion; centralizar la conversion; persistirla de forma atomica; y hacer que nuevas interfaces reutilicen el mismo limite de carga.
 
+### L-039: La apariencia de seleccion debe prometer el mismo alcance operativo
+
+Fecha: 2026-07-16
+
+Evidencia: `M` resaltaba varios nodos como si formaran una seleccion, pero internamente solo los marcaba como fuentes de links; por eso arrastrar uno movia exclusivamente ese nodo.
+
+Aprendizaje: cuando varios objetos comparten la apariencia convencional de seleccion, el usuario espera que las operaciones colectivas actuen sobre todos. Un estado especializado debe tener otra representacion o derivarse explicitamente de la seleccion general.
+
+Aplicacion futura: definir una seleccion canonica reutilizada por mover, copiar y borrar; convertirla a estados especializados al iniciar cada comando; y probar que teclado y raton producen el mismo conjunto operativo.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-039`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-040`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

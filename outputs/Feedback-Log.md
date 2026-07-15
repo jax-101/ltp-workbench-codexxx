@@ -323,6 +323,8 @@ Estado: pendiente. La pertenencia logica ya puede modificarse, pero la geometria
 
 Validacion 3A.1: confirmado visualmente que una entidad puede quedar encima de un frame al que no pertenece. Se mantiene como objetivo principal de 3B.
 
+Validacion 3A.4: confirmado tambien el caso inverso: una entidad pertenece correctamente a `Goal Tree` y entra en su seleccion estructural, pero queda dibujada fuera del rectangulo. La pertenencia no debe alterarse por coordenadas; 3B ajustara la geometria del frame y su contenido.
+
 Criterios de aceptacion:
 
 - Cada entidad queda completamente dentro del frame al que pertenece directamente.
@@ -335,7 +337,7 @@ Criterios de aceptacion:
 
 Feedback: siempre debe existir un frame base infinito. Crear una entidad con `N` requiere un frame de contexto seleccionado.
 
-Estado: refinado en el build 3A.3 y pendiente de nueva validacion manual. El frame raiz sigue existiendo en el modelo, pero no se dibuja ni entra en los limites del canvas o minimapa. Un selector y un boton `Root` permiten activarlo explicitamente; el canvas muestra siempre el contexto usado por `N`.
+Estado: refinado en el build 3A.3 y validado sobre el canvas compuesto el 2026-07-16. El root global no se dibuja ni entra en los limites del canvas o minimapa. Un selector y un boton `Root` permiten activarlo explicitamente; el canvas muestra siempre el contexto usado por `N`.
 
 Criterios de aceptacion:
 
@@ -598,7 +600,7 @@ Criterios de aceptacion:
 
 Feedback: el root debe ser un frame global, ilimitado y permanente. Cada arbol debe tener ademas un frame explicito propio, de forma que varios arboles puedan colocarse en el root o dentro de otro frame.
 
-Estado: implementado en el build `3A.4` y pendiente de validacion manual. El canvas posee un root conceptual unico; el antiguo root del arbol se migra sin cambiar su identidad a un frame anfitrion visible y finito.
+Estado: implementado en el build `3A.4` y validado manualmente el 2026-07-16. El canvas posee un root conceptual unico; el antiguo root del arbol se migra sin cambiar su identidad a un frame anfitrion visible y finito.
 
 Criterios de aceptacion:
 
@@ -613,7 +615,7 @@ Criterios de aceptacion:
 
 Feedback: en lugar de contadores genericos `Selected` e `Included`, al seleccionar un frame conviene mostrar un resumen de su contenido por categoria o tipo.
 
-Estado: implementado en el build `3A.4` y pendiente de validacion manual. El estado del canvas y el inspector muestran recuentos por tipo declarativo, subframes, links internos y assumptions relacionados.
+Estado: implementado en el build `3A.4` y validado manualmente el 2026-07-16. El estado del canvas y el inspector muestran recuentos por tipo declarativo, subframes, links internos y assumptions relacionados.
 
 Criterios de aceptacion:
 
@@ -639,3 +641,18 @@ Criterios de aceptacion:
 - Los links conservan su identidad y recalculan su ruta.
 - Mover una entidad al root cambia su contenedor espacial, pero no el arbol logico al que pertenece.
 - `Ctrl+G` cancela el modo de destino sin modificar datos.
+
+### F-058: Seleccion multiple general y arrastre colectivo
+
+Feedback: `M` debe activar y desactivar una seleccion multiple general. Si se arrastra una entidad que pertenece a esa seleccion, deben desplazarse juntas todas las entidades seleccionadas.
+
+Estado: implementado en el build `3A.5` y pendiente de validacion manual. `M` ya no representa un conjunto especial de fuentes de links; `L` transforma despues los nodos seleccionados en fuentes. El arrastre colectivo se guarda como una sola operacion reversible.
+
+Criterios de aceptacion:
+
+- Pulsar `M` entra en seleccion multiple y pulsarlo de nuevo cierra los hints sin limpiar la seleccion.
+- Los hints de seleccion multiple admiten nodos, links y frames.
+- `L` usa solamente los nodos de la seleccion general como fuentes y mantiene separado el estado de conexion.
+- Arrastrar un nodo explicitamente seleccionado mueve todos los nodos explicitamente seleccionados conservando sus distancias relativas.
+- El grupo cambia de frame en una unica transaccion y Undo lo devuelve completo.
+- La contencion final y el crecimiento del frame cumplen F-036 en 3B.

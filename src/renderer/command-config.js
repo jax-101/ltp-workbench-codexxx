@@ -34,7 +34,7 @@ window.LTP_COMMAND_BINDINGS = Object.freeze({
 window.LTP_COMMAND_LABELS = Object.freeze({
   commandPalette: "Command palette",
   showHints: "Toggle hints",
-  toggleMultiSelect: "Toggle multi-source selection",
+  toggleMultiSelect: "Toggle multiple selection",
   createNode: "Create node",
   createParentNode: "Create parent condition",
   createSupportingNode: "Create supporting condition",
