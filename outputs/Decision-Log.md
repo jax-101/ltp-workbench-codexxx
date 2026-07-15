@@ -272,3 +272,27 @@ Razon: cuando el zoom se aleja mas que el tamano del diagrama, escalar solo cont
 Decision: al cambiar el zoom, el punto de anclaje es el centro del conjunto seleccionado. Si no existe seleccion, se mantiene el centro logico actual del viewport.
 
 Razon: la seleccion representa el contexto activo del usuario y debe permanecer visible mientras cambia la escala. La regla alternativa conserva el comportamiento espacial actual cuando no hay un objetivo explicito.
+
+### D-044: El dominio es independiente de Electron
+
+Decision: reglas, validacion, comandos y transacciones viven en un nucleo Node sin dependencias del DOM. Electron, CLI y un futuro servidor MCP son adaptadores del mismo servicio de aplicacion.
+
+Razon: automatizar la interfaz o duplicar reglas para terminal produciria comportamientos distintos y reduciria las garantias para agentes headless.
+
+### D-045: Undo/Redo usa parches transaccionales
+
+Decision: cada intencion semantica genera parches directos e inversos mediante Immer. No se implementan inversas manuales por operacion ni event sourcing completo como fuente principal.
+
+Razon: los parches restauran borrados en cascada y cambios compuestos sin duplicar logica, manteniendo el JSON actual como estado canonico.
+
+### D-046: La concurrencia se controla por revision e idempotencia
+
+Decision: cada escritura declara `expectedRevision` y `commandId`. El repositorio bloquea el archivo, vuelve a comprobar la revision y escribe atomicamente.
+
+Razon: una UI y un agente pueden operar en procesos diferentes. Las revisiones evitan sobrescrituras silenciosas y el ID permite reintentos seguros.
+
+### D-047: El historial semantico no incluye ViewState
+
+Decision: zoom, pan, paneles, hints y seleccion se persisten fuera de la pila de Undo/Redo. Al aplicar parches historicos se conserva el `ViewState` actual.
+
+Razon: deshacer una edicion no debe transportar al usuario a otra zona del canvas ni cambiar la disposicion de trabajo elegida.

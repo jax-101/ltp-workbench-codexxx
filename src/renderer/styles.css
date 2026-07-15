@@ -285,10 +285,24 @@ kbd {
   color: var(--white);
 }
 
+.history-controls,
 .zoom-controls {
   display: grid;
-  grid-template-columns: 34px 62px 34px 44px;
   gap: 4px;
+}
+
+.history-controls {
+  grid-template-columns: repeat(2, 34px);
+}
+
+.history-controls button {
+  min-width: 0;
+  padding: 6px;
+  font-size: 18px;
+}
+
+.zoom-controls {
+  grid-template-columns: 34px 62px 34px 44px;
 }
 
 .zoom-controls button {

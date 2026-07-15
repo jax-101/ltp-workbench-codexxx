@@ -142,9 +142,30 @@ Criterios de aceptacion:
 - Al acercar, el minimapa sigue mostrando el contenido completo y el rectangulo reduce su tamano.
 - Click, arrastre, pan y ajuste a pantalla conservan su correspondencia con el canvas.
 
+## Iteracion 3.0: nucleo transaccional y acceso headless
+
+Estado: infraestructura inicial implementada; pendiente de validacion manual de Undo/Redo.
+
+Incluye:
+
+- F-050: deshacer y rehacer cambios semanticos con parches directos e inversos.
+- F-051: nucleo de dominio independiente de Electron y primera CLI JSON.
+- Revision optimista, command IDs idempotentes, validacion previa al commit y escritura atomica con bloqueo.
+- Cola de operaciones para coordinar vista, edicion y persistencia.
+- Migracion granular de `node.update`; el resto de operaciones entra temporalmente como transaccion compatible.
+
+Criterios de aceptacion:
+
+- `Cmd/Ctrl+Z` deshace y `Cmd/Ctrl+Shift+Z` o `Cmd/Ctrl+Y` rehacen fuera de campos de texto.
+- Los campos de texto conservan su historial nativo mientras se editan.
+- Undo/Redo no modifica zoom, pan ni disposicion de paneles.
+- Un comando invalido o concurrente no deja cambios parciales.
+- Repetir un `commandId` no duplica una operacion.
+- La CLI valida, consulta y previsualiza comandos usando el mismo nucleo que Electron.
+
 ## Iteracion 3A: seleccion y contexto estructural
 
-Estado: planificada. Comenzar despues de validar la iteracion 2.4 e integrar la serie 2.x.
+Estado: planificada. Comenzar despues de validar la iteracion 3.0.
 
 Incluye:
 

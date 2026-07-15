@@ -1,7 +1,12 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs/promises");
+const { randomUUID } = require("node:crypto");
 const ELK = require("elkjs/lib/elk.bundled.js");
+const { TransactionEngine, workspaceRevision } = require("./core/transaction-engine");
+const { WorkspaceRepository } = require("./core/workspace-repository");
+
+let workspaceEngine = null;
 
 const prototypeDataPath = () => {
   let fileName = "prototype-workspace.json";
@@ -105,7 +110,6 @@ const loadWorkspace = async () => {
       } catch {
         workspace = fallbackWorkspace();
       }
-      await saveWorkspace(workspace);
       return workspace;
     }
   }
@@ -131,19 +135,57 @@ const loadWorkspace = async () => {
     } catch {
       workspace = fallbackWorkspace();
     }
-    await saveWorkspace(workspace);
     return workspace;
   }
 };
 
-const saveWorkspace = async (workspace) => {
-  const nextWorkspace = {
-    ...workspace,
-    updatedAt: new Date().toISOString()
+const getWorkspaceEngine = async () => {
+  if (workspaceEngine) return workspaceEngine;
+  const initialWorkspace = await loadWorkspace();
+  const repository = new WorkspaceRepository(prototypeDataPath());
+  const normalizedWorkspace = {
+    ...initialWorkspace,
+    revision: workspaceRevision(initialWorkspace)
   };
-  await fs.mkdir(path.dirname(prototypeDataPath()), { recursive: true });
-  await fs.writeFile(prototypeDataPath(), JSON.stringify(nextWorkspace, null, 2));
-  return nextWorkspace;
+  const persistedWorkspace = process.env.LTP_SMOKE_TEST === "1"
+    ? await repository.reset(normalizedWorkspace)
+    : await repository.initialize(normalizedWorkspace);
+  workspaceEngine = new TransactionEngine(persistedWorkspace, {
+    persist: (workspace, metadata) => repository.commit(workspace, metadata)
+  });
+  return workspaceEngine;
+};
+
+const saveWorkspaceTransaction = async (workspace, options = {}) => {
+  const engine = await getWorkspaceEngine();
+  const result = await engine.execute(
+    {
+      commandId: options.commandId || randomUUID(),
+      type: "workspace.replace",
+      label: options.label || "Update workspace",
+      expectedRevision: workspaceRevision(workspace),
+      payload: {
+        workspace,
+        includeViewState: options.includeViewState !== false
+      }
+    },
+    { recordHistory: options.recordHistory !== false }
+  );
+  return result.workspace;
+};
+
+const saveViewStateTransaction = async (treeId, viewState) => {
+  const engine = await getWorkspaceEngine();
+  return engine.execute(
+    {
+      commandId: randomUUID(),
+      type: "view.update",
+      label: "Update view",
+      expectedRevision: engine.getHistoryState().revision,
+      payload: { treeId, viewState }
+    },
+    { recordHistory: false }
+  );
 };
 
 const getActiveTree = (workspace) => workspace.trees[0];
@@ -389,8 +431,13 @@ const createWindow = () => {
   }
 };
 
-ipcMain.handle("workspace:load", loadWorkspace);
-ipcMain.handle("workspace:save", async (_event, workspace) => saveWorkspace(workspace));
+ipcMain.handle("workspace:load", async () => (await getWorkspaceEngine()).getSnapshot());
+ipcMain.handle("workspace:save", async (_event, workspace, options) => saveWorkspaceTransaction(workspace, options));
+ipcMain.handle("workspace:save-view", async (_event, treeId, viewState) => saveViewStateTransaction(treeId, viewState));
+ipcMain.handle("workspace:execute", async (_event, command, options) => (await getWorkspaceEngine()).execute(command, options));
+ipcMain.handle("history:undo", async () => (await getWorkspaceEngine()).undo());
+ipcMain.handle("history:redo", async () => (await getWorkspaceEngine()).redo());
+ipcMain.handle("history:state", async () => (await getWorkspaceEngine()).getHistoryState());
 ipcMain.handle("layout:run", async (_event, workspace) => runLayout(workspace));
 ipcMain.handle("export:markdown", async (_event, workspace) => exportMarkdown(workspace));
 

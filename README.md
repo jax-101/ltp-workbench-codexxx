@@ -26,6 +26,19 @@ npm run dist
 
 La salida se generara en `outputs/dist`.
 
+## Nucleo transaccional y CLI
+
+La aplicacion dispone de un nucleo independiente de Electron con validacion, revision optimista, Undo/Redo y escritura atomica.
+
+Consultas headless iniciales:
+
+```bash
+npm run ltp -- validate --workspace outputs/sample-workspace-v0.1.json --json
+npm run ltp -- tree list --workspace outputs/sample-workspace-v0.1.json --json
+```
+
+La arquitectura y los comandos de escritura se describen en `outputs/Headless-Architecture.md`.
+
 ## Proxima informacion necesaria
 
 Para convertir esta base en una herramienta realmente fiel a tu forma de usar LTP, conviene incorporar:

@@ -1,4 +1,4 @@
-# Manual Test Guide: Interface Iterations 1, 1.1, 2, 2.1, 2.2 and 2.3
+# Manual Test Guide: Interface Iterations 1 through 3.0
 
 Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en un archivo de prueba separado. No modifica el workspace normal.
 
@@ -170,7 +170,30 @@ Resultado esperado: la entidad cambia de pertenencia en ambos sentidos, conserva
 
 Resultado esperado: tecla y boton alternan el mismo estado, cerrar limpia cualquier secuencia parcial y la lista plegable contiene todas las combinaciones configuradas.
 
-## Prueba 16: regresion basica
+## Prueba 16: deshacer y rehacer
+
+1. Edita el texto de una entidad y confirma con `Enter`.
+2. Pulsa `Cmd/Ctrl+Z` y comprueba que recupera el texto anterior.
+3. Pulsa `Cmd/Ctrl+Shift+Z` y comprueba que reaparece el cambio.
+4. Repite usando los dos botones de flecha de la barra superior.
+5. Deshaz y realiza una accion nueva; comprueba que Rehacer queda desactivado.
+6. Haz zoom, desplaza el canvas y deshaz una edicion.
+7. Dentro del campo de texto, usa el deshacer nativo antes de confirmar.
+
+Resultado esperado: cada intencion se deshace completa, Rehacer sigue la pila correcta y el historial semantico no cambia zoom, pan ni paneles.
+
+## Prueba 17: acceso headless seguro
+
+Con la aplicacion cerrada, ejecuta:
+
+```bash
+npm run ltp -- validate --workspace outputs/sample-workspace-v0.1.json --json
+npm run ltp -- tree list --workspace outputs/sample-workspace-v0.1.json --json
+```
+
+Resultado esperado: ambos comandos devuelven JSON valido, revision y resultados sin modificar el ejemplo.
+
+## Prueba 18: regresion basica
 
 Comprueba que siguen funcionando:
 

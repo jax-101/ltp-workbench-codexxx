@@ -23,6 +23,8 @@ let layoutAnimating = false;
 let layoutAnimationFrameCount = 0;
 let layoutAnimationMovedElements = 0;
 let layoutAnimationConnectionsTracked = false;
+let historyState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel: null, revision: 0 };
+let workspaceOperationQueue = Promise.resolve();
 
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace("H", "");
@@ -95,6 +97,12 @@ const setStatus = (message) => {
   if (status) status.textContent = message;
 };
 
+const enqueueWorkspaceOperation = (operation) => {
+  const result = workspaceOperationQueue.then(operation);
+  workspaceOperationQueue = result.catch(() => {});
+  return result;
+};
+
 const captureViewport = () => {
   const shell = app.querySelector(".canvas-shell");
   if (!shell) return;
@@ -120,7 +128,15 @@ const scheduleViewStatePersist = () => {
   window.clearTimeout(viewPersistTimer);
   viewPersistTimer = window.setTimeout(async () => {
     updateViewState();
-    await window.ltpPrototype.saveWorkspace(workspaceData);
+    const activeTree = tree();
+    const treeId = activeTree.id;
+    const viewState = structuredClone(activeTree.viewState);
+    await enqueueWorkspaceOperation(async () => {
+      const result = await window.ltpPrototype.saveViewState(treeId, viewState);
+      workspaceData.revision = result.revision;
+      workspaceData.updatedAt = result.workspace.updatedAt;
+      historyState = result.history;
+    });
   }, 300);
 };
 
@@ -230,12 +246,68 @@ const focusPrimaryEditor = () => {
   }
 };
 
-const persist = async () => {
-  workspaceData.updatedAt = now();
+const persist = async (label = "Update workspace") => {
+  window.clearTimeout(viewPersistTimer);
+  const pendingWorkspace = structuredClone(workspaceData);
+  return enqueueWorkspaceOperation(async () => {
+    pendingWorkspace.revision = workspaceData.revision || 0;
+    pendingWorkspace.updatedAt = now();
+    const activeTree = pendingWorkspace.trees?.[0];
+    if (activeTree) activeTree.updatedAt = now();
+    workspaceData = await window.ltpPrototype.saveWorkspace(pendingWorkspace, {
+      recordHistory: true,
+      includeViewState: false,
+      label
+    });
+    historyState = await window.ltpPrototype.getHistoryState();
+    setStatus("Saved locally");
+  });
+};
+
+const executeDomainCommand = async (type, payload, label) => {
+  window.clearTimeout(viewPersistTimer);
+  return enqueueWorkspaceOperation(async () => {
+    const result = await window.ltpPrototype.executeCommand({
+      commandId: uid("command"),
+      type,
+      label,
+      expectedRevision: workspaceData.revision || 0,
+      payload
+    });
+    workspaceData = result.workspace;
+    historyState = result.history;
+    return result;
+  });
+};
+
+const reconcileUiAfterHistory = () => {
   const activeTree = tree();
-  if (activeTree) activeTree.updatedAt = now();
-  workspaceData = await window.ltpPrototype.saveWorkspace(workspaceData);
-  setStatus("Saved locally");
+  if (!activeTree) return;
+  if (!frameById()[activeFrameId]) activeFrameId = activeTree.rootFrameId;
+  if (selectedElementId && elementType(selectedElementId) === "unknown") selectedElementId = null;
+  for (const id of [...selectedElementIds]) {
+    if (elementType(id) === "unknown") selectedElementIds.delete(id);
+  }
+  previewNodeId = nodeById()[previewNodeId] ? previewNodeId : null;
+  deleteCandidateId = null;
+  mode = "navigation";
+};
+
+const moveHistory = async (direction) => {
+  window.clearTimeout(viewPersistTimer);
+  return enqueueWorkspaceOperation(async () => {
+    const result = direction === "undo" ? await window.ltpPrototype.undo() : await window.ltpPrototype.redo();
+    if (!result.changed) {
+      setStatus(direction === "undo" ? "Nothing to undo" : "Nothing to redo");
+      return;
+    }
+    workspaceData = result.workspace;
+    historyState = result.history;
+    reconcileUiAfterHistory();
+    setStatus(`${direction === "undo" ? "Undid" : "Redid"}: ${result.label}`);
+    render();
+    focusCanvas();
+  });
 };
 
 const refreshMaps = () => {
@@ -439,11 +511,12 @@ const handleHintKey = (key) => {
 };
 
 const updateNode = async (id, field, value) => {
-  const node = nodeById()[id];
-  node[field] = value;
-  node.updatedAt = now();
+  await executeDomainCommand(
+    "node.update",
+    { treeId: tree().id, nodeId: id, field, value },
+    `Edit ${nodeTypeLabel(nodeById()[id]?.type || "node")}`
+  );
   render();
-  await persist();
 };
 
 const updateFrame = async (id, field, value) => {
@@ -451,7 +524,7 @@ const updateFrame = async (id, field, value) => {
   frame[field] = value;
   frame.updatedAt = now();
   render();
-  await persist();
+  await persist("Edit frame");
 };
 
 const updateLink = async (id, field, value) => {
@@ -459,7 +532,7 @@ const updateLink = async (id, field, value) => {
   link[field] = value;
   link.updatedAt = now();
   render();
-  await persist();
+  await persist("Edit link");
 };
 
 const updateAssumption = async (id, value) => {
@@ -467,7 +540,7 @@ const updateAssumption = async (id, value) => {
   assumption.statement = value;
   assumption.updatedAt = now();
   render();
-  await persist();
+  await persist("Edit assumption");
 };
 
 const viewportNodePosition = (frame, width = 250, height = 72) => {
@@ -563,7 +636,7 @@ const createNode = async (
   selectedElementType = "node";
   selectedElementIds.clear();
   multiSelectMode = false;
-  await persist();
+  await persist("Create node");
   render();
   return id;
 };
@@ -616,7 +689,7 @@ const createFrame = async () => {
   selectedElementType = "frame";
   selectedElementIds.clear();
   multiSelectMode = false;
-  await persist();
+  await persist("Create frame");
   render();
 };
 
@@ -688,7 +761,7 @@ const moveNodeToFrame = async (nodeId, targetFrameId, position = null) => {
     };
   }
 
-  await persist();
+  await persist("Move entity");
   setStatus(previousFrameId === targetFrame.id ? "Entity moved" : `Entity moved to ${targetFrame.name}`);
   render();
 };
@@ -748,7 +821,7 @@ const createLink = async (sourceNodeId, targetNodeId, options = {}) => {
     selectedElementId = id;
     selectedElementType = "link";
   }
-  if (persistAfter) await persist();
+  if (persistAfter) await persist("Create link");
   if (renderAfter) render();
   return id;
 };
@@ -763,7 +836,7 @@ const createLinksToTarget = async (sourceNodeIds, targetNodeId) => {
     });
     if (linkId) linkIds.push(linkId);
   }
-  await persist();
+  await persist("Create links");
   return linkIds;
 };
 
@@ -784,7 +857,7 @@ const addAssumptionToSelectedLink = async () => {
   };
   tree().assumptions.push(assumption);
   link.assumptionIds.push(id);
-  await persist();
+  await persist("Add assumption");
   render();
 };
 
@@ -832,7 +905,7 @@ const promoteAssumption = async (assumptionId) => {
   selectedElementType = "node";
   selectedElementIds.clear();
   multiSelectMode = false;
-  await persist();
+  await persist("Promote assumption");
   render();
 };
 
@@ -848,7 +921,7 @@ const togglePin = async () => {
     box.pinned = !box.pinned;
     box.layoutSource = box.pinned ? "manual" : "auto";
   }
-  await persist();
+  await persist("Toggle pin");
   render();
 };
 
@@ -954,7 +1027,7 @@ const runAutoLayout = async () => {
     const nextWorkspace = await window.ltpPrototype.runLayout(workspaceData);
     setStatus("Repositioning diagram...");
     await animateToLayout(nextWorkspace);
-    await persist();
+    await persist("Apply layout");
     setStatus("Layout updated with ELK.js");
     render();
   } finally {
@@ -1151,7 +1224,7 @@ const layoutDirectionLabel = (direction) =>
 const updateLayoutDirection = async (direction) => {
   if (!["TB", "BT", "LR", "RL"].includes(direction)) return;
   tree().layout.direction = direction;
-  await persist();
+  await persist("Change layout direction");
   setStatus(`Layout direction: ${layoutDirectionLabel(direction)}`);
   render();
 };
@@ -1567,7 +1640,7 @@ const confirmDeletion = async () => {
   selectedElementType = "unknown";
   selectedElementIds.clear();
   mode = "navigation";
-  await persist();
+  await persist("Delete selection");
   setStatus("Selection deleted");
   render();
   focusCanvas();
@@ -1622,6 +1695,10 @@ const renderCanvas = () => {
         </div>
         <div class="topbar-actions">
           <input class="search-input" data-search value="${escapeHtml(searchText)}" placeholder="Search (/)" />
+          <div class="history-controls" aria-label="Change history">
+            <button data-action="undo" title="Undo${historyState.undoLabel ? `: ${escapeHtml(historyState.undoLabel)}` : ""}" aria-label="Undo" ${historyState.canUndo ? "" : "disabled"}>&#8630;</button>
+            <button data-action="redo" title="Redo${historyState.redoLabel ? `: ${escapeHtml(historyState.redoLabel)}` : ""}" aria-label="Redo" ${historyState.canRedo ? "" : "disabled"}>&#8631;</button>
+          </div>
           <div class="zoom-controls" aria-label="Zoom controls">
             <button data-action="zoom-out" title="Zoom out">-</button>
             <button data-action="zoom-reset" title="Reset zoom">${Math.round(zoomLevel * 100)}%</button>
@@ -1920,6 +1997,8 @@ const bindEvents = () => {
       if (action === "close-node-preview" && button.classList.contains("node-preview-backdrop") && event.target !== button) return;
       if (action === "cancel-delete" && button.classList.contains("delete-backdrop") && event.target !== button) return;
       if (action === "layout") runAutoLayout();
+      if (action === "undo") moveHistory("undo");
+      if (action === "redo") moveHistory("redo");
       if (action === "export") exportMarkdown();
       if (action === "hints") toggleHints();
       if (action === "pin") togglePin();
@@ -2018,6 +2097,8 @@ const executeCommand = (command) => {
     togglePin,
     previewNode: toggleNodePreview,
     cancelContext: () => cancelContext({ clearSelection: true }),
+    undo: () => moveHistory("undo"),
+    redo: () => moveHistory("redo"),
     deleteSelection: requestDeleteSelection,
     panUp: () => panViewport(0, -80),
     panDown: () => panViewport(0, 80),
@@ -2117,6 +2198,7 @@ document.addEventListener("keydown", handleKeydown);
 
 const bootPromise = (async () => {
   workspaceData = await window.ltpPrototype.loadWorkspace();
+  historyState = await window.ltpPrototype.getHistoryState();
   const activeTree = tree();
   selectedElementId = activeTree.viewState?.selectedElementId || activeTree.nodes[0]?.id;
   activeFrameId = activeTree.viewState?.activeFrameId || activeTree.rootFrameId;
@@ -2248,6 +2330,18 @@ window.__ltpSmokeTest = async () => {
   const enterCommitsEditing = await waitFor(
     () => mode === "navigation" && nodeById()[selectedElementId]?.statement.endsWith("Smoke test edit")
   );
+  const undoButtonReady = historyState.canUndo && !document.querySelector("[data-action='undo']")?.disabled;
+  await moveHistory("undo");
+  const undoWorks =
+    undoButtonReady &&
+    nodeById()[selectedElementId]?.statement === originalStatement &&
+    historyState.canRedo &&
+    !document.querySelector("[data-action='redo']")?.disabled;
+  await moveHistory("redo");
+  const redoWorks =
+    nodeById()[selectedElementId]?.statement.endsWith("Smoke test edit") &&
+    historyState.canUndo &&
+    !historyState.canRedo;
 
   panelState.rightOpen = false;
   mode = "navigation";
@@ -2503,6 +2597,8 @@ window.__ltpSmokeTest = async () => {
       enterStartsEditing &&
       shiftEnterKeepsEditing &&
       enterCommitsEditing &&
+      undoWorks &&
+      redoWorks &&
       closedInspectorOpensForEditing &&
       inspectorStateRestoredAfterEditing &&
       previewOpenedWithSpace &&
@@ -2551,6 +2647,8 @@ window.__ltpSmokeTest = async () => {
     enterStartsEditing,
     shiftEnterKeepsEditing,
     enterCommitsEditing,
+    undoWorks,
+    redoWorks,
     closedInspectorOpensForEditing,
     inspectorStateRestoredAfterEditing,
     previewOpenedWithSpace,

@@ -515,3 +515,35 @@ Criterios de aceptacion:
 - Una seleccion multiple usa el centro del conjunto seleccionado.
 - Sin seleccion se conserva el centro logico actual del viewport.
 - El anclaje funciona con botones, atajos y cualquier control de zoom configurado.
+
+### F-050: Deshacer y rehacer operaciones
+
+Feedback: la herramienta debe contemplar opciones de deshacer y rehacer como capacidad transversal.
+
+Estado: infraestructura inicial implementada en la iteracion 3.0, pendiente de validacion manual. Las operaciones existentes quedan cubiertas mediante transacciones compatibles y la edicion de nodos ya usa un comando granular.
+
+Criterios de aceptacion:
+
+- `Cmd/Ctrl+Z` deshace la ultima transaccion semantica.
+- `Cmd/Ctrl+Shift+Z` y `Cmd/Ctrl+Y` rehacen la transaccion.
+- Los botones indican si existe una accion disponible y muestran su nombre.
+- Editar texto, crear, mover, borrar y aplicar Layout se registran como intenciones reconocibles.
+- Zoom, pan, seleccion, hints y paneles no aparecen en el historial semantico.
+- Una accion nueva despues de deshacer limpia la pila de rehacer.
+- El historial de sesion tiene un limite de memoria y no sustituye a checkpoints duraderos.
+
+### F-051: Nucleo headless para terminal y agentes
+
+Feedback: en una fase posterior se debe poder consultar y modificar arboles desde terminal, con garantias suficientes para que agentes de IA trabajen sin interfaz grafica.
+
+Estado: arquitectura base implementada en la iteracion 3.0. Existe una CLI inicial para validar, listar arboles, actualizar nodos y aplicar comandos JSON con `--dry-run`. La cobertura completa de comandos, permisos, auditoria duradera y MCP queda planificada para fases posteriores.
+
+Criterios de aceptacion:
+
+- Electron y CLI consumen el mismo registro de comandos y validador.
+- Todo comando de escritura usa ID idempotente y revision esperada.
+- El almacenamiento rechaza revisiones obsoletas bajo bloqueo de archivo.
+- La escritura usa archivo temporal, sincronizacion y sustitucion atomica.
+- Los errores y consultas tienen una representacion JSON estable.
+- Un agente puede previsualizar el resultado y las invariantes sin modificar archivos.
+- Ningun adaptador necesita modificar directamente el JSON para ejecutar operaciones soportadas.

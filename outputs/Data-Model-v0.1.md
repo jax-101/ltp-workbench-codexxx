@@ -24,6 +24,7 @@ El modelo debe permitir crear un Goal Tree real sin raton y guardar/cargar el tr
 - Mantener archivos legibles por humanos.
 - Usar IDs estables, no derivados del texto visible.
 - Versionar el schema desde el primer dia.
+- Mantener una `revision` monotona para control de concurrencia entre adaptadores.
 - Guardar suficiente informacion para reconstruir la experiencia de teclado y canvas.
 
 ## 3. Estructura de carpetas propuesta
@@ -392,9 +393,13 @@ Campos:
 
 Fase 1 puede guardar fuentes aunque no tenga biblioteca contextual avanzada.
 
-## 16. Checkpoints
+## 16. Historial de sesion y checkpoints
 
-Fase 1 soporta checkpoints manuales simples.
+El workspace persistido incluye `revision`, un entero que aumenta con cada transaccion confirmada. Se usa para detectar escrituras concurrentes y no identifica una version de negocio.
+
+Undo/Redo mantiene parches directos e inversos solo durante la sesion. Este historial efimero no se guarda dentro del workspace.
+
+Los checkpoints manuales proporcionan restauracion duradera.
 
 Campos en metadata de checkpoint:
 
@@ -404,7 +409,7 @@ Campos en metadata de checkpoint:
 - `systemId`.
 - `treeIds`.
 
-No hay historial complejo ni merge en fase 1.
+No hay merge automatico ni event sourcing completo en fase 1.
 
 ## 17. Export Markdown
 

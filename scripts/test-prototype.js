@@ -12,6 +12,11 @@ const steps = [
     args: ["run", "validate:model"]
   },
   {
+    name: "Test transactional core",
+    command: "npm",
+    args: ["run", "test:core"]
+  },
+  {
     name: "Check main process syntax",
     command: process.execPath,
     args: ["--check", "src/main.js"]

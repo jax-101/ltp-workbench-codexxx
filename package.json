@@ -3,11 +3,16 @@
   "version": "0.1.0",
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
   "main": "src/main.js",
+  "bin": {
+    "ltp": "scripts/ltp-cli.js"
+  },
   "scripts": {
     "start": "electron .",
     "test:manual": "LTP_MANUAL_TEST=1 LTP_USE_SAMPLE=1 electron .",
     "smoke": "LTP_SMOKE_TEST=1 LTP_USE_SAMPLE=1 LTP_MANUAL_TEST=1 electron .",
     "test:prototype": "node scripts/test-prototype.js",
+    "test:core": "node scripts/test-core.js",
+    "ltp": "node scripts/ltp-cli.js",
     "validate:model": "node scripts/validate-model.js",
     "package": "electron-builder --dir",
     "dist": "electron-builder"
@@ -31,6 +36,7 @@
     },
     "files": [
       "src/**/*",
+      "scripts/ltp-cli.js",
       "outputs/sample-workspace-v0.1.json",
       "package.json"
     ],
@@ -39,6 +45,8 @@
     }
   },
   "dependencies": {
-    "elkjs": "^0.11.1"
+    "elkjs": "^0.11.1",
+    "immer": "^10.2.0",
+    "proper-lockfile": "^4.1.2"
   }
 }
