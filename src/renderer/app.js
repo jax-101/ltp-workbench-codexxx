@@ -25,8 +25,9 @@ let layoutAnimationMovedElements = 0;
 let layoutAnimationConnectionsTracked = false;
 
 const app = document.querySelector("#app");
-const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace("H", "");
 const commandBindings = window.LTP_COMMAND_BINDINGS || {};
+const commandLabels = window.LTP_COMMAND_LABELS || {};
 
 const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 const now = () => new Date().toISOString();
@@ -407,6 +408,17 @@ const hideHints = () => {
   hintsVisible = false;
   hintBuffer = "";
   render();
+};
+
+const toggleHints = () => {
+  if (hintsVisible) {
+    hintsVisible = false;
+    hintBuffer = "";
+    setStatus("Hints hidden");
+    render();
+    return;
+  }
+  showHints();
 };
 
 const handleHintKey = (key) => {
@@ -1004,6 +1016,42 @@ const toggleMultiSelect = () => {
   render();
 };
 
+const displayShortcutKey = (key) =>
+  ({
+    " ": "Space",
+    ArrowUp: "Up",
+    ArrowDown: "Down",
+    ArrowLeft: "Left",
+    ArrowRight: "Right",
+    Backspace: "Backspace",
+    Delete: "Delete",
+    Enter: "Enter"
+  })[key] || key.toUpperCase();
+
+const formatShortcutBinding = (binding) => {
+  const parts = [];
+  if (binding.primary) parts.push("Cmd/Ctrl");
+  if (binding.control) parts.push("Ctrl");
+  if (binding.alt) parts.push("Alt");
+  if (binding.shift) parts.push("Shift");
+  parts.push(displayShortcutKey(binding.key));
+  return parts.join("+");
+};
+
+const renderShortcutList = () =>
+  Object.entries(commandBindings)
+    .map(
+      ([command, bindings]) => `
+        <div class="shortcut-item" data-shortcut-command="${command}">
+          <span class="shortcut-keys">
+            ${bindings.map((binding) => `<kbd>${escapeHtml(formatShortcutBinding(binding))}</kbd>`).join("")}
+          </span>
+          <span>${escapeHtml(commandLabels[command] || command)}</span>
+        </div>
+      `
+    )
+    .join("");
+
 const renderSidebar = () => {
   if (!panelState.leftOpen) {
     return `
@@ -1052,9 +1100,12 @@ const renderSidebar = () => {
 
       <section class="side-section shortcuts">
         <h2>Keyboard</h2>
-        <p><kbd>H</kbd> hints <kbd>M</kbd> multi-source <kbd>N</kbd> node</p>
-        <p><kbd>L</kbd> link <kbd>F</kbd> frame <kbd>Enter</kbd> edit</p>
-        <p><kbd>[</kbd>/<kbd>]</kbd> frame nav <kbd>P</kbd> pin <kbd>/</kbd> search</p>
+        <details class="shortcut-details" open>
+          <summary>All shortcuts</summary>
+          <div class="shortcut-list">
+            ${renderShortcutList()}
+          </div>
+        </details>
       </section>
 
       <button class="primary-action" data-action="layout">Run ELK layout</button>
@@ -1556,7 +1607,7 @@ const renderCanvas = () => {
               )
               .join("")}
           </select>
-          <button data-action="hints">Hints</button>
+          <button class="${hintsVisible ? "is-active" : ""}" data-action="hints" aria-pressed="${hintsVisible}">Hints</button>
           <button data-action="layout">Layout</button>
         </div>
       </header>
@@ -1841,7 +1892,7 @@ const bindEvents = () => {
       if (action === "cancel-delete" && button.classList.contains("delete-backdrop") && event.target !== button) return;
       if (action === "layout") runAutoLayout();
       if (action === "export") exportMarkdown();
-      if (action === "hints") showHints();
+      if (action === "hints") toggleHints();
       if (action === "pin") togglePin();
       if (action === "add-assumption") addAssumptionToSelectedLink();
       if (action === "enter-frame") enterSelectedFrame();
@@ -1922,7 +1973,7 @@ const commandForEvent = (event) => {
 const executeCommand = (command) => {
   const commands = {
     commandPalette: () => setStatus("Command palette placeholder: use H, N, A, L, F, P, /"),
-    showHints,
+    showHints: toggleHints,
     toggleMultiSelect,
     createNode: createNodeInViewport,
     createParentNode: () => createNode(selectedNode()?.frameId || activeFrameId, "necessaryCondition", "New parent/above condition"),
@@ -2007,6 +2058,12 @@ const handleKeydown = async (event) => {
 
   if (isTextField) return;
 
+  if (command === "showHints") {
+    event.preventDefault();
+    toggleHints();
+    return;
+  }
+
   if (multiSelectMode && mode !== "connection" && hintsVisible && event.key.toLowerCase() === "l" && selectedElementIds.size) {
     event.preventDefault();
     beginConnection();
@@ -2087,6 +2144,41 @@ window.__ltpSmokeTest = async () => {
   hintsVisible = false;
   hintBuffer = "";
   render();
+
+  const hintToggleSelection = selectedElementId;
+  focusCanvas();
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "h", bubbles: true, cancelable: true }));
+  const keyboardHintsOpen =
+    hintsVisible && document.querySelector("[data-action='hints']")?.getAttribute("aria-pressed") === "true";
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "h", bubbles: true, cancelable: true }));
+  const keyboardHintsToggle =
+    keyboardHintsOpen && !hintsVisible && selectedElementId === hintToggleSelection && hintBuffer === "";
+
+  document.querySelector("[data-action='hints']")?.click();
+  const buttonHintsOpen =
+    hintsVisible && document.querySelector("[data-action='hints']")?.classList.contains("is-active");
+  hintBuffer = "A";
+  document.querySelector("[data-action='hints']")?.click();
+  const hintButtonToggles =
+    buttonHintsOpen &&
+    !hintsVisible &&
+    hintBuffer === "" &&
+    document.querySelector("[data-action='hints']")?.getAttribute("aria-pressed") === "false";
+
+  panelState.leftOpen = true;
+  render();
+  const shortcutDetails = document.querySelector(".shortcut-details");
+  const allShortcutsListed =
+    Boolean(shortcutDetails?.open) &&
+    Object.entries(commandBindings).every(([command, bindings]) => {
+      const row = document.querySelector(`[data-shortcut-command="${command}"]`);
+      const displayedBindings = [...(row?.querySelectorAll("kbd") || [])].map((key) => key.textContent);
+      return (
+        row?.textContent.includes(commandLabels[command]) &&
+        displayedBindings.length === bindings.length &&
+        bindings.every((binding) => displayedBindings.includes(formatShortcutBinding(binding)))
+      );
+    });
 
   const initialShell = document.querySelector(".canvas-shell");
   initialShell.scrollLeft = Math.min(120, initialShell.scrollWidth - initialShell.clientWidth);
@@ -2359,6 +2451,9 @@ window.__ltpSmokeTest = async () => {
       document.querySelectorAll(".link-target").length >= 6 &&
       hintsArePrefixFree &&
       twoLetterHintWorks &&
+      keyboardHintsToggle &&
+      hintButtonToggles &&
+      allShortcutsListed &&
       viewportPreserved &&
       arrowEndsAtEdge &&
       fullTextPreviewWorks &&
@@ -2403,6 +2498,9 @@ window.__ltpSmokeTest = async () => {
     hints: hintEntries.length,
     hintsArePrefixFree,
     twoLetterHintWorks,
+    keyboardHintsToggle,
+    hintButtonToggles,
+    allShortcutsListed,
     viewportPreserved,
     arrowEndsAtEdge,
     fullTextPreviewWorks,

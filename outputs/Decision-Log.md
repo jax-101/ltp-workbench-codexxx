@@ -218,3 +218,21 @@ Razon: reutilizar identificadores o links externos corromperia el grafo. El fram
 Decision: el orden usado por `Shift+Tab`, los tipos permitidos y sus restricciones se obtienen de una definicion central por tipo de diagrama.
 
 Razon: un ciclo hardcodeado para Goal Tree impediria extender la herramienta a CRT, EC y otros artefactos con vocabularios y reglas diferentes.
+
+### D-035: La ayuda de teclado se deriva del mapa de comandos
+
+Decision: cada comando define sus bindings y una etiqueta legible en la configuracion. El panel izquierdo genera automaticamente el listado completo desde esos datos.
+
+Razon: mantener una lista manual separada hace probable que la interfaz muestre atajos obsoletos. Una unica fuente permite anadir, quitar o personalizar combinaciones sin editar el panel.
+
+### D-036: H y el boton Hints comparten una unica alternancia
+
+Decision: la tecla `H` queda reservada para abrir y cerrar hint mode, no se asigna como etiqueta de seleccion y ejecuta la misma accion que el boton Hints.
+
+Razon: dos controles para el mismo estado deben producir identicas transiciones. Reservar `H` evita que cerrar hints seleccione accidentalmente un elemento etiquetado con esa letra.
+
+### D-037: El enrutado de links forma parte de la geometria compuesta
+
+Decision: la evitacion de entidades y la minimizacion de cruces se resolveran en 3B junto con la contencion de frames. El renderer consumira rutas calculadas en lugar de sustituirlas por lineas rectas.
+
+Razon: una ruta no puede evitar correctamente nodos y frames sin conocer sus limites definitivos. Corregirla antes del layout compuesto produciria una segunda implementacion desechable.

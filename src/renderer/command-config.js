@@ -28,3 +28,34 @@ window.LTP_COMMAND_BINDINGS = Object.freeze({
   toggleRightPanel: [{ key: "]", alt: true }],
   runAutoLayout: [{ key: "l", primary: true, shift: true }]
 });
+
+window.LTP_COMMAND_LABELS = Object.freeze({
+  commandPalette: "Command palette",
+  showHints: "Toggle hints",
+  toggleMultiSelect: "Toggle multi-source selection",
+  createNode: "Create node",
+  createParentNode: "Create parent condition",
+  createSupportingNode: "Create supporting condition",
+  focusInspector: "Edit selected element",
+  beginConnection: "Create link",
+  createFrame: "Create frame",
+  selectParentFrame: "Select parent frame",
+  enterSelectedFrame: "Enter selected frame",
+  focusSearch: "Search",
+  togglePin: "Toggle pin",
+  previewNode: "View full statement",
+  cancelContext: "Cancel or clear selection",
+  deleteSelection: "Delete selection",
+  panUp: "Move view up",
+  panDown: "Move view down",
+  panLeft: "Move view left",
+  panRight: "Move view right",
+  centerSelection: "Center selection",
+  zoomIn: "Zoom in",
+  zoomOut: "Zoom out",
+  resetZoom: "Reset zoom",
+  fitView: "Fit diagram",
+  toggleLeftPanel: "Toggle left panel",
+  toggleRightPanel: "Toggle right panel",
+  runAutoLayout: "Run automatic layout"
+});

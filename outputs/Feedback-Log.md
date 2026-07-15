@@ -76,19 +76,19 @@ Estado: implementado en la iteracion 1, con validacion inicial positiva el 2026-
 
 Feedback: se echa de menos una vista de minimapa para orientarse y navegar diagramas grandes.
 
-Estado: implementado en la iteracion 2; la validacion de uso ha identificado los ajustes F-031 y F-032 antes de considerarlo cerrado.
+Estado: implementado en la iteracion 2 y validado por el usuario como parte de la version 2.2 el 2026-07-15.
 
 ### F-013: Paneles laterales plegables
 
 Feedback: los laterales izquierdo y derecho deberian poder ocultarse y desplegarse mediante boton o combinacion de teclado.
 
-Estado: implementado en la iteracion 2, pendiente de validacion de uso. Ambos paneles disponen de control visible, atajos y estado persistente.
+Estado: implementado en la iteracion 2 y validado por el usuario como parte de la version 2.2 el 2026-07-15. Ambos paneles disponen de control visible, atajos y estado persistente.
 
 ### F-014: Borrado de links y entidades
 
 Feedback: no se pueden borrar links una vez creados ni entidades del diagrama.
 
-Estado: implementado en la iteracion 2, pendiente de validacion de uso. El borrado exige confirmacion, protege el frame raiz y limpia en cascada relaciones, assumptions, jerarquias y layout.
+Estado: implementado en la iteracion 2 y validado por el usuario como parte de la version 2.2 el 2026-07-15. El borrado exige confirmacion, protege el frame raiz y limpia en cascada relaciones, assumptions, jerarquias y layout.
 
 ### F-015: Frames colapsables con preservacion de conexiones
 
@@ -124,19 +124,19 @@ Estado: base implementada en la iteracion 1, pendiente de evolucion. Los comando
 
 Feedback: se echa de menos zoom y la posibilidad de desplazar la ventana/canvas usando solo el teclado.
 
-Estado: implementado en la iteracion 2; la validacion de uso ha identificado las regresiones F-029, F-031 y F-032 antes de considerarlo cerrado.
+Estado: implementado en la iteracion 2 y validado por el usuario como parte de la version 2.2 el 2026-07-15.
 
 ### F-021: Animacion del auto-layout
 
 Feedback: seria valioso ver como los elementos se mueven a su nueva posicion cuando se ejecuta Layout, en vez de saltar instantaneamente.
 
-Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. El resultado de ELK se interpola durante una transicion breve; nodos, frames, flechas y puntos de interaccion se actualizan durante el movimiento.
+Estado: implementado en la iteracion 2.2 y validado por el usuario el 2026-07-15. El resultado de ELK se interpola durante una transicion breve; nodos, frames, flechas y puntos de interaccion se actualizan durante el movimiento.
 
 ### F-022: Direccion preferente por tipo de diagrama
 
 Feedback: cada diagrama tiene una direccion preferente de flechas. Por ejemplo, el Goal Tree es de arriba a abajo.
 
-Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. Goal Tree usa `TB` por defecto y cada arbol puede elegir `TB`, `BT`, `LR` o `RL` antes de ejecutar Layout.
+Estado: implementado en la iteracion 2.2 y validado por el usuario el 2026-07-15. Goal Tree usa `TB` por defecto y cada arbol puede elegir `TB`, `BT`, `LR` o `RL` antes de ejecutar Layout.
 
 ### F-023: Infraestructura extensible para tipos de diagrama
 
@@ -204,7 +204,7 @@ Criterios de aceptacion:
 
 Feedback: despues de jugar con el zoom, al pulsar `H` solo aparece el hint `A`. Al intentar escribir otra secuencia, la barra superior muestra `No hint matches that sequence`.
 
-Estado: implementado en la iteracion 2.1, pendiente de validacion de uso. Los hints se limitan al viewport logico, se regeneran al cambiar zoom y se dibujan en una capa de pantalla de tamano constante.
+Estado: implementado en la iteracion 2.1 y validado por el usuario como parte de la version 2.2 el 2026-07-15. Los hints se limitan al viewport logico, se regeneran al cambiar zoom y se dibujan en una capa de pantalla de tamano constante.
 
 Criterios de aceptacion:
 
@@ -217,7 +217,7 @@ Criterios de aceptacion:
 
 Feedback: los circulos `L` visibles sobre cada link generan ruido visual. Deberian permanecer ocultos por defecto y aparecer al activar `H`.
 
-Estado: implementado en la iteracion 2.1, pendiente de validacion de uso. El area interactiva permanece disponible, pero el circulo solo aparece durante hint mode, hover o foco.
+Estado: implementado en la iteracion 2.1 y validado por el usuario como parte de la version 2.2 el 2026-07-15. El area interactiva permanece disponible, pero el circulo solo aparece durante hint mode, hover o foco.
 
 Criterios de aceptacion:
 
@@ -230,7 +230,7 @@ Criterios de aceptacion:
 
 Feedback: al cambiar el zoom del canvas, la ventana de navegacion o minimapa cambia de posicion en la interfaz.
 
-Estado: implementado en la iteracion 2.1, pendiente de validacion de uso. El editor ocupa una altura estable y el minimapa queda anclado al viewport, no al canvas escalado.
+Estado: implementado en la iteracion 2.1 y validado por el usuario como parte de la version 2.2 el 2026-07-15. El editor ocupa una altura estable y el minimapa queda anclado al viewport, no al canvas escalado.
 
 Criterios de aceptacion:
 
@@ -242,7 +242,7 @@ Criterios de aceptacion:
 
 Feedback: el rectangulo que representa la pantalla visible mantiene el mismo tamano en el minimapa al cambiar el zoom.
 
-Estado: reabierto tras la validacion visual del usuario y corregido de nuevo en la iteracion 2.2. La primera formula cambiaba numericamente pero no producia una diferencia visual suficiente. La nueva version calcula el rectangulo desde la proporcion real entre area visible y area desplazable, y exige un cambio visible en la prueba automatizada. Pendiente de nueva validacion manual.
+Estado: reabierto tras la primera validacion visual, corregido de nuevo en la iteracion 2.2 y validado por el usuario el 2026-07-15. La nueva version calcula el rectangulo desde la proporcion real entre area visible y area desplazable.
 
 Criterios de aceptacion:
 
@@ -255,7 +255,7 @@ Criterios de aceptacion:
 
 Feedback: el canvas debe poder desplazarse con las flechas o con `Ctrl+P` arriba, `Ctrl+N` abajo, `Ctrl+F` derecha y `Ctrl+B` izquierda.
 
-Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. Ambos juegos de teclas usan los mismos comandos de pan y no se ejecutan mientras el foco esta en un campo de texto.
+Estado: implementado en la iteracion 2.2 y validado por el usuario el 2026-07-15. Ambos juegos de teclas usan los mismos comandos de pan y no se ejecutan mientras el foco esta en un campo de texto.
 
 Criterios de aceptacion:
 
@@ -268,7 +268,7 @@ Criterios de aceptacion:
 
 Feedback: al editar una entidad, el panel derecho debe abrirse automaticamente. Al confirmar con `Enter`, debe recuperar su estado anterior.
 
-Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. El editor recuerda si el inspector estaba abierto antes de comenzar y restaura ese estado al aceptar o cancelar.
+Estado: implementado en la iteracion 2.2 y validado por el usuario el 2026-07-15. El editor recuerda si el inspector estaba abierto antes de comenzar y restaura ese estado al aceptar o cancelar.
 
 Criterios de aceptacion:
 
@@ -281,7 +281,7 @@ Criterios de aceptacion:
 
 Feedback: debe ser posible introducir entidades en un frame y extraerlas posteriormente.
 
-Estado: implementado parcialmente en la iteracion 2.2, pendiente de validacion de uso. Los nodos se pueden arrastrar entre frames o reasignar con el selector `Frame` del inspector. Las garantias geometricas adicionales quedan recogidas en F-036.
+Estado: comportamiento base implementado en la iteracion 2.2 y validado por el usuario el 2026-07-15. Los nodos se pueden arrastrar entre frames o reasignar con el selector `Frame` del inspector. Las garantias geometricas adicionales quedan recogidas en F-036.
 
 Criterios de aceptacion:
 
@@ -390,3 +390,44 @@ Criterios de aceptacion:
 - La operacion funciona sobre una seleccion individual o multiple.
 - Dentro de un campo de edicion, `Shift+Tab` conserva la navegacion normal de foco.
 - Se respetan restricciones estructurales, como tipos unicos o cardinalidades.
+
+### F-043: Enrutado de flechas sin cruces ni entidades atravesadas
+
+Feedback: despues de aplicar Layout, las flechas no deberian cruzarse si es posible ni pasar por debajo de las entidades.
+
+Estado: pendiente para la iteracion 3B. ELK minimiza cruces al colocar nodos, pero el renderer actual sustituye sus rutas por lineas rectas y no evita obstaculos.
+
+Criterios de aceptacion:
+
+- El layout minimiza cruces de links cuando existe una alternativa razonable.
+- Ninguna ruta atraviesa el interior de una entidad.
+- Las rutas respetan frames y otros obstaculos visibles.
+- Las puntas terminan en el borde correcto del destino.
+- La animacion de Layout interpola tambien las rutas sin ocultarlas bajo nodos.
+- Cuando un cruce sea inevitable, se mantiene legible y estable.
+
+### F-044: Listado completo de atajos en el panel izquierdo
+
+Feedback: todas las combinaciones de teclado deben aparecer debajo de Keyboard en el panel izquierdo.
+
+Estado: implementado en la iteracion 2.3, pendiente de validacion de uso. La lista se genera desde el mismo mapa de comandos y etiquetas que utiliza el teclado.
+
+Criterios de aceptacion:
+
+- Cada comando configurado aparece exactamente una vez.
+- Se muestran todas las combinaciones alternativas del comando.
+- Modificar la configuracion actualiza la lista sin editar el panel.
+- La lista puede plegarse y el panel conserva un scroll util.
+
+### F-045: El boton Hints debe alternar su estado
+
+Feedback: la tecla `H` muestra y oculta correctamente los hints, pero el boton Hints solo los activa.
+
+Estado: implementado en la iteracion 2.3, pendiente de validacion de uso. Tecla y boton comparten la misma accion de alternancia.
+
+Criterios de aceptacion:
+
+- Pulsar el boton con hints ocultos los muestra.
+- Pulsarlo de nuevo los oculta y limpia cualquier secuencia parcial.
+- El boton indica visualmente y mediante `aria-pressed` si estan activos.
+- `H` produce exactamente la misma transicion sin seleccionar accidentalmente un hint.

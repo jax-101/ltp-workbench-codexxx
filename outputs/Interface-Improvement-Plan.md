@@ -1,6 +1,6 @@
 # Interface Improvement Plan
 
-Plan de evolucion del prototipo a partir del feedback F-010 a F-042. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
+Plan de evolucion del prototipo a partir del feedback F-010 a F-045. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
 
 ## Principios de ejecucion
 
@@ -53,7 +53,7 @@ Criterios de aceptacion:
 
 ## Iteracion 2: edicion y navegacion
 
-Estado: implementada; los ajustes de estabilizacion se entregan en la iteracion 2.1.
+Estado: implementada y validada por el usuario como parte de la version 2.2 el 2026-07-15.
 
 Incluye:
 
@@ -72,7 +72,7 @@ Criterios de aceptacion:
 
 Esta iteracion corta se completa antes de integrar la iteracion 2 en `main`.
 
-Estado: implementada; pendiente de validacion manual.
+Estado: implementada y validada por el usuario como parte de la version 2.2 el 2026-07-15.
 
 Incluye:
 
@@ -90,7 +90,7 @@ Criterios de aceptacion:
 
 ## Iteracion 2.2: interaccion, pertenencia y layout visible
 
-Estado: implementada; pendiente de validacion manual.
+Estado: implementada y validada por el usuario el 2026-07-15.
 
 Incluye:
 
@@ -110,9 +110,26 @@ Criterios de aceptacion:
 - El auto-layout muestra el recorrido de los elementos y las flechas lo acompanan.
 - ELK respeta la direccion elegida para el arbol.
 
+## Iteracion 2.3: cierre de controles y ayuda de teclado
+
+Estado: implementada; pendiente de validacion manual.
+
+Incluye:
+
+- F-044: listado completo y plegable de atajos en el panel izquierdo.
+- F-045: alternancia de hints compartida por tecla y boton.
+- Registrar F-043 para resolver el enrutado de links con la geometria de 3B.
+
+Criterios de aceptacion:
+
+- El panel refleja todos los comandos y alternativas de la configuracion real.
+- La ayuda puede plegarse sin perder acceso al resto del panel.
+- `H` y el boton Hints abren y cierran el mismo estado.
+- Cerrar hints limpia el buffer y actualiza el estado visual del boton.
+
 ## Iteracion 3A: seleccion y contexto estructural
 
-Estado: planificada. Comenzar despues de validar e integrar la iteracion 2.2.
+Estado: planificada. Comenzar despues de validar e integrar la iteracion 2.3.
 
 Incluye:
 
@@ -135,6 +152,7 @@ Incluye:
 
 - F-036: contencion y exclusion geometrica estrictas.
 - F-038: insercion direccional sin alterar la forma existente.
+- F-043: rutas de links con minimizacion de cruces y evitacion de obstaculos.
 - Completar F-035 con garantias espaciales al mover entidades entre frames.
 - Layout compuesto por frames y soporte de frames anidados.
 
@@ -145,6 +163,7 @@ Criterios de aceptacion:
 - Los frames se amplian y los grupos vecinos se trasladan rigidamente cuando falta espacio.
 - El auto-layout completo usa los frames como contenedores, no como limites calculados a posteriori.
 - Los tests verifican contencion, exclusion y preservacion de distancias relativas.
+- Las rutas no atraviesan entidades y minimizan cruces dentro de las restricciones del diagrama.
 
 ## Iteracion 3C: operaciones sobre selecciones
 

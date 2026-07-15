@@ -1,4 +1,4 @@
-# Manual Test Guide: Interface Iterations 1, 1.1, 2, 2.1 and 2.2
+# Manual Test Guide: Interface Iterations 1, 1.1, 2, 2.1, 2.2 and 2.3
 
 Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en un archivo de prueba separado. No modifica el workspace normal.
 
@@ -157,7 +157,18 @@ Resultado esperado: los elementos recorren visualmente el camino hacia su nueva 
 
 Resultado esperado: la entidad cambia de pertenencia en ambos sentidos, conserva sus links y puede reasignarse tanto con arrastre como con el selector.
 
-## Prueba 15: regresion basica
+## Prueba 15: cierre de controles y ayuda de teclado
+
+1. Pulsa `H` para mostrar hints y vuelve a pulsarla para ocultarlos.
+2. Pulsa el boton `Hints` dos veces y comprueba el mismo resultado.
+3. Verifica que el boton cambia visualmente mientras los hints estan activos.
+4. Abre `Keyboard > All shortcuts` en el panel izquierdo.
+5. Comprueba que aparecen tambien zoom, pan, paneles, borrado y Layout.
+6. Pliega y despliega la lista.
+
+Resultado esperado: tecla y boton alternan el mismo estado, cerrar limpia cualquier secuencia parcial y la lista plegable contiene todas las combinaciones configuradas.
+
+## Prueba 16: regresion basica
 
 Comprueba que siguen funcionando:
 
