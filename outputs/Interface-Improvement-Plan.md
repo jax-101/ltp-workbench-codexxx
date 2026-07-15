@@ -1,6 +1,6 @@
 # Interface Improvement Plan
 
-Plan de evolucion del prototipo a partir del feedback F-010 a F-035. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
+Plan de evolucion del prototipo a partir del feedback F-010 a F-042. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
 
 ## Principios de ejecucion
 
@@ -110,7 +110,59 @@ Criterios de aceptacion:
 - El auto-layout muestra el recorrido de los elementos y las flechas lo acompanan.
 - ELK respeta la direccion elegida para el arbol.
 
-## Iteracion 3: frames jerarquicos
+## Iteracion 3A: seleccion y contexto estructural
+
+Estado: planificada. Comenzar despues de validar e integrar la iteracion 2.2.
+
+Incluye:
+
+- F-041: seleccion transitiva del contenido de un frame.
+- F-037: frame raiz ilimitado y frame activo permanente.
+- Modelo de seleccion general para nodos, links y frames.
+- Parte minima de F-023: tipos permitidos, orden de ciclo y direccion por tipo de diagrama.
+
+Criterios de aceptacion:
+
+- La seleccion representa cualquier combinacion de elementos sin reutilizar el modo de fuentes de links.
+- Seleccionar un frame calcula siempre el mismo conjunto de descendientes y links internos.
+- Todo comando conoce el frame activo aunque la seleccion actual sea un nodo o link.
+- El frame raiz no impone limites visuales al canvas.
+- Goal Tree obtiene sus tipos y orden desde una definicion central.
+
+## Iteracion 3B: geometria de frames e insercion incremental
+
+Incluye:
+
+- F-036: contencion y exclusion geometrica estrictas.
+- F-038: insercion direccional sin alterar la forma existente.
+- Completar F-035 con garantias espaciales al mover entidades entre frames.
+- Layout compuesto por frames y soporte de frames anidados.
+
+Criterios de aceptacion:
+
+- Todas las operaciones mantienen las invariantes de pertenencia y contencion.
+- `N` coloca segun la direccion del diagrama sin solapar ni ejecutar Layout global.
+- Los frames se amplian y los grupos vecinos se trasladan rigidamente cuando falta espacio.
+- El auto-layout completo usa los frames como contenedores, no como limites calculados a posteriori.
+- Los tests verifican contencion, exclusion y preservacion de distancias relativas.
+
+## Iteracion 3C: operaciones sobre selecciones
+
+Incluye:
+
+- F-039: borrado atomico con `Ctrl+D`.
+- F-040: copia y pegado de subgrafos con `Ctrl+C` y `Ctrl+V`.
+- F-042: ciclo de tipos con `Shift+Tab`.
+
+Criterios de aceptacion:
+
+- Todas las operaciones usan el mismo conjunto de seleccion general.
+- Copiar y pegar remapea identificadores y conserva solo relaciones internas.
+- Borrar presenta un impacto agregado y mantiene protegido el frame raiz.
+- Cambiar tipos respeta la definicion y restricciones del diagrama.
+- Ningun atajo interfiere con la edicion de texto.
+
+## Iteracion 3D: frames jerarquicos
 
 Incluye:
 
@@ -128,8 +180,8 @@ Criterios de aceptacion:
 
 Incluye:
 
-- Layout compuesto por frame y soporte completo de frames anidados.
 - Refinamiento de posiciones fijadas, espaciado y rutas de links.
+- Optimizacion de cruces despues de consolidar el layout compuesto en 3B.
 - Los fundamentos F-021 y F-022 ya entregados en la iteracion 2.2.
 
 ## Iteracion 5: diagramas extensibles
@@ -145,5 +197,7 @@ Incluye:
 
 - Estado de vista -> preservar scroll -> zoom/pan -> minimapa.
 - Registro de comandos -> teclado estable -> atajos configurables.
-- Jerarquia de frames -> vista enfocada -> colapso -> layout compuesto.
-- Registro de diagramas -> direccion -> tipos y reglas -> CRT/EC.
+- Seleccion general -> cierre de frame -> copiar/borrar/cambiar tipo.
+- Frame activo -> raiz ilimitada -> insercion incremental -> layout compuesto.
+- Contencion de frames -> vista enfocada -> colapso -> rutas externas.
+- Registro minimo de diagramas -> ciclo de tipos -> registro completo -> CRT/EC.

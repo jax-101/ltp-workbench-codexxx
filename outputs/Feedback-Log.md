@@ -281,7 +281,7 @@ Criterios de aceptacion:
 
 Feedback: debe ser posible introducir entidades en un frame y extraerlas posteriormente.
 
-Estado: implementado en la iteracion 2.2, pendiente de validacion de uso. Los nodos se pueden arrastrar entre frames o reasignar con el selector `Frame` del inspector.
+Estado: implementado parcialmente en la iteracion 2.2, pendiente de validacion de uso. Los nodos se pueden arrastrar entre frames o reasignar con el selector `Frame` del inspector. Las garantias geometricas adicionales quedan recogidas en F-036.
 
 Criterios de aceptacion:
 
@@ -289,3 +289,104 @@ Criterios de aceptacion:
 - Soltarlo fuera de un frame hijo permite devolverlo al frame raiz o padre visible.
 - El selector del inspector ofrece una alternativa precisa al arrastre.
 - Cambiar la pertenencia conserva links, assumptions y el resto de datos de la entidad.
+
+### F-036: Contencion geometrica estricta de frames
+
+Feedback: un frame debe contener completamente todas las entidades que le pertenecen. Una entidad que no pertenece al frame ni a uno de sus descendientes no puede quedar visualmente dentro de sus limites.
+
+Estado: pendiente. La pertenencia logica ya puede modificarse, pero la geometria actual no impone contencion ni exclusion.
+
+Criterios de aceptacion:
+
+- Cada entidad queda completamente dentro del frame al que pertenece directamente.
+- Las entidades de frames descendientes pueden estar dentro de sus frames ancestro.
+- Ninguna entidad ajena o de una rama distinta invade el interior de un frame.
+- Arrastrar, pegar, crear y ejecutar Layout mantienen estas invariantes.
+- Los frames anidados quedan completamente contenidos por su frame padre.
+
+### F-037: Frame raiz ilimitado y contexto activo
+
+Feedback: siempre debe existir un frame base infinito. Crear una entidad con `N` requiere un frame de contexto seleccionado.
+
+Estado: pendiente. Actualmente existe un frame raiz finito y `N` usa `activeFrameId`, pero ambos conceptos deben unificarse como contexto activo permanente.
+
+Criterios de aceptacion:
+
+- Todo diagrama tiene un frame raiz conceptual sin borde ni tamano finito.
+- Siempre existe exactamente un frame activo para crear y pegar.
+- Seleccionar un nodo o link no elimina el frame activo.
+- Si no se ha entrado en otro frame, `N` usa el frame raiz.
+- El minimapa y el canvas crecen segun el contenido, no segun un rectangulo raiz artificial.
+
+### F-038: Insercion direccional sin alterar la forma existente
+
+Feedback: las entidades creadas con `N` deben aparecer en el lado opuesto a la direccion preferente del diagrama, separadas de las anteriores. Si falta espacio, el frame se amplia y otras partes del diagrama se desplazan sin cambiar su forma relativa.
+
+Estado: pendiente. La creacion actual prioriza la esquina visible del viewport y no aplica direccion, expansion ni propagacion de espacio.
+
+Criterios de aceptacion:
+
+- `TB` inserta por el lado superior, `BT` por el inferior, `LR` por el izquierdo y `RL` por el derecho.
+- Cada insercion respeta una separacion minima y nunca solapa entidades.
+- Un frame finito se amplia cuando su contenido necesita espacio.
+- Los grupos afectados pueden trasladarse rigidamente, conservando distancias y forma interna.
+- Crear con `N` no ejecuta un auto-layout global.
+- La nueva entidad queda visible o se ofrece una transicion comprensible hacia ella.
+
+### F-039: Borrado de la seleccion con Ctrl+D
+
+Feedback: `Ctrl+D` debe borrar la entidad o conjunto de elementos seleccionados.
+
+Estado: pendiente. El borrado individual y en cascada existe, pero falta una seleccion general y el borrado atomico de conjuntos.
+
+Criterios de aceptacion:
+
+- `Ctrl+D` abre una unica confirmacion con el impacto total.
+- Confirmar elimina la seleccion y sus dependencias sin duplicar recuentos.
+- El frame raiz permanece protegido.
+- Dentro de campos de texto, `Ctrl+D` no borra elementos del diagrama.
+- Cancelar no modifica ningun dato.
+
+### F-040: Copiar y pegar subgrafos
+
+Feedback: `Ctrl+C` debe copiar los elementos seleccionados y `Ctrl+V` debe pegar una copia.
+
+Estado: pendiente. Requiere seleccion general, remapeo de identificadores y colocacion sin solapamientos.
+
+Criterios de aceptacion:
+
+- Copiar incluye nodos, frames descendientes y links completamente internos.
+- Los links hacia elementos externos no se duplican.
+- Pegar crea identificadores nuevos y conserva jerarquia, atributos y assumptions internos.
+- La copia se inserta en el frame activo cerca del viewport.
+- Pegados sucesivos aplican un desplazamiento visible y no se superponen.
+- El original nunca se modifica.
+
+### F-041: Seleccion transitiva del contenido de un frame
+
+Feedback: al seleccionar un frame deben quedar seleccionados tambien todos sus elementos y links internos.
+
+Estado: pendiente. La seleccion multiple actual solo representa nodos origen para crear links y no sirve como seleccion general.
+
+Criterios de aceptacion:
+
+- Seleccionar un frame incluye sus frames descendientes y todas sus entidades.
+- Se incluyen los links cuyos dos extremos estan dentro del conjunto.
+- Los links con un extremo externo quedan fuera de la seleccion interna.
+- La interfaz distingue el frame principal de los elementos incluidos automaticamente.
+- Copiar, borrar y otras operaciones usan exactamente el mismo cierre de seleccion.
+
+### F-042: Ciclar el tipo con Shift+Tab
+
+Feedback: con una o varias entidades seleccionadas, `Shift+Tab` debe recorrer ciclicamente su tipo.
+
+Estado: pendiente. Los tipos permitidos siguen hardcodeados y la seleccion multiple no es todavia general.
+
+Criterios de aceptacion:
+
+- Solo se aplica a entidades y nunca a frames o links.
+- Cada entidad avanza al siguiente tipo permitido por el diagrama.
+- El ciclo y su orden proceden de la definicion del tipo de diagrama.
+- La operacion funciona sobre una seleccion individual o multiple.
+- Dentro de un campo de edicion, `Shift+Tab` conserva la navegacion normal de foco.
+- Se respetan restricciones estructurales, como tipos unicos o cardinalidades.

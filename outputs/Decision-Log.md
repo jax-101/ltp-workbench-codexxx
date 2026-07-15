@@ -175,3 +175,46 @@ Razon: la direccion pertenece al diagrama, mientras que la animacion es una pres
 Decision: mover una entidad a otro frame actualiza tanto `node.frameId` como las listas `frame.nodeIds`. El arrastre y el selector del inspector ejecutan la misma operacion.
 
 Razon: la posicion visual no basta para definir pertenencia. Una unica operacion de dominio evita discrepancias y conserva links y assumptions al reorganizar el diagrama.
+
+### D-029: El frame raiz es un contexto ilimitado
+
+Decision: todo diagrama tiene un frame raiz conceptual que siempre puede actuar como frame activo, pero no se representa como un rectangulo finito.
+
+Razon: siempre debe existir un destino para crear y pegar sin imponer un limite artificial al canvas. El tamano navegable se deriva del contenido real.
+
+### D-030: Pertenencia directa y contencion ancestral son conceptos distintos
+
+Decision: una entidad pertenece directamente a un solo frame. Tambien se considera contenida por todos los frames ancestro de ese frame.
+
+Razon: en una jerarquia anidada, una entidad debe poder estar dentro del frame hijo y, geometricamente, dentro del padre sin aparecer duplicada en sus listas de pertenencia directa.
+
+### D-031: Separar insercion incremental y auto-layout
+
+Decision: crear con `N` usa una colocacion incremental que preserva la forma existente. El comando Layout conserva la capacidad de reorganizar explicitamente todo el diagrama.
+
+Razon: usar el auto-layout global para cada insercion violaria la estabilidad espacial. La insercion puede ampliar frames y trasladar grupos rigidamente sin recalcular su estructura interna.
+
+La colocacion incremental usa el lado opuesto a la direccion configurada:
+
+- `TB`: lado superior.
+- `BT`: lado inferior.
+- `LR`: lado izquierdo.
+- `RL`: lado derecho.
+
+### D-032: La seleccion de frame se resuelve como un cierre transitivo
+
+Decision: seleccionar un frame incluye sus frames descendientes, sus entidades y los links cuyos dos extremos estan dentro del conjunto.
+
+Razon: copiar, borrar, ocultar y otras operaciones deben compartir una unica definicion de contenido interno. Los links con un extremo externo no forman parte del cierre.
+
+### D-033: Pegar crea un subgrafo nuevo en el frame activo
+
+Decision: el portapapeles interno guarda una plantilla del subgrafo seleccionado. Pegar genera identificadores nuevos, conserva relaciones internas y coloca la copia en el frame activo cerca del viewport.
+
+Razon: reutilizar identificadores o links externos corromperia el grafo. El frame activo y el viewport ofrecen un destino predecible incluso al copiar desde otro frame.
+
+### D-034: Los ciclos de tipo pertenecen a la definicion del diagrama
+
+Decision: el orden usado por `Shift+Tab`, los tipos permitidos y sus restricciones se obtienen de una definicion central por tipo de diagrama.
+
+Razon: un ciclo hardcodeado para Goal Tree impediria extender la herramienta a CRT, EC y otros artefactos con vocabularios y reglas diferentes.
