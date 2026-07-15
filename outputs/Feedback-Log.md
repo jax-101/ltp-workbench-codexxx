@@ -76,7 +76,7 @@ Estado: implementado en la iteracion 1, con validacion inicial positiva el 2026-
 
 Feedback: se echa de menos una vista de minimapa para orientarse y navegar diagramas grandes.
 
-Estado: implementado en la iteracion 2, pendiente de validacion de uso. El minimapa muestra frames, nodos, links y viewport, y permite navegar mediante click o arrastre.
+Estado: implementado en la iteracion 2; la validacion de uso ha identificado los ajustes F-031 y F-032 antes de considerarlo cerrado.
 
 ### F-013: Paneles laterales plegables
 
@@ -124,7 +124,7 @@ Estado: base implementada en la iteracion 1, pendiente de evolucion. Los comando
 
 Feedback: se echa de menos zoom y la posibilidad de desplazar la ventana/canvas usando solo el teclado.
 
-Estado: implementado en la iteracion 2, pendiente de validacion de uso. Se incluyen zoom, reset, ajuste completo, centrado de seleccion y pan incremental mediante teclado.
+Estado: implementado en la iteracion 2; la validacion de uso ha identificado las regresiones F-029, F-031 y F-032 antes de considerarlo cerrado.
 
 ### F-021: Animacion del auto-layout
 
@@ -199,3 +199,54 @@ Criterios de aceptacion:
 - En navegacion normal limpia la seleccion actual.
 - No modifica ni elimina datos.
 - `Esc` conserva el comportamiento existente.
+
+### F-029: Keyboard hints incompletos despues de usar zoom
+
+Feedback: despues de jugar con el zoom, al pulsar `H` solo aparece el hint `A`. Al intentar escribir otra secuencia, la barra superior muestra `No hint matches that sequence`.
+
+Estado: pendiente. Revisar la relacion entre escala, elementos seleccionables, regeneracion de hint entries y estado persistido del modo hint.
+
+Criterios de aceptacion:
+
+- El numero y las etiquetas de hints no cambian al variar el zoom si el conjunto de elementos no ha cambiado.
+- Todos los elementos seleccionables del alcance actual reciben un hint.
+- Las secuencias siguen seleccionando su elemento entre 35% y 250% de zoom.
+- Cambiar zoom no deja un buffer o mensaje de error anterior activo.
+
+### F-030: Ocultar los controles L de los links fuera del modo hint
+
+Feedback: los circulos `L` visibles sobre cada link generan ruido visual. Deberian permanecer ocultos por defecto y aparecer al activar `H`.
+
+Estado: pendiente. Separar el hit target accesible del indicador visual y mostrar este ultimo solo durante keyboard hint mode.
+
+Criterios de aceptacion:
+
+- En navegacion normal no se muestran circulos `L`.
+- Al pulsar `H`, cada link seleccionable muestra su indicador y su hint.
+- La flecha y su estado seleccionado siguen siendo visibles sin el circulo.
+- El link se puede seguir seleccionando con raton mediante un area de interaccion discreta.
+
+### F-031: El minimapa se desplaza al cambiar zoom
+
+Feedback: al cambiar el zoom del canvas, la ventana de navegacion o minimapa cambia de posicion en la interfaz.
+
+Estado: pendiente. Desacoplar por completo la posicion del minimapa de las dimensiones transformadas del canvas y anclarlo al viewport del editor.
+
+Criterios de aceptacion:
+
+- El minimapa permanece fijo en la misma esquina al acercar o alejar.
+- Su posicion no depende del tamano escalado del canvas.
+- Abrir o cerrar paneles lo recoloca una sola vez respecto al nuevo viewport, sin saltos durante el zoom.
+
+### F-032: El viewport del minimapa no cambia de tamano con el zoom
+
+Feedback: el rectangulo que representa la pantalla visible mantiene el mismo tamano en el minimapa al cambiar el zoom.
+
+Estado: pendiente. Recalcular dimensiones y posicion del viewport del minimapa despues de cada cambio de escala usando coordenadas logicas.
+
+Criterios de aceptacion:
+
+- Al acercar, el rectangulo del viewport se hace mas pequeno.
+- Al alejar, el rectangulo se hace mas grande.
+- El rectangulo mantiene una posicion coherente con la zona visible.
+- Click, arrastre, zoom y pan mantienen minimapa y canvas sincronizados.

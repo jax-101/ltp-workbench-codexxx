@@ -53,7 +53,7 @@ Criterios de aceptacion:
 
 ## Iteracion 2: edicion y navegacion
 
-Estado: implementada; pendiente de validacion manual.
+Estado: implementada y probada manualmente; requiere los ajustes de estabilizacion F-029 a F-032.
 
 Incluye:
 
@@ -67,6 +67,24 @@ Criterios de aceptacion:
 - El borrado limpia relaciones y referencias sin dejar datos huerfanos.
 - Todas las operaciones principales de navegacion funcionan sin raton.
 - El estado de vista se conserva al guardar y reabrir.
+
+## Iteracion 2.1: estabilizacion de hints y minimapa
+
+Esta iteracion corta se completa antes de integrar la iteracion 2 en `main`.
+
+Incluye:
+
+- F-029: corregir hints incompletos despues de usar zoom.
+- F-030: ocultar los indicadores `L` salvo durante hint mode.
+- F-031: mantener el minimapa anclado al viewport.
+- F-032: escalar correctamente el rectangulo visible del minimapa.
+
+Criterios de aceptacion:
+
+- Los hints conservan cantidad, secuencia y seleccion a cualquier zoom soportado.
+- Los links no anaden ruido visual fuera de hint mode.
+- El minimapa no cambia de posicion durante zoom.
+- Su rectangulo representa correctamente el area logica visible.
 
 ## Iteracion 3: frames jerarquicos
 
