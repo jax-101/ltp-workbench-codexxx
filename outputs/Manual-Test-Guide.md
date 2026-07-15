@@ -92,8 +92,9 @@ Resultado esperado: `Ctrl+G` limpia la seleccion en navegacion y cancela el cont
 3. Selecciona un elemento y pulsa `C` para centrarlo.
 4. Pulsa `Cmd+0` para volver al 100%.
 5. Pulsa `Cmd+1` para ajustar todo el diagrama a la ventana.
+6. Activa `H` en varios niveles de zoom.
 
-Resultado esperado: el zoom mantiene el centro de trabajo, las flechas desplazan la vista y los elementos conservan sus posiciones relativas.
+Resultado esperado: el zoom mantiene el centro de trabajo, las flechas desplazan la vista y los hints visibles conservan tamano legible y secuencias validas.
 
 ## Prueba 9: paneles laterales
 
@@ -110,10 +111,19 @@ Resultado esperado: los paneles se pliegan a un control estrecho y recuperan su 
 2. Comprueba que el rectangulo rojo representa la zona visible.
 3. Haz click en otra zona del minimapa.
 4. Arrastra dentro del minimapa.
+5. Acerca y aleja varias veces observando tanto el minimapa como su rectangulo rojo.
 
-Resultado esperado: el viewport y el minimapa se mantienen sincronizados y la navegacion no cambia el grafo.
+Resultado esperado: el minimapa permanece fijo; el rectangulo se hace pequeno al acercar, grande al alejar y sigue la zona visible.
 
-## Prueba 11: borrado seguro
+## Prueba 11: indicadores de link
+
+1. Navega por el diagrama sin activar hints.
+2. Pasa el puntero por el punto medio de un link.
+3. Pulsa `H`.
+
+Resultado esperado: los circulos `L` estan ocultos normalmente, aparecen de forma discreta al interactuar y todos se muestran durante hint mode.
+
+## Prueba 12: borrado seguro
 
 1. Crea dos nodos de prueba y un link entre ellos.
 2. Selecciona el link y pulsa `Delete`.
@@ -124,7 +134,7 @@ Resultado esperado: el viewport y el minimapa se mantienen sincronizados y la na
 
 Resultado esperado: siempre aparece confirmacion, cancelar no cambia datos y confirmar elimina tambien las relaciones dependientes. El frame raiz permanece protegido.
 
-## Prueba 12: regresion basica
+## Prueba 13: regresion basica
 
 Comprueba que siguen funcionando:
 

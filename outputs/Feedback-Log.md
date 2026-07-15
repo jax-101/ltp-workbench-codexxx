@@ -204,7 +204,7 @@ Criterios de aceptacion:
 
 Feedback: despues de jugar con el zoom, al pulsar `H` solo aparece el hint `A`. Al intentar escribir otra secuencia, la barra superior muestra `No hint matches that sequence`.
 
-Estado: pendiente. Revisar la relacion entre escala, elementos seleccionables, regeneracion de hint entries y estado persistido del modo hint.
+Estado: implementado en la iteracion 2.1, pendiente de validacion de uso. Los hints se limitan al viewport logico, se regeneran al cambiar zoom y se dibujan en una capa de pantalla de tamano constante.
 
 Criterios de aceptacion:
 
@@ -217,7 +217,7 @@ Criterios de aceptacion:
 
 Feedback: los circulos `L` visibles sobre cada link generan ruido visual. Deberian permanecer ocultos por defecto y aparecer al activar `H`.
 
-Estado: pendiente. Separar el hit target accesible del indicador visual y mostrar este ultimo solo durante keyboard hint mode.
+Estado: implementado en la iteracion 2.1, pendiente de validacion de uso. El area interactiva permanece disponible, pero el circulo solo aparece durante hint mode, hover o foco.
 
 Criterios de aceptacion:
 
@@ -230,7 +230,7 @@ Criterios de aceptacion:
 
 Feedback: al cambiar el zoom del canvas, la ventana de navegacion o minimapa cambia de posicion en la interfaz.
 
-Estado: pendiente. Desacoplar por completo la posicion del minimapa de las dimensiones transformadas del canvas y anclarlo al viewport del editor.
+Estado: implementado en la iteracion 2.1, pendiente de validacion de uso. El editor ocupa una altura estable y el minimapa queda anclado al viewport, no al canvas escalado.
 
 Criterios de aceptacion:
 
@@ -242,7 +242,7 @@ Criterios de aceptacion:
 
 Feedback: el rectangulo que representa la pantalla visible mantiene el mismo tamano en el minimapa al cambiar el zoom.
 
-Estado: pendiente. Recalcular dimensiones y posicion del viewport del minimapa despues de cada cambio de escala usando coordenadas logicas.
+Estado: implementado en la iteracion 2.1, pendiente de validacion de uso. El rectangulo se recalcula en coordenadas logicas despues de zoom, pan y render.
 
 Criterios de aceptacion:
 

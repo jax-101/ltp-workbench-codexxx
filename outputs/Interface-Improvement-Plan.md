@@ -53,7 +53,7 @@ Criterios de aceptacion:
 
 ## Iteracion 2: edicion y navegacion
 
-Estado: implementada y probada manualmente; requiere los ajustes de estabilizacion F-029 a F-032.
+Estado: implementada; los ajustes de estabilizacion se entregan en la iteracion 2.1.
 
 Incluye:
 
@@ -71,6 +71,8 @@ Criterios de aceptacion:
 ## Iteracion 2.1: estabilizacion de hints y minimapa
 
 Esta iteracion corta se completa antes de integrar la iteracion 2 en `main`.
+
+Estado: implementada; pendiente de validacion manual.
 
 Incluye:
 

@@ -137,3 +137,15 @@ Razon: los elementos visuales representan un grafo logico; dejar referencias hue
 Decision: zoom, pan y apertura de paneles forman parte de `ViewState` y se guardan de forma diferida al navegar.
 
 Razon: reabrir un arbol debe devolver al usuario al mismo contexto de trabajo sin convertir cada movimiento del viewport en una operacion visible de guardado.
+
+### D-023: Hints visibles en coordenadas de pantalla
+
+Decision: los keyboard hints se generan para los elementos que intersectan el viewport logico y se dibujan fuera de la capa escalada del canvas.
+
+Razon: las etiquetas deben conservar legibilidad y tamano estable con cualquier zoom, y sus secuencias deben corresponder a lo que el usuario puede ver y seleccionar.
+
+### D-024: Minimap anclado al editor
+
+Decision: el minimapa se posiciona respecto al viewport fijo del editor. Solo su rectangulo interno cambia con zoom y pan.
+
+Razon: escalar el diagrama no debe desplazar los controles de navegacion; el minimapa representa el canvas, pero no forma parte de el.

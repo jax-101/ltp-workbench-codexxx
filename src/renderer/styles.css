@@ -21,10 +21,17 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#app {
+  height: 100%;
+}
+
 body {
   margin: 0;
   min-width: 1120px;
   min-height: 720px;
+  overflow: hidden;
   background: var(--paper);
   color: var(--ink);
 }
@@ -45,7 +52,8 @@ button {
   --right-panel-width: 340px;
   display: grid;
   grid-template-columns: var(--left-panel-width) minmax(620px, 1fr) var(--right-panel-width);
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
 }
 
 .prototype-shell.left-collapsed {
@@ -198,6 +206,9 @@ kbd {
 .prototype-main {
   position: relative;
   min-width: 0;
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
   display: grid;
   grid-template-rows: auto 1fr;
 }
@@ -269,6 +280,7 @@ kbd {
 
 .canvas-shell {
   position: relative;
+  min-height: 0;
   overflow: auto;
   background:
     linear-gradient(#ede8dc 1px, transparent 1px),
@@ -446,6 +458,14 @@ kbd {
   color: #59635f;
   font-size: 11px;
   font-weight: 900;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.link-target:hover,
+.link-target:focus-visible,
+.link-target.hint-visible {
+  opacity: 1;
 }
 
 .link-target.selected {

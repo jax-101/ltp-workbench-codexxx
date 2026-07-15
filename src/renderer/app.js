@@ -157,6 +157,7 @@ const setZoom = (nextZoom, options = {}) => {
   const left = logicalCenter.x * zoomLevel - nextShell.clientWidth / 2;
   const top = logicalCenter.y * zoomLevel - nextShell.clientHeight / 2;
   setViewportPosition(left, top, { persist: options.persist });
+  refreshHintsForViewport();
   setStatus(`Zoom ${Math.round(zoomLevel * 100)}%`);
 };
 
@@ -171,6 +172,7 @@ const fitView = () => {
   viewportState = { left: 0, top: 0 };
   render();
   setViewportPosition(0, 0);
+  refreshHintsForViewport();
   setStatus(`Diagram fitted at ${Math.round(zoomLevel * 100)}%`);
 };
 
@@ -300,32 +302,66 @@ const generateHintLabels = (count, alphabet = hintAlphabetForMode()) => {
   return labels.slice(0, count);
 };
 
+const logicalViewport = () => ({
+  left: viewportState.left / zoomLevel,
+  top: viewportState.top / zoomLevel,
+  right: (viewportState.left + viewportSize.width) / zoomLevel,
+  bottom: (viewportState.top + viewportSize.height) / zoomLevel
+});
+
+const boxIntersectsViewport = (box, viewport) =>
+  box.x + box.width >= viewport.left &&
+  box.x <= viewport.right &&
+  box.y + box.height >= viewport.top &&
+  box.y <= viewport.bottom;
+
 const visibleHintEntries = () => {
   const activeTree = tree();
   if (!activeTree) return [];
   const query = searchText.trim().toLowerCase();
+  const viewport = logicalViewport();
   const entries = [];
 
   for (const frame of activeTree.frames) {
     const box = layoutFrame(frame.id);
-    if (!query || frame.name.toLowerCase().includes(query)) {
-      entries.push({ id: frame.id, type: "frame", x: box.x + 16, y: box.y + 16, label: frame.name });
+    if (boxIntersectsViewport(box, viewport) && (!query || frame.name.toLowerCase().includes(query))) {
+      entries.push({
+        id: frame.id,
+        type: "frame",
+        x: clamp(box.x + 16, viewport.left + 12, viewport.right - 34),
+        y: clamp(box.y + 16, viewport.top + 12, viewport.bottom - 28),
+        label: frame.name
+      });
     }
   }
 
   for (const node of activeTree.nodes) {
     const box = layoutNode(node.id);
     const text = `${node.shortLabel || ""} ${node.statement || ""}`.toLowerCase();
-    if (!query || text.includes(query)) {
-      entries.push({ id: node.id, type: "node", x: box.x + box.width - 18, y: box.y - 10, label: node.shortLabel || node.statement });
+    if (boxIntersectsViewport(box, viewport) && (!query || text.includes(query))) {
+      entries.push({
+        id: node.id,
+        type: "node",
+        x: clamp(box.x + box.width - 18, viewport.left + 12, viewport.right - 34),
+        y: clamp(box.y - 10, viewport.top + 12, viewport.bottom - 28),
+        label: node.shortLabel || node.statement
+      });
     }
   }
 
   for (const link of activeTree.links) {
     const box = layoutLink(link.id).labelPosition || { x: 0, y: 0 };
     const text = `${link.meaning || ""} ${link.verbalization || ""}`.toLowerCase();
-    if (!query || text.includes(query)) {
-      entries.push({ id: link.id, type: "link", x: box.x, y: box.y, label: link.meaning || link.id });
+    const labelIsVisible =
+      box.x >= viewport.left && box.x <= viewport.right && box.y >= viewport.top && box.y <= viewport.bottom;
+    if (labelIsVisible && (!query || text.includes(query))) {
+      entries.push({
+        id: link.id,
+        type: "link",
+        x: clamp(box.x + 18, viewport.left + 12, viewport.right - 34),
+        y: clamp(box.y - 12, viewport.top + 12, viewport.bottom - 28),
+        label: link.meaning || link.id
+      });
     }
   }
 
@@ -337,8 +373,17 @@ const visibleHintEntries = () => {
 const showHints = () => {
   hintsVisible = true;
   hintBuffer = "";
+  captureViewport();
   hintEntries = visibleHintEntries();
   setStatus(`Hints active: ${hintEntries.length} selectable elements`);
+  render();
+};
+
+const refreshHintsForViewport = () => {
+  if (!hintsVisible) return;
+  captureViewport();
+  hintBuffer = "";
+  hintEntries = visibleHintEntries();
   render();
 };
 
@@ -914,8 +959,9 @@ const renderLinks = () => {
     .map((link) => {
       const label = layoutLink(link.id).labelPosition || { x: 0, y: 0 };
       const selected = link.id === selectedElementId ? "selected" : "";
+      const hintVisible = hintsVisible ? "hint-visible" : "";
       return `
-        <button class="link-target ${selected}" data-element-id="${link.id}" data-element-type="link" style="left:${label.x - 12}px;top:${label.y - 12}px;" title="${escapeHtml(link.meaning)}">L</button>
+        <button class="link-target ${selected} ${hintVisible}" data-element-id="${link.id}" data-element-type="link" style="left:${label.x - 12}px;top:${label.y - 12}px;" title="${escapeHtml(link.meaning)}">L</button>
       `;
     })
     .join("");
@@ -941,7 +987,7 @@ const renderHints = () => {
   return hintEntries
     .map(
       (entry) => `
-        <div class="hint-badge hint-${entry.type}" style="left:${entry.x}px;top:${entry.y}px;">
+        <div class="hint-badge hint-${entry.type}" style="left:${entry.x * zoomLevel}px;top:${entry.y * zoomLevel}px;">
           ${entry.hint}
         </div>
       `
@@ -1303,8 +1349,8 @@ const renderCanvas = () => {
             ${renderLinks()}
             ${renderFrames()}
             ${renderNodes()}
-            ${renderHints()}
           </div>
+          ${renderHints()}
         </div>
       </div>
       ${renderMinimap()}
@@ -1796,6 +1842,35 @@ window.__ltpSmokeTest = async () => {
   const consecutiveNodesAreOffset =
     viewportNodeBox.x !== secondViewportNodeBox.x || viewportNodeBox.y !== secondViewportNodeBox.y;
 
+  fitView();
+  hideHints();
+  const minimapRectBeforeZoom = document.querySelector(".minimap")?.getBoundingClientRect();
+  const minimapViewportWidthBeforeZoom = Number.parseFloat(document.querySelector(".minimap-viewport")?.style.width || "0");
+  const hiddenLinkOpacity = getComputedStyle(document.querySelector(".link-target")).opacity;
+  showHints();
+  const hintCountBeforeZoom = hintEntries.length;
+  const hintBadgeHeightBeforeZoom = document.querySelector(".hint-badge")?.getBoundingClientRect().height;
+  const visibleLinkOpacity = getComputedStyle(document.querySelector(".link-target")).opacity;
+  setZoom(Math.min(1.25, zoomLevel + 0.4), { persist: false });
+  const minimapRectAfterZoom = document.querySelector(".minimap")?.getBoundingClientRect();
+  const minimapViewportWidthAfterZoom = Number.parseFloat(document.querySelector(".minimap-viewport")?.style.width || "0");
+  const hintBadgeHeightAfterZoom = document.querySelector(".hint-badge")?.getBoundingClientRect().height;
+  const hintsRemainUsableAfterZoom =
+    hintCountBeforeZoom > 1 &&
+    hintEntries.length > 1 &&
+    document.querySelectorAll(".hint-badge").length === hintEntries.length &&
+    hintBuffer === "" &&
+    !statusText.includes("No hint matches");
+  const hintBadgesKeepReadableSize =
+    Math.abs(hintBadgeHeightBeforeZoom - hintBadgeHeightAfterZoom) < 1;
+  const linkIndicatorsFollowHintMode = hiddenLinkOpacity === "0" && visibleLinkOpacity === "1";
+  const minimapStaysAnchored =
+    Math.abs(minimapRectBeforeZoom.right - minimapRectAfterZoom.right) < 1 &&
+    Math.abs(minimapRectBeforeZoom.bottom - minimapRectAfterZoom.bottom) < 1;
+  const minimapViewportScalesWithZoom =
+    minimapViewportWidthAfterZoom < minimapViewportWidthBeforeZoom;
+  hideHints();
+
   setZoom(1.25, { persist: false });
   const zoomWorks =
     zoomLevel === 1.25 && document.querySelector(".canvas-content")?.style.transform === "scale(1.25)";
@@ -1878,7 +1953,7 @@ window.__ltpSmokeTest = async () => {
       finalTree.nodes.length >= 10 &&
       finalTree.frames.length >= 4 &&
       finalTree.links.length >= 6 &&
-      hintEntries.length >= finalTree.nodes.length &&
+      hintEntries.length > 0 &&
       document.querySelectorAll(".tree-node").length >= 10 &&
       document.querySelectorAll(".tree-frame").length >= 4 &&
       document.querySelectorAll(".link-target").length >= 6 &&
@@ -1896,6 +1971,11 @@ window.__ltpSmokeTest = async () => {
       ctrlGClearsSelection &&
       nodeCreatedInViewport &&
       consecutiveNodesAreOffset &&
+      hintsRemainUsableAfterZoom &&
+      hintBadgesKeepReadableSize &&
+      linkIndicatorsFollowHintMode &&
+      minimapStaysAnchored &&
+      minimapViewportScalesWithZoom &&
       zoomWorks &&
       keyboardPanWorks &&
       minimapWorks &&
@@ -1928,6 +2008,11 @@ window.__ltpSmokeTest = async () => {
     ctrlGClearsSelection,
     nodeCreatedInViewport,
     consecutiveNodesAreOffset,
+    hintsRemainUsableAfterZoom,
+    hintBadgesKeepReadableSize,
+    linkIndicatorsFollowHintMode,
+    minimapStaysAnchored,
+    minimapViewportScalesWithZoom,
     zoomWorks,
     keyboardPanWorks,
     minimapWorks,
