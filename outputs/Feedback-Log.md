@@ -472,3 +472,17 @@ Criterios de aceptacion:
 - Elegir el destino externo completa la conexion sin desplazar el canvas enfocado.
 - Los nuevos links aparecen como portales en el borde y como links normales fuera del foco.
 - El flujo completo funciona con teclado y keyboard hints.
+
+### F-047: Indicar una direccion pendiente de aplicar
+
+Feedback: cambiar la direccion preferente no reorganiza inmediatamente el diagrama; es necesario ejecutar Layout con el boton o su atajo. La interfaz debe hacer visible esta relacion.
+
+Estado: pendiente para la iteracion 3B, junto con la consolidacion del layout direccional.
+
+Criterios de aceptacion:
+
+- Cambiar la direccion marca el diagrama como pendiente de Layout.
+- El boton Layout muestra un estado visual discreto hasta aplicar la preferencia.
+- El estado se limpia al completar Layout correctamente.
+- La interfaz no da a entender que el diagrama ya ha sido reorganizado.
+- Boton y `Cmd/Ctrl+Shift+L` aplican la misma direccion pendiente.

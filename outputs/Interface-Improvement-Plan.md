@@ -1,6 +1,6 @@
 # Interface Improvement Plan
 
-Plan de evolucion del prototipo a partir del feedback F-010 a F-046. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
+Plan de evolucion del prototipo a partir del feedback F-010 a F-047. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
 
 ## Principios de ejecucion
 
@@ -153,6 +153,7 @@ Incluye:
 - F-036: contencion y exclusion geometrica estrictas.
 - F-038: insercion direccional sin alterar la forma existente.
 - F-043: rutas de links con minimizacion de cruces y evitacion de obstaculos.
+- F-047: indicacion de direccion pendiente de aplicar.
 - Completar F-035 con garantias espaciales al mover entidades entre frames.
 - Layout compuesto por frames y soporte de frames anidados.
 
@@ -164,6 +165,7 @@ Criterios de aceptacion:
 - El auto-layout completo usa los frames como contenedores, no como limites calculados a posteriori.
 - Los tests verifican contencion, exclusion y preservacion de distancias relativas.
 - Las rutas no atraviesan entidades y minimizan cruces dentro de las restricciones del diagrama.
+- Cambiar la direccion deja claro que Layout debe ejecutarse y limpia el estado al completarse.
 
 ## Iteracion 3C: operaciones sobre selecciones
 

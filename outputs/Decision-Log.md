@@ -254,3 +254,9 @@ Razon: duplicar reglas para frames minimizados y vistas enfocadas produciria rut
 Decision: la vista enfocada dispone de un panel secundario para buscar, previsualizar y seleccionar entidades exteriores. Estas acciones no abandonan el frame activo salvo orden explicita del usuario.
 
 Razon: el valor del foco es mantener el contexto de trabajo. Saltar al exterior para inspeccionar o conectar una entidad reintroduciria la distraccion que la vista pretende eliminar.
+
+### D-041: La direccion es una preferencia aplicada por Layout
+
+Decision: cambiar la direccion configura la siguiente ejecucion de Layout y marca visualmente esa operacion como pendiente. No reorganiza automaticamente el diagrama.
+
+Razon: el auto-layout sigue siendo una accion explicita para evitar movimientos inesperados. El indicador pendiente comunica la diferencia entre guardar una preferencia y aplicarla.
