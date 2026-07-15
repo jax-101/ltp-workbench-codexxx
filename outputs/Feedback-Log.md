@@ -435,7 +435,7 @@ Criterios de aceptacion:
 
 Feedback: todas las combinaciones de teclado deben aparecer debajo de Keyboard en el panel izquierdo.
 
-Estado: implementado en la iteracion 2.3, pendiente de validacion de uso. La lista se genera desde el mismo mapa de comandos y etiquetas que utiliza el teclado.
+Estado: implementado en la iteracion 2.3 y validado por el usuario el 2026-07-15. La lista se genera desde el mismo mapa de comandos y etiquetas que utiliza el teclado.
 
 Criterios de aceptacion:
 
@@ -448,7 +448,7 @@ Criterios de aceptacion:
 
 Feedback: la tecla `H` muestra y oculta correctamente los hints, pero el boton Hints solo los activa.
 
-Estado: implementado en la iteracion 2.3, pendiente de validacion de uso. Tecla y boton comparten la misma accion de alternancia.
+Estado: implementado en la iteracion 2.3 y validado por el usuario el 2026-07-15. Tecla y boton comparten la misma accion de alternancia.
 
 Criterios de aceptacion:
 
@@ -486,3 +486,17 @@ Criterios de aceptacion:
 - El estado se limpia al completar Layout correctamente.
 - La interfaz no da a entender que el diagrama ya ha sido reorganizado.
 - Boton y `Cmd/Ctrl+Shift+L` aplican la misma direccion pendiente.
+
+### F-048: El minimapa debe mostrar la escala relativa al alejar
+
+Feedback: al alejar suficientemente el zoom, el rectangulo del viewport cambia de tamano, pero el resto del diagrama conserva el mismo tamano en el minimapa. Se espera que el diagrama se vea mas pequeno para representar que ocupa solo una parte de la pantalla real.
+
+Estado: pendiente para la iteracion 2.4, antes de integrar la serie 2.x. El dominio del minimapa debe abarcar tanto el contenido como la extension logica del viewport.
+
+Criterios de aceptacion:
+
+- Si el viewport logico es mayor que el contenido, el diagrama se reduce dentro del minimapa.
+- El espacio visible alrededor del contenido queda representado de forma proporcional.
+- El contenido y el rectangulo del viewport comparten origen, escala y limites.
+- Acercar, alejar, desplazar y navegar desde el minimapa no producen saltos.
+- El comportamiento sigue siendo correcto con paneles laterales abiertos o cerrados.

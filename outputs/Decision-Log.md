@@ -260,3 +260,9 @@ Razon: el valor del foco es mantener el contexto de trabajo. Saltar al exterior 
 Decision: cambiar la direccion configura la siguiente ejecucion de Layout y marca visualmente esa operacion como pendiente. No reorganiza automaticamente el diagrama.
 
 Razon: el auto-layout sigue siendo una accion explicita para evitar movimientos inesperados. El indicador pendiente comunica la diferencia entre guardar una preferencia y aplicarla.
+
+### D-042: El dominio del minimapa incluye contenido y viewport
+
+Decision: la escala del minimapa se calcula sobre la union entre los limites del contenido y la extension logica visible. El contenido, los links y el rectangulo del viewport usan la misma transformacion.
+
+Razon: cuando el zoom se aleja mas que el tamano del diagrama, escalar solo contra el canvas mantiene el contenido artificialmente grande y deja de comunicar cuanto espacio real ocupa en pantalla.

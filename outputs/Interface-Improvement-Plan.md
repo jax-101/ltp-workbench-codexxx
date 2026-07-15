@@ -112,7 +112,7 @@ Criterios de aceptacion:
 
 ## Iteracion 2.3: cierre de controles y ayuda de teclado
 
-Estado: implementada; pendiente de validacion manual.
+Estado: implementada y validada por el usuario el 2026-07-15.
 
 Incluye:
 
@@ -127,9 +127,24 @@ Criterios de aceptacion:
 - `H` y el boton Hints abren y cierran el mismo estado.
 - Cerrar hints limpia el buffer y actualiza el estado visual del boton.
 
+## Iteracion 2.4: escala contextual del minimapa
+
+Estado: planificada como correccion corta antes de integrar la serie 2.x en `main`.
+
+Incluye:
+
+- F-048: hacer que el minimapa represente tambien la extension logica visible al alejar el zoom mas alla del contenido.
+
+Criterios de aceptacion:
+
+- Al alejar y ver espacio alrededor del diagrama, su representacion se hace proporcionalmente mas pequena dentro del minimapa.
+- El rectangulo del viewport y el contenido usan el mismo dominio espacial y permanecen alineados.
+- Al acercar, el minimapa sigue mostrando el contenido completo y el rectangulo reduce su tamano.
+- Click, arrastre, pan y ajuste a pantalla conservan su correspondencia con el canvas.
+
 ## Iteracion 3A: seleccion y contexto estructural
 
-Estado: planificada. Comenzar despues de validar e integrar la iteracion 2.3.
+Estado: planificada. Comenzar despues de validar la iteracion 2.4 e integrar la serie 2.x.
 
 Incluye:
 
