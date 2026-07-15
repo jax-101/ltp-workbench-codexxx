@@ -129,7 +129,7 @@ Criterios de aceptacion:
 
 ## Iteracion 2.4: escala contextual del minimapa
 
-Estado: implementada; pendiente de validacion manual.
+Estado: implementada y validada por el usuario el 2026-07-15.
 
 Incluye:
 
@@ -150,6 +150,7 @@ Incluye:
 
 - F-041: seleccion transitiva del contenido de un frame.
 - F-037: frame raiz ilimitado y frame activo permanente.
+- F-049: zoom anclado al centro de la seleccion cuando exista.
 - Modelo de seleccion general para nodos, links y frames.
 - Parte minima de F-023: tipos permitidos, orden de ciclo y direccion por tipo de diagrama.
 
@@ -158,6 +159,7 @@ Criterios de aceptacion:
 - La seleccion representa cualquier combinacion de elementos sin reutilizar el modo de fuentes de links.
 - Seleccionar un frame calcula siempre el mismo conjunto de descendientes y links internos.
 - Todo comando conoce el frame activo aunque la seleccion actual sea un nodo o link.
+- El zoom mantiene centrada la seleccion y conserva el centro del viewport cuando no hay seleccion.
 - El frame raiz no impone limites visuales al canvas.
 - Goal Tree obtiene sus tipos y orden desde una definicion central.
 

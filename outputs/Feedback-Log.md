@@ -491,7 +491,7 @@ Criterios de aceptacion:
 
 Feedback: al alejar suficientemente el zoom, el rectangulo del viewport cambia de tamano, pero el resto del diagrama conserva el mismo tamano en el minimapa. Se espera que el diagrama se vea mas pequeno para representar que ocupa solo una parte de la pantalla real.
 
-Estado: implementado en la iteracion 2.4, pendiente de validacion manual. El dominio del minimapa abarca tanto el contenido como la extension logica del viewport y aplica una unica transformacion a todos sus elementos.
+Estado: implementado en la iteracion 2.4 y validado por el usuario el 2026-07-15. El dominio del minimapa abarca tanto el contenido como la extension logica del viewport y aplica una unica transformacion a todos sus elementos.
 
 Criterios de aceptacion:
 
@@ -500,3 +500,18 @@ Criterios de aceptacion:
 - El contenido y el rectangulo del viewport comparten origen, escala y limites.
 - Acercar, alejar, desplazar y navegar desde el minimapa no producen saltos.
 - El comportamiento sigue siendo correcto con paneles laterales abiertos o cerrados.
+
+### F-049: Centrar el zoom sobre la seleccion
+
+Feedback: al acercar o alejar, si existe algun elemento seleccionado, la pantalla debe ir centrandose sobre ese elemento para no perder el contexto de trabajo.
+
+Estado: pendiente para la iteracion 3A, junto con el modelo general de seleccion.
+
+Criterios de aceptacion:
+
+- Una entidad seleccionada permanece centrada al acercar o alejar.
+- Un frame seleccionado usa el centro de sus limites visibles.
+- Un link seleccionado usa el centro de su ruta o etiqueta.
+- Una seleccion multiple usa el centro del conjunto seleccionado.
+- Sin seleccion se conserva el centro logico actual del viewport.
+- El anclaje funciona con botones, atajos y cualquier control de zoom configurado.

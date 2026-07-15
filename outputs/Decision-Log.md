@@ -266,3 +266,9 @@ Razon: el auto-layout sigue siendo una accion explicita para evitar movimientos 
 Decision: la escala del minimapa se calcula sobre la union entre los limites del contenido y la extension logica visible. El contenido, los links y el rectangulo del viewport usan la misma transformacion.
 
 Razon: cuando el zoom se aleja mas que el tamano del diagrama, escalar solo contra el canvas mantiene el contenido artificialmente grande y deja de comunicar cuanto espacio real ocupa en pantalla.
+
+### D-043: El zoom se ancla a la seleccion
+
+Decision: al cambiar el zoom, el punto de anclaje es el centro del conjunto seleccionado. Si no existe seleccion, se mantiene el centro logico actual del viewport.
+
+Razon: la seleccion representa el contexto activo del usuario y debe permanecer visible mientras cambia la escala. La regla alternativa conserva el comportamiento espacial actual cuando no hay un objetivo explicito.
