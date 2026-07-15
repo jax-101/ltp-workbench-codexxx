@@ -322,9 +322,29 @@ Aprendizaje: configurabilidad segura requiere normalizacion, ambitos, validacion
 
 Aplicacion futura: validar overrides contra un registro de comandos, detectar colisiones por contexto y conservar defaults utilizables cuando la configuracion falla.
 
+### L-036: Ubicacion espacial y propiedad semantica necesitan ejes distintos
+
+Fecha: 2026-07-16
+
+Evidencia: mover una entidad al root debe sacarla de un frame visible sin convertirla en entidad de otro arbol ni perder sus links.
+
+Aprendizaje: usar una sola referencia para propiedad y posicion hace que reorganizar la interfaz cambie accidentalmente el dominio.
+
+Aplicacion futura: modelar por separado el agregado logico y el contenedor visual; exigir un comando semantico explicito para transferir propiedad entre agregados.
+
+### L-037: El comando debe declarar la intencion antes del target
+
+Fecha: 2026-07-16
+
+Evidencia: hacer que `L` conectara al elegir una entidad y moviera al elegir un frame ahorraba una tecla, pero convertia un error de hint en una mutacion diferente.
+
+Aprendizaje: cuando dos acciones tienen riesgos y efectos distintos, el tipo del objeto seleccionado no debe decidir retrospectivamente que accion queria el usuario.
+
+Aplicacion futura: entrar primero en un modo de accion explicito, filtrar despues los targets validos y conservar cancelacion y Undo/Redo.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-036`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-038`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

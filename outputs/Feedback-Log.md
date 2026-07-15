@@ -622,3 +622,20 @@ Criterios de aceptacion:
 - Goal Tree muestra al menos Goal, CSF, NC y Assumption.
 - Las categorias con cero elementos pueden omitirse o mostrarse de forma secundaria.
 - Los recuentos proceden del mismo cierre de seleccion usado por las operaciones colectivas.
+
+### F-057: Mover la seleccion entre frames con teclado
+
+Feedback: `Cmd+P` debe sacar la seleccion un nivel hacia su frame padre. `Cmd+F` debe mostrar exclusivamente frames, incluido el root, con hints para elegir el nuevo destino.
+
+Estado: planificado para 3B sobre el modelo de canvas compuesto de 3A.4.
+
+Criterios de aceptacion:
+
+- `Cmd+P` mueve cada raiz explicita seleccionada un nivel hacia su padre.
+- Si se selecciona un frame, sus descendientes viajan con el sin reprocesarse individualmente.
+- `Cmd+F` abre un modo de destino que muestra solo frames validos y un target sintetico `ROOT`.
+- Elegir el destino ejecuta una unica transaccion reversible.
+- Un frame no puede moverse dentro de si mismo ni de un descendiente.
+- Los links conservan su identidad y recalculan su ruta.
+- Mover una entidad al root cambia su contenedor espacial, pero no el arbol logico al que pertenece.
+- `Ctrl+G` cancela el modo de destino sin modificar datos.

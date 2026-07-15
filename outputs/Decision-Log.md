@@ -368,3 +368,15 @@ Razon: un archivo editable sin validacion puede dejar comandos inaccesibles o ca
 Decision: al seleccionar un frame, la interfaz muestra entidades agrupadas por los tipos declarados por el diagrama, junto con subframes y links internos. El propio frame no forma parte del inventario.
 
 Razon: `Selected` e `Included` describen el mecanismo de seleccion, pero no ayudan a comprender el contenido del frame.
+
+### D-060: Reparenting tiene comandos propios y hints de frames
+
+Decision: `Cmd+P` mueve la seleccion un nivel al padre. `Cmd+F` abre un modo de destino cuyos hints representan exclusivamente frames validos y el root conceptual. `L` permanece reservado para links.
+
+Razon: reutilizar `L` para conectar o mover segun el tipo del target haria posible una mutacion espacial accidental. Un comando separado expresa la intencion antes de elegir destino.
+
+### D-061: Contenedor espacial y pertenencia logica son independientes
+
+Decision: mover una entidad o frame cambia su ubicacion en la jerarquia del canvas sin cambiar automaticamente `treeId` ni su pertenencia semantica al diagrama. El root puede actuar como area espacial sin frame finito.
+
+Razon: esta separacion permite sacar temporalmente elementos de un frame, componer varios arboles y preservar las reglas de cada grafo. Mover contenido a otro arbol requerira una operacion semantica distinta.

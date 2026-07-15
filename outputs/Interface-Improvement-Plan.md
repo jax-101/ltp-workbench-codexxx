@@ -212,6 +212,7 @@ Incluye:
 - F-043: rutas de links con minimizacion de cruces y evitacion de obstaculos.
 - F-047: indicacion de direccion pendiente de aplicar.
 - F-052: transiciones animadas al deshacer y rehacer operaciones espaciales.
+- F-057: mover seleccion al padre con `Cmd+P` o a un frame elegido con `Cmd+F`.
 - Completar F-035 con garantias espaciales al mover entidades entre frames.
 - Layout compuesto por frames y soporte de frames anidados.
 
@@ -225,6 +226,7 @@ Criterios de aceptacion:
 - Las rutas no atraviesan entidades y minimizan cruces dentro de las restricciones del diagrama.
 - Cambiar la direccion deja claro que Layout debe ejecutarse y limpia el estado al completarse.
 - Undo/Redo de Layout y otras operaciones espaciales reutiliza la animacion sin crear nuevas entradas de historial.
+- El selector de destino muestra solo frames validos, incluido el root, y nunca permite ciclos.
 
 ## Iteracion 3C: operaciones sobre selecciones
 
