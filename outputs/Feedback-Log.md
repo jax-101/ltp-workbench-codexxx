@@ -94,19 +94,44 @@ Estado: implementado en la iteracion 2 y validado por el usuario como parte de l
 
 Feedback: los frames deberian poder minimizarse a un cuadrado mas pequeno. Al colapsar un frame, desaparecen de la vista los elementos internos, pero se mantienen las flechas que entran y salen del frame.
 
-Estado: pendiente. Definir representacion visual de frame colapsado y reglas de redireccion de links hacia el frame.
+Estado: pendiente para la iteracion 3D. El frame minimizado se tratara como una representacion resumen persistente de todo su contenido.
+
+Criterios de aceptacion:
+
+- Minimizar oculta nodos, frames descendientes y links completamente internos.
+- Los links externos terminan en el borde del frame minimizado.
+- El resumen muestra nombre, cantidad de elementos y conexiones externas.
+- Las conexiones agrupadas indican su multiplicidad y pueden inspeccionarse.
+- Expandir restaura exactamente las posiciones y rutas anteriores.
+- Un frame minimizado puede abrirse directamente en vista de foco.
 
 ### F-016: Vista enfocada de un frame
 
 Feedback: se deberia poder seleccionar un frame y cambiar a una vista unicamente de ese frame.
 
-Estado: pendiente. Aprovechar `activeFrameId` y definir navegacion de entrada/salida, breadcrumbs y alcance visible.
+Estado: pendiente para la iteracion 3D. La vista de foco sera un estado temporal de navegacion que dedica el canvas al frame sin modificar el diagrama.
+
+Criterios de aceptacion:
+
+- El contenido del frame ocupa el area central disponible sin elementos externos que distraigan.
+- Breadcrumbs visibles permiten subir al padre o salir del foco.
+- Inspector, hints, minimapa y comandos siguen disponibles dentro del alcance enfocado.
+- Los links externos terminan en portales etiquetados en el borde.
+- Consultar un portal no saca automaticamente al usuario de la vista.
+- Cerrar el foco restaura zoom, pan y contexto exterior de forma predecible.
 
 ### F-017: Jerarquia visible de frames
 
 Feedback: los frames deberian tener una jerarquia clara y navegable.
 
-Estado: pendiente. Mostrar arbol de frames, breadcrumbs o ambos.
+Estado: pendiente para la iteracion 3D. La jerarquia se mostrara mediante breadcrumbs y un navegador de frames que soporte niveles anidados.
+
+Criterios de aceptacion:
+
+- Siempre se distingue el frame activo, sus ancestros y sus descendientes directos.
+- Se puede entrar, subir o volver a la vista general sin perder seleccion accidentalmente.
+- Frames minimizados y enfocados conservan su posicion dentro de la jerarquia.
+- La navegacion funciona con raton, teclado y hints.
 
 ### F-018: Links como flechas visibles
 
@@ -431,3 +456,19 @@ Criterios de aceptacion:
 - Pulsarlo de nuevo los oculta y limpia cualquier secuencia parcial.
 - El boton indica visualmente y mediante `aria-pressed` si estan activos.
 - `H` produce exactamente la misma transicion sin seleccionar accidentalmente un hint.
+
+### F-046: Trabajar con entidades externas desde una vista de foco
+
+Feedback: desde el foco de un frame se debe poder consultar, buscar y conectar con entidades exteriores sin abandonar esa vista.
+
+Estado: pendiente para la iteracion 3D. Requiere portales de links externos y un selector secundario de entidades fuera del alcance.
+
+Criterios de aceptacion:
+
+- Un panel secundario busca entidades externas por texto, tipo y frame.
+- Los resultados muestran suficiente contexto para distinguir entidades similares.
+- Se puede previsualizar una entidad externa sin cambiar el foco.
+- Al crear un link, el origen puede estar dentro y el destino fuera, o viceversa.
+- Elegir el destino externo completa la conexion sin desplazar el canvas enfocado.
+- Los nuevos links aparecen como portales en el borde y como links normales fuera del foco.
+- El flujo completo funciona con teclado y keyboard hints.

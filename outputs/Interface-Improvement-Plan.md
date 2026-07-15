@@ -1,6 +1,6 @@
 # Interface Improvement Plan
 
-Plan de evolucion del prototipo a partir del feedback F-010 a F-045. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
+Plan de evolucion del prototipo a partir del feedback F-010 a F-046. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
 
 ## Principios de ejecucion
 
@@ -183,17 +183,48 @@ Criterios de aceptacion:
 
 ## Iteracion 3D: frames jerarquicos
 
+Esta iteracion usa una misma infraestructura de proyeccion para representar conexiones cuyo otro extremo esta oculto por minimizacion o por foco.
+
+### 3D.1: jerarquia y navegacion de foco
+
 Incluye:
 
-- F-017: arbol de frames y breadcrumbs.
-- F-016: vista enfocada de un frame.
-- F-015: colapso de frames con conexiones externas preservadas.
+- F-017: arbol de frames, breadcrumbs y navegacion padre/hijo.
+- F-016: vista enfocada de un frame como estado temporal de navegacion.
 
 Criterios de aceptacion:
 
-- Se puede entrar y salir de cualquier nivel de frame.
-- La vista enfocada solo muestra el contenido del frame activo.
-- Un frame colapsado oculta sus descendientes y recibe en su borde los links externos.
+- Entrar en foco dedica el canvas al frame y conserva inspector, hints y minimapa.
+- Breadcrumbs permiten subir o salir sin perder el contexto exterior.
+- Zoom y pan de la vista general se restauran al cerrar el foco.
+
+### 3D.2: minimizacion y portales de conexion
+
+Incluye:
+
+- F-015: frame minimizado como resumen persistente.
+- Portales de borde compartidos por frames minimizados y vistas de foco.
+
+Criterios de aceptacion:
+
+- Minimizar oculta detalle interno y conserva conexiones externas visibles.
+- Las conexiones agrupadas muestran su cantidad y pueden inspeccionarse.
+- Expandir restaura exactamente la geometria anterior.
+- Los portales distinguen claramente el destino externo de una entidad visible.
+
+### 3D.3: trabajo con entidades externas
+
+Incluye:
+
+- F-046: busqueda, previsualizacion y conexion con entidades externas desde el foco.
+- Panel secundario limitado al contenido exterior del frame activo.
+
+Criterios de aceptacion:
+
+- Se puede encontrar una entidad externa sin salir del foco.
+- La previsualizacion no cambia el viewport ni el frame activo.
+- Crear un link interior-exterior funciona con raton, teclado y hints.
+- El link se representa como portal dentro del foco y como ruta normal en la vista general.
 
 ## Iteracion 4: layout
 

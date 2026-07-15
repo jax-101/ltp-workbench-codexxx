@@ -236,3 +236,21 @@ Razon: dos controles para el mismo estado deben producir identicas transiciones.
 Decision: la evitacion de entidades y la minimizacion de cruces se resolveran en 3B junto con la contencion de frames. El renderer consumira rutas calculadas en lugar de sustituirlas por lineas rectas.
 
 Razon: una ruta no puede evitar correctamente nodos y frames sin conocer sus limites definitivos. Corregirla antes del layout compuesto produciria una segunda implementacion desechable.
+
+### D-038: Minimizar y enfocar tienen persistencia diferente
+
+Decision: minimizar un frame es estado persistente del diagrama. Poner foco es estado temporal de la vista del usuario.
+
+Razon: la minimizacion cambia la representacion compartida del diagrama, mientras que el foco solo reduce distracciones durante una sesion de trabajo y no debe modificar lo que ven otros contextos.
+
+### D-039: Las conexiones ocultas se representan mediante portales
+
+Decision: cuando un extremo de un link queda oculto por minimizacion o por foco, el link termina en un portal etiquetado en el borde visible. La misma infraestructura se usa en ambos casos.
+
+Razon: duplicar reglas para frames minimizados y vistas enfocadas produciria rutas y selecciones incoherentes. Un portal conserva direccion, multiplicidad e identidad del extremo oculto.
+
+### D-040: Consultar entidades externas no cambia el foco
+
+Decision: la vista enfocada dispone de un panel secundario para buscar, previsualizar y seleccionar entidades exteriores. Estas acciones no abandonan el frame activo salvo orden explicita del usuario.
+
+Razon: el valor del foco es mantener el contexto de trabajo. Saltar al exterior para inspeccionar o conectar una entidad reintroduciria la distraccion que la vista pretende eliminar.
