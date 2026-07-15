@@ -39,6 +39,8 @@ npm run ltp -- tree list --workspace outputs/sample-workspace-v0.1.json --json
 
 La arquitectura y los comandos de escritura se describen en `outputs/Headless-Architecture.md`.
 
+Los aprendizajes reutilizables del desarrollo se mantienen en `outputs/Engineering-Lessons-Log.md`.
+
 ## Proxima informacion necesaria
 
 Para convertir esta base en una herramienta realmente fiel a tu forma de usar LTP, conviene incorporar:
