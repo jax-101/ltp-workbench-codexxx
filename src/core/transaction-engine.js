@@ -16,6 +16,10 @@ const stampWorkspace = (workspace, revision, now) =>
 
 const keepCurrentViewState = (current, candidate) =>
   produce(candidate, (draft) => {
+    const currentCanvasViews = new Map((current.canvases || []).map((canvas) => [canvas.id, canvas.viewState]));
+    for (const canvas of draft.canvases || []) {
+      if (currentCanvasViews.has(canvas.id)) canvas.viewState = clone(currentCanvasViews.get(canvas.id));
+    }
     const currentViews = new Map((current.trees || []).map((tree) => [tree.id, tree.viewState]));
     for (const tree of draft.trees || []) {
       if (currentViews.has(tree.id)) tree.viewState = clone(currentViews.get(tree.id));

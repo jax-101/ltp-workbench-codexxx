@@ -342,9 +342,19 @@ Aprendizaje: cuando dos acciones tienen riesgos y efectos distintos, el tipo del
 
 Aplicacion futura: entrar primero en un modo de accion explicito, filtrar despues los targets validos y conservar cancelacion y Undo/Redo.
 
+### L-038: Una migracion debe preceder a la validacion en cada entrada
+
+Fecha: 2026-07-16
+
+Evidencia: separar Canvas y Tree hizo que los proyectos guardados con schema 0.1 dejaran de satisfacer las nuevas invariantes, y la aplicacion dispone de entradas distintas por Electron, CLI y fixtures de prueba.
+
+Aprendizaje: una migracion compatible no es una utilidad aislada. Debe ser idempotente, preservar identidades y ejecutarse antes de construir el nucleo validado en todos los adaptadores que abren datos.
+
+Aplicacion futura: probar schema antiguo, schema actual y doble migracion; centralizar la conversion; persistirla de forma atomica; y hacer que nuevas interfaces reutilicen el mismo limite de carga.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-038`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-039`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

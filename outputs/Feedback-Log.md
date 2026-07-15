@@ -598,7 +598,7 @@ Criterios de aceptacion:
 
 Feedback: el root debe ser un frame global, ilimitado y permanente. Cada arbol debe tener ademas un frame explicito propio, de forma que varios arboles puedan colocarse en el root o dentro de otro frame.
 
-Estado: aceptado como correccion arquitectonica previa a 3B. El modelo actual usa el root del arbol como root infinito y no distingue un canvas compartido.
+Estado: implementado en el build `3A.4` y pendiente de validacion manual. El canvas posee un root conceptual unico; el antiguo root del arbol se migra sin cambiar su identidad a un frame anfitrion visible y finito.
 
 Criterios de aceptacion:
 
@@ -613,7 +613,7 @@ Criterios de aceptacion:
 
 Feedback: en lugar de contadores genericos `Selected` e `Included`, al seleccionar un frame conviene mostrar un resumen de su contenido por categoria o tipo.
 
-Estado: planificado para 3A.4 junto con el frame explicito de cada arbol.
+Estado: implementado en el build `3A.4` y pendiente de validacion manual. El estado del canvas y el inspector muestran recuentos por tipo declarativo, subframes, links internos y assumptions relacionados.
 
 Criterios de aceptacion:
 

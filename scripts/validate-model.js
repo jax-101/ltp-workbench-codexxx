@@ -12,5 +12,5 @@ if (issues.length) {
 }
 
 console.log(
-  `Model fixture OK: ${data.systems.length} system(s), ${data.trees[0].frames.length} frame(s), ${data.trees[0].nodes.length} node(s), ${data.trees[0].links.length} link(s).`
+  `Model fixture OK: ${data.systems.length} system(s), ${data.canvases[0].frames.length} frame(s), ${data.trees[0].nodes.length} node(s), ${data.trees[0].links.length} link(s).`
 );

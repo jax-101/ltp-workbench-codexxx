@@ -6,6 +6,7 @@ const ELK = require("elkjs/lib/elk.bundled.js");
 const { TransactionEngine, workspaceRevision } = require("./core/transaction-engine");
 const { WorkspaceRepository } = require("./core/workspace-repository");
 const { getDiagramDefinition } = require("./core/diagram-registry");
+const { migrateWorkspace } = require("./core/workspace-migrations");
 const packageMetadata = require("../package.json");
 
 let workspaceEngine = null;
@@ -155,7 +156,7 @@ const getWorkspaceEngine = async () => {
   if (workspaceEngine) return workspaceEngine;
   if (!workspaceEnginePromise) {
     workspaceEnginePromise = (async () => {
-      const initialWorkspace = await loadWorkspace();
+      const initialWorkspace = migrateWorkspace(await loadWorkspace()).workspace;
       const repository = new WorkspaceRepository(prototypeDataPath());
       const normalizedWorkspace = {
         ...initialWorkspace,
@@ -164,7 +165,9 @@ const getWorkspaceEngine = async () => {
       const persistedWorkspace = process.env.LTP_SMOKE_TEST === "1"
         ? await repository.reset(normalizedWorkspace)
         : await repository.initialize(normalizedWorkspace);
-      workspaceEngine = new TransactionEngine(persistedWorkspace, {
+      const migration = migrateWorkspace(persistedWorkspace);
+      const readyWorkspace = migration.changed ? await repository.reset(migration.workspace) : migration.workspace;
+      workspaceEngine = new TransactionEngine(readyWorkspace, {
         persist: (workspace, metadata) => repository.commit(workspace, metadata)
       });
       return workspaceEngine;
@@ -194,7 +197,7 @@ const saveWorkspaceTransaction = async (workspace, options = {}) => {
   return result.workspace;
 };
 
-const saveViewStateTransaction = async (treeId, viewState) => {
+const saveViewStateTransaction = async (canvasId, viewState) => {
   const engine = await getWorkspaceEngine();
   return engine.execute(
     {
@@ -202,13 +205,14 @@ const saveViewStateTransaction = async (treeId, viewState) => {
       type: "view.update",
       label: "Update view",
       expectedRevision: engine.getHistoryState().revision,
-      payload: { treeId, viewState }
+      payload: { canvasId, viewState }
     },
     { recordHistory: false }
   );
 };
 
 const getActiveTree = (workspace) => workspace.trees[0];
+const getCanvasForTree = (workspace, tree) => workspace.canvases.find((canvas) => canvas.id === tree.canvasId);
 
 const defaultLayoutDirection = (treeType) => getDiagramDefinition(treeType)?.defaultDirection || "TB";
 
@@ -228,7 +232,7 @@ const nodeSize = (tree, nodeId) => {
   };
 };
 
-const frameBounds = (tree, frame, nodePositions, framePositions) => {
+const frameBounds = (canvas, frame, nodePositions, framePositions) => {
   const padding = 28;
   const childBoxes = [
     ...frame.nodeIds.map((id) => nodePositions[id]).filter(Boolean),
@@ -236,7 +240,7 @@ const frameBounds = (tree, frame, nodePositions, framePositions) => {
   ];
 
   if (!childBoxes.length) {
-    return tree.layout?.frames?.[frame.id] || { x: 80, y: 80, width: 320, height: 180, pinned: false, layoutSource: "auto" };
+    return canvas.layout?.frames?.[frame.id] || { x: 80, y: 80, width: 320, height: 180, pinned: false, layoutSource: "auto" };
   }
 
   const minX = Math.min(...childBoxes.map((box) => box.x)) - padding;
@@ -249,7 +253,7 @@ const frameBounds = (tree, frame, nodePositions, framePositions) => {
     y: minY,
     width: Math.max(260, maxX - minX),
     height: Math.max(160, maxY - minY),
-    pinned: tree.layout?.frames?.[frame.id]?.pinned || false,
+    pinned: canvas.layout?.frames?.[frame.id]?.pinned || false,
     layoutSource: "auto"
   };
 };
@@ -257,6 +261,7 @@ const frameBounds = (tree, frame, nodePositions, framePositions) => {
 const runLayout = async (workspace) => {
   const nextWorkspace = structuredClone(workspace);
   const tree = getActiveTree(nextWorkspace);
+  const canvas = getCanvasForTree(nextWorkspace, tree);
   const elk = new ELK();
   const direction = tree.layout?.direction || defaultLayoutDirection(tree.type);
 
@@ -297,7 +302,7 @@ const runLayout = async (workspace) => {
         };
   }
 
-  const frameById = Object.fromEntries(tree.frames.map((frame) => [frame.id, frame]));
+  const frameById = Object.fromEntries(canvas.frames.map((frame) => [frame.id, frame]));
   const nextFrameLayout = {};
   const computeFrame = (frameId) => {
     if (nextFrameLayout[frameId]) {
@@ -307,14 +312,11 @@ const runLayout = async (workspace) => {
     for (const childFrameId of frame.childFrameIds) {
       computeFrame(childFrameId);
     }
-    const previous = tree.layout?.frames?.[frameId] || {};
-    nextFrameLayout[frameId] = previous.pinned ? previous : frameBounds(tree, frame, nextNodeLayout, nextFrameLayout);
+    const previous = canvas.layout?.frames?.[frameId] || {};
+    nextFrameLayout[frameId] = previous.pinned ? previous : frameBounds(canvas, frame, nextNodeLayout, nextFrameLayout);
     return nextFrameLayout[frameId];
   };
-  computeFrame(tree.rootFrameId);
-  for (const frame of tree.frames) {
-    computeFrame(frame.id);
-  }
+  computeFrame(tree.hostFrameId);
 
   const nextLinkLayout = {};
   for (const link of tree.links) {
@@ -340,8 +342,11 @@ const runLayout = async (workspace) => {
     direction,
     lastRunAt: new Date().toISOString(),
     nodes: nextNodeLayout,
-    frames: nextFrameLayout,
     links: nextLinkLayout
+  };
+  canvas.layout = {
+    ...(canvas.layout || {}),
+    frames: { ...(canvas.layout?.frames || {}), ...nextFrameLayout }
   };
   tree.updatedAt = new Date().toISOString();
   nextWorkspace.updatedAt = new Date().toISOString();
@@ -455,7 +460,7 @@ const createWindow = () => {
 ipcMain.handle("workspace:load", async () => (await getWorkspaceEngine()).getSnapshot());
 ipcMain.handle("app:build-info", async () => buildInfo);
 ipcMain.handle("workspace:save", async (_event, workspace, options) => saveWorkspaceTransaction(workspace, options));
-ipcMain.handle("workspace:save-view", async (_event, treeId, viewState) => saveViewStateTransaction(treeId, viewState));
+ipcMain.handle("workspace:save-view", async (_event, canvasId, viewState) => saveViewStateTransaction(canvasId, viewState));
 ipcMain.handle("workspace:execute", async (_event, command, options) => (await getWorkspaceEngine()).execute(command, options));
 ipcMain.handle("history:undo", async () => (await getWorkspaceEngine()).undo());
 ipcMain.handle("history:redo", async () => (await getWorkspaceEngine()).redo());

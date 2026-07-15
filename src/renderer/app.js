@@ -45,9 +45,11 @@ const escapeHtml = (value = "") =>
     .replaceAll('"', "&quot;");
 
 const tree = () => workspaceData?.trees?.[0];
+const canvas = () => workspaceData?.canvases?.find((candidate) => candidate.id === tree()?.canvasId);
+const rootFrameId = () => canvas()?.rootFrameId;
 const system = () => workspaceData?.systems?.[0];
 const nodeById = () => Object.fromEntries((tree()?.nodes || []).map((node) => [node.id, node]));
-const frameById = () => Object.fromEntries((tree()?.frames || []).map((frame) => [frame.id, frame]));
+const frameById = () => Object.fromEntries((canvas()?.frames || []).map((frame) => [frame.id, frame]));
 const linkById = () => Object.fromEntries((tree()?.links || []).map((link) => [link.id, link]));
 const selectedNode = () => nodeById()[selectedElementId];
 const selectedFrame = () => frameById()[selectedElementId];
@@ -67,7 +69,7 @@ const elementType = (id) => {
 const rebuildSelection = () => {
   const validRoots = [...selectionRootIds].filter((id) => elementType(id) !== "unknown");
   selectionRootIds = new Set(validRoots);
-  selectionIds = new Set(window.LTP_SELECTION_MODEL.selectionClosure(tree(), validRoots));
+  selectionIds = new Set(window.LTP_SELECTION_MODEL.selectionClosure(tree(), validRoots, canvas()?.frames));
   if (selectedElementId && !selectionIds.has(selectedElementId)) {
     selectedElementId = validRoots.at(-1) || null;
   }
@@ -102,7 +104,7 @@ const layoutNode = (nodeId) =>
   };
 
 const layoutFrame = (frameId) =>
-  tree()?.layout?.frames?.[frameId] || {
+  canvas()?.layout?.frames?.[frameId] || {
     x: 80,
     y: 80,
     width: 320,
@@ -115,10 +117,11 @@ const layoutLink = (linkId) => tree()?.layout?.links?.[linkId] || { labelPositio
 
 const canvasSize = () => {
   const activeTree = tree();
-  if (!activeTree) return { width: 1200, height: 800 };
+  const activeCanvas = canvas();
+  if (!activeTree || !activeCanvas) return { width: 1200, height: 800 };
   const nodeBoxes = Object.values(activeTree.layout?.nodes || {});
-  const frameBoxes = Object.entries(activeTree.layout?.frames || {})
-    .filter(([frameId]) => frameId !== activeTree.rootFrameId)
+  const frameBoxes = Object.entries(activeCanvas.layout?.frames || {})
+    .filter(([frameId]) => frameId !== activeCanvas.rootFrameId)
     .map(([, box]) => box);
   const boxes = [...nodeBoxes, ...frameBoxes];
   const width = Math.max(1200, ...boxes.map((box) => (box.x || 0) + (box.width || 0) + 140));
@@ -146,10 +149,10 @@ const captureViewport = () => {
 };
 
 const updateViewState = () => {
-  const activeTree = tree();
-  if (!activeTree) return;
-  activeTree.viewState = {
-    ...(activeTree.viewState || {}),
+  const activeCanvas = canvas();
+  if (!activeCanvas) return;
+  activeCanvas.viewState = {
+    ...(activeCanvas.viewState || {}),
     activeFrameId,
     selectedElementId,
     selectionRootIds: [...selectionRootIds],
@@ -165,11 +168,11 @@ const scheduleViewStatePersist = () => {
   window.clearTimeout(viewPersistTimer);
   viewPersistTimer = window.setTimeout(async () => {
     updateViewState();
-    const activeTree = tree();
-    const treeId = activeTree.id;
-    const viewState = structuredClone(activeTree.viewState);
+    const activeCanvas = canvas();
+    const canvasId = activeCanvas.id;
+    const viewState = structuredClone(activeCanvas.viewState);
     await enqueueWorkspaceOperation(async () => {
-      const result = await window.ltpPrototype.saveViewState(treeId, viewState);
+      const result = await window.ltpPrototype.saveViewState(canvasId, viewState);
       workspaceData.revision = result.revision;
       workspaceData.updatedAt = result.workspace.updatedAt;
       historyState = result.history;
@@ -323,7 +326,7 @@ const executeDomainCommand = async (type, payload, label) => {
 const reconcileUiAfterHistory = () => {
   const activeTree = tree();
   if (!activeTree) return;
-  if (!frameById()[activeFrameId]) activeFrameId = activeTree.rootFrameId;
+  if (!frameById()[activeFrameId]) activeFrameId = rootFrameId();
   if (selectedElementId && elementType(selectedElementId) === "unknown") selectedElementId = null;
   for (const id of [...connectionSourceIds]) {
     if (!nodeById()[id]) connectionSourceIds.delete(id);
@@ -471,7 +474,7 @@ const visibleHintEntries = () => {
   const viewport = logicalViewport();
   const entries = [];
 
-  for (const frame of activeTree.frames.filter((candidate) => candidate.id !== activeTree.rootFrameId)) {
+  for (const frame of canvas().frames.filter((candidate) => candidate.id !== rootFrameId())) {
     const box = layoutFrame(frame.id);
     if (boxIntersectsViewport(box, viewport) && (!query || frame.name.toLowerCase().includes(query))) {
       entries.push({
@@ -612,7 +615,7 @@ const viewportNodePosition = (frame, width = 250, height = 72) => {
     right: (viewportState.left + (shell?.clientWidth || 720)) / zoomLevel,
     bottom: (viewportState.top + (shell?.clientHeight || 560)) / zoomLevel
   };
-  const isRootFrame = frame.id === tree().rootFrameId;
+  const isRootFrame = frame.id === rootFrameId();
   const frameBox = layoutFrame(frame.id);
   const frameInner = isRootFrame
     ? viewport
@@ -658,7 +661,7 @@ const createNode = async (
 ) => {
   const activeTree = tree();
   const id = uid("node");
-  const frame = frameById()[frameId] || frameById()[activeTree.rootFrameId];
+  const frame = frameById()[frameId] || frameById()[rootFrameId()];
   const frameBox = layoutFrame(frame.id);
   const offset = frame.nodeIds.length * 18;
   const position =
@@ -726,7 +729,8 @@ const createSupportingNode = async () => {
 
 const createFrame = async () => {
   const activeTree = tree();
-  const parent = frameById()[activeFrameId] || frameById()[activeTree.rootFrameId];
+  const activeCanvas = canvas();
+  const parent = frameById()[activeFrameId] || frameById()[rootFrameId()];
   const parentBox = layoutFrame(parent.id);
   captureViewport();
   const rootPosition = {
@@ -736,7 +740,9 @@ const createFrame = async () => {
   const id = uid("frame");
   const frame = {
     id,
-    treeId: activeTree.id,
+    canvasId: activeCanvas.id,
+    treeId: parent.treeId || null,
+    kind: "container",
     parentFrameId: parent.id,
     name: "New frame",
     semanticType: null,
@@ -747,11 +753,11 @@ const createFrame = async () => {
     createdAt: now(),
     updatedAt: now()
   };
-  activeTree.frames.push(frame);
+  activeCanvas.frames.push(frame);
   parent.childFrameIds.push(id);
-  activeTree.layout.frames[id] = {
-    x: parent.id === activeTree.rootFrameId ? rootPosition.x : parentBox.x + 42,
-    y: parent.id === activeTree.rootFrameId ? rootPosition.y : parentBox.y + 72,
+  activeCanvas.layout.frames[id] = {
+    x: parent.id === rootFrameId() ? rootPosition.x : parentBox.x + 42,
+    y: parent.id === rootFrameId() ? rootPosition.y : parentBox.y + 72,
     width: 320,
     height: 190,
     pinned: false,
@@ -777,8 +783,8 @@ const frameDepth = (frameId) => {
 };
 
 const frameAtPoint = (point) => {
-  const candidates = tree().frames.filter((frame) => {
-    if (frame.id === tree().rootFrameId) return false;
+  const candidates = canvas().frames.filter((frame) => {
+    if (frame.id === rootFrameId()) return false;
     const box = layoutFrame(frame.id);
     return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
   });
@@ -789,7 +795,7 @@ const frameAtPoint = (point) => {
     const rightBox = layoutFrame(right.id);
     return leftBox.width * leftBox.height - rightBox.width * rightBox.height;
   });
-  return candidates[0] || frameById()[tree().rootFrameId];
+  return candidates[0] || frameById()[rootFrameId()];
 };
 
 const moveNodeToFrame = async (nodeId, targetFrameId, position = null) => {
@@ -797,7 +803,7 @@ const moveNodeToFrame = async (nodeId, targetFrameId, position = null) => {
   const targetFrame = frameById()[targetFrameId];
   if (!node || !targetFrame) return;
 
-  for (const frame of tree().frames) {
+  for (const frame of canvas().frames) {
     frame.nodeIds = frame.nodeIds.filter((id) => id !== nodeId);
   }
   if (!targetFrame.nodeIds.includes(nodeId)) targetFrame.nodeIds.push(nodeId);
@@ -987,7 +993,7 @@ const togglePin = async () => {
     box.layoutSource = box.pinned ? "manual" : "auto";
   }
   if (selectedElementType === "frame") {
-    const box = activeTree.layout.frames[selectedElementId];
+    const box = canvas().layout.frames[selectedElementId];
     box.pinned = !box.pinned;
     box.layoutSource = box.pinned ? "manual" : "auto";
   }
@@ -1034,12 +1040,16 @@ const interpolatedLinkMap = (startMap = {}, targetMap = {}, progress) =>
 
 const animateToLayout = async (nextWorkspace) => {
   const activeTree = tree();
+  const activeCanvas = canvas();
   const nextTree = nextWorkspace.trees[0];
+  const nextCanvas = nextWorkspace.canvases.find((candidate) => candidate.id === nextTree.canvasId);
   const startLayout = structuredClone(activeTree.layout);
   const targetLayout = nextTree.layout;
-  const moved = [...Object.keys(targetLayout.nodes || {}), ...Object.keys(targetLayout.frames || {})].filter((id) => {
-    const start = startLayout.nodes?.[id] || startLayout.frames?.[id];
-    const target = targetLayout.nodes?.[id] || targetLayout.frames?.[id];
+  const startFrameLayout = structuredClone(activeCanvas.layout?.frames || {});
+  const targetFrameLayout = nextCanvas.layout?.frames || {};
+  const moved = [...Object.keys(targetLayout.nodes || {}), ...Object.keys(targetFrameLayout)].filter((id) => {
+    const start = startLayout.nodes?.[id] || startFrameLayout[id];
+    const target = targetLayout.nodes?.[id] || targetFrameLayout[id];
     return start && target && (Math.abs(start.x - target.x) > 1 || Math.abs(start.y - target.y) > 1);
   });
   layoutAnimationMovedElements = moved.length;
@@ -1062,9 +1072,9 @@ const animateToLayout = async (nextWorkspace) => {
       activeTree.layout = {
         ...targetLayout,
         nodes: interpolatedBoxMap(startLayout.nodes, targetLayout.nodes, progress),
-        frames: interpolatedBoxMap(startLayout.frames, targetLayout.frames, progress),
         links: interpolatedLinkMap(startLayout.links, targetLayout.links, progress)
       };
+      activeCanvas.layout.frames = interpolatedBoxMap(startFrameLayout, targetFrameLayout, progress);
       layoutAnimationFrameCount += 1;
       render();
       const firstLink = activeTree.links[0];
@@ -1260,10 +1270,10 @@ const renderSidebar = () => {
           <dd>
             <div class="frame-context-row">
               <select class="frame-context-select" data-active-frame aria-label="Creation frame">
-                ${activeTree.frames
+                ${canvas().frames
                   .map(
                     (frame) =>
-                      `<option value="${frame.id}" ${frame.id === activeFrameId ? "selected" : ""}>${escapeHtml(frame.name)}${frame.id === activeTree.rootFrameId ? " (root)" : ""}</option>`
+                      `<option value="${frame.id}" ${frame.id === activeFrameId ? "selected" : ""}>${escapeHtml(frame.name)}${frame.id === rootFrameId() ? " (root)" : ""}</option>`
                   )
                   .join("")}
               </select>
@@ -1290,9 +1300,8 @@ const renderSidebar = () => {
 };
 
 const renderFrames = () => {
-  const activeTree = tree();
-  return activeTree.frames
-    .filter((frame) => frame.id !== activeTree.rootFrameId)
+  return canvas().frames
+    .filter((frame) => frame.id !== rootFrameId())
     .map((frame) => {
       const box = layoutFrame(frame.id);
       const active = frame.id === activeFrameId ? "active" : "";
@@ -1310,6 +1319,29 @@ const renderFrames = () => {
 };
 
 const nodeTypeLabel = (type) => diagramNodeTypes().find((candidate) => candidate.id === type)?.shortLabel || type;
+
+const frameInventory = (frameId) => {
+  const ids = new Set(window.LTP_SELECTION_MODEL.selectionClosure(tree(), [frameId], canvas()?.frames));
+  const typeCounts = new Map();
+  for (const node of tree().nodes.filter((candidate) => ids.has(candidate.id))) {
+    const label = nodeTypeLabel(node.type);
+    typeCounts.set(label, (typeCounts.get(label) || 0) + 1);
+  }
+  const linkIds = new Set(tree().links.filter((link) => ids.has(link.id)).map((link) => link.id));
+  return {
+    types: [...typeCounts.entries()],
+    frames: canvas().frames.filter((frame) => frame.id !== frameId && ids.has(frame.id)).length,
+    links: linkIds.size,
+    assumptions: tree().assumptions.filter((assumption) => linkIds.has(assumption.linkId)).length
+  };
+};
+
+const renderFrameInventoryItems = (inventory) => [
+  ...inventory.types.map(([label, count]) => `<span>${escapeHtml(label)}: <strong>${count}</strong></span>`),
+  `<span>Frames: <strong>${inventory.frames}</strong></span>`,
+  `<span>Links: <strong>${inventory.links}</strong></span>`,
+  `<span>Assumptions: <strong>${inventory.assumptions}</strong></span>`
+].join("");
 
 const layoutDirectionLabel = (direction) =>
   ({
@@ -1353,7 +1385,7 @@ const selectionCenter = () => {
   for (const id of selectionIds) {
     const type = elementType(id);
     if (type === "node") boxes.push(layoutNode(id));
-    if (type === "frame" && id !== tree().rootFrameId) boxes.push(layoutFrame(id));
+    if (type === "frame" && id !== rootFrameId()) boxes.push(layoutFrame(id));
     if (type === "link") {
       const point = layoutLink(id).labelPosition;
       if (point) boxes.push({ x: point.x, y: point.y, width: 0, height: 0 });
@@ -1517,8 +1549,8 @@ const renderMinimapContents = (metrics) => {
       return `<line x1="${mapX(source.x)}" y1="${mapY(source.y)}" x2="${mapX(target.x)}" y2="${mapY(target.y)}" />`;
     })
     .join("");
-  const frames = tree()
-    .frames.filter((frame) => frame.id !== tree().rootFrameId)
+  const frames = canvas()
+    .frames.filter((frame) => frame.id !== rootFrameId())
     .map((frame) => {
       const box = layoutFrame(frame.id);
       return `<div class="minimap-frame" style="left:${mapX(box.x)}px;top:${mapY(box.y)}px;width:${box.width * metrics.scale}px;height:${box.height * metrics.scale}px;"></div>`;
@@ -1681,8 +1713,8 @@ const requestDeleteSelection = (id = selectedElementId) => {
     setStatus("Select a node, link, or frame to delete");
     return;
   }
-  if (type === "frame" && id === tree().rootFrameId) {
-    setStatus("The root frame cannot be deleted");
+  if (type === "frame" && (id === rootFrameId() || id === tree().hostFrameId)) {
+    setStatus(id === rootFrameId() ? "The root frame cannot be deleted" : "The tree frame cannot be deleted separately from its tree");
     return;
   }
   previewNodeId = null;
@@ -1700,6 +1732,7 @@ const removeLinks = (linkIds) => {
 
 const confirmDeletion = async () => {
   const activeTree = tree();
+  const activeCanvas = canvas();
   const id = deleteCandidateId;
   const type = elementType(id);
   if (type === "unknown") {
@@ -1720,14 +1753,14 @@ const confirmDeletion = async () => {
     );
     removeLinks(connectedLinkIds);
     activeTree.nodes = activeTree.nodes.filter((node) => node.id !== id);
-    for (const frame of activeTree.frames) frame.nodeIds = frame.nodeIds.filter((nodeId) => nodeId !== id);
+    for (const frame of activeCanvas.frames) frame.nodeIds = frame.nodeIds.filter((nodeId) => nodeId !== id);
     for (const assumption of activeTree.assumptions) {
       if (assumption.promotedNodeId === id) assumption.promotedNodeId = null;
     }
     delete activeTree.layout.nodes[id];
   }
 
-  if (type === "frame" && id !== activeTree.rootFrameId) {
+  if (type === "frame" && id !== rootFrameId() && id !== activeTree.hostFrameId) {
     const frameIds = new Set();
     const collectFrames = (frameId) => {
       if (frameIds.has(frameId)) return;
@@ -1743,8 +1776,8 @@ const confirmDeletion = async () => {
     );
     removeLinks(connectedLinkIds);
     activeTree.nodes = activeTree.nodes.filter((node) => !nodeIds.has(node.id));
-    activeTree.frames = activeTree.frames.filter((frame) => !frameIds.has(frame.id));
-    for (const frame of activeTree.frames) {
+    activeCanvas.frames = activeCanvas.frames.filter((frame) => !frameIds.has(frame.id));
+    for (const frame of activeCanvas.frames) {
       frame.childFrameIds = frame.childFrameIds.filter((frameId) => !frameIds.has(frameId));
       frame.nodeIds = frame.nodeIds.filter((nodeId) => !nodeIds.has(nodeId));
     }
@@ -1752,8 +1785,8 @@ const confirmDeletion = async () => {
       if (nodeIds.has(assumption.promotedNodeId)) assumption.promotedNodeId = null;
     }
     for (const nodeId of nodeIds) delete activeTree.layout.nodes[nodeId];
-    for (const frameId of frameIds) delete activeTree.layout.frames[frameId];
-    if (frameIds.has(activeFrameId)) activeFrameId = activeTree.rootFrameId;
+    for (const frameId of frameIds) delete activeCanvas.layout.frames[frameId];
+    if (frameIds.has(activeFrameId)) activeFrameId = activeTree.hostFrameId;
   }
 
   deleteCandidateId = null;
@@ -1806,6 +1839,7 @@ const renderCanvas = () => {
   const size = canvasSize();
   const scaledWidth = Math.round(size.width * zoomLevel);
   const scaledHeight = Math.round(size.height * zoomLevel);
+  const inventory = selectedFrame() ? frameInventory(selectedElementId) : null;
   return `
     <main class="prototype-main">
       <header class="prototype-topbar">
@@ -1844,10 +1878,9 @@ const renderCanvas = () => {
       <div class="canvas-shell">
         <div class="canvas-status">
           <span>Mode: <strong>${escapeHtml(mode)}</strong></span>
-          <span>Selected: <strong>${selectionRootIds.size}</strong></span>
-          <span>Included: <strong>${Math.max(0, selectionIds.size - selectionRootIds.size)}</strong></span>
+          ${inventory ? renderFrameInventoryItems(inventory) : `<span>Selected: <strong>${selectionRootIds.size}</strong></span>`}
           <span>Sources: <strong>${connectionSourceIds.size}</strong></span>
-          <span>Frame: <strong>${escapeHtml(frameById()[activeFrameId]?.name || "none")}${activeFrameId === tree().rootFrameId ? " (root)" : ""}</strong></span>
+          <span>Frame: <strong>${escapeHtml(frameById()[activeFrameId]?.name || "none")}${activeFrameId === rootFrameId() ? " (root)" : ""}</strong></span>
           <span>Zoom: <strong>${Math.round(zoomLevel * 100)}%</strong></span>
           <span data-status>${escapeHtml(statusText)}</span>
         </div>
@@ -1892,7 +1925,7 @@ const renderInspector = () => {
         </select>
         <label>Frame</label>
         <select data-node-frame data-id="${node.id}">
-          ${tree()
+          ${canvas()
             .frames.map(
               (frame) =>
                 `<option value="${frame.id}" ${node.frameId === frame.id ? "selected" : ""}>${escapeHtml(frame.name)}</option>`
@@ -1907,6 +1940,7 @@ const renderInspector = () => {
   }
 
   if (frame) {
+    const inventory = frameInventory(frame.id);
     return `
       <aside class="inspector">
         <button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button>
@@ -1917,9 +1951,11 @@ const renderInspector = () => {
         <input data-frame-field="semanticType" data-id="${frame.id}" value="${escapeHtml(frame.semanticType || "")}" />
         <label>Notes</label>
         <textarea data-frame-field="notes" data-id="${frame.id}">${escapeHtml(frame.notes || "")}</textarea>
+        <label>Contents</label>
+        <div class="frame-inventory">${renderFrameInventoryItems(inventory)}</div>
         <button data-action="enter-frame">Enter frame</button>
         <button data-action="pin">Toggle pin</button>
-        ${frame.id === tree().rootFrameId ? "" : '<button class="danger-action" data-action="delete-selection">Delete frame</button>'}
+        ${frame.id === rootFrameId() || frame.id === tree().hostFrameId ? "" : '<button class="danger-action" data-action="delete-selection">Delete frame</button>'}
       </aside>
     `;
   }
@@ -2047,7 +2083,7 @@ const beginNodeDrag = (event, element) => {
     app.querySelectorAll(".tree-frame.drop-target").forEach((frameElement) => frameElement.classList.remove("drop-target"));
     if (!dragging) return;
     element.dataset.dragged = "true";
-    await moveNodeToFrame(nodeId, targetFrame?.id || tree().rootFrameId, nextBox);
+    await moveNodeToFrame(nodeId, targetFrame?.id || rootFrameId(), nextBox);
   };
 
   element.addEventListener(
@@ -2141,7 +2177,7 @@ const bindEvents = () => {
       if (action === "fit-view") fitView();
       if (action === "toggle-left-panel") togglePanel("left");
       if (action === "toggle-right-panel") togglePanel("right");
-      if (action === "activate-root-frame") setActiveFrame(tree().rootFrameId);
+      if (action === "activate-root-frame") setActiveFrame(rootFrameId());
       if (action === "delete-selection") requestDeleteSelection();
       if (action === "cancel-delete") cancelContext();
       if (action === "confirm-delete") confirmDeletion();
@@ -2333,23 +2369,24 @@ const bootPromise = (async () => {
     window.ltpPrototype.getBuildInfo()
   ]);
   const activeTree = tree();
-  selectedElementId = activeTree.viewState?.selectedElementId || activeTree.nodes[0]?.id;
+  const activeViewState = canvas().viewState || {};
+  selectedElementId = activeViewState.selectedElementId || activeTree.nodes[0]?.id;
   selectionRootIds = new Set(
-    activeTree.viewState?.selectionRootIds?.length
-      ? activeTree.viewState.selectionRootIds
+    activeViewState.selectionRootIds?.length
+      ? activeViewState.selectionRootIds
       : selectedElementId
         ? [selectedElementId]
         : []
   );
-  activeFrameId = activeTree.viewState?.activeFrameId || activeTree.rootFrameId;
+  activeFrameId = activeViewState.activeFrameId || activeTree.hostFrameId;
   viewportState = {
-    left: activeTree.viewState?.pan?.x || 0,
-    top: activeTree.viewState?.pan?.y || 0
+    left: activeViewState.pan?.x || 0,
+    top: activeViewState.pan?.y || 0
   };
-  zoomLevel = clamp(activeTree.viewState?.zoom || 1, 0.35, 2.5);
+  zoomLevel = clamp(activeViewState.zoom || 1, 0.35, 2.5);
   panelState = {
-    leftOpen: activeTree.viewState?.panels?.leftOpen ?? true,
-    rightOpen: activeTree.viewState?.panels?.rightOpen ?? true
+    leftOpen: activeViewState.panels?.leftOpen ?? true,
+    rightOpen: activeViewState.panels?.rightOpen ?? true
   };
   rebuildSelection();
   statusText = "Prototype loaded";
@@ -2369,21 +2406,25 @@ window.__ltpSmokeTest = async () => {
   const exportResult = await window.ltpPrototype.exportMarkdown(workspaceData);
   render();
   const activeTree = tree();
+  const activeCanvas = canvas();
   const initialActiveFrameId = activeFrameId;
   const rootFrameIsConceptual =
-    !document.querySelector(`[data-element-id="${activeTree.rootFrameId}"]`) &&
-    document.querySelectorAll(".minimap-frame").length === activeTree.frames.length - 1;
+    !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`) &&
+    document.querySelectorAll(".minimap-frame").length === activeCanvas.frames.length - 1;
   const buildIdentityVisible =
     document.querySelector(".build-identity")?.textContent === `v${buildInfo.version} | build ${buildInfo.id}`;
   const registryDrivesGoalTree =
     diagramDefinition().defaultDirection === "TB" &&
     diagramNodeTypes().map((type) => type.id).join(",") ===
       "goal,criticalSuccessFactor,necessaryCondition,assumption";
-  const selectedTestFrame = activeTree.frames.find((frame) => frame.id !== activeTree.rootFrameId);
+  const selectedTestFrame = activeCanvas.frames.find((frame) => frame.id === activeTree.hostFrameId);
   const expectedFrameSelection = new Set(
-    window.LTP_SELECTION_MODEL.selectionClosure(activeTree, [selectedTestFrame.id])
+    window.LTP_SELECTION_MODEL.selectionClosure(activeTree, [selectedTestFrame.id], activeCanvas.frames)
   );
   await selectElement(selectedTestFrame.id);
+  const semanticFrameSummaryVisible =
+    document.querySelector(".frame-inventory")?.textContent.includes("Goal:") &&
+    !document.querySelector(".canvas-status")?.textContent.includes("Included:");
   const frameSelectionIsTransitive =
     selectionIds.size === expectedFrameSelection.size &&
     [...expectedFrameSelection].every((id) => selectionIds.has(id));
@@ -2414,12 +2455,9 @@ window.__ltpSmokeTest = async () => {
     selectionIds.size === 0 && selectionRootIds.size === 0 && activeFrameId === selectedTestFrame.id;
   connectionSourceIds.clear();
   const frameContextControlAvailable =
-    document.querySelectorAll("[data-active-frame] option").length === activeTree.frames.length &&
-    document.querySelector(`[data-active-frame] option[value="${activeTree.rootFrameId}"]`)?.textContent.includes("root") &&
+    document.querySelectorAll("[data-active-frame] option").length === activeCanvas.frames.length &&
+    document.querySelector(`[data-active-frame] option[value="${activeCanvas.rootFrameId}"]`)?.textContent.includes("root") &&
     Boolean(document.querySelector("[data-action='activate-root-frame']"));
-  const selectionCountersAreSeparated =
-    [...document.querySelectorAll(".canvas-status span")].some((item) => item.textContent.includes("Selected: 0")) &&
-    [...document.querySelectorAll(".canvas-status span")].some((item) => item.textContent.includes("Included: 0"));
   replaceSelection(activeTree.nodes[0].id);
   toggleSelectionRoot(activeTree.nodes[1].id);
   beginConnection();
@@ -2429,7 +2467,7 @@ window.__ltpSmokeTest = async () => {
     connectionSourceIds.has(activeTree.nodes[1].id);
   cancelContext();
   activeFrameId = initialActiveFrameId;
-  replaceSelection(activeTree.viewState?.selectedElementId || activeTree.nodes[0]?.id);
+  replaceSelection(activeCanvas.viewState?.selectedElementId || activeTree.nodes[0]?.id);
   render();
   hintEntries = visibleHintEntries();
   const stressHintLabels = generateHintLabels(40);
@@ -2733,7 +2771,7 @@ window.__ltpSmokeTest = async () => {
     !linkById()[cascadeLinkId] &&
     !tree().assumptions.some((assumption) => assumption.id === cascadeAssumptionId) &&
     !tree().layout.nodes[cascadeSourceId] &&
-    tree().frames.every((frame) => !frame.nodeIds.includes(cascadeSourceId));
+    canvas().frames.every((frame) => !frame.nodeIds.includes(cascadeSourceId));
   requestDeleteSelection(cascadeTargetId);
   await confirmDeletion();
 
@@ -2744,8 +2782,7 @@ window.__ltpSmokeTest = async () => {
   const linkCountBeforeFrameMove = tree().links.length;
   const dragElement = document.querySelector(`[data-element-id="${frameNodeId}"]`);
   const dragStartBox = layoutNode(frameNodeId);
-  const rootBox = layoutFrame(tree().rootFrameId);
-  const dragTarget = { x: rootBox.x + 18, y: rootBox.y + 18 };
+  const dragTarget = { x: 12, y: 12 };
   const dragStart = { x: 120, y: 120 };
   dragElement.dispatchEvent(
     new PointerEvent("pointerdown", {
@@ -2765,10 +2802,10 @@ window.__ltpSmokeTest = async () => {
     })
   );
   document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true }));
-  await waitFor(() => nodeById()[frameNodeId]?.frameId === tree().rootFrameId);
+  await waitFor(() => nodeById()[frameNodeId]?.frameId === rootFrameId());
   const entityCanLeaveFrame =
-    nodeById()[frameNodeId].frameId === tree().rootFrameId &&
-    frameById()[tree().rootFrameId].nodeIds.includes(frameNodeId) &&
+    nodeById()[frameNodeId].frameId === rootFrameId() &&
+    frameById()[rootFrameId()].nodeIds.includes(frameNodeId) &&
     !frameById()[temporaryFrameId].nodeIds.includes(frameNodeId);
   await moveNodeToFrame(frameNodeId, temporaryFrameId);
   const entityCanEnterFrame =
@@ -2782,24 +2819,25 @@ window.__ltpSmokeTest = async () => {
     !frameById()[temporaryFrameId] &&
     !nodeById()[frameNodeId] &&
     !linkById()[frameLinkId] &&
-    !tree().layout.frames[temporaryFrameId] &&
+    !canvas().layout.frames[temporaryFrameId] &&
     !tree().layout.nodes[frameNodeId] &&
-    tree().frames.every((frame) => !frame.childFrameIds.includes(temporaryFrameId));
-  requestDeleteSelection(tree().rootFrameId);
-  const rootFrameIsProtected = deleteCandidateId === null && Boolean(frameById()[tree().rootFrameId]);
+    canvas().frames.every((frame) => !frame.childFrameIds.includes(temporaryFrameId));
+  requestDeleteSelection(rootFrameId());
+  const rootFrameIsProtected = deleteCandidateId === null && Boolean(frameById()[rootFrameId()]);
 
   hintEntries = visibleHintEntries();
   const finalTree = tree();
+  const finalCanvas = canvas();
 
   return {
     ok:
       Boolean(workspaceData) &&
       finalTree.nodes.length >= 10 &&
-      finalTree.frames.length >= 4 &&
+      finalCanvas.frames.length >= 5 &&
       finalTree.links.length >= 6 &&
       hintEntries.length > 0 &&
       document.querySelectorAll(".tree-node").length >= 10 &&
-      document.querySelectorAll(".tree-frame").length === finalTree.frames.length - 1 &&
+      document.querySelectorAll(".tree-frame").length === finalCanvas.frames.length - 1 &&
       document.querySelectorAll(".link-target").length >= 6 &&
       hintsArePrefixFree &&
       buildIdentityVisible &&
@@ -2811,7 +2849,7 @@ window.__ltpSmokeTest = async () => {
       connectionSourcesStayIndependent &&
       selectedFrameTogglesOff &&
       frameContextControlAvailable &&
-      selectionCountersAreSeparated &&
+      semanticFrameSummaryVisible &&
       generalSelectionSeedsConnection &&
       twoLetterHintWorks &&
       keyboardHintsToggle &&
@@ -2860,7 +2898,7 @@ window.__ltpSmokeTest = async () => {
       Object.keys(commandBindings).length >= 10 &&
       Boolean(exportResult.path),
     nodes: finalTree.nodes.length,
-    frames: finalTree.frames.length,
+    frames: finalCanvas.frames.length,
     links: finalTree.links.length,
     hints: hintEntries.length,
     hintsArePrefixFree,
@@ -2873,7 +2911,7 @@ window.__ltpSmokeTest = async () => {
     connectionSourcesStayIndependent,
     selectedFrameTogglesOff,
     frameContextControlAvailable,
-    selectionCountersAreSeparated,
+    semanticFrameSummaryVisible,
     generalSelectionSeedsConnection,
     twoLetterHintWorks,
     keyboardHintsToggle,

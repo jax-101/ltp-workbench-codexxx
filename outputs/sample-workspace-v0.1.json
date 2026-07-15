@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "fixtureType": "single-file-workspace-example",
   "createdAt": "2026-07-14T00:00:00+02:00",
   "updatedAt": "2026-07-14T00:00:00+02:00",
@@ -140,7 +140,7 @@
   ],
   "trees": [
     {
-      "schemaVersion": "0.1",
+      "schemaVersion": "0.2",
       "id": "tree-goal-workbench-v1",
       "systemId": "sys-problem-solving-app",
       "perspectiveId": "perspective-benchmark",
@@ -148,84 +148,8 @@
       "name": "Goal Tree - LTP Workbench",
       "status": "draft",
       "logicMode": "necessity",
-      "rootFrameId": "frame-goal-tree-root",
       "createdAt": "2026-07-14T00:00:00+02:00",
       "updatedAt": "2026-07-14T00:00:00+02:00",
-      "frames": [
-        {
-          "id": "frame-goal-tree-root",
-          "treeId": "tree-goal-workbench-v1",
-          "parentFrameId": null,
-          "name": "Goal Tree",
-          "semanticType": "goalTree",
-          "collapsed": false,
-          "childFrameIds": [
-            "frame-csf-thinking",
-            "frame-csf-keyboard",
-            "frame-csf-persistence"
-          ],
-          "nodeIds": [
-            "node-goal"
-          ],
-          "notes": "",
-          "createdAt": "2026-07-14T00:00:00+02:00",
-          "updatedAt": "2026-07-14T00:00:00+02:00"
-        },
-        {
-          "id": "frame-csf-thinking",
-          "treeId": "tree-goal-workbench-v1",
-          "parentFrameId": "frame-goal-tree-root",
-          "name": "Rigor de pensamiento",
-          "semanticType": "csfBranch",
-          "collapsed": false,
-          "childFrameIds": [],
-          "nodeIds": [
-            "node-csf-thinking",
-            "node-nc-system-profile",
-            "node-nc-goal-tree",
-            "node-nc-link-assumptions"
-          ],
-          "notes": "Branch for reasoning quality.",
-          "createdAt": "2026-07-14T00:00:00+02:00",
-          "updatedAt": "2026-07-14T00:00:00+02:00"
-        },
-        {
-          "id": "frame-csf-keyboard",
-          "treeId": "tree-goal-workbench-v1",
-          "parentFrameId": "frame-goal-tree-root",
-          "name": "Flujo sin raton",
-          "semanticType": "csfBranch",
-          "collapsed": false,
-          "childFrameIds": [],
-          "nodeIds": [
-            "node-csf-keyboard",
-            "node-nc-keyboard-hints",
-            "node-nc-command-palette",
-            "node-nc-frame-navigation"
-          ],
-          "notes": "Branch for keyboard-first interaction.",
-          "createdAt": "2026-07-14T00:00:00+02:00",
-          "updatedAt": "2026-07-14T00:00:00+02:00"
-        },
-        {
-          "id": "frame-csf-persistence",
-          "treeId": "tree-goal-workbench-v1",
-          "parentFrameId": "frame-goal-tree-root",
-          "name": "Trabajo recuperable",
-          "semanticType": "csfBranch",
-          "collapsed": false,
-          "childFrameIds": [],
-          "nodeIds": [
-            "node-csf-persistence",
-            "node-nc-json-files",
-            "node-nc-markdown-export",
-            "node-nc-layout-state"
-          ],
-          "notes": "Branch for local persistence.",
-          "createdAt": "2026-07-14T00:00:00+02:00",
-          "updatedAt": "2026-07-14T00:00:00+02:00"
-        }
-      ],
       "nodes": [
         {
           "id": "node-goal",
@@ -812,40 +736,6 @@
           "respectPinned": true,
           "minimizeCrossings": true
         },
-        "frames": {
-          "frame-goal-tree-root": {
-            "x": 80,
-            "y": 40,
-            "width": 1120,
-            "height": 620,
-            "pinned": false,
-            "layoutSource": "auto"
-          },
-          "frame-csf-thinking": {
-            "x": 140,
-            "y": 260,
-            "width": 320,
-            "height": 320,
-            "pinned": false,
-            "layoutSource": "auto"
-          },
-          "frame-csf-keyboard": {
-            "x": 500,
-            "y": 260,
-            "width": 320,
-            "height": 320,
-            "pinned": false,
-            "layoutSource": "auto"
-          },
-          "frame-csf-persistence": {
-            "x": 860,
-            "y": 260,
-            "width": 320,
-            "height": 320,
-            "pinned": false,
-            "layoutSource": "auto"
-          }
-        },
         "nodes": {
           "node-goal": {
             "x": 440,
@@ -1003,6 +893,161 @@
           }
         }
       },
+      "canvasId": "canvas-sys-problem-solving-app",
+      "hostFrameId": "frame-goal-tree-root"
+    }
+  ],
+  "exports": [
+    {
+      "id": "export-goal-tree-markdown",
+      "type": "markdown",
+      "systemId": "sys-problem-solving-app",
+      "treeId": "tree-goal-workbench-v1",
+      "path": "systems/sys-problem-solving-app/exports/goal-tree.md",
+      "createdAt": "2026-07-14T00:00:00+02:00"
+    }
+  ],
+  "canvases": [
+    {
+      "schemaVersion": "0.2",
+      "id": "canvas-sys-problem-solving-app",
+      "systemId": "sys-problem-solving-app",
+      "name": "Aplicacion LTP Workbench canvas",
+      "rootFrameId": "frame-canvas-root-sys-problem-solving-app",
+      "frames": [
+        {
+          "id": "frame-canvas-root-sys-problem-solving-app",
+          "canvasId": "canvas-sys-problem-solving-app",
+          "treeId": null,
+          "kind": "root",
+          "parentFrameId": null,
+          "name": "Root",
+          "semanticType": "workspaceRoot",
+          "collapsed": false,
+          "childFrameIds": [
+            "frame-goal-tree-root"
+          ],
+          "nodeIds": [],
+          "notes": "Infinite workspace root"
+        },
+        {
+          "id": "frame-goal-tree-root",
+          "treeId": "tree-goal-workbench-v1",
+          "parentFrameId": "frame-canvas-root-sys-problem-solving-app",
+          "name": "Goal Tree",
+          "semanticType": "goalTree",
+          "collapsed": false,
+          "childFrameIds": [
+            "frame-csf-thinking",
+            "frame-csf-keyboard",
+            "frame-csf-persistence"
+          ],
+          "nodeIds": [
+            "node-goal"
+          ],
+          "notes": "",
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00",
+          "canvasId": "canvas-sys-problem-solving-app",
+          "kind": "diagram"
+        },
+        {
+          "id": "frame-csf-thinking",
+          "treeId": "tree-goal-workbench-v1",
+          "parentFrameId": "frame-goal-tree-root",
+          "name": "Rigor de pensamiento",
+          "semanticType": "csfBranch",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "node-csf-thinking",
+            "node-nc-system-profile",
+            "node-nc-goal-tree",
+            "node-nc-link-assumptions"
+          ],
+          "notes": "Branch for reasoning quality.",
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00",
+          "canvasId": "canvas-sys-problem-solving-app",
+          "kind": "container"
+        },
+        {
+          "id": "frame-csf-keyboard",
+          "treeId": "tree-goal-workbench-v1",
+          "parentFrameId": "frame-goal-tree-root",
+          "name": "Flujo sin raton",
+          "semanticType": "csfBranch",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "node-csf-keyboard",
+            "node-nc-keyboard-hints",
+            "node-nc-command-palette",
+            "node-nc-frame-navigation"
+          ],
+          "notes": "Branch for keyboard-first interaction.",
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00",
+          "canvasId": "canvas-sys-problem-solving-app",
+          "kind": "container"
+        },
+        {
+          "id": "frame-csf-persistence",
+          "treeId": "tree-goal-workbench-v1",
+          "parentFrameId": "frame-goal-tree-root",
+          "name": "Trabajo recuperable",
+          "semanticType": "csfBranch",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "node-csf-persistence",
+            "node-nc-json-files",
+            "node-nc-markdown-export",
+            "node-nc-layout-state"
+          ],
+          "notes": "Branch for local persistence.",
+          "createdAt": "2026-07-14T00:00:00+02:00",
+          "updatedAt": "2026-07-14T00:00:00+02:00",
+          "canvasId": "canvas-sys-problem-solving-app",
+          "kind": "container"
+        }
+      ],
+      "layout": {
+        "frames": {
+          "frame-goal-tree-root": {
+            "x": 80,
+            "y": 40,
+            "width": 1120,
+            "height": 620,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "frame-csf-thinking": {
+            "x": 140,
+            "y": 260,
+            "width": 320,
+            "height": 320,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "frame-csf-keyboard": {
+            "x": 500,
+            "y": 260,
+            "width": 320,
+            "height": 320,
+            "pinned": false,
+            "layoutSource": "auto"
+          },
+          "frame-csf-persistence": {
+            "x": 860,
+            "y": 260,
+            "width": 320,
+            "height": 320,
+            "pinned": false,
+            "layoutSource": "auto"
+          }
+        }
+      },
       "viewState": {
         "activeFrameId": "frame-goal-tree-root",
         "selectedElementId": "node-goal",
@@ -1018,17 +1063,9 @@
           "Goal Tree",
           "Goal Tree"
         ]
-      }
-    }
-  ],
-  "exports": [
-    {
-      "id": "export-goal-tree-markdown",
-      "type": "markdown",
-      "systemId": "sys-problem-solving-app",
-      "treeId": "tree-goal-workbench-v1",
-      "path": "systems/sys-problem-solving-app/exports/goal-tree.md",
-      "createdAt": "2026-07-14T00:00:00+02:00"
+      },
+      "createdAt": "2026-07-14T00:00:00+02:00",
+      "updatedAt": "2026-07-14T00:00:00+02:00"
     }
   ]
 }

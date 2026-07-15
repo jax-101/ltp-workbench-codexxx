@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.3`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.4`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -207,21 +207,19 @@ Comprueba que siguen funcionando:
 - `P`: fijar o liberar posicion.
 - `Cmd+Shift+L`: ejecutar layout.
 
-## Prueba 19: seleccion estructural y frame raiz
+## Prueba 19: seleccion estructural y canvas compuesto
 
-1. Selecciona un frame hijo.
-2. Comprueba que el frame principal se distingue en verde y que sus entidades, frames descendientes y links internos aparecen incluidos en dorado.
-3. Comprueba que un link con un extremo fuera del frame no queda incluido.
-4. Manteniendo `Shift` o `Cmd/Ctrl`, selecciona otro nodo o link y comprueba que se anade al conjunto.
-5. Selecciona dos nodos con `Shift` o `Cmd`, pulsa `L` y elige un tercer nodo como destino.
-6. En `Tree > Active frame`, elige un frame hijo, selecciona uno de sus nodos y pulsa `N`.
-7. Elige despues `Goal Tree (root)` en el mismo selector y pulsa `N` de nuevo.
-8. Pulsa tambien el boton `Root` y comprueba que el estado del canvas muestra `Goal Tree (root)`.
+1. Comprueba que existe un frame visible llamado `Goal Tree` que contiene el arbol completo.
+2. Comprueba que `Root` aparece en `Tree > Active frame`, pero no como rectangulo en el canvas ni en el minimapa.
+3. Selecciona el frame `Goal Tree` y comprueba que sus entidades, frames descendientes y links internos aparecen incluidos.
+4. Observa en el estado y en el inspector el inventario por `Goal`, `CSF`, `NC`, subframes, links y assumptions; no debe aparecer `Included`.
+5. Comprueba que un link con un extremo fuera del frame seleccionado no queda incluido.
+6. Manteniendo `Shift` o `Cmd`, selecciona otro nodo o link y comprueba que se anade al conjunto.
+7. Selecciona dos nodos con `Shift` o `Cmd`, pulsa `L` y elige un tercer nodo como destino.
+8. En `Tree > Active frame`, alterna entre un frame hijo, `Goal Tree` y `Root`; pulsa `N` en cada contexto y comprueba el destino.
 9. Selecciona un frame dos veces y comprueba que el segundo click limpia la seleccion, pero conserva ese frame como contexto de creacion.
-10. Observa que `Selected` cuenta solo elecciones explicitas e `Included` solo el contenido derivado.
-11. Observa el canvas y el minimapa.
 
-Resultado esperado: la seleccion estructural es determinista, `L` usa los nodos seleccionados como origenes, `N` crea siempre en el frame indicado sobre el canvas y el frame raiz no aparece como un rectangulo artificial.
+Resultado esperado: `Root` es el espacio global ilimitado, `Goal Tree` es un frame explicito y finito, el inventario explica su contenido y la seleccion estructural sigue siendo determinista.
 
 ## Registro de resultados
 

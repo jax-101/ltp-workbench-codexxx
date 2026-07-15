@@ -6,6 +6,8 @@ const { TransactionEngine } = require("../src/core/transaction-engine");
 const { WorkspaceRepository } = require("../src/core/workspace-repository");
 const { getDiagramDefinition, getNodeTypeDefinition } = require("../src/core/diagram-registry");
 const { selectionClosure } = require("../src/core/selection-model");
+const { migrateWorkspace } = require("../src/core/workspace-migrations");
+const { validateWorkspace } = require("../src/core/workspace-validator");
 
 const fixturePath = path.join(__dirname, "..", "outputs", "sample-workspace-v0.1.json");
 const fixture = JSON.parse(require("node:fs").readFileSync(fixturePath, "utf8"));
@@ -37,11 +39,13 @@ const run = async () => {
   assert.equal(getNodeTypeDefinition("goalTree", "criticalSuccessFactor").shortLabel, "CSF");
 
   const fixtureTree = fixture.trees[0];
-  const rootSelection = new Set(selectionClosure(fixtureTree, [fixtureTree.rootFrameId]));
-  assert.equal(rootSelection.size, fixtureTree.frames.length + fixtureTree.nodes.length + fixtureTree.links.length);
+  const fixtureCanvas = fixture.canvases.find((canvas) => canvas.id === fixtureTree.canvasId);
+  const hostSelection = new Set(selectionClosure(fixtureTree, [fixtureTree.hostFrameId], fixtureCanvas.frames));
+  const treeFrames = fixtureCanvas.frames.filter((frame) => frame.treeId === fixtureTree.id);
+  assert.equal(hostSelection.size, treeFrames.length + fixtureTree.nodes.length + fixtureTree.links.length);
   assert.deepEqual(selectionClosure(fixtureTree, [fixtureTree.nodes[0].id]), [fixtureTree.nodes[0].id]);
-  const childFrame = fixtureTree.frames.find((frame) => frame.parentFrameId === fixtureTree.rootFrameId);
-  const childSelection = new Set(selectionClosure(fixtureTree, [childFrame.id]));
+  const childFrame = fixtureCanvas.frames.find((frame) => frame.parentFrameId === fixtureTree.hostFrameId);
+  const childSelection = new Set(selectionClosure(fixtureTree, [childFrame.id], fixtureCanvas.frames));
   const childNodeIds = new Set(fixtureTree.nodes.filter((node) => node.frameId === childFrame.id).map((node) => node.id));
   assert(childSelection.has(childFrame.id));
   assert([...childNodeIds].every((id) => childSelection.has(id)));
@@ -49,6 +53,33 @@ const run = async () => {
     fixtureTree.links
       .filter((link) => childNodeIds.has(link.sourceNodeId) && childNodeIds.has(link.targetNodeId))
       .every((link) => childSelection.has(link.id))
+  );
+
+  const legacyFixture = structuredClone(fixture);
+  const legacyTree = legacyFixture.trees[0];
+  const legacyCanvas = legacyFixture.canvases[0];
+  legacyFixture.schemaVersion = "0.1";
+  legacyTree.schemaVersion = "0.1";
+  legacyTree.rootFrameId = legacyTree.hostFrameId;
+  legacyTree.frames = legacyCanvas.frames
+    .filter((frame) => frame.id !== legacyCanvas.rootFrameId)
+    .map(({ canvasId, kind, ...frame }) => ({ ...frame, parentFrameId: frame.id === legacyTree.hostFrameId ? null : frame.parentFrameId }));
+  legacyTree.layout.frames = structuredClone(legacyCanvas.layout.frames);
+  legacyTree.viewState = structuredClone(legacyCanvas.viewState);
+  delete legacyTree.canvasId;
+  delete legacyTree.hostFrameId;
+  delete legacyFixture.canvases;
+  const migrated = migrateWorkspace(legacyFixture);
+  assert.equal(migrated.changed, true);
+  assert.equal(migrated.workspace.trees[0].hostFrameId, fixtureTree.hostFrameId);
+  assert.equal(migrated.workspace.canvases[0].frames.length, fixtureCanvas.frames.length);
+  assert.deepEqual(migrated.workspace.trees[0].nodes, fixtureTree.nodes);
+  assert.equal(migrateWorkspace(migrated.workspace).changed, false, "migration must be idempotent");
+  const disconnectedFixture = structuredClone(fixture);
+  disconnectedFixture.canvases[0].frames.find((frame) => frame.kind === "root").childFrameIds = [];
+  assert(
+    validateWorkspace(disconnectedFixture).some((issue) => issue.code === "FRAME_HIERARCHY_MISMATCH"),
+    "validator must reject a one-sided frame hierarchy"
   );
   assert(
     fixtureTree.links
@@ -109,7 +140,7 @@ const run = async () => {
   assert.equal(engine.getSnapshot().revision, 3, "dry-run must not mutate state");
 
   const viewWorkspace = engine.getSnapshot();
-  viewWorkspace.trees[0].viewState.zoom = 1.75;
+  viewWorkspace.canvases[0].viewState.zoom = 1.75;
   await engine.execute({
     commandId: "view-change",
     type: "workspace.replace",
@@ -118,7 +149,7 @@ const run = async () => {
     payload: { workspace: viewWorkspace, includeViewState: true }
   }, { recordHistory: false });
   const undoAfterViewChange = await engine.undo();
-  assert.equal(undoAfterViewChange.workspace.trees[0].viewState.zoom, 1.75, "undo must preserve current view state");
+  assert.equal(undoAfterViewChange.workspace.canvases[0].viewState.zoom, 1.75, "undo must preserve current canvas view state");
 
   const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "ltp-core-test-"));
   try {
@@ -140,7 +171,7 @@ const run = async () => {
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 
-  console.log("Core transaction tests passed: patches, undo/redo, validation, idempotency, dry-run and concurrency.");
+  console.log("Core tests passed: canvas migration, selection, patches, undo/redo, validation, idempotency, dry-run and concurrency.");
 };
 
 run().catch((error) => {

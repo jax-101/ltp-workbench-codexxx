@@ -4,7 +4,7 @@ contextBridge.exposeInMainWorld("ltpPrototype", {
   getBuildInfo: () => ipcRenderer.invoke("app:build-info"),
   loadWorkspace: () => ipcRenderer.invoke("workspace:load"),
   saveWorkspace: (workspace, options) => ipcRenderer.invoke("workspace:save", workspace, options),
-  saveViewState: (treeId, viewState) => ipcRenderer.invoke("workspace:save-view", treeId, viewState),
+  saveViewState: (canvasId, viewState) => ipcRenderer.invoke("workspace:save-view", canvasId, viewState),
   executeCommand: (command, options) => ipcRenderer.invoke("workspace:execute", command, options),
   undo: () => ipcRenderer.invoke("history:undo"),
   redo: () => ipcRenderer.invoke("history:redo"),

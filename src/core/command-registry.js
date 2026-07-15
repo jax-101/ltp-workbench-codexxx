@@ -9,7 +9,17 @@ const findTree = (workspace, treeId) => {
   return tree;
 };
 
+const findCanvas = (workspace, canvasId) => {
+  const canvas = workspace.canvases?.find((candidate) => candidate.id === canvasId);
+  if (!canvas) throw new LtpError("CANVAS_NOT_FOUND", `Canvas ${canvasId} was not found`, { canvasId });
+  return canvas;
+};
+
 const preserveViewState = (currentWorkspace, replacement) => {
+  const currentCanvasViews = new Map((currentWorkspace.canvases || []).map((canvas) => [canvas.id, canvas.viewState]));
+  for (const canvas of replacement.canvases || []) {
+    if (currentCanvasViews.has(canvas.id)) canvas.viewState = cloneValue(currentCanvasViews.get(canvas.id));
+  }
   const currentViews = new Map((currentWorkspace.trees || []).map((tree) => [tree.id, tree.viewState]));
   for (const tree of replacement.trees || []) {
     if (currentViews.has(tree.id)) tree.viewState = cloneValue(currentViews.get(tree.id));
@@ -47,8 +57,11 @@ const createCommandRegistry = () => {
   });
 
   register("view.update", (draft, payload) => {
-    const tree = findTree(draft, payload.treeId);
-    tree.viewState = structuredClone(payload.viewState || {});
+    if (payload.canvasId) {
+      findCanvas(draft, payload.canvasId).viewState = structuredClone(payload.viewState || {});
+      return;
+    }
+    findTree(draft, payload.treeId).viewState = structuredClone(payload.viewState || {});
   });
 
   return { register, apply, has: (type) => handlers.has(type) };

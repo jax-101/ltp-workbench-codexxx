@@ -188,6 +188,8 @@ Antes de 3B se completa la siguiente correccion de modelo.
 
 ## Iteracion 3A.4: canvas compuesto y resumen estructural
 
+Estado: implementada como build `3A.4`; pruebas automaticas superadas y pendiente de validacion manual.
+
 Incluye:
 
 - F-055: root global ilimitado y frame anfitrion explicito por arbol.

@@ -5,6 +5,7 @@ const { randomUUID } = require("node:crypto");
 const { TransactionEngine, workspaceRevision } = require("../src/core/transaction-engine");
 const { WorkspaceRepository } = require("../src/core/workspace-repository");
 const { validateWorkspace } = require("../src/core/workspace-validator");
+const { migrateWorkspace } = require("../src/core/workspace-migrations");
 
 const args = process.argv.slice(2);
 const positional = [];
@@ -38,12 +39,13 @@ const requireFlag = (name) => {
   return flags[name];
 };
 
-const readWorkspace = async () => JSON.parse(await fs.readFile(requireFlag("workspace"), "utf8"));
+const readWorkspace = async () => migrateWorkspace(JSON.parse(await fs.readFile(requireFlag("workspace"), "utf8"))).workspace;
 
 const createEngine = async () => {
   const workspacePath = requireFlag("workspace");
   const repository = new WorkspaceRepository(workspacePath);
-  const workspace = await repository.read();
+  const migration = migrateWorkspace(await repository.read());
+  const workspace = migration.changed ? await repository.reset(migration.workspace) : migration.workspace;
   return new TransactionEngine(workspace, {
     persist: (nextWorkspace, metadata) => repository.commit(nextWorkspace, metadata)
   });
@@ -81,7 +83,7 @@ const run = async () => {
       name: tree.name,
       status: tree.status,
       nodes: tree.nodes.length,
-      frames: tree.frames.length,
+      frames: workspace.canvases.find((canvas) => canvas.id === tree.canvasId)?.frames.filter((frame) => frame.treeId === tree.id).length || 0,
       links: tree.links.length
     }));
     output({ ok: true, revision: workspaceRevision(workspace), trees }, `${trees.length} tree(s) at revision ${workspaceRevision(workspace)}`);

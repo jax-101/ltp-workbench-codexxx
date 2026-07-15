@@ -351,6 +351,8 @@ Decision: `Selected` cuenta las raices elegidas por el usuario e `Included` cuen
 
 Razon: un total unico parecia contar el frame dos veces conceptualmente y ocultaba por que aparecian mas elementos. Separar intencion y consecuencia hace el modelo verificable.
 
+Revision 2026-07-16: D-059 sustituye estos contadores cuando la seleccion principal es un frame. La separacion interna entre raices explicitas y cierre derivado se conserva, pero la interfaz presenta un inventario de dominio.
+
 ### D-057: Root de canvas y frame de arbol son conceptos distintos
 
 Decision: el root conceptual pertenece al canvas compartido. Cada arbol se presenta mediante un frame anfitrion explicito, visible y finito que puede colocarse en el root o dentro de otro frame. Esta decision sustituye la parte de D-006 que trataba el frame principal del arbol como raiz total.

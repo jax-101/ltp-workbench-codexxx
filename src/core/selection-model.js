@@ -1,7 +1,7 @@
-const selectionClosure = (tree, rootIds = []) => {
+const selectionClosure = (tree, rootIds = [], availableFrames = null) => {
   if (!tree) return [];
 
-  const frames = new Map((tree.frames || []).map((frame) => [frame.id, frame]));
+  const frames = new Map((availableFrames || tree.frames || []).map((frame) => [frame.id, frame]));
   const nodes = new Map((tree.nodes || []).map((node) => [node.id, node]));
   const links = new Map((tree.links || []).map((link) => [link.id, link]));
   const selected = new Set();

@@ -432,7 +432,7 @@ El modelo inicial sobrecargo `Tree.rootFrameId` con dos responsabilidades: raiz 
 
 Un canvas pertenece al workspace y puede presentar varios diagramas o arboles.
 
-Campos previstos:
+Campos implementados en el schema `0.2`:
 
 - `id`.
 - `systemId`.
@@ -461,6 +461,10 @@ Los frames genericos usan `kind: container`. El root usa `kind: root` y no parti
 - `activeFrameId` indica donde crear o pegar, sin sustituir al arbol activo.
 
 Esta separacion permite varios arboles en un canvas sin mezclar sus grafos logicos y prepara foco, minimizacion y composicion futura.
+
+### 18.4 Migracion desde schema 0.1
+
+La migracion conserva los IDs, nodos, links, posiciones y frame activo. El antiguo `Tree.rootFrameId` pasa a ser `Tree.hostFrameId`; se crea un root global por sistema y los frames junto con su geometria se trasladan al canvas. La operacion es idempotente y se ejecuta antes de validar tanto en Electron como en la CLI.
 
 ## 19. Pendiente para validacion tecnica
 
