@@ -167,7 +167,7 @@ Estado: implementado en la iteracion 2.2 y validado por el usuario el 2026-07-15
 
 Feedback: cada diagrama tiene una lista de elementos con atributos propios, por ejemplo CSF y NC para Goal Tree. Seria interesante disponer de una infraestructura para definir nuevos diagramas y configurar Goal Tree, CRT, EC, etc. Esto haria la herramienta mas extensible y util.
 
-Estado: pendiente. Definir un registro/schema de diagramas con tipos de entidades, atributos, reglas de link, direccion de layout, validaciones y acciones disponibles.
+Estado: implementacion parcial en la iteracion 3A. Goal Tree ya obtiene tipos permitidos, etiquetas, orden y direccion predeterminada de un registro central compartido por Node y la interfaz. Siguen pendientes los atributos por tipo, reglas de link, validaciones y acciones para completar la infraestructura.
 
 ### F-024: Texto cortado en entidades
 
@@ -333,7 +333,7 @@ Criterios de aceptacion:
 
 Feedback: siempre debe existir un frame base infinito. Crear una entidad con `N` requiere un frame de contexto seleccionado.
 
-Estado: pendiente. Actualmente existe un frame raiz finito y `N` usa `activeFrameId`, pero ambos conceptos deben unificarse como contexto activo permanente.
+Estado: implementado en la iteracion 3A y pendiente de validacion manual. El frame raiz sigue existiendo en el modelo, pero no se dibuja ni entra en los limites del canvas o minimapa. El frame activo se mantiene separado de la seleccion y `N` lo usa siempre como contexto.
 
 Criterios de aceptacion:
 
@@ -391,7 +391,7 @@ Criterios de aceptacion:
 
 Feedback: al seleccionar un frame deben quedar seleccionados tambien todos sus elementos y links internos.
 
-Estado: pendiente. La seleccion multiple actual solo representa nodos origen para crear links y no sirve como seleccion general.
+Estado: implementado en la iteracion 3A y pendiente de validacion manual. La seleccion general admite nodos, links y frames; seleccionar un frame calcula en el nucleo sus descendientes, entidades y links internos. Los origenes para crear links conservan un estado independiente.
 
 Criterios de aceptacion:
 
@@ -405,7 +405,7 @@ Criterios de aceptacion:
 
 Feedback: con una o varias entidades seleccionadas, `Shift+Tab` debe recorrer ciclicamente su tipo.
 
-Estado: pendiente. Los tipos permitidos siguen hardcodeados y la seleccion multiple no es todavia general.
+Estado: pendiente para la iteracion 3C. La iteracion 3A ya aporta la seleccion general y el orden declarativo de tipos que necesita esta operacion.
 
 Criterios de aceptacion:
 
@@ -505,7 +505,7 @@ Criterios de aceptacion:
 
 Feedback: al acercar o alejar, si existe algun elemento seleccionado, la pantalla debe ir centrandose sobre ese elemento para no perder el contexto de trabajo.
 
-Estado: pendiente para la iteracion 3A, junto con el modelo general de seleccion.
+Estado: implementado en la iteracion 3A y pendiente de validacion manual. El zoom usa el centro geometrico de la seleccion general y conserva el centro logico del viewport cuando la seleccion esta vacia.
 
 Criterios de aceptacion:
 

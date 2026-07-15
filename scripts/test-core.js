@@ -4,6 +4,8 @@ const os = require("node:os");
 const path = require("node:path");
 const { TransactionEngine } = require("../src/core/transaction-engine");
 const { WorkspaceRepository } = require("../src/core/workspace-repository");
+const { getDiagramDefinition, getNodeTypeDefinition } = require("../src/core/diagram-registry");
+const { selectionClosure } = require("../src/core/selection-model");
 
 const fixturePath = path.join(__dirname, "..", "outputs", "sample-workspace-v0.1.json");
 const fixture = JSON.parse(require("node:fs").readFileSync(fixturePath, "utf8"));
@@ -24,6 +26,36 @@ const command = (overrides = {}) => ({
 });
 
 const run = async () => {
+  const goalTreeDefinition = getDiagramDefinition("goalTree");
+  assert.equal(goalTreeDefinition.defaultDirection, "TB");
+  assert.deepEqual(goalTreeDefinition.nodeTypes.map((type) => type.id), [
+    "goal",
+    "criticalSuccessFactor",
+    "necessaryCondition",
+    "assumption"
+  ]);
+  assert.equal(getNodeTypeDefinition("goalTree", "criticalSuccessFactor").shortLabel, "CSF");
+
+  const fixtureTree = fixture.trees[0];
+  const rootSelection = new Set(selectionClosure(fixtureTree, [fixtureTree.rootFrameId]));
+  assert.equal(rootSelection.size, fixtureTree.frames.length + fixtureTree.nodes.length + fixtureTree.links.length);
+  assert.deepEqual(selectionClosure(fixtureTree, [fixtureTree.nodes[0].id]), [fixtureTree.nodes[0].id]);
+  const childFrame = fixtureTree.frames.find((frame) => frame.parentFrameId === fixtureTree.rootFrameId);
+  const childSelection = new Set(selectionClosure(fixtureTree, [childFrame.id]));
+  const childNodeIds = new Set(fixtureTree.nodes.filter((node) => node.frameId === childFrame.id).map((node) => node.id));
+  assert(childSelection.has(childFrame.id));
+  assert([...childNodeIds].every((id) => childSelection.has(id)));
+  assert(
+    fixtureTree.links
+      .filter((link) => childNodeIds.has(link.sourceNodeId) && childNodeIds.has(link.targetNodeId))
+      .every((link) => childSelection.has(link.id))
+  );
+  assert(
+    fixtureTree.links
+      .filter((link) => childNodeIds.has(link.sourceNodeId) !== childNodeIds.has(link.targetNodeId))
+      .every((link) => !childSelection.has(link.id))
+  );
+
   const persisted = [];
   const engine = new TransactionEngine(fixture, {
     clock: () => "2026-07-15T12:00:00.000Z",

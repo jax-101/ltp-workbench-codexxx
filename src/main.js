@@ -5,6 +5,7 @@ const { randomUUID } = require("node:crypto");
 const ELK = require("elkjs/lib/elk.bundled.js");
 const { TransactionEngine, workspaceRevision } = require("./core/transaction-engine");
 const { WorkspaceRepository } = require("./core/workspace-repository");
+const { getDiagramDefinition } = require("./core/diagram-registry");
 
 let workspaceEngine = null;
 
@@ -190,10 +191,7 @@ const saveViewStateTransaction = async (treeId, viewState) => {
 
 const getActiveTree = (workspace) => workspace.trees[0];
 
-const defaultLayoutDirection = (treeType) =>
-  ({
-    goalTree: "TB"
-  })[treeType] || "TB";
+const defaultLayoutDirection = (treeType) => getDiagramDefinition(treeType)?.defaultDirection || "TB";
 
 const elkDirection = (direction) =>
   ({
@@ -413,6 +411,10 @@ const createWindow = () => {
       contextIsolation: true,
       nodeIntegration: false
     }
+  });
+
+  mainWindow.webContents.on("console-message", (_event, level, message, line, sourceId) => {
+    if (level >= 2) console.error(`Renderer: ${message} (${sourceId}:${line})`);
   });
 
   mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));

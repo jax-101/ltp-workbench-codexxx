@@ -232,9 +232,39 @@ Aprendizaje: una buena arquitectura no equivale a todas sus garantias futuras ya
 
 Aplicacion futura: mantener secciones separadas de estado actual, limitaciones y evolucion; vincular cada garantia importante a una prueba o criterio de aceptacion.
 
+### L-027: Un mismo concepto de seleccion debe vivir fuera de la UI
+
+Fecha: 2026-07-15
+
+Evidencia: seleccionar un frame afecta a copiar, borrar, zoom, links internos y futuras operaciones headless. Implementarlo solo mediante clases CSS habria creado cierres diferentes por adaptador.
+
+Aprendizaje: cuando una seleccion tiene semantica transitiva, es una consulta de dominio y no un detalle visual.
+
+Aplicacion futura: representar raices explicitas, derivar el cierre con una funcion pura y hacer que UI, CLI y comandos consuman esa misma consulta.
+
+### L-028: Los estados temporales de una animacion no deben persistirse
+
+Fecha: 2026-07-15
+
+Evidencia: la animacion de Layout produjo eventos de scroll que intentaron guardar ViewState sobre una revision intermedia y causaron un conflicto optimista.
+
+Aprendizaje: una transicion visual puede ejecutar muchos renders validos para pintar, pero solo su inicio y su final son estados coherentes para persistencia.
+
+Aplicacion futura: drenar la cola antes de una transicion, suspender autosaves durante ella y confirmar una sola instantanea final; probar la animacion con timers de persistencia activos.
+
+### L-029: Compartir codigo no exige relajar el aislamiento del renderer
+
+Fecha: 2026-07-15
+
+Evidencia: el preload aislado de Electron no podia importar los nuevos modulos locales. Desactivar el sandbox lo habria resuelto, pero reduciendo una garantia de seguridad.
+
+Aprendizaje: las reglas puras pueden publicarse en un formato compatible con Node y navegador y cargarse en ambos lados sin conceder acceso Node al renderer.
+
+Aplicacion futura: mantener los modulos compartidos sin DOM ni Electron, ofrecer export CommonJS y global de navegador, y verificar que el preload conserva su superficie minima.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-027`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-030`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

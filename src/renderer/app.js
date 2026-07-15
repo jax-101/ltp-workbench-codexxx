@@ -1,8 +1,10 @@
 let workspaceData = null;
 let selectedElementId = null;
 let selectedElementType = "node";
-let selectedElementIds = new Set();
-let multiSelectMode = false;
+let selectionRootIds = new Set();
+let selectionIds = new Set();
+let connectionSourceIds = new Set();
+let sourceSelectionMode = false;
 let activeFrameId = null;
 let mode = "navigation";
 let connectionSourceId = null;
@@ -30,6 +32,7 @@ const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace("H", "");
 const commandBindings = window.LTP_COMMAND_BINDINGS || {};
 const commandLabels = window.LTP_COMMAND_LABELS || {};
+const diagramDefinitions = window.LTP_DIAGRAM_REGISTRY.DIAGRAM_DEFINITIONS;
 
 const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 const now = () => new Date().toISOString();
@@ -49,13 +52,42 @@ const selectedNode = () => nodeById()[selectedElementId];
 const selectedFrame = () => frameById()[selectedElementId];
 const selectedLink = () => linkById()[selectedElementId];
 const assumptionsForLink = (linkId) => (tree()?.assumptions || []).filter((assumption) => assumption.linkId === linkId);
-const selectedSourceNodeIds = () => [...selectedElementIds].filter((id) => Boolean(nodeById()[id]));
+const selectedSourceNodeIds = () => [...connectionSourceIds].filter((id) => Boolean(nodeById()[id]));
+const diagramDefinition = () => diagramDefinitions[tree()?.type] || diagramDefinitions.goalTree;
+const diagramNodeTypes = () => diagramDefinition()?.nodeTypes || [];
 
 const elementType = (id) => {
   if (nodeById()[id]) return "node";
   if (frameById()[id]) return "frame";
   if (linkById()[id]) return "link";
   return "unknown";
+};
+
+const rebuildSelection = () => {
+  const validRoots = [...selectionRootIds].filter((id) => elementType(id) !== "unknown");
+  selectionRootIds = new Set(validRoots);
+  selectionIds = new Set(window.LTP_SELECTION_MODEL.selectionClosure(tree(), validRoots));
+  if (selectedElementId && !selectionIds.has(selectedElementId)) {
+    selectedElementId = validRoots.at(-1) || null;
+  }
+  selectedElementType = elementType(selectedElementId);
+};
+
+const replaceSelection = (id) => {
+  selectedElementId = elementType(id) === "unknown" ? null : id;
+  selectionRootIds = new Set(selectedElementId ? [selectedElementId] : []);
+  rebuildSelection();
+};
+
+const toggleSelectionRoot = (id) => {
+  if (selectionRootIds.has(id)) {
+    selectionRootIds.delete(id);
+    if (selectedElementId === id) selectedElementId = [...selectionRootIds].at(-1) || null;
+  } else {
+    selectionRootIds.add(id);
+    selectedElementId = id;
+  }
+  rebuildSelection();
 };
 
 const layoutNode = (nodeId) =>
@@ -84,7 +116,9 @@ const canvasSize = () => {
   const activeTree = tree();
   if (!activeTree) return { width: 1200, height: 800 };
   const nodeBoxes = Object.values(activeTree.layout?.nodes || {});
-  const frameBoxes = Object.values(activeTree.layout?.frames || {});
+  const frameBoxes = Object.entries(activeTree.layout?.frames || {})
+    .filter(([frameId]) => frameId !== activeTree.rootFrameId)
+    .map(([, box]) => box);
   const boxes = [...nodeBoxes, ...frameBoxes];
   const width = Math.max(1200, ...boxes.map((box) => (box.x || 0) + (box.width || 0) + 140));
   const height = Math.max(760, ...boxes.map((box) => (box.y || 0) + (box.height || 0) + 140));
@@ -117,6 +151,7 @@ const updateViewState = () => {
     ...(activeTree.viewState || {}),
     activeFrameId,
     selectedElementId,
+    selectionRootIds: [...selectionRootIds],
     mode,
     zoom: zoomLevel,
     pan: { x: viewportState.left, y: viewportState.top },
@@ -125,6 +160,7 @@ const updateViewState = () => {
 };
 
 const scheduleViewStatePersist = () => {
+  if (layoutAnimating) return;
   window.clearTimeout(viewPersistTimer);
   viewPersistTimer = window.setTimeout(async () => {
     updateViewState();
@@ -169,10 +205,11 @@ const setZoom = (nextZoom, options = {}) => {
   const shell = app.querySelector(".canvas-shell");
   if (!shell) return;
   captureViewport();
-  const logicalCenter = {
+  const viewportCenter = {
     x: (viewportState.left + shell.clientWidth / 2) / zoomLevel,
     y: (viewportState.top + shell.clientHeight / 2) / zoomLevel
   };
+  const logicalCenter = selectionCenter() || viewportCenter;
   zoomLevel = clamp(Math.round(nextZoom * 100) / 100, 0.35, 2.5);
   render();
   const nextShell = app.querySelector(".canvas-shell");
@@ -199,10 +236,7 @@ const fitView = () => {
 };
 
 const centerSelection = () => {
-  let point = null;
-  if (selectedElementType === "node") point = centerOf(layoutNode(selectedElementId));
-  if (selectedElementType === "frame") point = centerOf(layoutFrame(selectedElementId));
-  if (selectedElementType === "link") point = layoutLink(selectedElementId).labelPosition;
+  const point = selectionCenter();
   if (!point) {
     setStatus("Select an element to center it");
     return;
@@ -250,17 +284,22 @@ const persist = async (label = "Update workspace") => {
   window.clearTimeout(viewPersistTimer);
   const pendingWorkspace = structuredClone(workspaceData);
   return enqueueWorkspaceOperation(async () => {
-    pendingWorkspace.revision = workspaceData.revision || 0;
-    pendingWorkspace.updatedAt = now();
-    const activeTree = pendingWorkspace.trees?.[0];
-    if (activeTree) activeTree.updatedAt = now();
-    workspaceData = await window.ltpPrototype.saveWorkspace(pendingWorkspace, {
-      recordHistory: true,
-      includeViewState: false,
-      label
-    });
-    historyState = await window.ltpPrototype.getHistoryState();
-    setStatus("Saved locally");
+    try {
+      pendingWorkspace.revision = workspaceData.revision || 0;
+      pendingWorkspace.updatedAt = now();
+      const activeTree = pendingWorkspace.trees?.[0];
+      if (activeTree) activeTree.updatedAt = now();
+      workspaceData = await window.ltpPrototype.saveWorkspace(pendingWorkspace, {
+        recordHistory: true,
+        includeViewState: false,
+        label
+      });
+      historyState = await window.ltpPrototype.getHistoryState();
+      setStatus("Saved locally");
+    } catch (error) {
+      console.error(`Persist failed during "${label}": ${error.message}`);
+      throw error;
+    }
   });
 };
 
@@ -285,9 +324,10 @@ const reconcileUiAfterHistory = () => {
   if (!activeTree) return;
   if (!frameById()[activeFrameId]) activeFrameId = activeTree.rootFrameId;
   if (selectedElementId && elementType(selectedElementId) === "unknown") selectedElementId = null;
-  for (const id of [...selectedElementIds]) {
-    if (elementType(id) === "unknown") selectedElementIds.delete(id);
+  for (const id of [...connectionSourceIds]) {
+    if (!nodeById()[id]) connectionSourceIds.delete(id);
   }
+  rebuildSelection();
   previewNodeId = nodeById()[previewNodeId] ? previewNodeId : null;
   deleteCandidateId = null;
   mode = "navigation";
@@ -311,13 +351,13 @@ const moveHistory = async (direction) => {
 };
 
 const refreshMaps = () => {
-  selectedElementType = elementType(selectedElementId);
-  for (const id of [...selectedElementIds]) {
-    if (!nodeById()[id]) selectedElementIds.delete(id);
+  rebuildSelection();
+  for (const id of [...connectionSourceIds]) {
+    if (!nodeById()[id]) connectionSourceIds.delete(id);
   }
 };
 
-const selectElement = async (id) => {
+const selectElement = async (id, options = {}) => {
   const nextType = elementType(id);
   hintBuffer = "";
 
@@ -339,19 +379,18 @@ const selectElement = async (id) => {
     }
 
     await createLinksToTarget(sourceIds, id);
-    selectedElementId = id;
-    selectedElementType = "node";
+    replaceSelection(id);
     mode = "navigation";
     connectionSourceId = null;
-    selectedElementIds.clear();
-    multiSelectMode = false;
+    connectionSourceIds.clear();
+    sourceSelectionMode = false;
     hintsVisible = false;
     setStatus(`${sourceIds.length} source link${sourceIds.length === 1 ? "" : "s"} ready for this target`);
     render();
     return;
   }
 
-  if (multiSelectMode) {
+  if (sourceSelectionMode) {
     if (nextType !== "node") {
       hintsVisible = true;
       setStatus("Multi-select marks source nodes only");
@@ -359,28 +398,27 @@ const selectElement = async (id) => {
       return;
     }
 
-    selectedElementId = id;
-    selectedElementType = "node";
-    if (selectedElementIds.has(id)) {
-      selectedElementIds.delete(id);
+    replaceSelection(id);
+    if (connectionSourceIds.has(id)) {
+      connectionSourceIds.delete(id);
     } else {
-      selectedElementIds.add(id);
+      connectionSourceIds.add(id);
     }
     hintsVisible = true;
     hintEntries = visibleHintEntries();
-    setStatus(`${selectedElementIds.size} source node${selectedElementIds.size === 1 ? "" : "s"} marked. Press L to choose the target.`);
+    setStatus(`${connectionSourceIds.size} source node${connectionSourceIds.size === 1 ? "" : "s"} marked. Press L to choose the target.`);
     render();
     return;
   }
 
-  selectedElementId = id;
-  selectedElementType = nextType;
-  selectedElementIds.clear();
+  if (nextType === "frame") activeFrameId = id;
+  if (options.additive) toggleSelectionRoot(id);
+  else replaceSelection(id);
   hintsVisible = false;
   render();
 };
 
-const hintAlphabetForMode = () => (multiSelectMode && mode !== "connection" ? hintAlphabet.replace("L", "") : hintAlphabet);
+const hintAlphabetForMode = () => (sourceSelectionMode && mode !== "connection" ? hintAlphabet.replace("L", "") : hintAlphabet);
 
 const generateHintLabels = (count, alphabet = hintAlphabetForMode()) => {
   const labels = [...alphabet];
@@ -411,7 +449,7 @@ const visibleHintEntries = () => {
   const viewport = logicalViewport();
   const entries = [];
 
-  for (const frame of activeTree.frames) {
+  for (const frame of activeTree.frames.filter((candidate) => candidate.id !== activeTree.rootFrameId)) {
     const box = layoutFrame(frame.id);
     if (boxIntersectsViewport(box, viewport) && (!query || frame.name.toLowerCase().includes(query))) {
       entries.push({
@@ -454,7 +492,7 @@ const visibleHintEntries = () => {
     }
   }
 
-  const modeFilteredEntries = mode === "connection" || multiSelectMode ? entries.filter((entry) => entry.type === "node") : entries;
+  const modeFilteredEntries = mode === "connection" || sourceSelectionMode ? entries.filter((entry) => entry.type === "node") : entries;
   const labels = generateHintLabels(modeFilteredEntries.length);
   return modeFilteredEntries.map((entry, index) => ({ ...entry, hint: labels[index] }));
 };
@@ -552,13 +590,16 @@ const viewportNodePosition = (frame, width = 250, height = 72) => {
     right: (viewportState.left + (shell?.clientWidth || 720)) / zoomLevel,
     bottom: (viewportState.top + (shell?.clientHeight || 560)) / zoomLevel
   };
+  const isRootFrame = frame.id === tree().rootFrameId;
   const frameBox = layoutFrame(frame.id);
-  const frameInner = {
-    left: frameBox.x + 28,
-    top: frameBox.y + 54,
-    right: frameBox.x + frameBox.width - 28,
-    bottom: frameBox.y + frameBox.height - 28
-  };
+  const frameInner = isRootFrame
+    ? viewport
+    : {
+        left: frameBox.x + 28,
+        top: frameBox.y + 54,
+        right: frameBox.x + frameBox.width - 28,
+        bottom: frameBox.y + frameBox.height - 28
+      };
   const intersection = {
     left: Math.max(viewport.left + 42, frameInner.left),
     top: Math.max(viewport.top + 52, frameInner.top),
@@ -632,17 +673,21 @@ const createNode = async (
     pinned: false,
     layoutSource: "manual"
   };
-  selectedElementId = id;
-  selectedElementType = "node";
-  selectedElementIds.clear();
-  multiSelectMode = false;
+  replaceSelection(id);
+  connectionSourceIds.clear();
+  sourceSelectionMode = false;
   await persist("Create node");
   render();
   return id;
 };
 
 const createNodeInViewport = () =>
-  createNode(activeFrameId, "necessaryCondition", "New necessary condition", { placement: "viewport" });
+  createNode(
+    activeFrameId,
+    diagramDefinition()?.defaultNodeType || "necessaryCondition",
+    "New necessary condition",
+    { placement: "viewport" }
+  );
 
 const createSupportingNode = async () => {
   const target = selectedNode();
@@ -661,6 +706,11 @@ const createFrame = async () => {
   const activeTree = tree();
   const parent = frameById()[activeFrameId] || frameById()[activeTree.rootFrameId];
   const parentBox = layoutFrame(parent.id);
+  captureViewport();
+  const rootPosition = {
+    x: Math.round(viewportState.left / zoomLevel + 42),
+    y: Math.round(viewportState.top / zoomLevel + 72)
+  };
   const id = uid("frame");
   const frame = {
     id,
@@ -678,17 +728,17 @@ const createFrame = async () => {
   activeTree.frames.push(frame);
   parent.childFrameIds.push(id);
   activeTree.layout.frames[id] = {
-    x: parentBox.x + 42,
-    y: parentBox.y + 72,
+    x: parent.id === activeTree.rootFrameId ? rootPosition.x : parentBox.x + 42,
+    y: parent.id === activeTree.rootFrameId ? rootPosition.y : parentBox.y + 72,
     width: 320,
     height: 190,
     pinned: false,
     layoutSource: "manual"
   };
-  selectedElementId = id;
-  selectedElementType = "frame";
-  selectedElementIds.clear();
-  multiSelectMode = false;
+  activeFrameId = id;
+  replaceSelection(id);
+  connectionSourceIds.clear();
+  sourceSelectionMode = false;
   await persist("Create frame");
   render();
 };
@@ -706,6 +756,7 @@ const frameDepth = (frameId) => {
 
 const frameAtPoint = (point) => {
   const candidates = tree().frames.filter((frame) => {
+    if (frame.id === tree().rootFrameId) return false;
     const box = layoutFrame(frame.id);
     return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
   });
@@ -776,8 +827,7 @@ const createLink = async (sourceNodeId, targetNodeId, options = {}) => {
   const existingLink = activeTree.links.find((link) => link.sourceNodeId === sourceNodeId && link.targetNodeId === targetNodeId);
   if (existingLink) {
     if (selectCreated) {
-      selectedElementId = existingLink.id;
-      selectedElementType = "link";
+      replaceSelection(existingLink.id);
     }
     if (renderAfter) render();
     return existingLink.id;
@@ -818,8 +868,7 @@ const createLink = async (sourceNodeId, targetNodeId, options = {}) => {
   activeTree.links.push(link);
   activeTree.layout.links[id] = link.visual;
   if (selectCreated) {
-    selectedElementId = id;
-    selectedElementType = "link";
+    replaceSelection(id);
   }
   if (persistAfter) await persist("Create link");
   if (renderAfter) render();
@@ -901,10 +950,9 @@ const promoteAssumption = async (assumptionId) => {
     layoutSource: "manual"
   };
   assumption.promotedNodeId = nodeId;
-  selectedElementId = nodeId;
-  selectedElementType = "node";
-  selectedElementIds.clear();
-  multiSelectMode = false;
+  replaceSelection(nodeId);
+  connectionSourceIds.clear();
+  sourceSelectionMode = false;
   await persist("Promote assumption");
   render();
 };
@@ -1021,6 +1069,8 @@ const animateToLayout = async (nextWorkspace) => {
 
 const runAutoLayout = async () => {
   if (layoutAnimating) return;
+  window.clearTimeout(viewPersistTimer);
+  await workspaceOperationQueue;
   layoutAnimating = true;
   setStatus("Running ELK layout...");
   try {
@@ -1044,8 +1094,7 @@ const selectParentFrame = () => {
   const frame = frameById()[activeFrameId];
   if (frame?.parentFrameId) {
     activeFrameId = frame.parentFrameId;
-    selectedElementId = activeFrameId;
-    selectedElementType = "frame";
+    replaceSelection(activeFrameId);
     render();
   }
 };
@@ -1071,19 +1120,19 @@ const beginConnection = () => {
 };
 
 const toggleMultiSelect = () => {
-  multiSelectMode = !multiSelectMode;
+  sourceSelectionMode = !sourceSelectionMode;
   mode = "navigation";
   connectionSourceId = null;
   hintBuffer = "";
 
-  if (multiSelectMode) {
-    if (selectedNode()) selectedElementIds.add(selectedElementId);
+  if (sourceSelectionMode) {
+    if (selectedNode()) connectionSourceIds.add(selectedElementId);
     showHints();
-    setStatus(`${selectedElementIds.size} source node${selectedElementIds.size === 1 ? "" : "s"} marked. Choose more nodes, then press L.`);
+    setStatus(`${connectionSourceIds.size} source node${connectionSourceIds.size === 1 ? "" : "s"} marked. Choose more nodes, then press L.`);
     return;
   }
 
-  selectedElementIds.clear();
+  connectionSourceIds.clear();
   hintsVisible = false;
   setStatus("Multi-select cleared");
   render();
@@ -1190,12 +1239,14 @@ const renderSidebar = () => {
 const renderFrames = () => {
   const activeTree = tree();
   return activeTree.frames
+    .filter((frame) => frame.id !== activeTree.rootFrameId)
     .map((frame) => {
       const box = layoutFrame(frame.id);
       const active = frame.id === activeFrameId ? "active" : "";
       const selected = frame.id === selectedElementId ? "selected" : "";
+      const included = selectionIds.has(frame.id) && frame.id !== selectedElementId ? "selection-included" : "";
       return `
-        <button class="tree-frame ${active} ${selected}" data-element-id="${frame.id}" data-element-type="frame"
+        <button class="tree-frame ${active} ${selected} ${included}" data-element-id="${frame.id}" data-element-type="frame"
           style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;">
           <span>${escapeHtml(frame.name)}</span>
           <small>${escapeHtml(frame.semanticType || "visual frame")}</small>
@@ -1205,13 +1256,7 @@ const renderFrames = () => {
     .join("");
 };
 
-const nodeTypeLabel = (type) =>
-  ({
-    goal: "Goal",
-    criticalSuccessFactor: "CSF",
-    necessaryCondition: "NC",
-    assumption: "Assumption"
-  })[type] || type;
+const nodeTypeLabel = (type) => diagramNodeTypes().find((candidate) => candidate.id === type)?.shortLabel || type;
 
 const layoutDirectionLabel = (direction) =>
   ({
@@ -1222,7 +1267,7 @@ const layoutDirectionLabel = (direction) =>
   })[direction] || direction;
 
 const updateLayoutDirection = async (direction) => {
-  if (!["TB", "BT", "LR", "RL"].includes(direction)) return;
+  if (!diagramDefinition()?.directions.includes(direction)) return;
   tree().layout.direction = direction;
   await persist("Change layout direction");
   setStatus(`Layout direction: ${layoutDirectionLabel(direction)}`);
@@ -1234,9 +1279,10 @@ const renderNodes = () =>
     .nodes.map((node) => {
       const box = layoutNode(node.id);
       const selected = node.id === selectedElementId ? "selected" : "";
-      const multiSelected = selectedElementIds.has(node.id) ? "multi-selected" : "";
+      const included = selectionIds.has(node.id) && node.id !== selectedElementId ? "selection-included" : "";
+      const multiSelected = connectionSourceIds.has(node.id) ? "multi-selected" : "";
       return `
-        <button class="tree-node ${selected} ${multiSelected} node-${node.type}" data-element-id="${node.id}" data-element-type="node"
+        <button class="tree-node ${selected} ${included} ${multiSelected} node-${node.type}" data-element-id="${node.id}" data-element-type="node"
           style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;"
           title="${escapeHtml(node.statement)}">
           <strong>${escapeHtml(nodeTypeLabel(node.type))}</strong>
@@ -1248,6 +1294,25 @@ const renderNodes = () =>
     .join("");
 
 const centerOf = (box) => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+
+const selectionCenter = () => {
+  const boxes = [];
+  for (const id of selectionIds) {
+    const type = elementType(id);
+    if (type === "node") boxes.push(layoutNode(id));
+    if (type === "frame" && id !== tree().rootFrameId) boxes.push(layoutFrame(id));
+    if (type === "link") {
+      const point = layoutLink(id).labelPosition;
+      if (point) boxes.push({ x: point.x, y: point.y, width: 0, height: 0 });
+    }
+  }
+  if (!boxes.length) return null;
+  const left = Math.min(...boxes.map((box) => box.x));
+  const top = Math.min(...boxes.map((box) => box.y));
+  const right = Math.max(...boxes.map((box) => box.x + box.width));
+  const bottom = Math.max(...boxes.map((box) => box.y + box.height));
+  return { x: (left + right) / 2, y: (top + bottom) / 2 };
+};
 
 const pointOnBoxEdge = (box, toward) => {
   const center = centerOf(box);
@@ -1279,9 +1344,10 @@ const renderLinks = () => {
       const targetBox = layoutNode(link.targetNodeId);
       const { source, target } = linkEndpoints(sourceBox, targetBox);
       const selected = link.id === selectedElementId ? "selected" : "";
-      const marker = selected ? "arrow-selected" : "arrow";
+      const included = selectionIds.has(link.id) && link.id !== selectedElementId ? "selection-included" : "";
+      const marker = selected ? "arrow-selected" : included ? "arrow-included" : "arrow";
       return `
-        <line class="tree-link-line ${selected}" data-link-id="${link.id}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" marker-end="url(#${marker})" />
+        <line class="tree-link-line ${selected} ${included}" data-link-id="${link.id}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" marker-end="url(#${marker})" />
       `;
     })
     .join("");
@@ -1290,9 +1356,10 @@ const renderLinks = () => {
     .map((link) => {
       const label = layoutLink(link.id).labelPosition || { x: 0, y: 0 };
       const selected = link.id === selectedElementId ? "selected" : "";
+      const included = selectionIds.has(link.id) && link.id !== selectedElementId ? "selection-included" : "";
       const hintVisible = hintsVisible ? "hint-visible" : "";
       return `
-        <button class="link-target ${selected} ${hintVisible}" data-element-id="${link.id}" data-element-type="link" style="left:${label.x - 12}px;top:${label.y - 12}px;" title="${escapeHtml(link.meaning)}">L</button>
+        <button class="link-target ${selected} ${included} ${hintVisible}" data-element-id="${link.id}" data-element-type="link" style="left:${label.x - 12}px;top:${label.y - 12}px;" title="${escapeHtml(link.meaning)}">L</button>
       `;
     })
     .join("");
@@ -1305,6 +1372,9 @@ const renderLinks = () => {
         </marker>
         <marker id="arrow-selected" markerWidth="13" markerHeight="13" refX="11" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
           <path d="M0,0 L0,9 L12,4.5 z" fill="#9f4f45"></path>
+        </marker>
+        <marker id="arrow-included" markerWidth="13" markerHeight="13" refX="11" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L0,9 L12,4.5 z" fill="#c58f2c"></path>
         </marker>
       </defs>
       ${lines}
@@ -1395,7 +1465,8 @@ const renderMinimapContents = (metrics) => {
     })
     .join("");
   const frames = tree()
-    .frames.map((frame) => {
+    .frames.filter((frame) => frame.id !== tree().rootFrameId)
+    .map((frame) => {
       const box = layoutFrame(frame.id);
       return `<div class="minimap-frame" style="left:${mapX(box.x)}px;top:${mapY(box.y)}px;width:${box.width * metrics.scale}px;height:${box.height * metrics.scale}px;"></div>`;
     })
@@ -1443,8 +1514,7 @@ const renderMinimap = () => {
 
 const openNodePreview = (nodeId = selectedElementId) => {
   if (!nodeById()[nodeId]) return;
-  selectedElementId = nodeId;
-  selectedElementType = "node";
+  replaceSelection(nodeId);
   previewNodeId = nodeId;
   render();
   app.querySelector("[data-action='close-node-preview']")?.focus();
@@ -1454,8 +1524,7 @@ const closeNodePreview = (options = {}) => {
   const nodeId = previewNodeId;
   previewNodeId = null;
   if (options.continueEditing && nodeById()[nodeId]) {
-    selectedElementId = nodeId;
-    selectedElementType = "node";
+    replaceSelection(nodeId);
     focusPrimaryEditor();
     return;
   }
@@ -1485,12 +1554,12 @@ const cancelContext = (options = {}) => {
     return;
   }
 
-  if (mode === "connection" || mode === "editing" || multiSelectMode || selectedElementIds.size) {
+  if (mode === "connection" || mode === "editing" || sourceSelectionMode || connectionSourceIds.size) {
     if (mode === "editing") restoreInspectorAfterEditing();
     mode = "navigation";
     connectionSourceId = null;
-    multiSelectMode = false;
-    selectedElementIds.clear();
+    sourceSelectionMode = false;
+    connectionSourceIds.clear();
     hintsVisible = false;
     setStatus("Current mode cancelled");
     render();
@@ -1506,8 +1575,7 @@ const cancelContext = (options = {}) => {
   }
 
   if (options.clearSelection && selectedElementId) {
-    selectedElementId = null;
-    selectedElementType = "unknown";
+    replaceSelection(null);
     setStatus("Selection cleared");
     render();
     focusCanvas();
@@ -1636,9 +1704,8 @@ const confirmDeletion = async () => {
   }
 
   deleteCandidateId = null;
-  selectedElementId = null;
-  selectedElementType = "unknown";
-  selectedElementIds.clear();
+  replaceSelection(null);
+  connectionSourceIds.clear();
   mode = "navigation";
   await persist("Delete selection");
   setStatus("Selection deleted");
@@ -1706,7 +1773,7 @@ const renderCanvas = () => {
             <button data-action="fit-view" title="Fit diagram">Fit</button>
           </div>
           <select class="direction-select" data-layout-direction title="Preferred layout direction" aria-label="Preferred layout direction">
-            ${["TB", "BT", "LR", "RL"]
+            ${diagramDefinition().directions
               .map(
                 (direction) =>
                   `<option value="${direction}" ${tree()?.layout?.direction === direction ? "selected" : ""}>${layoutDirectionLabel(direction)}</option>`
@@ -1722,7 +1789,8 @@ const renderCanvas = () => {
         <div class="canvas-status">
           <span>Mode: <strong>${escapeHtml(mode)}</strong></span>
           <span>Selected: <strong>${escapeHtml(selectedElementId || "none")}</strong></span>
-          <span>Sources: <strong>${selectedElementIds.size}</strong></span>
+          <span>Selection: <strong>${selectionIds.size}</strong></span>
+          <span>Sources: <strong>${connectionSourceIds.size}</strong></span>
           <span>Zoom: <strong>${Math.round(zoomLevel * 100)}%</strong></span>
           <span data-status>${escapeHtml(statusText)}</span>
         </div>
@@ -1763,7 +1831,7 @@ const renderInspector = () => {
         <input data-node-field="shortLabel" data-id="${node.id}" value="${escapeHtml(node.shortLabel || "")}" />
         <label>Type</label>
         <select data-node-field="type" data-id="${node.id}">
-          ${["goal", "criticalSuccessFactor", "necessaryCondition", "assumption"].map((type) => `<option value="${type}" ${node.type === type ? "selected" : ""}>${nodeTypeLabel(type)}</option>`).join("")}
+          ${diagramNodeTypes().map((type) => `<option value="${type.id}" ${node.type === type.id ? "selected" : ""}>${escapeHtml(type.label)}</option>`).join("")}
         </select>
         <label>Frame</label>
         <select data-node-frame data-id="${node.id}">
@@ -1944,7 +2012,7 @@ const bindEvents = () => {
   app.querySelectorAll("[data-element-id]").forEach((element) => {
     element.addEventListener("click", (event) => {
       event.stopPropagation();
-      selectElement(element.dataset.elementId);
+      selectElement(element.dataset.elementId, { additive: event.shiftKey || event.metaKey || event.ctrlKey });
     });
     if (element.dataset.elementType === "node") {
       element.addEventListener("pointerdown", (event) => beginNodeDrag(event, element));
@@ -2176,7 +2244,7 @@ const handleKeydown = async (event) => {
     return;
   }
 
-  if (multiSelectMode && mode !== "connection" && hintsVisible && event.key.toLowerCase() === "l" && selectedElementIds.size) {
+  if (sourceSelectionMode && mode !== "connection" && hintsVisible && event.key.toLowerCase() === "l" && connectionSourceIds.size) {
     event.preventDefault();
     beginConnection();
     return;
@@ -2201,6 +2269,13 @@ const bootPromise = (async () => {
   historyState = await window.ltpPrototype.getHistoryState();
   const activeTree = tree();
   selectedElementId = activeTree.viewState?.selectedElementId || activeTree.nodes[0]?.id;
+  selectionRootIds = new Set(
+    activeTree.viewState?.selectionRootIds?.length
+      ? activeTree.viewState.selectionRootIds
+      : selectedElementId
+        ? [selectedElementId]
+        : []
+  );
   activeFrameId = activeTree.viewState?.activeFrameId || activeTree.rootFrameId;
   viewportState = {
     left: activeTree.viewState?.pan?.x || 0,
@@ -2211,7 +2286,7 @@ const bootPromise = (async () => {
     leftOpen: activeTree.viewState?.panels?.leftOpen ?? true,
     rightOpen: activeTree.viewState?.panels?.rightOpen ?? true
   };
-  selectedElementType = elementType(selectedElementId);
+  rebuildSelection();
   statusText = "Prototype loaded";
   render();
 })();
@@ -2229,6 +2304,49 @@ window.__ltpSmokeTest = async () => {
   const exportResult = await window.ltpPrototype.exportMarkdown(workspaceData);
   render();
   const activeTree = tree();
+  const initialActiveFrameId = activeFrameId;
+  const rootFrameIsConceptual =
+    !document.querySelector(`[data-element-id="${activeTree.rootFrameId}"]`) &&
+    document.querySelectorAll(".minimap-frame").length === activeTree.frames.length - 1;
+  const registryDrivesGoalTree =
+    diagramDefinition().defaultDirection === "TB" &&
+    diagramNodeTypes().map((type) => type.id).join(",") ===
+      "goal,criticalSuccessFactor,necessaryCondition,assumption";
+  const selectedTestFrame = activeTree.frames.find((frame) => frame.id !== activeTree.rootFrameId);
+  const expectedFrameSelection = new Set(
+    window.LTP_SELECTION_MODEL.selectionClosure(activeTree, [selectedTestFrame.id])
+  );
+  await selectElement(selectedTestFrame.id);
+  const frameSelectionIsTransitive =
+    selectionIds.size === expectedFrameSelection.size &&
+    [...expectedFrameSelection].every((id) => selectionIds.has(id));
+  const frameSelectionIsDistinct =
+    document.querySelector(`[data-element-id="${selectedTestFrame.id}"]`)?.classList.contains("selected") &&
+    [...expectedFrameSelection]
+      .filter((id) => id !== selectedTestFrame.id)
+      .every((id) => {
+        const element =
+          document.querySelector(`[data-element-id="${id}"]`) ||
+          document.querySelector(`[data-link-id="${id}"]`);
+        return element?.classList.contains("selection-included");
+      });
+  const selectedFrameNodeIds = new Set(
+    activeTree.nodes.filter((node) => selectionIds.has(node.id)).map((node) => node.id)
+  );
+  const externalLinksStayOutsideFrameSelection = activeTree.links
+    .filter(
+      (link) =>
+        selectedFrameNodeIds.has(link.sourceNodeId) !== selectedFrameNodeIds.has(link.targetNodeId)
+    )
+    .every((link) => !selectionIds.has(link.id));
+  connectionSourceIds.add(activeTree.nodes[0].id);
+  await selectElement(selectedTestFrame.id);
+  const connectionSourcesStayIndependent =
+    connectionSourceIds.has(activeTree.nodes[0].id) && selectionIds.has(selectedTestFrame.id);
+  connectionSourceIds.clear();
+  activeFrameId = initialActiveFrameId;
+  replaceSelection(activeTree.viewState?.selectedElementId || activeTree.nodes[0]?.id);
+  render();
   hintEntries = visibleHintEntries();
   const stressHintLabels = generateHintLabels(40);
   const hintsArePrefixFree = stressHintLabels.every(
@@ -2253,7 +2371,7 @@ window.__ltpSmokeTest = async () => {
   await Promise.resolve();
   const twoLetterHintWorks =
     firstHintLetterWaits && selectedElementId === twoLetterTarget && activeTree.nodes.length === initialNodeCount;
-  selectedElementId = initialSelection;
+  replaceSelection(initialSelection);
   hintsVisible = false;
   hintBuffer = "";
   render();
@@ -2314,8 +2432,7 @@ window.__ltpSmokeTest = async () => {
   const fullTextPreviewWorks = document.querySelector(".node-preview-dialog p")?.textContent === activeTree.nodes[0]?.statement;
   closeNodePreview();
 
-  selectedElementId = tree().nodes[0]?.id;
-  selectedElementType = "node";
+  replaceSelection(tree().nodes[0]?.id);
   mode = "navigation";
   render();
   focusCanvas();
@@ -2366,8 +2483,7 @@ window.__ltpSmokeTest = async () => {
     !previewNodeId && mode === "editing" && document.activeElement?.matches?.("[data-primary-editor]");
   cancelContext();
 
-  selectedElementId = tree().nodes[0]?.id;
-  selectedElementType = "node";
+  replaceSelection(tree().nodes[0]?.id);
   mode = "navigation";
   render();
   focusCanvas();
@@ -2434,6 +2550,21 @@ window.__ltpSmokeTest = async () => {
   setZoom(1.25, { persist: false });
   const zoomWorks =
     zoomLevel === 1.25 && document.querySelector(".canvas-content")?.style.transform === "scale(1.25)";
+  const zoomAnchor = selectionCenter();
+  const zoomShell = document.querySelector(".canvas-shell");
+  const expectedZoomLeft = clamp(
+    zoomAnchor.x * zoomLevel - zoomShell.clientWidth / 2,
+    0,
+    Math.max(0, zoomShell.scrollWidth - zoomShell.clientWidth)
+  );
+  const expectedZoomTop = clamp(
+    zoomAnchor.y * zoomLevel - zoomShell.clientHeight / 2,
+    0,
+    Math.max(0, zoomShell.scrollHeight - zoomShell.clientHeight)
+  );
+  const zoomAnchorsSelection =
+    Math.abs(zoomShell.scrollLeft - expectedZoomLeft) < 2 &&
+    Math.abs(zoomShell.scrollTop - expectedZoomTop) < 2;
   setViewportPosition(0, 0, { persist: false });
   const panStart = document.querySelector(".canvas-shell").scrollLeft;
   focusCanvas();
@@ -2584,9 +2715,15 @@ window.__ltpSmokeTest = async () => {
       finalTree.links.length >= 6 &&
       hintEntries.length > 0 &&
       document.querySelectorAll(".tree-node").length >= 10 &&
-      document.querySelectorAll(".tree-frame").length >= 4 &&
+      document.querySelectorAll(".tree-frame").length === finalTree.frames.length - 1 &&
       document.querySelectorAll(".link-target").length >= 6 &&
       hintsArePrefixFree &&
+      rootFrameIsConceptual &&
+      registryDrivesGoalTree &&
+      frameSelectionIsTransitive &&
+      frameSelectionIsDistinct &&
+      externalLinksStayOutsideFrameSelection &&
+      connectionSourcesStayIndependent &&
       twoLetterHintWorks &&
       keyboardHintsToggle &&
       hintButtonToggles &&
@@ -2614,6 +2751,7 @@ window.__ltpSmokeTest = async () => {
       minimapViewportScalesWithZoom &&
       minimapContentScalesWhenZoomedOut &&
       zoomWorks &&
+      zoomAnchorsSelection &&
       keyboardPanWorks &&
       alternativeKeyboardPanWorks &&
       minimapWorks &&
@@ -2637,6 +2775,12 @@ window.__ltpSmokeTest = async () => {
     links: finalTree.links.length,
     hints: hintEntries.length,
     hintsArePrefixFree,
+    rootFrameIsConceptual,
+    registryDrivesGoalTree,
+    frameSelectionIsTransitive,
+    frameSelectionIsDistinct,
+    externalLinksStayOutsideFrameSelection,
+    connectionSourcesStayIndependent,
     twoLetterHintWorks,
     keyboardHintsToggle,
     hintButtonToggles,
@@ -2664,6 +2808,7 @@ window.__ltpSmokeTest = async () => {
     minimapViewportScalesWithZoom,
     minimapContentScalesWhenZoomedOut,
     zoomWorks,
+    zoomAnchorsSelection,
     keyboardPanWorks,
     alternativeKeyboardPanWorks,
     minimapWorks,

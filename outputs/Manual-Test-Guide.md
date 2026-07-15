@@ -1,4 +1,4 @@
-# Manual Test Guide: Interface Iterations 1 through 3.0
+# Manual Test Guide: Interface Iterations 1 through 3A
 
 Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en un archivo de prueba separado. No modifica el workspace normal.
 
@@ -96,6 +96,8 @@ Resultado esperado: `Ctrl+G` limpia la seleccion en navegacion y cancela el cont
 7. Activa `H` en varios niveles de zoom.
 
 Resultado esperado: el zoom mantiene el centro de trabajo, ambos juegos de teclas desplazan la vista y los hints visibles conservan tamano legible y secuencias validas.
+
+Repite el cambio de zoom con un nodo, un link y un frame seleccionados. En cada caso, el elemento o conjunto seleccionado debe permanecer centrado.
 
 ## Prueba 9: paneles laterales
 
@@ -204,6 +206,17 @@ Comprueba que siguen funcionando:
 - `F`: crear frame.
 - `P`: fijar o liberar posicion.
 - `Cmd+Shift+L`: ejecutar layout.
+
+## Prueba 19: seleccion estructural y frame raiz
+
+1. Selecciona un frame hijo.
+2. Comprueba que el frame principal se distingue en verde y que sus entidades, frames descendientes y links internos aparecen incluidos en dorado.
+3. Comprueba que un link con un extremo fuera del frame no queda incluido.
+4. Manteniendo `Shift` o `Cmd/Ctrl`, selecciona otro nodo o link y comprueba que se anade al conjunto.
+5. Selecciona despues un nodo normal y pulsa `N`.
+6. Observa el canvas y el minimapa.
+
+Resultado esperado: la seleccion estructural es determinista, la seleccion adicional no se confunde con los origenes de links, `N` sigue usando el ultimo frame activo y el frame raiz no aparece como un rectangulo artificial.
 
 ## Registro de resultados
 

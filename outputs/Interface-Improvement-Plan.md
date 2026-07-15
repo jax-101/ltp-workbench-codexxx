@@ -165,7 +165,7 @@ Criterios de aceptacion:
 
 ## Iteracion 3A: seleccion y contexto estructural
 
-Estado: planificada. Comenzar despues de validar la iteracion 3.0.
+Estado: implementada y pendiente de validacion manual.
 
 Incluye:
 

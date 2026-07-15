@@ -396,6 +396,11 @@ kbd {
   stroke-width: 3.2;
 }
 
+.tree-link-line.selection-included {
+  stroke: var(--gold);
+  stroke-width: 2.8;
+}
+
 .tree-frame,
 .tree-node,
 .link-target,
@@ -434,6 +439,11 @@ kbd {
 
 .tree-frame.selected {
   outline: 3px solid rgba(15, 107, 104, 0.22);
+}
+
+.tree-frame.selection-included {
+  border-color: var(--gold);
+  background: rgba(197, 143, 44, 0.08);
 }
 
 .tree-frame.drop-target {
@@ -485,6 +495,10 @@ kbd {
 .tree-node.selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgba(15, 107, 104, 0.16), 0 6px 14px rgba(37, 43, 42, 0.1);
+}
+
+.tree-node.selection-included {
+  box-shadow: 0 0 0 3px rgba(197, 143, 44, 0.24), 0 6px 14px rgba(37, 43, 42, 0.1);
 }
 
 .tree-node.multi-selected {
@@ -540,6 +554,11 @@ kbd {
 .link-target.selected {
   border-color: var(--red);
   color: var(--red);
+}
+
+.link-target.selection-included {
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 .hint-badge {

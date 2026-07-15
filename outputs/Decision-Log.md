@@ -302,3 +302,21 @@ Razon: deshacer una edicion no debe transportar al usuario a otra zona del canva
 Decision: las entradas de historial incluyen metadatos de categoria. Undo/Redo reutiliza la transicion de Layout cuando la categoria es espacial, sin registrar la animacion como una nueva transaccion.
 
 Razon: deducir el comportamiento visual desde una etiqueta como `Apply layout` es fragil y no escala a mover frames, pegar subgrafos u otras operaciones geometricas.
+
+### D-049: Seleccion general y origenes de links son estados distintos
+
+Decision: la seleccion de trabajo se representa mediante raices explicitas y un cierre derivado. Los nodos marcados como origen para crear links viven en un conjunto independiente.
+
+Razon: seleccionar el contenido de un frame para borrar, copiar o inspeccionar no debe cambiar implicitamente los extremos de una conexion. Cada estado tiene reglas, apariencia y ciclo de vida propios.
+
+### D-050: El cierre de seleccion es una regla compartida del nucleo
+
+Decision: el cierre transitivo de frames se implementa como un modulo puro consumible por Node y por el renderer. Los modulos puros se cargan directamente en ambos entornos sin atravesar el preload.
+
+Razon: borrar, copiar, CLI y UI deben obtener exactamente el mismo conjunto. Cargar codigo compatible con navegador mantiene una sola implementacion sin desactivar el sandbox de Electron.
+
+### D-051: Las transiciones suspenden la persistencia intermedia de vista
+
+Decision: Layout espera a que termine la cola de operaciones y bloquea guardados de ViewState durante su animacion. Solo se confirma el estado espacial final.
+
+Razon: los renders intermedios pueden generar eventos de scroll y guardar una revision mientras el layout nuevo aun parte de la anterior. Esos estados son presentacion temporal, no intenciones persistibles.
