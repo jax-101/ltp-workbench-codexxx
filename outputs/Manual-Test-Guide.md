@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.1`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.2`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -213,10 +213,12 @@ Comprueba que siguen funcionando:
 2. Comprueba que el frame principal se distingue en verde y que sus entidades, frames descendientes y links internos aparecen incluidos en dorado.
 3. Comprueba que un link con un extremo fuera del frame no queda incluido.
 4. Manteniendo `Shift` o `Cmd/Ctrl`, selecciona otro nodo o link y comprueba que se anade al conjunto.
-5. Selecciona despues un nodo normal y pulsa `N`.
-6. Observa el canvas y el minimapa.
+5. Selecciona dos nodos con `Shift` o `Cmd`, pulsa `L` y elige un tercer nodo como destino.
+6. En `Tree > Active frame`, elige un frame hijo, selecciona uno de sus nodos y pulsa `N`.
+7. Elige despues `Goal Tree (root)` en el mismo selector y pulsa `N` de nuevo.
+8. Observa el canvas y el minimapa.
 
-Resultado esperado: la seleccion estructural es determinista, la seleccion adicional no se confunde con los origenes de links, `N` sigue usando el ultimo frame activo y el frame raiz no aparece como un rectangulo artificial.
+Resultado esperado: la seleccion estructural es determinista, `L` usa los nodos seleccionados como origenes, `N` crea siempre en el frame indicado sobre el canvas y el frame raiz no aparece como un rectangulo artificial.
 
 ## Registro de resultados
 

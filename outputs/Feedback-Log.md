@@ -56,7 +56,7 @@ Estado: incorporado mediante este Feedback Log, Decision Log y Open Questions.
 
 Feedback: el usuario debe poder seleccionar varios nodos y hacer que todos apunten a un mismo nodo destino.
 
-Estado: incorporado al PRD y al prototipo como seleccion multiple de nodos origen.
+Estado: incorporado al PRD y refinado en el build 3A.2. `M` mantiene el modo explicito de origenes y `L` tambien puede tomar los nodos de la seleccion general como origenes para elegir un destino.
 
 ## 2026-07-14
 
@@ -321,6 +321,8 @@ Feedback: un frame debe contener completamente todas las entidades que le perten
 
 Estado: pendiente. La pertenencia logica ya puede modificarse, pero la geometria actual no impone contencion ni exclusion.
 
+Validacion 3A.1: confirmado visualmente que una entidad puede quedar encima de un frame al que no pertenece. Se mantiene como objetivo principal de 3B.
+
 Criterios de aceptacion:
 
 - Cada entidad queda completamente dentro del frame al que pertenece directamente.
@@ -333,7 +335,7 @@ Criterios de aceptacion:
 
 Feedback: siempre debe existir un frame base infinito. Crear una entidad con `N` requiere un frame de contexto seleccionado.
 
-Estado: implementado en la iteracion 3A y pendiente de validacion manual. El frame raiz sigue existiendo en el modelo, pero no se dibuja ni entra en los limites del canvas o minimapa. El frame activo se mantiene separado de la seleccion y `N` lo usa siempre como contexto.
+Estado: refinado en el build 3A.2 y pendiente de nueva validacion manual. El frame raiz sigue existiendo en el modelo, pero no se dibuja ni entra en los limites del canvas o minimapa. Un selector en el panel izquierdo permite activar explicitamente cualquier frame, incluido el raiz, y el canvas muestra siempre el contexto usado por `N`.
 
 Criterios de aceptacion:
 
@@ -364,6 +366,8 @@ Feedback: `Ctrl+D` debe borrar la entidad o conjunto de elementos seleccionados.
 
 Estado: pendiente. El borrado individual y en cascada existe, pero falta una seleccion general y el borrado atomico de conjuntos.
 
+Validacion 3A.1: confirmado que la seleccion multiple se representa correctamente, pero Delete solo actua sobre el elemento principal. La operacion colectiva sigue planificada para 3C.
+
 Criterios de aceptacion:
 
 - `Ctrl+D` abre una unica confirmacion con el impacto total.
@@ -391,7 +395,7 @@ Criterios de aceptacion:
 
 Feedback: al seleccionar un frame deben quedar seleccionados tambien todos sus elementos y links internos.
 
-Estado: implementado en la iteracion 3A y pendiente de validacion manual. La seleccion general admite nodos, links y frames; seleccionar un frame calcula en el nucleo sus descendientes, entidades y links internos. Los origenes para crear links conservan un estado independiente.
+Estado: implementado en la iteracion 3A y pendiente de validacion final. La seleccion general admite nodos, links y frames; seleccionar un frame calcula en el nucleo sus descendientes, entidades y links internos. El build 3A.2 muestra ademas el recuento de nodos y links internos para distinguir un cierre correcto de un frame que no contiene conexiones internas.
 
 Criterios de aceptacion:
 

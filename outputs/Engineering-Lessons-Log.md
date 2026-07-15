@@ -282,9 +282,19 @@ Aprendizaje: cachear solo el resultado resuelto no protege el intervalo entre co
 
 Aplicacion futura: asignar inmediatamente una promesa compartida, hacer que todos los consumidores la esperen y limpiarla al fallar para permitir un reintento controlado.
 
+### L-032: Separar estados no obliga a exponer friccion al usuario
+
+Fecha: 2026-07-16
+
+Evidencia: la seleccion general y los origenes de links debian ser independientes, pero exigir rehacer manualmente la seleccion en modo conexion resultaba incomprensible.
+
+Aprendizaje: dos estados pueden conservar contratos distintos y aun ofrecer una transicion explicita entre ellos cuando una accion expresa claramente la intencion.
+
+Aplicacion futura: mantener modelos internos separados, definir conversiones unidireccionales en comandos concretos y evitar sincronizaciones implicitas permanentes.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-032`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-033`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

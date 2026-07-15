@@ -415,6 +415,13 @@ const selectElement = async (id, options = {}) => {
   if (nextType === "frame") activeFrameId = id;
   if (options.additive) toggleSelectionRoot(id);
   else replaceSelection(id);
+  if (nextType === "frame" && !options.additive) {
+    const selectedNodes = [...selectionIds].filter((selectedId) => elementType(selectedId) === "node").length;
+    const internalLinks = [...selectionIds].filter((selectedId) => elementType(selectedId) === "link").length;
+    setStatus(`Frame selected: ${selectedNodes} node${selectedNodes === 1 ? "" : "s"}, ${internalLinks} internal link${internalLinks === 1 ? "" : "s"}`);
+  } else if (options.additive) {
+    setStatus(`${selectionRootIds.size} explicit elements selected; ${selectionIds.size} total with internal links`);
+  }
   hintsVisible = false;
   render();
 };
@@ -1100,6 +1107,16 @@ const selectParentFrame = () => {
   }
 };
 
+const setActiveFrame = (frameId) => {
+  const frame = frameById()[frameId];
+  if (!frame) return;
+  activeFrameId = frame.id;
+  setStatus(`Creation frame: ${frame.name}`);
+  render();
+  scheduleViewStatePersist();
+  focusCanvas();
+};
+
 const enterSelectedFrame = () => {
   const frame = selectedFrame();
   if (frame) {
@@ -1109,15 +1126,24 @@ const enterSelectedFrame = () => {
 };
 
 const beginConnection = () => {
-  const sourceIds = selectedSourceNodeIds();
-  if (!sourceIds.length && !selectedNode()) {
+  const explicitSourceIds = selectedSourceNodeIds();
+  const selectedNodeIds = [...selectionRootIds].filter((id) => Boolean(nodeById()[id]));
+  const sourceIds = explicitSourceIds.length
+    ? explicitSourceIds
+    : selectedNodeIds.length
+      ? selectedNodeIds
+      : selectedNode()
+        ? [selectedElementId]
+        : [];
+  if (!sourceIds.length) {
     setStatus("Select a node before entering connection mode");
     return;
   }
+  connectionSourceIds = new Set(sourceIds);
   mode = "connection";
-  connectionSourceId = sourceIds[0] || selectedElementId;
+  connectionSourceId = sourceIds[0];
   showHints();
-  setStatus(`Connection mode: choose target node for ${sourceIds.length || 1} source${(sourceIds.length || 1) === 1 ? "" : "s"}`);
+  setStatus(`Connection mode: choose target node for ${sourceIds.length} source${sourceIds.length === 1 ? "" : "s"}`);
 };
 
 const toggleMultiSelect = () => {
@@ -1217,7 +1243,16 @@ const renderSidebar = () => {
           <dt>Logic</dt>
           <dd>${escapeHtml(activeTree?.logicMode)}</dd>
           <dt>Active frame</dt>
-          <dd>${escapeHtml(frameById()[activeFrameId]?.name || "")}</dd>
+          <dd>
+            <select class="frame-context-select" data-active-frame aria-label="Creation frame">
+              ${activeTree.frames
+                .map(
+                  (frame) =>
+                    `<option value="${frame.id}" ${frame.id === activeFrameId ? "selected" : ""}>${escapeHtml(frame.name)}${frame.id === activeTree.rootFrameId ? " (root)" : ""}</option>`
+                )
+                .join("")}
+            </select>
+          </dd>
         </dl>
       </section>
 
@@ -1795,6 +1830,7 @@ const renderCanvas = () => {
           <span>Selected: <strong>${escapeHtml(selectedElementId || "none")}</strong></span>
           <span>Selection: <strong>${selectionIds.size}</strong></span>
           <span>Sources: <strong>${connectionSourceIds.size}</strong></span>
+          <span>Frame: <strong>${escapeHtml(frameById()[activeFrameId]?.name || "none")}</strong></span>
           <span>Zoom: <strong>${Math.round(zoomLevel * 100)}%</strong></span>
           <span data-status>${escapeHtml(statusText)}</span>
         </div>
@@ -2057,6 +2093,10 @@ const bindEvents = () => {
 
   app.querySelector("[data-layout-direction]")?.addEventListener("change", (event) => {
     updateLayoutDirection(event.target.value);
+  });
+
+  app.querySelector("[data-active-frame]")?.addEventListener("change", (event) => {
+    setActiveFrame(event.target.value);
   });
 
   app.querySelectorAll("[data-promote-assumption]").forEach((button) => {
@@ -2353,6 +2393,17 @@ window.__ltpSmokeTest = async () => {
   const connectionSourcesStayIndependent =
     connectionSourceIds.has(activeTree.nodes[0].id) && selectionIds.has(selectedTestFrame.id);
   connectionSourceIds.clear();
+  const frameContextControlAvailable =
+    document.querySelectorAll("[data-active-frame] option").length === activeTree.frames.length &&
+    document.querySelector(`[data-active-frame] option[value="${activeTree.rootFrameId}"]`)?.textContent.includes("root");
+  replaceSelection(activeTree.nodes[0].id);
+  toggleSelectionRoot(activeTree.nodes[1].id);
+  beginConnection();
+  const generalSelectionSeedsConnection =
+    mode === "connection" &&
+    connectionSourceIds.has(activeTree.nodes[0].id) &&
+    connectionSourceIds.has(activeTree.nodes[1].id);
+  cancelContext();
   activeFrameId = initialActiveFrameId;
   replaceSelection(activeTree.viewState?.selectedElementId || activeTree.nodes[0]?.id);
   render();
@@ -2734,6 +2785,8 @@ window.__ltpSmokeTest = async () => {
       frameSelectionIsDistinct &&
       externalLinksStayOutsideFrameSelection &&
       connectionSourcesStayIndependent &&
+      frameContextControlAvailable &&
+      generalSelectionSeedsConnection &&
       twoLetterHintWorks &&
       keyboardHintsToggle &&
       hintButtonToggles &&
@@ -2792,6 +2845,8 @@ window.__ltpSmokeTest = async () => {
     frameSelectionIsDistinct,
     externalLinksStayOutsideFrameSelection,
     connectionSourcesStayIndependent,
+    frameContextControlAvailable,
+    generalSelectionSeedsConnection,
     twoLetterHintWorks,
     keyboardHintsToggle,
     hintButtonToggles,

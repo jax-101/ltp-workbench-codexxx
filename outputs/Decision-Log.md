@@ -332,3 +332,15 @@ Razon: una version SemVer puede abarcar varias entregas internas. Un build visib
 Decision: el motor del workspace conserva tanto la instancia resuelta como la promesa de inicializacion en curso. Todas las solicitudes concurrentes esperan esa misma promesa.
 
 Razon: comprobar solo si existe la instancia deja una ventana de carrera antes de asignarla. Dos llamadas iniciales pueden crear o reiniciar el mismo repositorio simultaneamente.
+
+### D-054: El frame de creacion tiene un control explicito
+
+Decision: el frame activo se mantiene independiente de la seleccion y se elige mediante un selector que incluye el frame raiz conceptual. Su nombre aparece tambien en el estado del canvas.
+
+Razon: seleccionar un nodo no debe cambiar silenciosamente el destino de `N`, pero el usuario necesita ver y modificar ese contexto aunque el frame raiz no tenga borde dibujado.
+
+### D-055: Crear links transfiere la seleccion de nodos a origenes
+
+Decision: al pulsar `L`, los nodos elegidos explicitamente en la seleccion general se copian al conjunto separado de origenes. Seleccionar un frame no transfiere automaticamente todos sus descendientes.
+
+Razon: mantiene separados ambos estados internos y, a la vez, respeta la expectativa de conectar directamente una seleccion multiple de nodos.

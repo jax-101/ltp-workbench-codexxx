@@ -136,6 +136,16 @@ button {
   line-height: 1.35;
 }
 
+.frame-context-select {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 7px;
+  background: var(--white);
+  color: var(--ink);
+}
+
 .side-section {
   border-top: 1px solid var(--line);
   padding-top: 14px;
