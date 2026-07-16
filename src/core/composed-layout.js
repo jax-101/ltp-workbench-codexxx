@@ -1,5 +1,5 @@
-const ELK = require("elkjs/lib/elk.bundled.js");
 const { getDiagramDefinition } = require("./diagram-registry");
+const { createElkLayeredEngine } = require("./layout-engines/elk-layered-engine");
 
 const FRAME_SIDE_PADDING = 28;
 const FRAME_TOP_PADDING = 58;
@@ -25,14 +25,6 @@ const QUALITY_WEIGHTS = Object.freeze({
   averageMovementExcess: 1.5,
   maximumMovementExcess: 1.5
 });
-
-const elkDirection = (direction) =>
-  ({
-    TB: "DOWN",
-    BT: "UP",
-    LR: "RIGHT",
-    RL: "LEFT"
-  })[direction] || "DOWN";
 
 const boxesOverlap = (left, right, gap = 0) =>
   left.x < right.x + right.width + gap &&
@@ -420,54 +412,19 @@ const compareCandidateQuality = (left, right) => {
   return 0;
 };
 
-const optimizedElkLayout = async (elk, graph, items, edges, direction, optimize, currentChildren = null) => {
-  const baseOptions = graph.layoutOptions;
-  const strictConfigs = optimize
-    ? [
-        { placement: "BRANDES_KOEPF", seed: 1 },
-        { placement: "BRANDES_KOEPF", seed: 2 },
-        { placement: "BRANDES_KOEPF", seed: 4 },
-        { placement: "NETWORK_SIMPLEX", seed: 4 },
-        { placement: "NETWORK_SIMPLEX", seed: 7 }
-      ]
-    : [{ placement: "BRANDES_KOEPF", seed: 1 }];
-  const relaxed = relaxDirectionEdges(items.map((item) => item.id), edges);
-  const configs = [
-    ...strictConfigs.map((config) => ({ ...config, relaxed: false, edges })),
-    ...(optimize && relaxed.reversed
-      ? [
-          { placement: "NETWORK_SIMPLEX", seed: 7, relaxed: true, edges: relaxed.edges },
-          { placement: "NETWORK_SIMPLEX", seed: 11, relaxed: true, edges: relaxed.edges },
-          { placement: "BRANDES_KOEPF", seed: 2, relaxed: true, edges: relaxed.edges },
-          { placement: "BRANDES_KOEPF", seed: 4, relaxed: true, edges: relaxed.edges }
-        ]
-      : [])
-  ];
+const selectLayoutCandidate = async (engine, problem, items, edges, direction, currentChildren = null) => {
+  const candidates = await engine.generateCandidates(problem);
   let best = null;
-  for (const config of configs) {
-    const laidOut = await elk.layout({
-      ...graph,
-      layoutOptions: {
-        ...baseOptions,
-        "elk.randomSeed": String(config.seed),
-        "elk.layered.thoroughness": "30",
-        "elk.layered.crossingMinimization.greedySwitch.type": "TWO_SIDED",
-        "elk.layered.crossingMinimization.greedySwitch.activationThreshold": "0",
-        "elk.layered.nodePlacement.strategy": config.placement,
-        "elk.layered.nodePlacement.favorStraightEdges": "true",
-        "elk.layered.nodePlacement.bk.edgeStraightening": "IMPROVE_STRAIGHTNESS"
-      },
-      edges: config.edges
-    });
-    const quality = candidateQuality(items, laidOut.children || [], edges, direction, currentChildren);
+  for (const generated of candidates) {
+    const quality = candidateQuality(items, generated.children, edges, direction, currentChildren);
     const candidate = {
-      laidOut,
+      laidOut: { children: generated.children },
       quality,
-      config: { placement: config.placement, seed: config.seed, relaxed: config.relaxed }
+      config: generated.config
     };
     if (!best || compareCandidateQuality(candidate.quality, best.quality) < 0) best = candidate;
   }
-  if (!currentChildren?.length) return { ...best, candidates: configs.length };
+  if (!currentChildren?.length) return { ...best, candidates: candidates.length };
 
   const currentQuality = candidateQuality(items, currentChildren, edges, direction, currentChildren);
   const improvement = currentQuality.score
@@ -475,7 +432,7 @@ const optimizedElkLayout = async (elk, graph, items, edges, direction, optimize,
     : 0;
   if (improvement < MINIMUM_LAYOUT_IMPROVEMENT) {
     return {
-      laidOut: { ...graph, children: currentChildren },
+      laidOut: { children: currentChildren },
       quality: currentQuality,
       config: {
         placement: "CURRENT",
@@ -486,7 +443,7 @@ const optimizedElkLayout = async (elk, graph, items, edges, direction, optimize,
         baselineScore: currentQuality.score,
         selectedScore: currentQuality.score
       },
-      candidates: configs.length
+      candidates: candidates.length
     };
   }
   return {
@@ -498,7 +455,7 @@ const optimizedElkLayout = async (elk, graph, items, edges, direction, optimize,
       baselineScore: currentQuality.score,
       selectedScore: best.quality.score
     },
-    candidates: configs.length
+    candidates: candidates.length
   };
 };
 
@@ -726,7 +683,7 @@ const runComposedLayout = async (workspace, options = {}) => {
   const direction = activeTree.layout?.direction || diagramDefinition?.defaultDirection || "TB";
   const spacingNodeNode = activeTree.layout?.settings?.spacingNodeNode || ITEM_SPACING;
   const spacingLayer = activeTree.layout?.settings?.spacingLayer || LAYER_SPACING;
-  const elk = new ELK();
+  const layoutEngine = options.layoutEngine || createElkLayeredEngine();
 
   const layoutContainer = async (frameId, isRoot = false) => {
     const frame = frameById.get(frameId);
@@ -792,27 +749,6 @@ const runComposedLayout = async (workspace, options = {}) => {
             ])
           )
         : new Map();
-      const graph = {
-        id: `container-${frameId}`,
-        layoutOptions: {
-          "elk.algorithm": "layered",
-          "elk.direction": elkDirection(direction),
-          "elk.spacing.nodeNode": String(spacingNodeNode),
-          "elk.layered.spacing.nodeNodeBetweenLayers": String(spacingLayer),
-          "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
-          "elk.edgeRouting": "ORTHOGONAL",
-          ...(rankPartitions.size ? { "org.eclipse.elk.partitioning.activate": "true" } : {})
-        },
-        children: items.map(({ id, width, height }) => ({
-          id,
-          width,
-          height,
-          ...(rankPartitions.has(id)
-            ? { layoutOptions: { "org.eclipse.elk.partitioning.partition": String(rankPartitions.get(id)) } }
-            : {})
-        })),
-        edges: graphEdges
-      };
       const optimize = !isRoot && frame.kind === "diagram" && items.length >= 4 && graphEdges.length >= 3 && !items.some((item) => item.pinned);
       const canCompareCurrent =
         !isRoot &&
@@ -820,13 +756,23 @@ const runComposedLayout = async (workspace, options = {}) => {
         graphEdges.length > 0 &&
         currentChildren.length === items.length &&
         !items.some((item) => item.pinned);
-      const selectedLayout = await optimizedElkLayout(
-        elk,
-        graph,
+      const relaxed = relaxDirectionEdges(items.map((item) => item.id), graphEdges);
+      const selectedLayout = await selectLayoutCandidate(
+        layoutEngine,
+        {
+          containerId: frameId,
+          items,
+          edges: graphEdges,
+          relaxedEdges: relaxed.reversed ? relaxed.edges : null,
+          direction,
+          spacingNodeNode,
+          spacingLayer,
+          rankPartitions,
+          optimize
+        },
         items,
         graphEdges,
         direction,
-        optimize,
         canCompareCurrent ? currentChildren : null
       );
       elkChildren = selectedLayout.laidOut.children || [];
@@ -954,7 +900,7 @@ const runComposedLayout = async (workspace, options = {}) => {
     }
     tree.layout = {
       ...(tree.layout || {}),
-      engine: "elk-composed",
+      engine: `${layoutEngine.id}-composed`,
       direction,
       lastRunAt: new Date().toISOString(),
       optimization: result.optimization,
