@@ -1,0 +1,46 @@
+{
+  "id": "oracle-ec",
+  "title": "Canonical Evaporating Cloud with assumptions and injection",
+  "diagramType": "EC",
+  "logicMode": "NECESSITY",
+  "elements": [
+    { "id": "objective", "type": "OBJECTIVE", "statement": "Operate profitably and reliably" },
+    { "id": "need-flow", "type": "NEED", "statement": "Protect system flow" },
+    { "id": "need-cost", "type": "NEED", "statement": "Control unit cost" },
+    { "id": "want-small", "type": "WANT", "statement": "Produce small batches" },
+    { "id": "want-large", "type": "WANT", "statement": "Produce large batches" },
+    { "id": "injection", "type": "INJECTION", "statement": "Use buffer-based replenishment" }
+  ],
+  "relations": [
+    { "id": "rel-need-flow-objective", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "need-flow" }], "outputs": [{ "elementId": "objective" }] },
+    { "id": "rel-need-cost-objective", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "need-cost" }], "outputs": [{ "elementId": "objective" }] },
+    { "id": "rel-want-small-flow", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "want-small" }], "outputs": [{ "elementId": "need-flow" }] },
+    { "id": "rel-want-large-cost", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "want-large" }], "outputs": [{ "elementId": "need-cost" }] },
+    { "id": "rel-wants-conflict", "type": "CONFLICT", "combination": null, "renderMode": "CONFLICT", "inputs": [{ "elementId": "want-small" }, { "elementId": "want-large" }], "outputs": [] }
+  ],
+  "assumptions": [
+    { "id": "assumption-objective-flow", "statement": "Protecting flow is indispensable to operating profitably and reliably", "subject": { "kind": "RELATION", "relationId": "rel-need-flow-objective" } },
+    { "id": "assumption-objective-cost", "statement": "Controlling unit cost is indispensable to operating profitably and reliably", "subject": { "kind": "RELATION", "relationId": "rel-need-cost-objective" } },
+    { "id": "assumption-flow", "statement": "Only small batches can protect flow", "subject": { "kind": "RELATION", "relationId": "rel-want-small-flow" } },
+    { "id": "assumption-cost", "statement": "Only large batches can control unit cost", "subject": { "kind": "RELATION", "relationId": "rel-want-large-cost" } },
+    { "id": "assumption-conflict", "statement": "The same resource cannot produce small and large batches at the same time", "subject": { "kind": "CONFLICT", "relationId": "rel-wants-conflict" } }
+  ],
+  "derivations": [
+    { "id": "derivation-injection", "type": "CHALLENGES_ASSUMPTION", "sourceElementId": "injection", "targetAssumptionId": "assumption-cost", "status": "PROPOSED" }
+  ],
+  "expected": {
+    "errorCodes": [],
+    "warningCodes": [],
+    "junctionIds": [],
+    "targetExpressions": {
+      "objective": "Control unit cost AND Protect system flow"
+    },
+    "verbalizations": {
+      "rel-want-small-flow": "In order to achieve Protect system flow, we must have Produce small batches.",
+      "rel-wants-conflict": "Produce large batches conflicts with Produce small batches."
+    },
+    "derivationTypeCounts": { "CHALLENGES_ASSUMPTION": 1 },
+    "assumptionScopeCounts": { "RELATION": 4, "CONFLICT": 1 },
+    "hasCycle": false
+  }
+}

@@ -44,9 +44,10 @@ comunes.
 | P1 | UX | No esta definido como crear, editar, seleccionar o verbalizar junctions y relaciones n-arias solo con teclado | El nuevo modelo puede romper la promesa principal del producto | Gramatica de teclado y pruebas por consecuencia para cada primitiva semantica |
 | P1 | Calidad | No hay presupuestos de rendimiento ni corpus de compatibilidad | El preview, layout o validacion pueden degradarse sin un limite observable | Fixtures de escala, tiempos objetivo y prueba de apertura de workspaces antiguos |
 
-Estado tras esta revision: la contradiccion de secuencia queda corregida en el
-plan. Los otros tres P0 no estan resueltos aun; quedan convertidos en gates que
-deben cerrarse con evidencia antes de publicar el formato.
+Estado actualizado el 2026-07-16: la contradiccion de secuencia esta corregida y
+el gap semantico dispone ya de contrato ejecutable, fixtures y runner en PASS;
+queda su validacion metodologica. Los P0 de migracion por capas y operaciones
+n-arias permanecen abiertos antes de publicar el formato.
 
 ## Hat 1: Producto
 

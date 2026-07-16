@@ -12,6 +12,11 @@ const steps = [
     args: ["run", "validate:model"]
   },
   {
+    name: "Test semantic contract",
+    command: "npm",
+    args: ["run", "test:semantic"]
+  },
+  {
     name: "Test transactional core",
     command: "npm",
     args: ["run", "test:core"]

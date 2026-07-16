@@ -51,29 +51,36 @@ diagram
 ```text
 relation
   id
-  type: CAUSALITY | NECESSITY | CONFLICT | DERIVATION
-  combination: SIMPLE | AND | OR | MAG | XOR
-  renderMode: IMPLICIT | JUNCTION
+  type: CAUSALITY | NECESSITY | CONFLICT
+  combination: SIMPLE | AND | OR | MAG | XOR | null
+  renderMode: IMPLICIT | JUNCTION | CONFLICT
   inputs: [{ elementId, role }]
   outputs: [{ elementId, role }]
-  assumptionIds[]
 ```
 
-`logicMode` establece la combinacion implicita de las flechas que llegan
-directamente a una entidad. En suficiencia, como CRT y FRT, son causas
-independientes `OR`. En necesidad, como Goal Tree, EC y PrT, son condiciones
-`AND`. Una relacion explicita puede sobrescribir esa regla.
+Cada flecha directa es una relacion `SIMPLE`. `logicMode` establece como se
+combinan las relaciones que llegan a una entidad: `OR` en suficiencia, como CRT
+y FRT, y `AND` en necesidad, como Goal Tree, EC y PrT.
 
 Una junction no se guarda como una afirmacion ficticia. Es la representacion
-visual de una relacion n-aria cuando hay que agrupar entradas o mostrar una
-combinacion distinta de la implicita. `AND` representa dependencia conjunta,
-`OR` alternativas, `MAG` contribuciones aditivas y `XOR` alternativas
+visual de una relacion n-aria que agrupa entradas. `AND` representa dependencia
+conjunta, `OR` alternativas, `MAG` contribuciones aditivas y `XOR` alternativas
 mutuamente excluyentes. Su identificador de layout se deriva de la relacion, por
 ejemplo `junction:<relationId>`, para que seleccion, rutas y Undo sean estables.
 
-En un CRT/FRT, varias flechas directas conservan `combination: OR` con
-`renderMode: IMPLICIT`; no se dibuja un junctor `OR` redundante. En un diagrama
-de necesidad puede aparecer un `OR` visible para expresar alternativas.
+Asi, `A OR (B AND C)` se representa mediante una relacion simple desde `A` y
+una relacion `AND` desde `B+C`. Las dos relaciones se agregan como `OR` en el
+destino por pertenecer a un diagrama de suficiencia. En un diagrama de necesidad
+puede aparecer un grupo `OR` visible para expresar alternativas dentro del `AND`
+implicito del destino.
+
+Las assumptions son objetos separados que pueden referirse a la relacion
+completa, una entrada, una salida o un conflicto. Las derivaciones entre
+artefactos tampoco se modelan como flechas internas.
+
+`CONFLICT` usa `combination: null`: no es un junctor `XOR`. Una EC puede contener
+condiciones opuestas o alternativas que serian compatibles si cambiasen las
+restricciones de recursos. `XOR` se reserva para causalidad realmente exclusiva.
 
 ### Registro por diagrama
 

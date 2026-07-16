@@ -729,9 +729,43 @@ dominio; evitar simbolos redundantes; y probar la verbalizacion junto a la
 captura visual para comprobar que una geometria no adquiere dos significados
 accidentalmente.
 
+### L-075: Agregar argumentos y agrupar premisas son operaciones distintas
+
+Fecha: 2026-07-16
+
+Evidencia: modelar las flechas directas como una sola relacion `OR` explicaba el
+resultado, pero dificultaba assumptions por flecha y composiciones como
+`A OR (B AND C)`. Separar cada flecha simple del grupo `B+C` conserva ambos
+niveles sin crear entidades ficticias.
+
+Aprendizaje: cuando una expresion combina operadores, el contenedor no debe
+absorber la estructura interna de sus operandos. La agregacion del destino y la
+agrupacion de entradas necesitan identidades y reglas distintas.
+
+Aplicacion futura: modelar argumentos como unidades componibles; derivar los
+defaults del contexto; asociar metadatos al argumento real; y probar expresiones
+mixtas antes de congelar un schema aparentemente generico.
+
+### L-076: Una incompatibilidad contextual no es siempre un XOR
+
+Fecha: 2026-07-16
+
+Evidencia: la primera version del contrato asignaba `XOR` al conflicto de una
+Evaporating Cloud. Sin embargo, algunos conflictos son alternativas que podrian
+coexistir con mas recursos; su incompatibilidad procede de la situacion actual,
+no de una exclusividad logica permanente.
+
+Aprendizaje: una etiqueta de dominio familiar no debe traducirse automaticamente
+a un operador formal. La relacion, la restriccion contextual y la notacion
+necesitan contratos separados.
+
+Aplicacion futura: exigir ejemplos y contraejemplos antes de asignar operadores;
+permitir que las restricciones cambien sin reescribir la semantica base; y
+probar la verbalizacion de cada proyeccion, no solo su estructura.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-075`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-077`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

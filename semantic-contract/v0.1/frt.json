@@ -1,0 +1,42 @@
+{
+  "id": "oracle-frt",
+  "title": "FRT with injection, dependent causes and negative branch",
+  "diagramType": "FRT",
+  "logicMode": "SUFFICIENCY",
+  "elements": [
+    { "id": "injection-scheduling", "type": "INJECTION", "statement": "Adopt finite-capacity scheduling" },
+    { "id": "precondition-data", "type": "PRECONDITION", "statement": "Capacity data is accurate" },
+    { "id": "schedule", "type": "ENTITY", "statement": "Schedules are feasible" },
+    { "id": "delivery", "type": "DESIRED_EFFECT", "statement": "Customer deliveries are reliable" },
+    { "id": "resistance", "type": "UDE", "statement": "Planners initially reject the new schedules" },
+    { "id": "injection-pilot", "type": "INJECTION", "statement": "Pilot the method with planners" }
+  ],
+  "relations": [
+    { "id": "rel-and-schedule", "type": "CAUSALITY", "combination": "AND", "renderMode": "JUNCTION", "inputs": [{ "elementId": "injection-scheduling" }, { "elementId": "precondition-data" }], "outputs": [{ "elementId": "schedule" }] },
+    { "id": "rel-schedule-delivery", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "schedule" }], "outputs": [{ "elementId": "delivery" }] },
+    { "id": "rel-scheduling-resistance", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "tags": ["NEGATIVE_BRANCH"], "inputs": [{ "elementId": "injection-scheduling" }], "outputs": [{ "elementId": "resistance" }] }
+  ],
+  "assumptions": [
+    { "id": "assumption-schedule", "statement": "The scheduling rules use the available capacity data correctly", "subject": { "kind": "RELATION", "relationId": "rel-and-schedule" } },
+    { "id": "assumption-resistance", "statement": "Planners will distrust schedules they did not help test", "subject": { "kind": "RELATION", "relationId": "rel-scheduling-resistance" } }
+  ],
+  "derivations": [
+    { "id": "derivation-frt", "type": "VALIDATES", "sourceElementId": "injection-scheduling", "status": "PROPOSED" },
+    { "id": "derivation-mitigation", "type": "MITIGATES", "sourceElementId": "injection-pilot", "targetElementId": "resistance", "status": "PROPOSED" }
+  ],
+  "expected": {
+    "errorCodes": [],
+    "warningCodes": [],
+    "junctionIds": ["junction:rel-and-schedule"],
+    "targetExpressions": {
+      "schedule": "(Adopt finite-capacity scheduling AND Capacity data is accurate)"
+    },
+    "verbalizations": {
+      "rel-and-schedule": "If Adopt finite-capacity scheduling and Capacity data is accurate, then Schedules are feasible.",
+      "rel-scheduling-resistance": "If Adopt finite-capacity scheduling, then Planners initially reject the new schedules."
+    },
+    "relationTagCounts": { "NEGATIVE_BRANCH": 1 },
+    "derivationTypeCounts": { "VALIDATES": 1, "MITIGATES": 1 },
+    "hasCycle": false
+  }
+}

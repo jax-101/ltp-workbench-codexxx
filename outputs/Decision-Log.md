@@ -531,14 +531,37 @@ posterior en una ruptura de compatibilidad.
 
 ### D-085: La combinacion implicita depende del modo logico
 
-Decision: las relaciones separaran `type`, `combination` y `renderMode`. Las
-entradas directas se combinan como `OR` en diagramas de suficiencia y como `AND`
-en diagramas de necesidad. Los junctors explicitos disponibles son `AND`, `OR`,
-`MAG` y `XOR`, pero solo se muestran cuando agrupan entradas o sobrescriben la
-combinacion implicita. Por tanto, las causas independientes de CRT/FRT no
+Decision revisada el 2026-07-16: cada flecha directa sera una relacion `SIMPLE`.
+El destino agregara las relaciones entrantes como `OR` en diagramas de
+suficiencia y como `AND` en diagramas de necesidad. Una relacion n-aria agrupa
+entradas mediante un junctor explicito `AND`, `OR`, `MAG` o `XOR`. Por tanto, las
+causas independientes de CRT/FRT permanecen como relaciones separadas y no
 muestran un junctor `OR` redundante.
 
 Razon: la misma geometria de flechas entrantes tiene una lectura distinta segun
 el modo logico. Confundir operador semantico con simbolo visible produce
 diagramas metodologicamente incorrectos y obliga a dibujar elementos que no
 aportan informacion.
+
+### D-086: Agrupacion explicita y agregacion del destino son niveles distintos
+
+Decision: el kernel compondra argumentos en dos niveles. Primero, cada relacion
+convierte una o varias entradas en un argumento simple o agrupado. Segundo, la
+entidad destino combina todos sus argumentos entrantes usando el default de su
+`logicMode`. Las assumptions se asociaran a la relacion completa o a uno de sus
+tramos, no al simbolo visual sintetico.
+
+Razon: esta separacion expresa `A OR (B AND C)` y `A AND (B OR C)` sin nodos
+ficticios, conserva una identidad independiente por flecha y evita confundir el
+operador de un grupo con la regla general del diagrama.
+
+### D-087: Un conflicto EC no es un junctor XOR
+
+Decision: `CONFLICT` sera un tipo de relacion sin `combination`. Conectara los
+dos wants y tendra presentacion propia. `XOR` permanecera disponible para grupos
+causales o alternativas realmente mutuamente excluyentes, pero no se inferira
+por el mero hecho de existir un conflicto.
+
+Razon: una EC puede describir condiciones opuestas, pero tambien alternativas
+que podrian coexistir si hubiera suficientes recursos. Codificar todo conflicto
+como XOR convertiria una restriccion contextual en una imposibilidad logica.

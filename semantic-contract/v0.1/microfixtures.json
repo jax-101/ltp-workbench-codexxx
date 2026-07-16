@@ -1,0 +1,221 @@
+[
+  {
+    "id": "micro-sufficiency-default-or",
+    "title": "Independent sufficient causes use implicit OR",
+    "diagramType": "SUFFICIENCY_GENERIC",
+    "logicMode": "SUFFICIENCY",
+    "elements": [
+      { "id": "cause-a", "type": "ENTITY", "statement": "Cause A exists" },
+      { "id": "cause-b", "type": "ENTITY", "statement": "Cause B exists" },
+      { "id": "effect", "type": "ENTITY", "statement": "The effect exists" }
+    ],
+    "relations": [
+      { "id": "relation-a", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "cause-a" }], "outputs": [{ "elementId": "effect" }] },
+      { "id": "relation-b", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "cause-b" }], "outputs": [{ "elementId": "effect" }] }
+    ],
+    "assumptions": [],
+    "derivations": [],
+    "expected": {
+      "errorCodes": [],
+      "warningCodes": [],
+      "junctionIds": [],
+      "targetExpressions": { "effect": "Cause A exists OR Cause B exists" },
+      "verbalizations": {
+        "relation-a": "If Cause A exists, then The effect exists.",
+        "relation-b": "If Cause B exists, then The effect exists."
+      }
+    }
+  },
+  {
+    "id": "micro-necessity-default-and",
+    "title": "Independent necessary conditions use implicit AND",
+    "diagramType": "NECESSITY_GENERIC",
+    "logicMode": "NECESSITY",
+    "elements": [
+      { "id": "condition-a", "type": "ENTITY", "statement": "Condition A exists" },
+      { "id": "condition-b", "type": "ENTITY", "statement": "Condition B exists" },
+      { "id": "objective", "type": "ENTITY", "statement": "The objective is achieved" }
+    ],
+    "relations": [
+      { "id": "relation-a", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "condition-a" }], "outputs": [{ "elementId": "objective" }] },
+      { "id": "relation-b", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "condition-b" }], "outputs": [{ "elementId": "objective" }] }
+    ],
+    "assumptions": [],
+    "derivations": [],
+    "expected": {
+      "errorCodes": [],
+      "warningCodes": [],
+      "junctionIds": [],
+      "targetExpressions": { "objective": "Condition A exists AND Condition B exists" }
+    }
+  },
+  {
+    "id": "micro-explicit-and",
+    "title": "Conceptual AND groups dependent causes",
+    "diagramType": "SUFFICIENCY_GENERIC",
+    "logicMode": "SUFFICIENCY",
+    "elements": [
+      { "id": "cause-a", "type": "ENTITY", "statement": "Water is available" },
+      { "id": "cause-b", "type": "ENTITY", "statement": "Water is heated" },
+      { "id": "effect", "type": "ENTITY", "statement": "Steam power is available" }
+    ],
+    "relations": [
+      { "id": "relation-and", "type": "CAUSALITY", "combination": "AND", "renderMode": "JUNCTION", "inputs": [{ "elementId": "cause-a" }, { "elementId": "cause-b" }], "outputs": [{ "elementId": "effect" }] }
+    ],
+    "assumptions": [],
+    "derivations": [],
+    "expected": {
+      "errorCodes": [],
+      "warningCodes": [],
+      "junctionIds": ["junction:relation-and"],
+      "targetExpressions": { "effect": "(Water is available AND Water is heated)" },
+      "verbalizations": { "relation-and": "If Water is available and Water is heated, then Steam power is available." }
+    }
+  },
+  {
+    "id": "micro-explicit-or",
+    "title": "OR junctor expresses alternatives in necessity logic",
+    "diagramType": "NECESSITY_GENERIC",
+    "logicMode": "NECESSITY",
+    "elements": [
+      { "id": "alternative-a", "type": "ENTITY", "statement": "Alternative A is implemented" },
+      { "id": "alternative-b", "type": "ENTITY", "statement": "Alternative B is implemented" },
+      { "id": "objective", "type": "ENTITY", "statement": "The obstacle is overcome" }
+    ],
+    "relations": [
+      { "id": "relation-or", "type": "NECESSITY", "combination": "OR", "renderMode": "JUNCTION", "inputs": [{ "elementId": "alternative-a" }, { "elementId": "alternative-b" }], "outputs": [{ "elementId": "objective" }] }
+    ],
+    "assumptions": [],
+    "derivations": [],
+    "expected": {
+      "errorCodes": [],
+      "warningCodes": [],
+      "junctionIds": ["junction:relation-or"],
+      "targetExpressions": { "objective": "(Alternative A is implemented OR Alternative B is implemented)" },
+      "verbalizations": { "relation-or": "If Alternative A is implemented or Alternative B is implemented, then The obstacle is overcome." }
+    }
+  },
+  {
+    "id": "micro-mag-quantified",
+    "title": "MAG contributions add to the effect magnitude",
+    "diagramType": "SUFFICIENCY_GENERIC",
+    "logicMode": "SUFFICIENCY",
+    "elements": [
+      { "id": "pressure", "type": "ENTITY", "statement": "Tire pressure is increased" },
+      { "id": "speed", "type": "ENTITY", "statement": "Driving speed is moderated" },
+      { "id": "tune", "type": "ENTITY", "statement": "The engine is tuned" },
+      { "id": "mileage", "type": "ENTITY", "statement": "Gasoline mileage improves" }
+    ],
+    "relations": [
+      { "id": "relation-mag", "type": "CAUSALITY", "combination": "MAG", "renderMode": "JUNCTION", "inputs": [{ "elementId": "pressure", "contribution": 10 }, { "elementId": "speed", "contribution": 60 }, { "elementId": "tune", "contribution": 30 }], "outputs": [{ "elementId": "mileage" }] }
+    ],
+    "assumptions": [],
+    "derivations": [],
+    "expected": {
+      "errorCodes": [],
+      "warningCodes": [],
+      "junctionIds": ["junction:relation-mag"],
+      "targetExpressions": { "mileage": "(Tire pressure is increased MAG Driving speed is moderated MAG The engine is tuned)" }
+    }
+  },
+  {
+    "id": "micro-mag-qualitative",
+    "title": "MAG can remain qualitative but reports the missing magnitude",
+    "diagramType": "SUFFICIENCY_GENERIC",
+    "logicMode": "SUFFICIENCY",
+    "elements": [
+      { "id": "cause-a", "type": "ENTITY", "statement": "First contribution exists" },
+      { "id": "cause-b", "type": "ENTITY", "statement": "Second contribution exists" },
+      { "id": "effect", "type": "ENTITY", "statement": "The effect increases" }
+    ],
+    "relations": [
+      { "id": "relation-mag-qualitative", "type": "CAUSALITY", "combination": "MAG", "renderMode": "JUNCTION", "inputs": [{ "elementId": "cause-a" }, { "elementId": "cause-b" }], "outputs": [{ "elementId": "effect" }] }
+    ],
+    "assumptions": [],
+    "derivations": [],
+    "expected": {
+      "errorCodes": [],
+      "warningCodes": ["MAG_CONTRIBUTION_UNQUANTIFIED"],
+      "junctionIds": ["junction:relation-mag-qualitative"]
+    }
+  },
+  {
+    "id": "micro-xor",
+    "title": "XOR represents mutually exclusive causes",
+    "diagramType": "SUFFICIENCY_GENERIC",
+    "logicMode": "SUFFICIENCY",
+    "elements": [
+      { "id": "cause-a", "type": "ENTITY", "statement": "A tornado destroys the house" },
+      { "id": "cause-b", "type": "ENTITY", "statement": "A fire destroys the house" },
+      { "id": "effect", "type": "ENTITY", "statement": "The house is destroyed" }
+    ],
+    "relations": [
+      { "id": "relation-xor", "type": "CAUSALITY", "combination": "XOR", "renderMode": "JUNCTION", "inputs": [{ "elementId": "cause-a" }, { "elementId": "cause-b" }], "outputs": [{ "elementId": "effect" }] }
+    ],
+    "assumptions": [],
+    "derivations": [],
+    "expected": {
+      "errorCodes": [],
+      "warningCodes": [],
+      "junctionIds": ["junction:relation-xor"],
+      "verbalizations": { "relation-xor": "If either A tornado destroys the house or A fire destroys the house, but not both, then The house is destroyed." }
+    }
+  },
+  {
+    "id": "invalid-simple-arity",
+    "title": "SIMPLE cannot group two inputs",
+    "diagramType": "SUFFICIENCY_GENERIC",
+    "logicMode": "SUFFICIENCY",
+    "elements": [
+      { "id": "a", "type": "ENTITY", "statement": "A" },
+      { "id": "b", "type": "ENTITY", "statement": "B" },
+      { "id": "e", "type": "ENTITY", "statement": "E" }
+    ],
+    "relations": [
+      { "id": "bad-simple", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "a" }, { "elementId": "b" }], "outputs": [{ "elementId": "e" }] }
+    ],
+    "expected": { "errorCodes": ["INPUT_ARITY"], "warningCodes": [], "junctionIds": [] }
+  },
+  {
+    "id": "invalid-and-arity",
+    "title": "AND requires two inputs",
+    "diagramType": "SUFFICIENCY_GENERIC",
+    "logicMode": "SUFFICIENCY",
+    "elements": [
+      { "id": "a", "type": "ENTITY", "statement": "A" },
+      { "id": "e", "type": "ENTITY", "statement": "E" }
+    ],
+    "relations": [
+      { "id": "bad-and", "type": "CAUSALITY", "combination": "AND", "renderMode": "JUNCTION", "inputs": [{ "elementId": "a" }], "outputs": [{ "elementId": "e" }] }
+    ],
+    "expected": { "errorCodes": ["INPUT_ARITY"], "warningCodes": [], "junctionIds": ["junction:bad-and"] }
+  },
+  {
+    "id": "invalid-mag-render-mode",
+    "title": "MAG requires an explicit junction",
+    "diagramType": "SUFFICIENCY_GENERIC",
+    "logicMode": "SUFFICIENCY",
+    "elements": [
+      { "id": "a", "type": "ENTITY", "statement": "A" },
+      { "id": "b", "type": "ENTITY", "statement": "B" },
+      { "id": "e", "type": "ENTITY", "statement": "E" }
+    ],
+    "relations": [
+      { "id": "bad-mag", "type": "CAUSALITY", "combination": "MAG", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "a", "contribution": 40 }, { "elementId": "b", "contribution": 60 }], "outputs": [{ "elementId": "e" }] }
+    ],
+    "expected": { "errorCodes": ["RENDER_MODE_MISMATCH"], "warningCodes": [], "junctionIds": [] }
+  },
+  {
+    "id": "invalid-missing-endpoint",
+    "title": "Every endpoint must exist",
+    "diagramType": "NECESSITY_GENERIC",
+    "logicMode": "NECESSITY",
+    "elements": [
+      { "id": "objective", "type": "ENTITY", "statement": "Objective" }
+    ],
+    "relations": [
+      { "id": "bad-endpoint", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "missing" }], "outputs": [{ "elementId": "objective" }] }
+    ],
+    "expected": { "errorCodes": ["ENDPOINT_MISSING"], "warningCodes": [], "junctionIds": [] }
+  }
+]

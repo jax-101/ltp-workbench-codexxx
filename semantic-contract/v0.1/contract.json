@@ -1,0 +1,133 @@
+{
+  "contractVersion": "0.1",
+  "status": "INTERNAL_DRAFT",
+  "combinations": {
+    "SIMPLE": {
+      "minInputs": 1,
+      "maxInputs": 1,
+      "renderModes": ["IMPLICIT"]
+    },
+    "AND": {
+      "minInputs": 2,
+      "maxInputs": null,
+      "renderModes": ["JUNCTION"]
+    },
+    "OR": {
+      "minInputs": 2,
+      "maxInputs": null,
+      "renderModes": ["JUNCTION"]
+    },
+    "MAG": {
+      "minInputs": 2,
+      "maxInputs": null,
+      "renderModes": ["JUNCTION"]
+    },
+    "XOR": {
+      "minInputs": 2,
+      "maxInputs": null,
+      "renderModes": ["JUNCTION", "CONFLICT"]
+    }
+  },
+  "relationTypes": {
+    "CAUSALITY": {
+      "logicModes": ["SUFFICIENCY"],
+      "minOutputs": 1,
+      "maxOutputs": 1
+    },
+    "NECESSITY": {
+      "logicModes": ["NECESSITY"],
+      "minOutputs": 1,
+      "maxOutputs": 1
+    },
+    "CONFLICT": {
+      "logicModes": ["NECESSITY"],
+      "minInputs": 2,
+      "maxInputs": 2,
+      "minOutputs": 0,
+      "maxOutputs": 0,
+      "combinations": [null],
+      "renderModes": ["CONFLICT"]
+    }
+  },
+  "profiles": {
+    "SUFFICIENCY_GENERIC": {
+      "logicMode": "SUFFICIENCY",
+      "defaultInputCombination": "OR",
+      "allowedElementTypes": ["ENTITY"],
+      "allowedRelationTypes": ["CAUSALITY"],
+      "allowedCombinations": ["SIMPLE", "AND", "OR", "MAG", "XOR"],
+      "cyclePolicy": "ALLOWED"
+    },
+    "NECESSITY_GENERIC": {
+      "logicMode": "NECESSITY",
+      "defaultInputCombination": "AND",
+      "allowedElementTypes": ["ENTITY"],
+      "allowedRelationTypes": ["NECESSITY"],
+      "allowedCombinations": ["SIMPLE", "AND", "OR", "MAG", "XOR"],
+      "cyclePolicy": "FORBIDDEN"
+    },
+    "GOAL_TREE": {
+      "logicMode": "NECESSITY",
+      "defaultInputCombination": "AND",
+      "allowedElementTypes": ["GOAL", "CSF", "NC"],
+      "allowedRelationTypes": ["NECESSITY"],
+      "allowedCombinations": ["SIMPLE"],
+      "cyclePolicy": "FORBIDDEN",
+      "requiredElementCounts": {
+        "GOAL": { "min": 1, "max": 1 },
+        "CSF": { "min": 1, "max": null }
+      },
+      "recommendedElementCounts": {
+        "CSF": { "min": 3, "max": 5 }
+      }
+    },
+    "CRT": {
+      "logicMode": "SUFFICIENCY",
+      "defaultInputCombination": "OR",
+      "allowedElementTypes": ["ENTITY", "UDE", "ROOT_CAUSE", "CRITICAL_ROOT_CAUSE"],
+      "allowedRelationTypes": ["CAUSALITY"],
+      "allowedCombinations": ["SIMPLE", "AND", "MAG", "XOR"],
+      "cyclePolicy": "ALLOWED",
+      "requiredElementCounts": {
+        "UDE": { "min": 1, "max": null }
+      },
+      "recommendedElementCounts": {
+        "UDE": { "min": 2, "max": null }
+      }
+    },
+    "EC": {
+      "logicMode": "NECESSITY",
+      "defaultInputCombination": "AND",
+      "allowedElementTypes": ["OBJECTIVE", "NEED", "WANT", "INJECTION"],
+      "allowedRelationTypes": ["NECESSITY", "CONFLICT"],
+      "allowedCombinations": ["SIMPLE", "OR"],
+      "cyclePolicy": "FORBIDDEN",
+      "requiredElementCounts": {
+        "OBJECTIVE": { "min": 1, "max": 1 },
+        "NEED": { "min": 2, "max": 2 },
+        "WANT": { "min": 2, "max": 2 }
+      },
+      "requiredRelationPatterns": [
+        { "id": "needs-to-objective", "type": "NECESSITY", "inputType": "NEED", "outputType": "OBJECTIVE", "min": 2 },
+        { "id": "wants-to-needs", "type": "NECESSITY", "inputType": "WANT", "outputType": "NEED", "min": 2 },
+        { "id": "want-conflict", "type": "CONFLICT", "inputType": "WANT", "outputType": null, "min": 1 }
+      ]
+    },
+    "FRT": {
+      "logicMode": "SUFFICIENCY",
+      "defaultInputCombination": "OR",
+      "allowedElementTypes": ["ENTITY", "INJECTION", "DESIRED_EFFECT", "UDE", "PRECONDITION", "ACTION"],
+      "allowedRelationTypes": ["CAUSALITY"],
+      "allowedCombinations": ["SIMPLE", "AND", "MAG", "XOR"],
+      "cyclePolicy": "ALLOWED",
+      "requiredElementCounts": {
+        "INJECTION": { "min": 1, "max": null },
+        "DESIRED_EFFECT": { "min": 1, "max": null }
+      }
+    }
+  },
+  "assumptionScopes": ["RELATION", "INPUT", "OUTPUT", "CONFLICT"],
+  "derivationTypes": ["CHALLENGES_ASSUMPTION", "DERIVED_FROM", "VALIDATES", "MITIGATES"],
+  "derivationStatuses": ["PROPOSED", "VALIDATED", "REJECTED", "SUPERSEDED"],
+  "reviewStates": ["UNREVIEWED", "ACCEPTED", "NEEDS_WORK", "WAIVED"]
+}
