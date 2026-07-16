@@ -508,3 +508,9 @@ Razon: una `M` no puede significar de forma determinista a la vez caracter de un
 Decision: Goal Tree, CRT, FRT, EC, PrT y TrT se modelaran como diagramas con elementos y relaciones n-arias definidos por un registro. Las junctions seran proyecciones seleccionables de relaciones y no nodos de contenido. Un compilador por definicion generara el `LayoutGraph` consumido por el unico backend ELK layered.
 
 Razon: los diagramas alternan causa suficiente y condicion necesaria, admiten operadores y topologias diferentes y asignan significado distinto a ciclos, assumptions e injections. Añadir flags a links binarios o condicionales al renderer mezclaria dominio y presentacion, y haria fragiles copiar/pegar, CLI, validacion y layout.
+
+### D-083: Los diagramas oficiales usan la misma arquitectura que los personales
+
+Decision: Goal Tree, CRT, FRT, EC, PrT y TrT se entregaran como paquetes declarativos versionados. El runtime y la CLI los cargaran con el mismo compilador que las definiciones creadas o bifurcadas por el usuario. El futuro Diagram Studio editara esos paquetes, no codigo fuente ni un modelo paralelo.
+
+Razon: hardcodear los diagramas oficiales y ofrecer extensibilidad solo para casos secundarios crea dos productos y dos niveles de capacidad. Una unica ruta de carga obliga a que el contrato sea suficiente, comprobable y portable. Prohibir JavaScript arbitrario mantiene seguridad, determinismo y compatibilidad headless.

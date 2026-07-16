@@ -682,9 +682,19 @@ Aprendizaje: una arquitectura extensible no se valida añadiendo otro nombre al 
 
 Aplicacion futura: elegir fixtures que fuercen aridad, topologia y reglas distintas; separar relaciones de su representacion visual; compilar a un modelo neutral para motores externos; y probar el segundo dominio antes de estabilizar operaciones transversales como copiar, borrar o exportar.
 
+### L-072: Un sistema extensible debe usar sus extensiones para sus propios casos oficiales
+
+Fecha: 2026-07-16
+
+Evidencia: mantener Goal Tree y los futuros diagramas TOC dentro del codigo permitiria diseñar un formato de usuario aparentemente extensible que nunca afrontara los requisitos completos del producto. El primer caso real que quedara fuera revelaria tarde las diferencias entre ambas rutas.
+
+Aprendizaje: la mejor prueba de una arquitectura de extensiones es que el propio producto dependa de ella. Los built-ins deben ser paquetes cargados por el mismo contrato, con las mismas validaciones y limites que los artefactos de terceros.
+
+Aplicacion futura: dogfood del formato desde la primera migracion; fijar versiones por instancia; compartir compilador entre UI y CLI; evitar codigo arbitrario en datos; y definir explicitamente la frontera entre capacidades componibles y nuevas primitives que requieren codigo de confianza.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-072`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-073`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

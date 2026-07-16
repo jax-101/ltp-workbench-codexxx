@@ -177,6 +177,10 @@ Criterios arquitectonicos anadidos:
 - Un unico backend ELK consume un grafo neutral compilado desde cada definicion.
 - Assumptions pueden pertenecer a relaciones n-arias y las derivaciones entre diagramas se conservan aparte.
 - El nucleo, la CLI y Undo/Redo operan sobre IDs semanticos, no sobre artefactos sinteticos de layout.
+- Los diagramas oficiales se cargan desde definiciones declarativas mediante el mismo loader que los personales.
+- El usuario puede crear o bifurcar definiciones sin editar ni recompilar el codigo de la aplicacion.
+- Las definiciones son versionadas, reproducibles y no contienen JavaScript arbitrario.
+- Un futuro Diagram Studio edita el mismo formato consumido por la CLI y el runtime.
 
 ### F-024: Texto cortado en entidades
 

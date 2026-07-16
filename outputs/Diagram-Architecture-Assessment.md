@@ -6,7 +6,7 @@ Fecha: 2026-07-16.
 
 LTP Workbench no debe modelar CRT, FRT, EC, PrT y TrT como Goal Trees con otros colores. Comparten canvas, seleccion, frames, historial y un backend de layout, pero difieren en proceso logico, topologia, clases de entidad, aridad de relaciones y validaciones.
 
-Se mantiene un unico backend `ELK layered`, precedido por un compilador semantico por tipo de diagrama. El registro deja de ser una lista de tipos visuales y pasa a describir un contrato de dominio completo.
+Se mantiene un unico backend `ELK layered`, precedido por un compilador semantico por tipo de diagrama. El registro deja de ser una lista de tipos visuales y pasa a describir un contrato de dominio completo. Goal Tree y los futuros diagramas oficiales se distribuyen como definiciones declarativas cargadas por el mismo mecanismo disponible para el usuario; no como ramas privilegiadas del codigo.
 
 ## Diferencias verificadas
 
@@ -73,6 +73,44 @@ Cada definicion declara:
 - perfil de layout, puertos, junctions, ciclos y routing;
 - presentacion de entidades, relaciones y editor.
 
+### Definiciones como artefactos
+
+Una definicion de diagrama es un paquete versionado, portable y validable:
+
+```text
+diagram-definition.json
+  id, version, label, description
+  requiredKernelCapabilities[]
+  logicMode
+  elementTypes[]
+  relationTypes[]
+  topology
+  validationRules[]
+  creationRecipes[]
+  layoutProfile
+  presentation
+  fixtures[]
+```
+
+Las definiciones oficiales y las creadas por el usuario pasan por el mismo loader y compilador. Una instancia guarda `definitionId`, `definitionVersion` y un hash; el workspace conserva un lock o snapshot de la definicion para abrirse de forma reproducible aunque cambie la biblioteca local.
+
+El formato no admite JavaScript arbitrario. Reglas, acciones y validaciones se expresan mediante un DSL limitado y capacidades conocidas del kernel. Si un futuro diagrama necesita un nuevo operador logico o primitiva visual, esa capacidad se incorpora al kernel o a un plugin de confianza; no se oculta codigo ejecutable dentro del archivo de definicion.
+
+### Modo Diagram Studio
+
+El programa tendra un modo separado para crear, bifurcar y probar definiciones. Debe permitir:
+
+- declarar Types y sus atributos;
+- definir relaciones, roles, operadores y cardinalidad;
+- elegir topologia libre o una plantilla restringida;
+- componer reglas y recetas de creacion con primitives del kernel;
+- configurar layout, puertos, routing y presentacion;
+- editar un fixture de ejemplo y previsualizarlo en vivo;
+- validar colisiones, referencias, compatibilidad y accesibilidad;
+- publicar una version nueva o crear un fork sin alterar instancias existentes.
+
+El Studio edita el mismo formato que la CLI. No mantiene un segundo modelo interno ni genera codigo fuente.
+
 ### Compilador de layout
 
 El motor recibe un `LayoutGraph` neutral, no el modelo semantico directamente:
@@ -103,9 +141,10 @@ Las relaciones entre artefactos se guardan como `derivations`, separadas de las 
 1. Congelar tres fixtures de contrato: CRT con `AND/OR` y loop, EC canonica con assumptions y FRT con injection y negative branch.
 2. Definir schema `0.3`, migracion desde Goal Tree `0.2` y serializacion estable.
 3. Extraer un kernel generico de elementos, relaciones n-arias, derivaciones y validadores.
-4. Crear la proyeccion neutral a ELK y demostrar que Goal Tree conserva exactamente su comportamiento.
-5. Validar CRT de extremo a extremo antes de implementar mas diagramas.
-6. Implementar EC y FRT como paquetes declarativos; dejar PrT y TrT para la fase de implementacion.
+4. Extraer Goal Tree a un paquete declarativo y demostrar que conserva exactamente su comportamiento.
+5. Crear la proyeccion neutral a ELK y validar CRT de extremo a extremo mediante otro paquete, sin modificar el kernel.
+6. Entregar loader, validador y CLI para crear o comprobar definiciones antes de construir el Studio visual.
+7. Implementar EC y FRT como paquetes declarativos; dejar PrT y TrT para la fase de implementacion.
 
 Las operaciones de borrar, copiar/pegar y CLI deben construirse sobre este kernel para incluir relaciones y junctions sin reglas especiales posteriores.
 

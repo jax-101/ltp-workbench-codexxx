@@ -605,6 +605,7 @@ Incluye:
 - Schema `0.3` basado en `diagrams`, `elements`, relaciones n-arias y `derivations` entre artefactos.
 - Junctions como proyeccion visual de relaciones, no como afirmaciones ficticias.
 - Registro con Types, atributos, relaciones, aridad, roles, reglas, acciones y layout por diagrama.
+- Definiciones oficiales cargadas como datos mediante el mismo mecanismo que las definiciones del usuario.
 - Compilador `Diagram -> LayoutGraph` que conserva un unico backend ELK layered.
 - Validacion comun, validacion especifica y CLR progresiva.
 - Migracion reversible del Goal Tree actual.
@@ -617,6 +618,7 @@ Criterios de aceptacion:
 - Un fixture FRT representa injection, DE, precondition y negative branch.
 - Copiar, borrar, Undo/Redo y CLI operan sobre relaciones n-arias de forma atomica.
 - ELK recibe exclusivamente el grafo neutral compilado y no contiene condicionales de dominio.
+- Goal Tree puede exportarse, volver a importarse y ejecutarse sin depender de una definicion hardcodeada.
 - El assessment detallado queda en `outputs/Diagram-Architecture-Assessment.md`.
 
 ### 3C.14: kernel semantico y prueba vertical CRT
@@ -630,8 +632,30 @@ Incluye:
 - Validadores declarativos y projection adapter.
 - Render y edicion de junctions.
 - Fixture CRT pequeno probado en nucleo, CLI, layout y captura visual.
+- Goal Tree y CRT cargados desde paquetes declarativos versionados.
 
 Gate: no se inicia la implementacion completa de EC/FRT hasta que Goal Tree y CRT compartan el mismo kernel sin ramas especificas en las operaciones comunes.
+
+### 3C.15: formato de definicion y herramientas headless
+
+Estado: planificado despues del kernel y antes del Diagram Studio visual.
+
+Incluye:
+
+- `diagram-definition.json` con version, capacidades requeridas, Types, relaciones, reglas, recetas, layout y presentacion.
+- Loader unico para definiciones oficiales, personales y embebidas en un workspace.
+- Pin de version, hash y snapshot para reproducibilidad.
+- DSL declarativo sin JavaScript arbitrario.
+- CLI para crear, validar, inspeccionar, probar y empaquetar definiciones.
+- Fixture minimo creado sin editar el codigo fuente.
+
+Criterios de aceptacion:
+
+- Exportar e importar la definicion oficial de Goal Tree no cambia comportamiento ni datos.
+- Una definicion nueva puede crearse y abrirse sin recompilar la aplicacion.
+- Una definicion invalida produce errores localizados y no corrompe el workspace.
+- Cambiar una definicion publicada crea una nueva version; las instancias existentes siguen fijadas a la anterior.
+- CLI y aplicacion producen el mismo resultado de validacion y compilacion.
 
 ## Iteracion 3C: operaciones sobre selecciones
 
@@ -705,15 +729,26 @@ Incluye:
 - Optimizacion de cruces despues de consolidar el layout compuesto en 3B.
 - Los fundamentos F-021 y F-022 ya entregados en la iteracion 2.2.
 
-## Iteracion 5: diagramas extensibles
+## Iteracion 5: Diagram Studio y diagramas oficiales
 
 Incluye:
 
-- Implementacion de paquetes completos sobre el kernel entregado en 3C.14.
+- Modo visual para crear, bifurcar, probar y versionar definiciones sin escribir codigo.
+- Edicion de Types, atributos, relaciones, topologia, reglas, acciones, layout y presentacion.
+- Preview vivo sobre fixtures y diagnostico de errores o capacidades ausentes.
+- Biblioteca de definiciones oficiales, personales y del workspace.
+- Implementacion de paquetes completos sobre el kernel y formato entregados en 3C.14/3C.15.
 - CRT como primera prueba vertical; EC y FRT como siguiente flujo trazable.
 - PrT y TrT como validacion de condicion necesaria y pasos compuestos.
-- Configuracion de Types, atributos, relaciones, logica, verbalizacion, validaciones, acciones y layout.
 - Personalizacion de combinaciones de teclas sobre el registro interno de comandos.
+
+Criterios de aceptacion:
+
+- El Studio genera exactamente el mismo formato que consume la CLI.
+- Crear un tipo de diagrama sencillo no requiere modificar ni recompilar LTP Workbench.
+- Las definiciones oficiales no tienen privilegios tecnicos sobre las personales.
+- El usuario puede hacer fork de una definicion oficial sin modificar el original.
+- Las instancias declaran y conservan la version exacta de su definicion.
 
 ## Dependencias principales
 
@@ -722,4 +757,4 @@ Incluye:
 - Seleccion general -> cierre de frame -> copiar/borrar/cambiar tipo.
 - Frame activo -> raiz ilimitada -> insercion incremental -> layout compuesto.
 - Contencion de frames -> vista enfocada -> colapso -> rutas externas.
-- Assessment multi-diagrama -> kernel semantico -> operaciones colectivas -> CRT vertical -> EC/FRT -> PrT/TrT.
+- Assessment multi-diagrama -> kernel semantico -> formato declarativo -> operaciones colectivas -> CRT vertical -> Diagram Studio -> EC/FRT -> PrT/TrT.
