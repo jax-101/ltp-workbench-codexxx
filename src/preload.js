@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("ltpPrototype", {
   getBuildInfo: () => ipcRenderer.invoke("app:build-info"),
   loadWorkspace: () => ipcRenderer.invoke("workspace:load"),
+  loadSampleWorkspaceFixture: () => ipcRenderer.invoke("fixture:sample-workspace"),
   loadComplexGoalTreeFixture: () => ipcRenderer.invoke("fixture:complex-goal-tree"),
   loadRandomLayoutFixture: (options) => ipcRenderer.invoke("fixture:random-layout", options),
   saveWorkspace: (workspace, options) => ipcRenderer.invoke("workspace:save", workspace, options),

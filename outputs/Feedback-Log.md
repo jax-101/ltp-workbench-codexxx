@@ -859,3 +859,20 @@ Criterios de aceptacion:
 - La punta seleccionada aumenta de tamano y conserva el mismo color que el enlace.
 - El control central del link seleccionado permanece visible aunque los hints generales esten ocultos.
 - La mejora no cambia la geometria, el layout ni el contenido de la seleccion.
+
+### F-071: Auditoria visual exhaustiva de atajos
+
+Feedback: probar todos los atajos sobre un ejemplo, guardar pantallazos, registrar resultados y profundizar en cualquier comportamiento incorrecto.
+
+Estado: implementado y ejecutado en `3C.11` sobre macOS. La auditoria final cubre 34 comandos y 43 bindings con resultado `43/43 PASS`.
+
+Criterios de aceptacion:
+
+- El manifiesto de prueba se deriva del mismo registro que muestra el panel Keyboard.
+- Cada binding se ejecuta sobre una copia limpia del workspace de ejemplo.
+- La prueba valida el efecto prometido, no solo que la tecla sea reconocida.
+- Cada caso genera una captura y una fila explicativa en Markdown y JSON.
+- `Cmd+K` abre una paleta funcional con busqueda y navegacion por teclado.
+- `Shift+A` crea y conecta la condicion padre; `A` crea y conecta la condicion de soporte.
+- Las entidades creadas quedan separadas, visibles y no obligan a un frame a englobar elementos ajenos.
+- El informe inicial conserva los falsos positivos y fallos reales para explicar el diagnostico.

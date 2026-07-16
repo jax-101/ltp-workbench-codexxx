@@ -632,9 +632,39 @@ Aprendizaje: foco, elemento activo, raices explicitas y cierre derivado son esta
 
 Aplicacion futura: modelar cada estado por separado; derivar el estilo de pertenencia desde el conjunto correspondiente; reservar el elemento activo para inspector o foco; y probar selecciones de al menos dos elementos tanto por teclado como por raton.
 
+### L-067: Una auditoria debe comprobar consecuencias, no eventos
+
+Fecha: 2026-07-16
+
+Evidencia: `Cmd+K` era reconocido por el matcher y mostraba un mensaje, pero no existia ninguna paleta. Una prueba limitada a `commandForEvent` lo habria declarado correcto. La auditoria semantica exigio dialogo visible, busqueda enfocada y lista completa, y descubrio el placeholder.
+
+Aprendizaje: capturar una entrada no demuestra que una funcionalidad exista. Las pruebas de interaccion deben formular el resultado observable prometido y medir estado de dominio, modo de interfaz, foco y representacion visual segun corresponda.
+
+Aplicacion futura: derivar casos del registro real; declarar una consecuencia por comando; probar bindings alternativos por separado; y tratar placeholders o no-ops como fallos aunque el dispatcher funcione.
+
+### L-068: Las pruebas asincronas de UI necesitan una frontera de estabilidad
+
+Fecha: 2026-07-16
+
+Evidencia: la primera pasada marco minimizar, preview y creacion de soporte como fallos parciales. Dos casos observaban un render intermedio y otro buscaba el objeto activo equivocado despues de que la operacion pasara del nodo al link.
+
+Aprendizaje: esperar un tiempo fijo no garantiza que una cadena de guardados, renders y animaciones haya terminado. La prueba debe observar la cola hasta que permanezca estable y consultar el estado que representa la intencion, no una referencia incidental de foco.
+
+Aplicacion futura: exponer promesas o estados de finalizacion; esperar colas estables y animaciones cerradas; usar selectores de contrato; y conservar la primera evidencia para distinguir defectos del producto de defectos del test.
+
+### L-069: La inspeccion visual puede descubrir una violacion estructural posterior al PASS
+
+Fecha: 2026-07-16
+
+Evidencia: `A` y `Shift+A` llegaron a `PASS` al crear nodo y link sin solape, pero las capturas mostraron primero una entidad fuera del viewport y despues un frame ampliado sobre elementos ajenos. Incorporar exclusion de frames y visibilidad al criterio produjo una colocacion valida.
+
+Aprendizaje: las aserciones funcionales y geometricas pueden omitir una composicion visual absurda. La captura no es decoracion de la prueba: sirve para descubrir invariantes que aun no se habian expresado y convertirlos despues en comprobaciones automaticas.
+
+Aplicacion futura: revisar visualmente casos representativos tras cada nueva suite; traducir cada defecto observado a una invariante; comprobar cajas completas y pertenencia; y no cerrar una prueba solo porque el dato final sea correcto.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-067`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-070`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

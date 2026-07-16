@@ -41,6 +41,16 @@ La arquitectura y los comandos de escritura se describen en `outputs/Headless-Ar
 
 Los aprendizajes reutilizables del desarrollo se mantienen en `outputs/Engineering-Lessons-Log.md`.
 
+## Pruebas del prototipo
+
+```bash
+npm run test:prototype
+npm run test:visual
+npm run test:shortcuts
+```
+
+`test:shortcuts` deriva su inventario del mismo registro que alimenta el panel Keyboard, ejecuta cada combinacion sobre un workspace aislado y guarda un informe con una captura por binding en `outputs/shortcut-audit/<build>/`.
+
 ## Proxima informacion necesaria
 
 Para convertir esta base en una herramienta realmente fiel a tu forma de usar LTP, conviene incorporar:

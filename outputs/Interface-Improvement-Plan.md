@@ -556,6 +556,26 @@ Evidencia:
 - Captura `20-multi-selected.png` comprueba tres entidades resaltadas simultaneamente al 35%.
 - Bateria visual `3C.10` con 37 escenarios en estado `PASS`.
 
+### Build 3C.11: auditoria completa de teclado
+
+Estado: implementado y validado automaticamente y por inspeccion visual.
+
+Incluye:
+
+- Suite derivada del registro con 34 comandos y 43 bindings.
+- Workspace aislado, asercion semantica, PNG e informe por binding.
+- Paleta de comandos funcional para `Cmd+K`.
+- Creacion relacional completa con `A` y `Shift+A`.
+- Colocacion adyacente sin solapes, dentro del viewport y sin invadir frames hermanos.
+- Log de diagnostico con falsos positivos, causas y correcciones.
+
+Evidencia:
+
+- Auditoria de atajos `43/43 PASS` en macOS.
+- Bateria general del prototipo en estado `PASS`.
+- Bateria visual general `37/37 PASS`.
+- Informes locales en `outputs/shortcut-audit/3C.11/` y `outputs/test-evidence/3C.11/`.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:

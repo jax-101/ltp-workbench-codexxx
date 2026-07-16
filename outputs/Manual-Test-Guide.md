@@ -12,9 +12,17 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.10`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.11`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
+
+## Auditoria automatizada de teclado
+
+```bash
+npm run test:shortcuts
+```
+
+El comando prueba los 34 comandos y sus 43 combinaciones sobre copias limpias del ejemplo. Guarda `report.md`, `report.json` y una captura por binding en `outputs/shortcut-audit/3C.11/`. Un resultado correcto termina con `passed: 43` y `failed: 0`.
 
 ## Prueba visual automatizada
 
@@ -413,6 +421,19 @@ Resultado esperado: la seleccion individual continua desde su valor; la seleccio
 10. Repite con `Shift+click` o `Cmd+click` sobre dos entidades y comprueba que ambas se muestran seleccionadas.
 
 Resultado esperado: la seleccion primaria se identifica inmediatamente por varios signos visuales y nunca se confunde con el Type ni con los elementos incluidos colectivamente. Todos los elementos elegidos explicitamente permanecen resaltados, aunque solo el ultimo alimente el inspector.
+
+## Prueba 31: paleta y creacion relacional
+
+1. Pulsa `Cmd+K` y comprueba que se abre Commands con el cursor en Search commands.
+2. Escribe parte del nombre de una accion y comprueba que la lista se filtra.
+3. Usa las flechas y `Enter` para ejecutar una accion; abre de nuevo y cierra con `Esc`.
+4. Selecciona una entidad y pulsa `Shift+A`.
+5. Comprueba que aparece una condicion padre separada, seleccionada y conectada desde la entidad original.
+6. Deshaz, selecciona de nuevo la entidad y pulsa `A`.
+7. Comprueba que aparece una condicion de soporte separada, seleccionada y conectada hacia la entidad original.
+8. Comprueba que ninguna entidad ajena queda dentro del frame ampliado.
+
+Resultado esperado: la paleta permite encontrar y ejecutar comandos sin raton. `A` y `Shift+A` producen subgrafos completos, visibles y geometricamente coherentes.
 
 ## Registro de resultados
 

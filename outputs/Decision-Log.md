@@ -484,3 +484,15 @@ Razon: evitar que dos origenes coincidan no evita que sus entidades o etiquetas 
 Decision: todos los elementos que son raices explicitas de la seleccion usan un azul exclusivo, un refuerzo de forma y un halo, mientras los elementos incorporados por el cierre de seleccion conservan una indicacion dorada secundaria. El ultimo elemento activo se mantiene como referencia del inspector, pero no determina por si solo el resaltado. Los trazos SVG de seleccion no escalan con el canvas y el control central de un link seleccionado no depende del estado global de hints.
 
 Razon: reutilizar colores de Types obliga a interpretar el significado por tono y un trazo que se reduce con zoom deja de comunicar estado. La seleccion es una condicion operativa y debe reconocerse de inmediato por color, grosor y contorno, incluso sobre elementos semanticamente coloreados o en vistas alejadas.
+
+### D-079: El registro de comandos es tambien el manifiesto de auditoria
+
+Decision: la auditoria de teclado enumera comandos y bindings directamente desde `command-config.js`. Cada binding se ejecuta sobre un fixture reiniciado, comprueba una consecuencia semantica especifica y produce evidencia visual. Las capturas se regeneran localmente y el log estable se conserva en Git.
+
+Razon: mantener manualmente otra lista de atajos permite que el panel, el matcher y las pruebas diverjan. Una unica fuente garantiza cobertura al crecer el registro, mientras los fixtures aislados evitan que operaciones destructivas o historicas contaminen casos posteriores.
+
+### D-080: Los comandos de creacion relacional deben producir estructura completa
+
+Decision: `A` crea una entidad de soporte y el link hacia la seleccion; `Shift+A` crea una condicion padre y el link desde la seleccion. Ambos dejan activa la nueva entidad y buscan una posicion libre que preserve contencion y exclusion de frames.
+
+Razon: un comando llamado parent o supporting condition no esta completo si solo crea una caja. La relacion es parte de su significado, y una operacion semanticamente correcta sigue siendo defectuosa si el resultado aparece solapado o deforma su frame sobre elementos ajenos.

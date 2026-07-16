@@ -27,6 +27,7 @@ const prototypeDataPath = () => {
   if (process.env.LTP_COMPLEX_TEST === "1") fileName = "complex-goal-tree-manual-test.json";
   if (process.env.LTP_SMOKE_TEST === "1") fileName = "smoke-test-workspace.json";
   if (process.env.LTP_VISUAL_TEST === "1") fileName = "visual-test-workspace.json";
+  if (process.env.LTP_SHORTCUT_TEST === "1") fileName = "shortcut-test-workspace.json";
   return path.join(app.getPath("userData"), fileName);
 };
 const sampleDataPath = () => path.join(app.getAppPath(), "outputs", "sample-workspace-v0.1.json");
@@ -107,7 +108,7 @@ const fallbackWorkspace = () => ({
 const readJson = async (filePath) => JSON.parse(await fs.readFile(filePath, "utf8"));
 
 const loadWorkspace = async () => {
-  if (process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1") {
+  if (process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1") {
     try {
       return await readJson(sampleDataPath());
     } catch {
@@ -174,7 +175,7 @@ const getWorkspaceEngine = async () => {
         ...initialWorkspace,
         revision: workspaceRevision(initialWorkspace)
       };
-      const persistedWorkspace = process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1"
+      const persistedWorkspace = process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1"
         ? await repository.reset(normalizedWorkspace)
         : await repository.initialize(normalizedWorkspace);
       const migration = migrateWorkspace(persistedWorkspace);
@@ -377,6 +378,86 @@ const runVisualTest = async (mainWindow) => {
   return report;
 };
 
+const shortcutFilePart = (value) =>
+  String(value)
+    .replaceAll(" ", "space")
+    .replaceAll("/", "slash")
+    .replaceAll("[", "left-bracket")
+    .replaceAll("]", "right-bracket")
+    .replaceAll("+", "plus")
+    .replaceAll("=", "equals")
+    .replaceAll(/[^a-z0-9-]+/gi, "-")
+    .replaceAll(/^-|-$/g, "")
+    .toLowerCase();
+
+const runShortcutAudit = async (mainWindow) => {
+  const manifest = await mainWindow.webContents.executeJavaScript(
+    "window.__ltpShortcutAuditManifest && window.__ltpShortcutAuditManifest()"
+  );
+  const evidenceDirectory = path.join(app.getAppPath(), "outputs", "shortcut-audit", buildInfo.id);
+  await fs.rm(evidenceDirectory, { recursive: true, force: true });
+  await fs.mkdir(evidenceDirectory, { recursive: true });
+  const results = [];
+
+  for (let index = 0; index < manifest.length; index += 1) {
+    const testCase = manifest[index];
+    const result = await mainWindow.webContents.executeJavaScript(
+      `window.__ltpShortcutAuditStep && window.__ltpShortcutAuditStep(${JSON.stringify(testCase.command)}, ${testCase.bindingIndex})`
+    );
+    await new Promise((resolve) => setTimeout(resolve, 180));
+    const image = await mainWindow.webContents.capturePage();
+    const fileName = `${String(index + 1).padStart(2, "0")}-${shortcutFilePart(testCase.command)}-${shortcutFilePart(testCase.shortcut)}.png`;
+    await fs.writeFile(path.join(evidenceDirectory, fileName), image.toPNG());
+    results.push({ ...testCase, ...result, screenshot: fileName });
+  }
+
+  const commandCount = new Set(results.map((result) => result.command)).size;
+  const passed = results.filter((result) => result.ok).length;
+  const report = {
+    build: buildInfo,
+    generatedAt: new Date().toISOString(),
+    platform: process.platform,
+    commandCount,
+    bindingCount: results.length,
+    passed,
+    failed: results.length - passed,
+    ok: passed === results.length,
+    results
+  };
+  const markdown = [
+    `# Keyboard shortcut audit - build ${buildInfo.id}`,
+    "",
+    `Result: ${report.ok ? "PASS" : "FAIL"}`,
+    `Platform: ${process.platform}`,
+    `Commands: ${commandCount}`,
+    `Bindings: ${results.length}`,
+    `Passed: ${report.passed}`,
+    `Failed: ${report.failed}`,
+    "",
+    "| # | Command | Shortcut | Result | Observed effect | Evidence |",
+    "|---:|---|---|---|---|---|",
+    ...results.map(
+      (result, index) =>
+        `| ${index + 1} | ${result.label} | \`${result.shortcut}\` | ${result.ok ? "PASS" : "FAIL"} | ${String(result.detail).replaceAll("|", "\\|")} | [PNG](${result.screenshot}) |`
+    ),
+    "",
+    ...results
+      .filter((result) => !result.ok)
+      .flatMap((result) => [
+        `## Failure: ${result.label} (${result.shortcut})`,
+        "",
+        result.detail,
+        "",
+        `Evidence: [${result.screenshot}](${result.screenshot})`,
+        ""
+      ])
+  ].join("\n");
+  await fs.writeFile(path.join(evidenceDirectory, "report.json"), `${JSON.stringify(report, null, 2)}\n`);
+  await fs.writeFile(path.join(evidenceDirectory, "report.md"), markdown);
+  console.log(JSON.stringify({ ok: report.ok, evidenceDirectory, commandCount, bindings: results.length, passed, failed: report.failed }));
+  return report;
+};
+
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 1400,
@@ -422,9 +503,22 @@ const createWindow = () => {
       }
     });
   }
+
+  if (process.env.LTP_SHORTCUT_TEST === "1") {
+    mainWindow.webContents.once("did-finish-load", async () => {
+      try {
+        const result = await runShortcutAudit(mainWindow);
+        app.exit(result.ok ? 0 : 1);
+      } catch (error) {
+        console.error(error);
+        app.exit(1);
+      }
+    });
+  }
 };
 
 ipcMain.handle("workspace:load", async () => (await getWorkspaceEngine()).getSnapshot());
+ipcMain.handle("fixture:sample-workspace", async () => migrateWorkspace(await readJson(sampleDataPath())).workspace);
 ipcMain.handle("fixture:complex-goal-tree", async () => migrateWorkspace(await readJson(complexFixturePath())).workspace);
 ipcMain.handle("fixture:random-layout", async (_event, options) =>
   generateRandomLayoutFixture(migrateWorkspace(await readJson(complexFixturePath())).workspace, options)

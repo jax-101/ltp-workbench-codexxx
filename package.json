@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.10",
-    "name": "Explicit Multi-selection Highlight",
+    "id": "3C.11",
+    "name": "Keyboard Shortcut Audit",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -17,6 +17,7 @@
     "test:complex": "LTP_COMPLEX_TEST=1 electron .",
     "smoke": "LTP_SMOKE_TEST=1 LTP_USE_SAMPLE=1 LTP_MANUAL_TEST=1 electron .",
     "test:visual": "LTP_VISUAL_TEST=1 LTP_USE_SAMPLE=1 electron .",
+    "test:shortcuts": "LTP_SHORTCUT_TEST=1 LTP_USE_SAMPLE=1 electron .",
     "test:prototype": "node scripts/test-prototype.js",
     "test:core": "node scripts/test-core.js",
     "test:layout": "node scripts/test-layout.js",

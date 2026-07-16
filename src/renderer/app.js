@@ -30,6 +30,9 @@ let historyState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel:
 let workspaceOperationQueue = Promise.resolve();
 let visualTestState = {};
 let multiTypeCycleState = { signature: null, index: -1 };
+let commandPaletteOpen = false;
+let commandPaletteQuery = "";
+let commandPaletteIndex = 0;
 
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace("H", "");
@@ -818,8 +821,9 @@ const createNode = async (
   const frame = frameById()[frameId] || frameById()[rootFrameId()];
   const frameBox = layoutFrame(frame.id);
   const offset = frame.nodeIds.length * 18;
-  const position =
-    options.placement === "viewport"
+  const position = options.position
+    ? { ...options.position, width: options.position.width || 250, height: options.position.height || 72 }
+    : options.placement === "viewport"
       ? viewportNodePosition(frame)
       : { x: frameBox.x + 48 + offset, y: frameBox.y + 80 + offset, width: 250, height: 72 };
   const node = {
@@ -869,6 +873,106 @@ const createNodeInViewport = () =>
     { placement: "viewport" }
   );
 
+const relatedNodePosition = (targetId, relation) => {
+  const target = layoutNode(targetId);
+  const width = 250;
+  const height = 72;
+  const direction = tree()?.layout?.direction || diagramDefinition()?.defaultDirection || "TB";
+  const forward = {
+    TB: { x: 0, y: 1 },
+    BT: { x: 0, y: -1 },
+    LR: { x: 1, y: 0 },
+    RL: { x: -1, y: 0 }
+  }[direction];
+  const sign = relation === "target" ? 1 : -1;
+  const vector = { x: forward.x * sign, y: forward.y * sign };
+  const vertical = vector.y !== 0;
+  const occupied = Object.entries(tree()?.layout?.nodes || {})
+    .filter(([nodeId]) => nodeId !== targetId)
+    .map(([, box]) => box);
+  const overlaps = (candidate, box) =>
+    candidate.x < box.x + box.width + NODE_INSERTION_GAP &&
+    candidate.x + candidate.width + NODE_INSERTION_GAP > box.x &&
+    candidate.y < box.y + box.height + NODE_INSERTION_GAP &&
+    candidate.y + candidate.height + NODE_INSERTION_GAP > box.y;
+  const viewport = logicalViewport();
+  const ownerFrameId = nodeById()[targetId]?.frameId;
+  const ownerFrameBox = layoutFrame(ownerFrameId);
+  const ownedFrameIds = frameDescendantIds(ownerFrameId, true);
+  const ancestorFrameIds = new Set();
+  let ancestorId = frameById()[ownerFrameId]?.parentFrameId;
+  while (ancestorId) {
+    ancestorFrameIds.add(ancestorId);
+    ancestorId = frameById()[ancestorId]?.parentFrameId;
+  }
+  const rectanglesOverlap = (left, right) =>
+    left.x < right.x + right.width && left.x + left.width > right.x && left.y < right.y + right.height && left.y + left.height > right.y;
+  const preservesFrameExclusion = (candidate) => {
+    if (!ownerFrameBox || ownerFrameId === rootFrameId()) return true;
+    const expanded = {
+      x: Math.min(ownerFrameBox.x, candidate.x - FRAME_CONTENT_PADDING),
+      y: Math.min(ownerFrameBox.y, candidate.y - FRAME_CONTENT_PADDING),
+      width: 0,
+      height: 0
+    };
+    const right = Math.max(ownerFrameBox.x + ownerFrameBox.width, candidate.x + candidate.width + FRAME_CONTENT_PADDING);
+    const bottom = Math.max(ownerFrameBox.y + ownerFrameBox.height, candidate.y + candidate.height + FRAME_CONTENT_PADDING);
+    expanded.width = right - expanded.x;
+    expanded.height = bottom - expanded.y;
+    const externalNodeCollision = tree().nodes.some(
+      (node) => !ownedFrameIds.has(node.frameId) && rectanglesOverlap(expanded, layoutNode(node.id))
+    );
+    const siblingFrameCollision = canvas().frames.some(
+      (frame) =>
+        !ownedFrameIds.has(frame.id) &&
+        !ancestorFrameIds.has(frame.id) &&
+        frame.id !== rootFrameId() &&
+        rectanglesOverlap(expanded, layoutFrame(frame.id))
+    );
+    return !externalNodeCollision && !siblingFrameCollision;
+  };
+  const offsets = [0, 1, -1, 2, -2, 3, -3];
+  let firstFree = null;
+  for (const candidateVector of [vector, { x: -vector.x, y: -vector.y }]) {
+    const candidateVertical = candidateVector.y !== 0;
+    for (const offset of offsets) {
+      for (let primaryStep = 1; primaryStep <= 8; primaryStep += 1) {
+      const candidate = {
+        x: Math.round(
+          candidateVertical
+            ? target.x + (target.width - width) / 2 + offset * (width + NODE_INSERTION_GAP)
+            : target.x + (candidateVector.x > 0
+                ? target.width + NODE_INSERTION_GAP + (primaryStep - 1) * (width + NODE_INSERTION_GAP)
+                : -primaryStep * (width + NODE_INSERTION_GAP))
+        ),
+        y: Math.round(
+          candidateVertical
+            ? target.y + (candidateVector.y > 0
+                ? target.height + NODE_INSERTION_GAP + (primaryStep - 1) * (height + NODE_INSERTION_GAP)
+                : -primaryStep * (height + NODE_INSERTION_GAP))
+            : target.y + (target.height - height) / 2 + offset * (height + NODE_INSERTION_GAP)
+        ),
+        width,
+        height
+      };
+      if (!occupied.every((box) => !overlaps(candidate, box))) continue;
+      const insideOwnerCrossAxis = ownerFrameId === rootFrameId() || !ownerFrameBox || (candidateVertical
+        ? candidate.x >= ownerFrameBox.x + FRAME_CONTENT_PADDING && candidate.x + candidate.width <= ownerFrameBox.x + ownerFrameBox.width - FRAME_CONTENT_PADDING
+        : candidate.y >= ownerFrameBox.y + 54 && candidate.y + candidate.height <= ownerFrameBox.y + ownerFrameBox.height - FRAME_CONTENT_PADDING);
+      if (!insideOwnerCrossAxis || !preservesFrameExclusion(candidate)) continue;
+      firstFree ||= candidate;
+      const insideViewport =
+        candidate.x >= viewport.left + 20 &&
+        candidate.y >= viewport.top + 20 &&
+        candidate.x + candidate.width <= viewport.right - 20 &&
+        candidate.y + candidate.height <= viewport.bottom - 20;
+      if (insideViewport) return candidate;
+      }
+    }
+  }
+  return firstFree || viewportNodePosition(frameById()[nodeById()[targetId]?.frameId] || frameById()[activeFrameId]);
+};
+
 const createSupportingNode = async () => {
   const target = selectedNode();
   if (!target) {
@@ -877,9 +981,30 @@ const createSupportingNode = async () => {
   }
 
   const type = target.type === "goal" ? "criticalSuccessFactor" : "necessaryCondition";
-  const sourceId = await createNode(target.frameId, type, type === "criticalSuccessFactor" ? "New critical success factor" : "New necessary condition");
-  await createLink(sourceId, target.id);
+  const position = relatedNodePosition(target.id, "source");
+  const sourceId = await createNode(
+    target.frameId,
+    type,
+    type === "criticalSuccessFactor" ? "New critical success factor" : "New necessary condition",
+    { position }
+  );
+  await createLink(sourceId, target.id, { selectCreated: false });
+  replaceSelection(sourceId);
+  setStatus("Supporting condition created and connected");
+  render();
   return sourceId;
+};
+
+const createParentNode = async () => {
+  const source = selectedNode();
+  if (!source) return createNode();
+  const position = relatedNodePosition(source.id, "target");
+  const targetId = await createNode(source.frameId, "necessaryCondition", "New parent/above condition", { position });
+  await createLink(source.id, targetId, { selectCreated: false });
+  replaceSelection(targetId);
+  setStatus("Parent condition created and connected");
+  render();
+  return targetId;
 };
 
 const createFrame = async () => {
@@ -1734,6 +1859,73 @@ const renderShortcutList = () =>
     )
     .join("");
 
+const commandPaletteEntries = () => {
+  const query = commandPaletteQuery.trim().toLowerCase();
+  return Object.entries(commandBindings)
+    .filter(([command]) => command !== "commandPalette")
+    .map(([command, bindings]) => ({
+      command,
+      label: commandLabels[command] || command,
+      shortcuts: bindings.map(formatShortcutBinding)
+    }))
+    .filter((entry) => !query || `${entry.label} ${entry.shortcuts.join(" ")}`.toLowerCase().includes(query));
+};
+
+const focusCommandPaletteSearch = () => {
+  const search = app.querySelector("[data-command-palette-search]");
+  search?.focus();
+  search?.setSelectionRange?.(search.value.length, search.value.length);
+};
+
+const openCommandPalette = () => {
+  commandPaletteOpen = true;
+  commandPaletteQuery = "";
+  commandPaletteIndex = 0;
+  setStatus("Command palette open");
+  render();
+  focusCommandPaletteSearch();
+};
+
+const closeCommandPalette = () => {
+  commandPaletteOpen = false;
+  commandPaletteQuery = "";
+  commandPaletteIndex = 0;
+  render();
+  focusCanvas();
+};
+
+const toggleCommandPalette = () => {
+  if (commandPaletteOpen) closeCommandPalette();
+  else openCommandPalette();
+};
+
+const renderCommandPalette = () => {
+  if (!commandPaletteOpen) return "";
+  const entries = commandPaletteEntries();
+  commandPaletteIndex = clamp(commandPaletteIndex, 0, Math.max(0, entries.length - 1));
+  return `
+    <div class="command-palette-backdrop" data-command-palette-backdrop>
+      <section class="command-palette" data-command-palette role="dialog" aria-modal="true" aria-labelledby="command-palette-title">
+        <header>
+          <h2 id="command-palette-title">Commands</h2>
+          <button data-command-palette-close aria-label="Close command palette">Close</button>
+        </header>
+        <input data-command-palette-search value="${escapeHtml(commandPaletteQuery)}" placeholder="Search commands" aria-label="Search commands" autocomplete="off" />
+        <div class="command-palette-list" role="listbox">
+          ${entries.length
+            ? entries.map((entry, index) => `
+                <button class="command-palette-item ${index === commandPaletteIndex ? "active" : ""}" data-command-palette-command="${entry.command}" role="option" aria-selected="${index === commandPaletteIndex}">
+                  <span>${escapeHtml(entry.label)}</span>
+                  <span class="command-palette-shortcuts">${entry.shortcuts.map((shortcut) => `<kbd>${escapeHtml(shortcut)}</kbd>`).join("")}</span>
+                </button>
+              `).join("")
+            : '<p class="command-palette-empty">No matching commands</p>'}
+        </div>
+      </section>
+    </div>
+  `;
+};
+
 const renderSidebar = () => {
   if (!panelState.leftOpen) {
     return `
@@ -2544,6 +2736,7 @@ const render = () => {
       ${renderInspector()}
     </div>
     ${renderNodePreview()}
+    ${renderCommandPalette()}
   `;
   bindEvents();
   restoreViewport();
@@ -2771,6 +2964,26 @@ const bindEvents = () => {
   search?.addEventListener("input", () => {
     searchText = search.value;
   });
+
+  const paletteSearch = app.querySelector("[data-command-palette-search]");
+  paletteSearch?.addEventListener("input", () => {
+    commandPaletteQuery = paletteSearch.value;
+    commandPaletteIndex = 0;
+    render();
+    focusCommandPaletteSearch();
+  });
+  app.querySelector("[data-command-palette-close]")?.addEventListener("click", closeCommandPalette);
+  app.querySelector("[data-command-palette-backdrop]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) closeCommandPalette();
+  });
+  app.querySelectorAll("[data-command-palette-command]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const command = button.dataset.commandPaletteCommand;
+      commandPaletteOpen = false;
+      render();
+      await executeCommand(command);
+    });
+  });
 };
 
 const bindingMatchesEvent = (binding, event) => {
@@ -2800,13 +3013,13 @@ const commandForEvent = (event) => {
 
 const executeCommand = (command) => {
   const commands = {
-    commandPalette: () => setStatus("Command palette placeholder: use H, N, A, L, F, P, /"),
+    commandPalette: toggleCommandPalette,
     showHints: toggleHints,
     toggleMultiSelect,
     moveSelectionToParent,
     chooseSelectionFrame: beginFrameTargetMode,
     createNode: createNodeInViewport,
-    createParentNode: () => createNode(selectedNode()?.frameId || activeFrameId, "necessaryCondition", "New parent/above condition"),
+    createParentNode,
     createSupportingNode,
     focusInspector: focusPrimaryEditor,
     beginConnection,
@@ -2845,8 +3058,42 @@ const handleKeydown = async (event) => {
 
   if (event.key === "Escape") {
     event.preventDefault();
+    if (commandPaletteOpen) {
+      closeCommandPalette();
+      return;
+    }
     cancelContext();
     return;
+  }
+
+  if (commandPaletteOpen) {
+    const paletteCommand = commandForEvent(event);
+    if (paletteCommand === "commandPalette") {
+      event.preventDefault();
+      closeCommandPalette();
+      return;
+    }
+    const entries = commandPaletteEntries();
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (entries.length) {
+        const delta = event.key === "ArrowDown" ? 1 : -1;
+        commandPaletteIndex = (commandPaletteIndex + delta + entries.length) % entries.length;
+        render();
+        focusCommandPaletteSearch();
+      }
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const selectedCommand = entries[commandPaletteIndex]?.command;
+      if (selectedCommand) {
+        commandPaletteOpen = false;
+        render();
+        await executeCommand(selectedCommand);
+      }
+      return;
+    }
   }
 
   if (previewNodeId && event.key === " ") {
@@ -3735,6 +3982,393 @@ window.__ltpSmokeTest = async () => {
   };
 };
 
+const shortcutAuditBindingEvent = (binding) => ({
+  key: binding.key,
+  metaKey: Boolean(binding.command || binding.primary),
+  ctrlKey: Boolean(binding.control),
+  altKey: Boolean(binding.alt),
+  shiftKey: Boolean(binding.shift),
+  bubbles: true,
+  cancelable: true
+});
+
+const resetShortcutAuditWorkspace = async () => {
+  await bootPromise;
+  await workspaceOperationQueue;
+  window.clearTimeout(viewPersistTimer);
+  const revision = workspaceData.revision || 0;
+  const fixture = await window.ltpPrototype.loadSampleWorkspaceFixture();
+  fixture.revision = revision;
+  workspaceData = await window.ltpPrototype.saveWorkspace(fixture, {
+    recordHistory: false,
+    includeViewState: false,
+    label: "Reset keyboard shortcut audit",
+    category: "test"
+  });
+  historyState = await window.ltpPrototype.getHistoryState();
+  selectedElementId = null;
+  selectedElementType = "unknown";
+  selectionRootIds = new Set();
+  selectionIds = new Set();
+  connectionSourceIds.clear();
+  connectionSourceId = null;
+  multiSelectionMode = false;
+  multiSelectionFrameSeedIds.clear();
+  mode = "navigation";
+  hintsVisible = false;
+  hintBuffer = "";
+  hintEntries = [];
+  searchText = "";
+  previewNodeId = null;
+  activeFrameId = tree().hostFrameId;
+  zoomLevel = 1;
+  viewportState = { left: 0, top: 0 };
+  panelState = { leftOpen: true, rightOpen: true };
+  editingRightPanelWasOpen = null;
+  layoutAnimating = false;
+  commandPaletteOpen = false;
+  commandPaletteQuery = "";
+  commandPaletteIndex = 0;
+  replaceSelection(tree().nodes.find((node) => node.type === "necessaryCondition")?.id || tree().nodes[0]?.id);
+  setStatus("Keyboard shortcut audit ready");
+  render();
+  fitView();
+  window.clearTimeout(viewPersistTimer);
+  await new Promise((resolve) => setTimeout(resolve, 60));
+};
+
+window.__ltpShortcutAuditManifest = () =>
+  Object.entries(commandBindings).flatMap(([command, bindings]) =>
+    bindings.map((binding, bindingIndex) => ({
+      command,
+      bindingIndex,
+      shortcut: formatShortcutBinding(binding),
+      label: commandLabels[command] || command
+    }))
+  );
+
+window.__ltpShortcutAuditStep = async (command, bindingIndex) => {
+  await resetShortcutAuditWorkspace();
+  const binding = commandBindings[command]?.[bindingIndex];
+  const result = (ok, detail) => ({ ok: Boolean(ok), detail });
+  const waitFor = async (predicate, timeoutMs = 5000) => {
+    const startedAt = Date.now();
+    while (!predicate() && Date.now() - startedAt < timeoutMs) {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    }
+    return predicate();
+  };
+  const press = async () => {
+    const matchedCommand = commandForEvent(new KeyboardEvent("keydown", shortcutAuditBindingEvent(binding)));
+    if (matchedCommand !== command) throw new Error(`Expected ${command}, but binding resolves to ${matchedCommand || "none"}`);
+    document.dispatchEvent(new KeyboardEvent("keydown", shortcutAuditBindingEvent(binding)));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    for (let index = 0; index < 4; index += 1) {
+      const observedQueue = workspaceOperationQueue;
+      await observedQueue;
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      if (observedQueue === workspaceOperationQueue) break;
+    }
+    if (layoutAnimating) await waitFor(() => !layoutAnimating, 6500);
+  };
+  const selectAuditNode = (id = "node-nc-system-profile") => {
+    replaceSelection(nodeById()[id] ? id : tree().nodes.find((node) => node.type === "necessaryCondition")?.id);
+    render();
+    return selectedNode();
+  };
+  const selectAuditFrame = (id = "frame-csf-thinking") => {
+    replaceSelection(frameById()[id] ? id : canvas().frames.find((frame) => frame.id !== rootFrameId() && frame.id !== tree().hostFrameId)?.id);
+    render();
+    return selectedFrame();
+  };
+  const prepareScrollableViewport = () => {
+    setZoom(1.8);
+    render();
+    const shell = document.querySelector(".canvas-shell");
+    setViewportPosition(
+      Math.max(120, (shell.scrollWidth - shell.clientWidth) / 2),
+      Math.max(120, (shell.scrollHeight - shell.clientHeight) / 2)
+    );
+    return { ...viewportState };
+  };
+  const nodesOverlap = (leftId, rightId) => {
+    const left = layoutNode(leftId);
+    const right = layoutNode(rightId);
+    return left.x < right.x + right.width && left.x + left.width > right.x && left.y < right.y + right.height && left.y + left.height > right.y;
+  };
+  const frameExcludesNonMembers = (frameId) => {
+    const frameBox = layoutFrame(frameId);
+    const ownedFrameIds = frameDescendantIds(frameId, true);
+    return tree().nodes
+      .filter((node) => !ownedFrameIds.has(node.frameId))
+      .every((node) => {
+        const box = layoutNode(node.id);
+        return box.x + box.width <= frameBox.x || box.x >= frameBox.x + frameBox.width || box.y + box.height <= frameBox.y || box.y >= frameBox.y + frameBox.height;
+      });
+  };
+
+  if (!binding) return result(false, `Binding ${bindingIndex} is missing from ${command}.`);
+
+  if (command === "commandPalette") {
+    await press();
+    let palette = document.querySelector("[data-command-palette]");
+    let search = document.querySelector("[data-command-palette-search]");
+    let items = document.querySelectorAll("[data-command-palette-command]");
+    const opensFocused = commandPaletteOpen && Boolean(palette) && document.activeElement === search && items.length === Object.keys(commandBindings).length - 1;
+    search.value = "Toggle hints";
+    search.dispatchEvent(new Event("input", { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    items = document.querySelectorAll("[data-command-palette-command]");
+    const filters = items.length === 1 && items[0].dataset.commandPaletteCommand === "showHints";
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const executes = !commandPaletteOpen && hintsVisible;
+    await press();
+    palette = document.querySelector("[data-command-palette]");
+    search = document.querySelector("[data-command-palette-search]");
+    items = document.querySelectorAll("[data-command-palette-command]");
+    const reopens = commandPaletteOpen && Boolean(palette) && document.activeElement === search;
+    const usable = opensFocused && filters && executes && reopens;
+    return result(usable, `Opened with ${Object.keys(commandBindings).length - 1} commands=${opensFocused}; filtered Toggle hints=${filters}; Enter executed hints=${executes}; reopened focused=${reopens}.`);
+  }
+
+  if (command === "showHints") {
+    await press();
+    return result(hintsVisible && document.querySelectorAll(".hint-badge").length > 0, `Hints visible=${hintsVisible}; badges=${document.querySelectorAll(".hint-badge").length}.`);
+  }
+
+  if (command === "toggleMultiSelect") {
+    await press();
+    return result(multiSelectionMode && hintsVisible, `Multi-selection=${multiSelectionMode}; hints visible=${hintsVisible}.`);
+  }
+
+  if (command === "moveSelectionToParent") {
+    const node = selectAuditNode();
+    const sourceFrameId = node.frameId;
+    const expectedFrameId = frameById()[sourceFrameId]?.parentFrameId;
+    await press();
+    return result(nodeById()[node.id]?.frameId === expectedFrameId, `Node moved from ${sourceFrameId} to ${nodeById()[node.id]?.frameId}; expected ${expectedFrameId}.`);
+  }
+
+  if (command === "chooseSelectionFrame") {
+    selectAuditNode();
+    await press();
+    const onlyFrames = hintEntries.length > 0 && hintEntries.every((entry) => entry.type === "frame");
+    return result(mode === "frame-target" && onlyFrames, `Mode=${mode}; frame targets=${hintEntries.length}; only frames=${onlyFrames}.`);
+  }
+
+  if (command === "createNode") {
+    const before = tree().nodes.length;
+    await press();
+    const created = selectedNode();
+    return result(tree().nodes.length === before + 1 && created?.statement === "New necessary condition", `Nodes ${before} -> ${tree().nodes.length}; selected=${created?.statement || "none"}.`);
+  }
+
+  if (command === "createParentNode") {
+    const target = selectAuditNode();
+    const before = tree().nodes.length;
+    const beforeLinks = tree().links.length;
+    await press();
+    const created = selectedNode();
+    const connected = tree().links.some((link) => link.sourceNodeId === target.id && link.targetNodeId === created?.id);
+    const separated = created && !nodesOverlap(target.id, created.id);
+    const frameExclusion = frameExcludesNonMembers(target.frameId);
+    return result(tree().nodes.length === before + 1 && tree().links.length === beforeLinks + 1 && created?.frameId === target.frameId && created?.statement.includes("parent/above") && connected && separated && frameExclusion, `Nodes ${before} -> ${tree().nodes.length}; links ${beforeLinks} -> ${tree().links.length}; created="${created?.statement || "none"}" in target frame=${created?.frameId === target.frameId}; selected entity connects to parent=${connected}; boxes separated=${separated}; frame excludes non-members=${frameExclusion}.`);
+  }
+
+  if (command === "createSupportingNode") {
+    const target = selectAuditNode();
+    const beforeNodes = tree().nodes.length;
+    const beforeLinks = tree().links.length;
+    const beforeIds = new Set(tree().nodes.map((node) => node.id));
+    await press();
+    const created = tree().nodes.find((node) => !beforeIds.has(node.id));
+    const connected = tree().links.some((link) => link.sourceNodeId === created?.id && link.targetNodeId === target.id);
+    const separated = created && !nodesOverlap(target.id, created.id);
+    const frameExclusion = frameExcludesNonMembers(target.frameId);
+    return result(tree().nodes.length === beforeNodes + 1 && tree().links.length === beforeLinks + 1 && connected && separated && frameExclusion, `Nodes ${beforeNodes} -> ${tree().nodes.length}; links ${beforeLinks} -> ${tree().links.length}; connected to target=${connected}; boxes separated=${separated}; frame excludes non-members=${frameExclusion}.`);
+  }
+
+  if (command === "focusInspector") {
+    selectAuditNode();
+    panelState.rightOpen = false;
+    render();
+    await press();
+    const editor = document.querySelector("[data-primary-editor]");
+    return result(panelState.rightOpen && mode === "editing" && document.activeElement === editor, `Right panel open=${panelState.rightOpen}; mode=${mode}; primary editor focused=${document.activeElement === editor}.`);
+  }
+
+  if (command === "beginConnection") {
+    selectAuditNode();
+    await press();
+    const onlyNodes = hintEntries.length > 0 && hintEntries.every((entry) => entry.type === "node");
+    return result(mode === "connection" && connectionSourceIds.size === 1 && onlyNodes, `Mode=${mode}; sources=${connectionSourceIds.size}; node targets=${hintEntries.length}; only nodes=${onlyNodes}.`);
+  }
+
+  if (command === "createFrame") {
+    const before = canvas().frames.length;
+    await press();
+    return result(canvas().frames.length === before + 1 && selectedFrame()?.id === activeFrameId, `Frames ${before} -> ${canvas().frames.length}; new frame selected and active=${selectedFrame()?.id === activeFrameId}.`);
+  }
+
+  if (command === "selectParentFrame") {
+    activeFrameId = "frame-csf-thinking";
+    selectAuditNode();
+    const expected = frameById()[activeFrameId]?.parentFrameId;
+    await press();
+    return result(activeFrameId === expected && selectedElementId === expected, `Active and selected frame=${activeFrameId}; expected=${expected}.`);
+  }
+
+  if (command === "enterSelectedFrame") {
+    activeFrameId = tree().hostFrameId;
+    const frame = selectAuditFrame();
+    await press();
+    return result(activeFrameId === frame.id, `Creation frame=${activeFrameId}; expected=${frame.id}.`);
+  }
+
+  if (command === "focusSearch") {
+    await press();
+    return result(document.activeElement === document.querySelector("[data-search]"), `Search focused=${document.activeElement === document.querySelector("[data-search]")}.`);
+  }
+
+  if (command === "togglePin") {
+    const node = selectAuditNode();
+    const before = layoutNode(node.id).pinned;
+    await press();
+    return result(layoutNode(node.id).pinned !== before, `Pinned ${before} -> ${layoutNode(node.id).pinned}.`);
+  }
+
+  if (command === "toggleFrameCollapsed") {
+    const frame = selectAuditFrame();
+    await press();
+    await waitFor(() => frameById()[frame.id]?.collapsed && !layoutAnimating && !statusText.startsWith("Repositioning"), 6500);
+    const hidden = frameById()[frame.id].nodeIds.every((nodeId) => !document.querySelector(`.tree-node[data-element-id="${nodeId}"]`));
+    return result(frameById()[frame.id]?.collapsed && hidden, `Collapsed=${frameById()[frame.id]?.collapsed}; contained entities hidden=${hidden}.`);
+  }
+
+  if (command === "previewNode") {
+    const node = selectAuditNode();
+    await press();
+    return result(previewNodeId === node.id && Boolean(document.querySelector(".node-preview-dialog")), `Preview node=${previewNodeId}; dialog visible=${Boolean(document.querySelector(".node-preview-dialog"))}.`);
+  }
+
+  if (command === "cancelContext") {
+    selectAuditNode();
+    await press();
+    return result(!selectedElementId && selectionRootIds.size === 0 && !hintsVisible && mode === "navigation", `Selected=${selectedElementId || "none"}; roots=${selectionRootIds.size}; hints=${hintsVisible}; mode=${mode}.`);
+  }
+
+  if (command === "undo") {
+    const before = tree().nodes.length;
+    await createNodeInViewport();
+    const createdId = selectedElementId;
+    await press();
+    return result(tree().nodes.length === before && !nodeById()[createdId], `Created node ${createdId}; node count after undo=${tree().nodes.length}; expected=${before}.`);
+  }
+
+  if (command === "redo") {
+    const before = tree().nodes.length;
+    await createNodeInViewport();
+    const createdId = selectedElementId;
+    await moveHistory("undo");
+    await press();
+    return result(tree().nodes.length === before + 1 && Boolean(nodeById()[createdId]), `Node ${createdId} restored=${Boolean(nodeById()[createdId])}; count=${tree().nodes.length}.`);
+  }
+
+  if (command === "deleteSelection") {
+    const node = selectAuditNode("node-nc-command-palette");
+    await press();
+    return result(!nodeById()[node.id], `Deleted entity absent=${!nodeById()[node.id]}; selection roots=${selectionRootIds.size}.`);
+  }
+
+  if (command === "cycleNodeTypes") {
+    const node = selectAuditNode();
+    const before = node.type;
+    await press();
+    return result(nodeById()[node.id]?.type !== before, `Type ${before} -> ${nodeById()[node.id]?.type}.`);
+  }
+
+  if (["panUp", "panDown", "panLeft", "panRight"].includes(command)) {
+    const before = prepareScrollableViewport();
+    await press();
+    const after = { ...viewportState };
+    const moved = {
+      panUp: after.top < before.top,
+      panDown: after.top > before.top,
+      panLeft: after.left < before.left,
+      panRight: after.left > before.left
+    }[command];
+    return result(moved, `Viewport (${Math.round(before.left)}, ${Math.round(before.top)}) -> (${Math.round(after.left)}, ${Math.round(after.top)}).`);
+  }
+
+  if (command === "centerSelection") {
+    const node = selectAuditNode("node-nc-layout-state");
+    setZoom(1.8);
+    setViewportPosition(0, 0);
+    await press();
+    const shell = document.querySelector(".canvas-shell");
+    const box = layoutNode(node.id);
+    const screenCenter = {
+      x: (box.x + box.width / 2) * zoomLevel - viewportState.left,
+      y: (box.y + box.height / 2) * zoomLevel - viewportState.top
+    };
+    const centered = Math.abs(screenCenter.x - shell.clientWidth / 2) < 4 && Math.abs(screenCenter.y - shell.clientHeight / 2) < 4;
+    return result(centered, `Selected entity screen center=(${screenCenter.x.toFixed(1)}, ${screenCenter.y.toFixed(1)}); viewport center=(${(shell.clientWidth / 2).toFixed(1)}, ${(shell.clientHeight / 2).toFixed(1)}).`);
+  }
+
+  if (command === "zoomIn") {
+    const before = zoomLevel;
+    await press();
+    return result(zoomLevel > before, `Zoom ${(before * 100).toFixed(0)}% -> ${(zoomLevel * 100).toFixed(0)}%.`);
+  }
+
+  if (command === "zoomOut") {
+    setZoom(1.2);
+    const before = zoomLevel;
+    await press();
+    return result(zoomLevel < before, `Zoom ${(before * 100).toFixed(0)}% -> ${(zoomLevel * 100).toFixed(0)}%.`);
+  }
+
+  if (command === "resetZoom") {
+    setZoom(1.6);
+    await press();
+    return result(zoomLevel === 1, `Zoom reset to ${(zoomLevel * 100).toFixed(0)}%.`);
+  }
+
+  if (command === "fitView") {
+    setZoom(1.8);
+    setViewportPosition(200, 200);
+    await press();
+    return result(zoomLevel <= 1 && viewportState.left === 0 && viewportState.top === 0, `Fit zoom=${(zoomLevel * 100).toFixed(0)}%; viewport=(${viewportState.left}, ${viewportState.top}).`);
+  }
+
+  if (command === "toggleLeftPanel") {
+    await press();
+    return result(!panelState.leftOpen && document.querySelector(".prototype-shell")?.classList.contains("left-collapsed"), `Left panel open=${panelState.leftOpen}.`);
+  }
+
+  if (command === "toggleRightPanel") {
+    await press();
+    return result(!panelState.rightOpen && document.querySelector(".prototype-shell")?.classList.contains("right-collapsed"), `Right panel open=${panelState.rightOpen}.`);
+  }
+
+  if (command === "runAutoLayout") {
+    const node = selectAuditNode();
+    const hostBox = layoutFrame(tree().hostFrameId);
+    tree().layout.nodes[node.id].x = hostBox.x + hostBox.width + 500;
+    tree().layout.nodes[node.id].y = hostBox.y + hostBox.height + 500;
+    render();
+    await press();
+    await waitFor(() => !layoutAnimating && !statusText.startsWith("Running ELK"), 6500);
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    const structuralIssues = issues.filter((issue) => !issue.code.startsWith("LINK_"));
+    return result(structuralIssues.length === 0 && /layout|Current layout/i.test(statusText), `Status="${statusText}"; structural geometry issues=${structuralIssues.length}.`);
+  }
+
+  await press();
+  return result(false, `No semantic audit assertion is defined for ${command}.`);
+};
+
 window.__ltpVisualTestStep = async (step) => {
   await bootPromise;
   await workspaceOperationQueue;
@@ -3844,7 +4478,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.10" && hostVisible && rootHidden, "Build 3C.10 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.11" && hostVisible && rootHidden, "Build 3C.11 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
