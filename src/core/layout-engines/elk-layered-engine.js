@@ -8,9 +8,9 @@ const elkDirection = (direction) =>
     RL: "LEFT"
   })[direction] || "DOWN";
 
-const strictConfigurations = (optimize) =>
-  optimize
-    ? [
+const strictConfigurations = (optimize) => {
+  if (!optimize) return [{ placement: "BRANDES_KOEPF", seed: 1, spacingScale: 1 }];
+  const placements = [
         { placement: "BRANDES_KOEPF", seed: 1 },
         { placement: "BRANDES_KOEPF", seed: 2 },
         { placement: "BRANDES_KOEPF", seed: 4 },
@@ -20,8 +20,12 @@ const strictConfigurations = (optimize) =>
         { placement: "NETWORK_SIMPLEX", seed: 9 },
         { placement: "NETWORK_SIMPLEX", seed: 11 },
         { placement: "NETWORK_SIMPLEX", seed: 13 }
-      ]
-    : [{ placement: "BRANDES_KOEPF", seed: 1 }];
+      ];
+  return placements.map((configuration, index) => ({
+    ...configuration,
+    spacingScale: index % 2 === 0 ? 1 : 1.35
+  }));
+};
 
 const createElkLayeredEngine = () => {
   const elk = new ELK();
@@ -50,7 +54,7 @@ const createElkLayeredEngine = () => {
           layoutOptions: {
             "elk.algorithm": "layered",
             "elk.direction": elkDirection(direction),
-            "elk.spacing.nodeNode": String(spacingNodeNode),
+            "elk.spacing.nodeNode": String(Math.round(spacingNodeNode * config.spacingScale)),
             "elk.layered.spacing.nodeNodeBetweenLayers": String(spacingLayer),
             "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
             "elk.edgeRouting": "ORTHOGONAL",
@@ -75,7 +79,7 @@ const createElkLayeredEngine = () => {
         });
         candidates.push({
           children: laidOut.children || [],
-          config: { placement: config.placement, seed: config.seed }
+          config: { placement: config.placement, seed: config.seed, spacingScale: config.spacingScale }
         });
       }
 

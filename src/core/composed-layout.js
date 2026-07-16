@@ -12,6 +12,9 @@ const MIN_FRAME_HEIGHT = 180;
 const COLLAPSED_FRAME_WIDTH = 190;
 const COLLAPSED_FRAME_HEIGHT = 76;
 const ROUTE_CLEARANCE = 14;
+const PORT_STUB_LENGTH = 52;
+const PORT_EDGE_MARGIN = 18;
+const PORT_MIN_SPACING = 18;
 const STABILITY_DISTANCE = 120;
 const LONG_LINK_DISTANCE = 480;
 const MINIMUM_LAYOUT_IMPROVEMENT = 0.15;
@@ -192,12 +195,12 @@ const routePorts = (source, target, direction, assignment = {}) => {
   return {
     source: sourcePoint,
     start: {
-      x: sourcePoint.x + vector.x * ROUTE_CLEARANCE,
-      y: sourcePoint.y + vector.y * ROUTE_CLEARANCE
+      x: sourcePoint.x + vector.x * PORT_STUB_LENGTH,
+      y: sourcePoint.y + vector.y * PORT_STUB_LENGTH
     },
     end: {
-      x: targetPoint.x - vector.x * ROUTE_CLEARANCE,
-      y: targetPoint.y - vector.y * ROUTE_CLEARANCE
+      x: targetPoint.x - vector.x * PORT_STUB_LENGTH,
+      y: targetPoint.y - vector.y * PORT_STUB_LENGTH
     },
     target: targetPoint
   };
@@ -233,13 +236,38 @@ const distributedPortAssignments = (links, nodeLayouts, direction) => {
         : left.otherCenter.x - right.otherCenter.x;
       return Math.abs(difference) > 0.001 ? difference : left.linkId.localeCompare(right.linkId);
     });
-    const dimension = variesOnY ? entries[0].box.height : entries[0].box.width;
-    const margin = Math.min(28, dimension / 4);
+    const box = entries[0].box;
+    const dimension = variesOnY ? box.height : box.width;
+    const origin = variesOnY ? box.y : box.x;
+    const margin = Math.min(PORT_EDGE_MARGIN, dimension / 4);
+    const lower = margin;
+    const upper = dimension - margin;
+    const available = Math.max(0, upper - lower);
+    const spacing = entries.length > 1
+      ? Math.min(PORT_MIN_SPACING, available / (entries.length - 1))
+      : 0;
+    const positions = entries.map((entry) => {
+      const projected = (variesOnY ? entry.otherCenter.y : entry.otherCenter.x) - origin;
+      return Math.max(lower, Math.min(upper, projected));
+    });
+
+    for (let index = 1; index < positions.length; index += 1) {
+      positions[index] = Math.max(positions[index], positions[index - 1] + spacing);
+    }
+    if (positions.length && positions.at(-1) > upper) {
+      positions[positions.length - 1] = upper;
+      for (let index = positions.length - 2; index >= 0; index -= 1) {
+        positions[index] = Math.min(positions[index], positions[index + 1] - spacing);
+      }
+    }
+    if (positions.length && positions[0] < lower) {
+      const shift = lower - positions[0];
+      positions.forEach((position, index) => {
+        positions[index] = position + shift;
+      });
+    }
     entries.forEach((entry, index) => {
-      const position = entries.length === 1
-        ? dimension / 2
-        : margin + index * (dimension - margin * 2) / (entries.length - 1);
-      assignments.get(entry.linkId)[`${entry.role}Fraction`] = position / dimension;
+      assignments.get(entry.linkId)[`${entry.role}Fraction`] = positions[index] / dimension;
     });
   }
 
@@ -406,14 +434,20 @@ const candidateQuality = (items, children, edges, direction, referenceChildren =
   const boxes = new Map(
     children.map((child) => [child.id, { x: child.x || 0, y: child.y || 0, width: child.width, height: child.height }])
   );
-  const segments = edges
-    .map((edge) => {
-      const sourceId = edge.sources[0];
-      const targetId = edge.targets[0];
+  const candidateLinks = edges.map((edge) => ({
+    id: edge.id,
+    sourceNodeId: edge.sources[0],
+    targetNodeId: edge.targets[0]
+  }));
+  const portAssignments = distributedPortAssignments(candidateLinks, Object.fromEntries(boxes), direction);
+  const segments = candidateLinks
+    .map((link) => {
+      const sourceId = link.sourceNodeId;
+      const targetId = link.targetNodeId;
       const source = boxes.get(sourceId);
       const target = boxes.get(targetId);
       if (!source || !target) return null;
-      const ports = routePorts(source, target, direction);
+      const ports = routePorts(source, target, direction, portAssignments.get(link.id));
       const preferred = directionVector(direction);
       const sourceCenter = centerOf(source);
       const targetCenter = centerOf(target);
@@ -604,7 +638,7 @@ const orthogonalRoute = (source, target, obstacles, existingRoutes, direction, l
       x: Math.sign(proposed.x - endpoint.x),
       y: Math.sign(proposed.y - endpoint.y)
     };
-    for (let distance = ROUTE_CLEARANCE; distance >= 0; distance -= 2) {
+    for (let distance = PORT_STUB_LENGTH; distance >= 0; distance -= 2) {
       const candidate = {
         x: endpoint.x + vector.x * distance,
         y: endpoint.y + vector.y * distance

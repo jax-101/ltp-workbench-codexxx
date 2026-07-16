@@ -582,9 +582,19 @@ Aprendizaje: una decision visual reversible debe apoyarse sobre un contrato geom
 
 Aplicacion futura: persistir intencion y geometria estable; derivar el trazo en la capa de presentacion; ofrecer comparacion con los mismos datos; y verificar tanto percepcion visual como invariantes mediante muestreo de la curva final.
 
+### L-062: Los grados de libertad pequenos deben entrar en la optimizacion
+
+Fecha: 2026-07-16
+
+Evidencia: las flechas ya llegaban a la cara correcta, pero los puertos uniformes y una unica separacion transversal obligaban a curvar antes de tiempo y desaprovechaban espacio disponible. Proyectar puertos, mantener su orden y comparar capas compactas y ampliadas mejoro las entradas sin cambiar rangos.
+
+Aprendizaje: antes de sustituir el algoritmo principal conviene identificar que variables se han fijado artificialmente. Puertos deslizantes, orden dentro de una capa y tamano del contenedor pueden eliminar conflictos locales con menos impacto que crear codos o mover nodos entre niveles.
+
+Aplicacion futura: enumerar variables libres y restricciones duras por separado; generar una diversidad acotada de candidatos; puntuar la geometria que realmente se renderiza; y exigir pruebas perceptivas en unidades de pantalla cuando intervienen zoom o marcadores.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-062`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-063`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

@@ -1866,17 +1866,21 @@ const linkEndpoints = (sourceBox, targetBox) => {
 
 const pathNumber = (value) => Math.round(value * 100) / 100;
 
-const curvedLinkPath = (route, vector) => {
+const curvedLinkPath = (route, vector, terminalStraight = 18) => {
   if (route.length < 2) return "";
   const point = (candidate) => `${pathNumber(candidate.x)},${pathNumber(candidate.y)}`;
   if (route.length === 2) {
     const [source, target] = route;
     const distance = Math.hypot(target.x - source.x, target.y - source.y);
     const axialDistance = Math.abs((target.x - source.x) * vector.x + (target.y - source.y) * vector.y);
-    const handle = Math.min(140, Math.max(12, distance * 0.28), Math.max(12, axialDistance * 0.45));
-    const firstControl = { x: source.x + vector.x * handle, y: source.y + vector.y * handle };
-    const secondControl = { x: target.x - vector.x * handle, y: target.y - vector.y * handle };
-    return `M${point(source)} C${point(firstControl)} ${point(secondControl)} ${point(target)}`;
+    const stub = Math.min(terminalStraight, Math.max(0, axialDistance / 2 - 4));
+    const sourceStub = { x: source.x + vector.x * stub, y: source.y + vector.y * stub };
+    const targetStub = { x: target.x - vector.x * stub, y: target.y - vector.y * stub };
+    const curvedDistance = Math.hypot(targetStub.x - sourceStub.x, targetStub.y - sourceStub.y);
+    const handle = Math.min(140, Math.max(12, curvedDistance * 0.3));
+    const firstControl = { x: sourceStub.x + vector.x * handle, y: sourceStub.y + vector.y * handle };
+    const secondControl = { x: targetStub.x - vector.x * handle, y: targetStub.y - vector.y * handle };
+    return `M${point(source)} L${point(sourceStub)} C${point(firstControl)} ${point(secondControl)} ${point(targetStub)} L${point(target)}`;
   }
 
   let path = `M${point(route[0])}`;
@@ -1886,7 +1890,13 @@ const curvedLinkPath = (route, vector) => {
     const next = route[index + 1];
     const incomingLength = Math.hypot(corner.x - previous.x, corner.y - previous.y);
     const outgoingLength = Math.hypot(next.x - corner.x, next.y - corner.y);
-    const radius = Math.min(32, incomingLength / 2, outgoingLength / 2);
+    const incomingLimit = index === 1
+      ? Math.max(0, incomingLength - terminalStraight)
+      : incomingLength / 2;
+    const outgoingLimit = index === route.length - 2
+      ? Math.max(0, outgoingLength - terminalStraight)
+      : outgoingLength / 2;
+    const radius = Math.min(32, incomingLength / 2, outgoingLength / 2, incomingLimit, outgoingLimit);
     if (radius < 0.5) {
       path += ` L${point(corner)}`;
       continue;
@@ -1925,7 +1935,8 @@ const renderLinks = () => {
       const route = routeMatchesProjection ? linkLayout.route || [] : [];
       if (routingStyle() === "CURVED") {
         const curvedRoute = !layoutAnimating && route.length >= 2 ? route : [source, target];
-        const path = curvedLinkPath(curvedRoute, vector);
+        const terminalStraight = Math.max(18, 15 / clamp(zoomLevel, 0.35, 2.5));
+        const path = curvedLinkPath(curvedRoute, vector, terminalStraight);
         return `<path class="tree-link-line link-curved ${selected} ${included}" data-link-id="${link.id}" d="${path}" marker-end="url(#${marker})" />`;
       }
       if (!layoutAnimating && route.length >= 2) {
@@ -3222,6 +3233,8 @@ window.__ltpSmokeTest = async () => {
   togglePanel("left");
   togglePanel("right");
 
+  window.clearTimeout(viewPersistTimer);
+  await workspaceOperationQueue;
   const directionTestTree = tree();
   directionTestTree.layout.direction = "LR";
   const leftToRightWorkspace = await window.ltpPrototype.runLayout(workspaceData);
@@ -3624,7 +3637,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.5" && hostVisible && rootHidden, "Build 3C.5 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.6" && hostVisible && rootHidden, "Build 3C.6 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -4079,6 +4092,22 @@ window.__ltpVisualTestStep = async (step) => {
       routingStyle() === "CURVED" &&
       curvedPaths.length === laidOutTree.links.length &&
       curvedPaths.every((path) => /[CQ]/.test(path.getAttribute("d") || ""));
+    const terminalProbeDistance = 14 / clamp(zoomLevel, 0.35, 2.5);
+    const terminalSegmentsStayPerpendicular = csfGoalLinks.every((link) => {
+      const path = document.querySelector(`[data-link-id="${link.id}"]`);
+      const length = path?.getTotalLength() || 0;
+      if (!path || length <= terminalProbeDistance * 2) return false;
+      const source = path.getPointAtLength(0);
+      const afterSource = path.getPointAtLength(terminalProbeDistance);
+      const beforeTarget = path.getPointAtLength(length - terminalProbeDistance);
+      const target = path.getPointAtLength(length);
+      return (
+        Math.abs(source.x - afterSource.x) < 0.5 &&
+        afterSource.y < source.y &&
+        Math.abs(beforeTarget.x - target.x) < 0.5 &&
+        beforeTarget.y > target.y
+      );
+    });
     const visibleObstacleBoxes = [
       ...laidOutTree.nodes.filter(nodeIsVisible).map((node) => ({ id: node.id, box: layoutNode(node.id) })),
       ...canvas().frames
@@ -4119,10 +4148,11 @@ window.__ltpVisualTestStep = async (step) => {
         quality.crossings === 0 &&
         mostlyStraight &&
         curvedRoutingVisible &&
+        terminalSegmentsStayPerpendicular &&
         curvesAvoidEntities &&
         stableLayoutKept &&
         frameContainsDiagram,
-      `18 entities, 21 links, current layout kept=${stableLayoutKept}, curved paths=${curvedRoutingVisible}, curves avoid entities=${curvesAvoidEntities}, CSF to Goal=${csfGoalLinks.length}, CSF layers=${csfRows.size}, distinct arrow arrivals=${distinctArrivals}, arrow width=${arrowMarkerScreenWidth.toFixed(1)}px, crossings=${quality.crossings}, straight=${quality.straightRoutes}, bends=${quality.bends}, geometry issues=${issues.length}.`
+      `18 entities, 21 links, current layout kept=${stableLayoutKept}, curved paths=${curvedRoutingVisible}, perpendicular terminal segments=${terminalSegmentsStayPerpendicular}, curves avoid entities=${curvesAvoidEntities}, CSF to Goal=${csfGoalLinks.length}, CSF layers=${csfRows.size}, distinct arrow arrivals=${distinctArrivals}, arrow width=${arrowMarkerScreenWidth.toFixed(1)}px, crossings=${quality.crossings}, straight=${quality.straightRoutes}, bends=${quality.bends}, geometry issues=${issues.length}.`
     );
   }
 

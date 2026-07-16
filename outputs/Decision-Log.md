@@ -460,3 +460,9 @@ Razon: una flecha invertida en un DAG comunica una dependencia distinta y no pue
 Decision: el coordinador persiste una ruta neutral formada por puntos y libre de obstaculos. El renderer puede proyectarla como polilinea ortogonal o como curva suave. Los enlaces directos usan Bezier cubico con tangentes perpendiculares; los desvios usan curvas cuadraticas acotadas por la longitud de cada tramo.
 
 Razon: pedir a cada estilo visual que vuelva a resolver navegacion, cruces y obstaculos duplicaria la parte mas delicada del sistema. Separar topologia de representacion permite comparar legibilidad sin alterar posiciones, semantica, historial o garantias geometricas.
+
+### D-075: Puertos, posiciones de capa y tamano de frame son variables del layout
+
+Decision: los extremos no se fijan al centro de una cara. Se proyectan hacia el nodo opuesto, se ordenan y se separan dentro de la cara preferente. ELK compara variantes compactas y ampliadas que desplazan entidades sobre el eje transversal de su capa; el frame adopta despues la caja del candidato elegido. El renderer reserva un tramo terminal recto cuyo minimo se calcula en pantalla para no quedar oculto por la punta.
+
+Razon: tratar puertos, coordenadas transversales y limites del contenedor como constantes elimina grados de libertad que pueden evitar cruces sin cambiar capas ni semantica. Optimizarlos conjuntamente permite mejorar legibilidad antes de introducir desvios adicionales.

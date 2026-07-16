@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.5`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.6`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -369,6 +369,19 @@ Resultado esperado: Layout rompe el ciclo solo en su grafo temporal. La relacion
 9. Cierra y vuelve a abrir la aplicacion; comprueba que se conserva el estilo elegido.
 
 Resultado esperado: ambos estilos representan exactamente el mismo diagrama y la misma ruta geometrica. `Curved` mejora continuidad visual sin perder puertos, obstaculos o transiciones; `Orthogonal` permite una comparacion inmediata y reversible.
+
+## Prueba 28: puertos adaptativos y entrada perpendicular
+
+1. Abre el caso complejo, selecciona `Bottom to Top`, elige `Curved` y pulsa `Layout`.
+2. Observa las tres flechas de los CSF que entran en el Goal.
+3. Comprueba que llegan por puntos distintos del borde inferior y en el mismo orden horizontal que sus CSF.
+4. Comprueba que cada curva se convierte en una recta vertical antes de empezar la punta.
+5. Repite la observacion al 35%, 100% y 200% de zoom.
+6. Sigue una rama larga y comprueba que tambien sale perpendicularmente de cada entidad antes de curvarse.
+7. Comprueba que las entidades de una misma capa pueden ocupar distintas posiciones horizontales sin abandonar su nivel.
+8. Comprueba que el borde del Goal Tree contiene por completo el resultado y se ajusta al espacio ocupado.
+
+Resultado esperado: puertos, posicion transversal y tamano del frame cooperan para reducir cruces. Las caras preferentes y las capas no cambian, y la punta nunca oculta el inicio de la aproximacion perpendicular.
 
 ## Registro de resultados
 

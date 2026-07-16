@@ -360,7 +360,7 @@ Campos globales:
 - `lastRunAt`.
 - `settings`, incluyendo `routingStyle`: `CURVED` u `ORTHOGONAL`.
 
-La ruta persistida sigue siendo una lista neutral de puntos que evita obstaculos. `routingStyle` controla su proyeccion visual y puede cambiarse sin recalcular posiciones ni modificar links semanticos.
+La ruta persistida sigue siendo una lista neutral de puntos que evita obstaculos. Sus extremos identifican puertos calculados sobre las caras preferentes; esos puertos pueden desplazarse a lo largo de la cara sin cambiar el link semantico. `routingStyle` controla la proyeccion visual y puede cambiarse sin recalcular posiciones ni modificar links semanticos. En modo curvo, el tramo final recto se deriva tambien del zoom para mantener visible la aproximacion perpendicular antes de la punta.
 
 Fase 1 usa auto-layout por comando. No debe reordenar agresivamente sin accion del usuario.
 

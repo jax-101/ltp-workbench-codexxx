@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { runComposedLayout, validateComposedGeometry, boxContains, boxesOverlap } = require("../src/core/composed-layout");
+const { createElkLayeredEngine } = require("../src/core/layout-engines/elk-layered-engine");
 
 const fixturePath = path.join(__dirname, "..", "outputs", "sample-workspace-v0.1.json");
 const fixture = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
@@ -58,6 +59,29 @@ const addContainerFrame = (workspace, frameId, parentFrameId, nodeIds) => {
 };
 
 const run = async () => {
+  const spacingCandidates = await createElkLayeredEngine().generateCandidates({
+    containerId: "spacing-probe",
+    items: [
+      { id: "a", width: 200, height: 60 },
+      { id: "b", width: 200, height: 60 },
+      { id: "c", width: 200, height: 60 }
+    ],
+    edges: [
+      { id: "ab", sources: ["a"], targets: ["c"] },
+      { id: "bb", sources: ["b"], targets: ["c"] }
+    ],
+    direction: "TB",
+    spacingNodeNode: 48,
+    spacingLayer: 96,
+    rankPartitions: new Map(),
+    optimize: true
+  });
+  assert.deepEqual(
+    new Set(spacingCandidates.map((candidate) => candidate.config.spacingScale)),
+    new Set([1, 1.35]),
+    "ELK candidates must include compact and expanded movement within each layer"
+  );
+
   const fixtureSnapshot = JSON.stringify(fixture);
   for (const direction of ["TB", "BT", "LR", "RL"]) {
     const directional = structuredClone(fixture);
@@ -334,7 +358,7 @@ const run = async () => {
   assert.equal(directLayout.quality.directionExceptions, 0, "an acyclic graph must follow the preferred direction");
   assert.equal(directLayout.quality.cycleBreaks, 0, "an acyclic graph must not break any edge for layout");
   assert.equal(directLayerCount, 4, "the shortcut must preserve a fourth layer instead of reversing an edge");
-  assert.equal(directLayout.optimization[directHost.id].candidates, 9, "the optimizer should compare every deterministic candidate");
+  assert.equal(directLayout.optimization[directHost.id].candidates, 9, "the optimizer should compare compact and expanded layer variants");
   assert(canvasFor(directResult).layout.frames[directHost.id].width < 1800, "the host frame should shrink to its content");
 
   const cyclic = structuredClone(fixture);
@@ -387,6 +411,14 @@ const run = async () => {
   );
   const goalArrivals = csfGoalLinks.map((link) => complexTree.layout.links[link.id].route.at(-1));
   const distinctGoalArrivals = new Set(goalArrivals.map((point) => `${point.x}:${point.y}`));
+  const orderedGoalArrivals = csfGoalLinks
+    .map((link) => ({
+      sourceX:
+        complexTree.layout.nodes[link.sourceNodeId].x +
+        complexTree.layout.nodes[link.sourceNodeId].width / 2,
+      arrivalX: complexTree.layout.links[link.id].route.at(-1).x
+    }))
+    .sort((left, right) => left.sourceX - right.sourceX);
   const goalBox = complexTree.layout.nodes[complexGoal.id];
   const csfRows = new Set(complexCsfs.map((node) => complexTree.layout.nodes[node.id].y));
   const complexOptimization = complexTree.layout.optimization[complexTree.hostFrameId];
@@ -409,6 +441,10 @@ const run = async () => {
   assert.equal(csfRows.size, 1, "all three CSFs must share their semantic layer");
   assert([...complexCsfs].every((node) => complexTree.layout.nodes[node.id].y > goalBox.y), "BT places the CSF layer below the Goal");
   assert.equal(distinctGoalArrivals.size, 3, "CSF arrowheads must use distinct arrival points on the Goal");
+  assert(
+    orderedGoalArrivals.every((entry, index) => index === 0 || entry.arrivalX > orderedGoalArrivals[index - 1].arrivalX),
+    "ports on the Goal face must follow source order to avoid local crossings"
+  );
   assert(goalArrivals.every((point) => point.y === goalBox.y + goalBox.height), "BT arrows must enter through the Goal bottom edge");
   assert.deepEqual(validateComposedGeometry(complexResult), [], "the complex fixture must preserve composed geometry");
   assert.equal(complexTree.layout.quality.crossings, 0, "the complex fixture should avoid independent route crossings");

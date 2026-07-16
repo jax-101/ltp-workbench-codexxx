@@ -822,3 +822,20 @@ Criterios de aceptacion:
 - Layout, Undo y Redo mantienen los enlaces unidos a sus extremos durante la transicion.
 - La preferencia se persiste en `tree.layout.settings.routingStyle` y es independiente de la semantica de los links.
 - El registro declarativo de cada diagrama puede elegir estilo inicial y estilos admitidos.
+
+### F-069: Puertos adaptativos y tramos terminales rectos
+
+Feedback: una flecha curva debe conservar la perpendicularidad hasta el inicio visible de la punta. Los puntos de entrada y salida pueden desplazarse por la cara preferente, los nodos pueden deslizarse dentro de su capa y el frame puede crecer si asi se reducen cruces.
+
+Estado: implementado en `3C.6`.
+
+Criterios de aceptacion:
+
+- El tramo anterior a la punta permanece recto y perpendicular durante al menos 14 px visibles en cualquier nivel de zoom admitido.
+- Los puertos se proyectan hacia el otro extremo, se mantienen dentro de margenes seguros y conservan una separacion minima.
+- Varios links sobre una cara ordenan sus puertos como sus extremos opuestos para evitar cruces locales.
+- Todas las conexiones respetan las caras preferentes de la direccion del diagrama.
+- Las variantes ELK incluyen separacion compacta y ampliada sobre el eje de cada capa.
+- La funcion de calidad compara cruces, obstaculos, longitud, espacio y estabilidad usando los puertos adaptativos.
+- El frame se ajusta a las dimensiones del candidato ganador sin perder contencion.
+- El caso complejo conserva capas, cero cruces independientes y cero curvas atravesando entidades.

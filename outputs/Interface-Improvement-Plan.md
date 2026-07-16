@@ -466,6 +466,26 @@ Evidencia:
 - Bateria visual `3C.5` con 37 escenarios en estado `PASS`.
 - Captura `26-readable-routing.png`: Goal Tree complejo completo en modo `Curved`.
 
+### Build 3C.6: puertos y capas adaptativos
+
+Estado: implementado y validado automaticamente y visualmente.
+
+Incluye:
+
+- Tramos terminales rectos que permanecen visibles antes de la punta a cualquier zoom.
+- Puertos proyectados hacia el otro extremo y distribuidos con orden y separacion minima.
+- Variantes compactas y ampliadas de separacion transversal dentro de las capas ELK.
+- Evaluacion de candidatos con los puertos reales sobre las caras preferentes.
+- Ajuste automatico del frame al espacio utilizado por la variante ganadora.
+
+Evidencia:
+
+- La prueba geometrica verifica tres llegadas ordenadas y distintas al Goal.
+- La prueba visual mide 14 px rectos y perpendiculares en salida y llegada.
+- El caso complejo conserva 19 rutas rectas, cero cruces independientes y cero invasiones de entidades.
+- Bateria visual `3C.6` con 37 escenarios en estado `PASS`.
+- Captura `26-readable-routing.png`: puertos distribuidos y curvas enderezadas antes de cada punta.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:
