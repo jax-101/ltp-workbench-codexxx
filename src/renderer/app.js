@@ -1719,24 +1719,27 @@ const selectionCenter = () => {
   return { x: (left + right) / 2, y: (top + bottom) / 2 };
 };
 
-const pointOnBoxEdge = (box, toward) => {
-  const center = centerOf(box);
-  const dx = toward.x - center.x;
-  const dy = toward.y - center.y;
-  if (!dx && !dy) return center;
-  const scale = 1 / Math.max(Math.abs(dx) / (box.width / 2), Math.abs(dy) / (box.height / 2));
-  return {
-    x: center.x + dx * scale,
-    y: center.y + dy * scale
-  };
-};
-
 const linkEndpoints = (sourceBox, targetBox) => {
   const sourceCenter = centerOf(sourceBox);
   const targetCenter = centerOf(targetBox);
+  const vector =
+    ({
+      TB: { x: 0, y: 1 },
+      BT: { x: 0, y: -1 },
+      LR: { x: 1, y: 0 },
+      RL: { x: -1, y: 0 }
+    })[tree()?.layout?.direction] || { x: 0, y: 1 };
+  const sourceDistance = vector.x ? sourceBox.width / 2 : sourceBox.height / 2;
+  const targetDistance = vector.x ? targetBox.width / 2 : targetBox.height / 2;
   return {
-    source: pointOnBoxEdge(sourceBox, targetCenter),
-    target: pointOnBoxEdge(targetBox, sourceCenter)
+    source: {
+      x: sourceCenter.x + vector.x * sourceDistance,
+      y: sourceCenter.y + vector.y * sourceDistance
+    },
+    target: {
+      x: targetCenter.x - vector.x * targetDistance,
+      y: targetCenter.y - vector.y * targetDistance
+    }
   };
 };
 
@@ -3375,7 +3378,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3B.0" && hostVisible && rootHidden, "Build 3B.0 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3B.1" && hostVisible && rootHidden, "Build 3B.1 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3669,6 +3672,84 @@ window.__ltpVisualTestStep = async (step) => {
     await selectElement(targetId);
     const created = activeTree.links.length - before;
     return result("Connect the general selection", created === visualTestState.nodeIds.length, "L converts the selected nodes into link sources and creates one link per source.");
+  }
+
+  if (step === "readable-routing") {
+    const hostFrame = frameById()[activeTree.hostFrameId];
+    const rootFrame = frameById()[rootFrameId()];
+    const routingNodes = activeTree.nodes.slice(0, 8);
+    const routingNodeIds = routingNodes.map((node) => node.id);
+    const [goalId, firstId, secondId, thirdId, fourthId, fifthId, sixthId, seventhId] = routingNodeIds;
+    const linkPairs = [
+      [firstId, goalId],
+      [secondId, goalId],
+      [thirdId, goalId],
+      [fourthId, firstId],
+      [fifthId, secondId],
+      [sixthId, thirdId],
+      [seventhId, thirdId]
+    ];
+
+    activeTree.nodes = routingNodes;
+    routingNodes.forEach((node, index) => {
+      node.frameId = hostFrame.id;
+      node.type = index === 0 ? "goal" : "necessaryCondition";
+      node.statement = index === 0 ? "Goal" : `Necessary condition ${index}`;
+      node.shortLabel = node.statement;
+    });
+    activeTree.links = linkPairs.map(([sourceNodeId, targetNodeId], index) => ({
+      id: `visual-readable-link-${index + 1}`,
+      treeId: activeTree.id,
+      sourceNodeId,
+      targetNodeId,
+      type: "necessity",
+      meaning: "Necessary condition supports its parent",
+      verbalization: "In order to have the target, we must have the source",
+      assumptionIds: []
+    }));
+    activeTree.assumptions = [];
+    activeTree.layout.direction = "BT";
+    activeTree.layout.nodes = Object.fromEntries(
+      Object.entries(activeTree.layout.nodes || {}).filter(([nodeId]) => routingNodeIds.includes(nodeId))
+    );
+    activeTree.layout.links = {};
+
+    activeCanvas.frames = [rootFrame, hostFrame];
+    rootFrame.childFrameIds = [hostFrame.id];
+    rootFrame.nodeIds = [];
+    hostFrame.parentFrameId = rootFrame.id;
+    hostFrame.childFrameIds = [];
+    hostFrame.nodeIds = routingNodeIds;
+    activeCanvas.layout.frames = {
+      [hostFrame.id]: {
+        x: 60,
+        y: 48,
+        width: 1800,
+        height: 900,
+        pinned: true,
+        layoutSource: "manual"
+      }
+    };
+
+    activeFrameId = hostFrame.id;
+    replaceSelection(hostFrame.id);
+    await runAutoLayout();
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    const routes = activeTree.links.map((link) => activeTree.layout.links[link.id]?.route || []);
+    const straight = routes.every((route) => route.length === 2);
+    const directional = activeTree.links.every((link) => {
+      const route = activeTree.layout.links[link.id]?.route || [];
+      const source = layoutNode(link.sourceNodeId);
+      const target = layoutNode(link.targetNodeId);
+      return route[0]?.y === source.y && route.at(-1)?.y === target.y + target.height;
+    });
+    const fitted = layoutFrame(hostFrame.id).width < 1800 && layoutFrame(hostFrame.id).height < 900;
+    fitView();
+    return result(
+      "Prefer straight directional routes",
+      issues.length === 0 && straight && directional && fitted,
+      `Seven links are straight=${straight}, Bottom-to-Top ports=${directional}, frame fitted=${fitted}, geometry issues=${issues.length}.`
+    );
   }
 
   return result(`Unknown step: ${step}`, false, "The requested visual test step is not registered.");

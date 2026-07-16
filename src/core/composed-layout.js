@@ -120,56 +120,69 @@ const compactContainerItems = (items, direction, sidePadding, topPadding, spacin
 
 const centerOf = (box) => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
 
-const routePorts = (source, target) => {
+const directionVector = (direction) =>
+  ({
+    TB: { x: 0, y: 1 },
+    BT: { x: 0, y: -1 },
+    LR: { x: 1, y: 0 },
+    RL: { x: -1, y: 0 }
+  })[direction] || { x: 0, y: 1 };
+
+const routePorts = (source, target, direction) => {
   const sourceCenter = centerOf(source);
   const targetCenter = centerOf(target);
-  const horizontal = Math.abs(targetCenter.x - sourceCenter.x) > Math.abs(targetCenter.y - sourceCenter.y);
-  if (horizontal) {
-    const sign = targetCenter.x >= sourceCenter.x ? 1 : -1;
-    return {
-      source: { x: sourceCenter.x + sign * source.width / 2, y: sourceCenter.y },
-      start: { x: sourceCenter.x + sign * (source.width / 2 + ROUTE_CLEARANCE), y: sourceCenter.y },
-      end: { x: targetCenter.x - sign * (target.width / 2 + ROUTE_CLEARANCE), y: targetCenter.y },
-      target: { x: targetCenter.x - sign * target.width / 2, y: targetCenter.y }
-    };
-  }
-  const sign = targetCenter.y >= sourceCenter.y ? 1 : -1;
+  const vector = directionVector(direction);
+  const sourceDistance = vector.x ? source.width / 2 : source.height / 2;
+  const targetDistance = vector.x ? target.width / 2 : target.height / 2;
   return {
-    source: { x: sourceCenter.x, y: sourceCenter.y + sign * source.height / 2 },
-    start: { x: sourceCenter.x, y: sourceCenter.y + sign * (source.height / 2 + ROUTE_CLEARANCE) },
-    end: { x: targetCenter.x, y: targetCenter.y - sign * (target.height / 2 + ROUTE_CLEARANCE) },
-    target: { x: targetCenter.x, y: targetCenter.y - sign * target.height / 2 }
+    source: {
+      x: sourceCenter.x + vector.x * sourceDistance,
+      y: sourceCenter.y + vector.y * sourceDistance
+    },
+    start: {
+      x: sourceCenter.x + vector.x * (sourceDistance + ROUTE_CLEARANCE),
+      y: sourceCenter.y + vector.y * (sourceDistance + ROUTE_CLEARANCE)
+    },
+    end: {
+      x: targetCenter.x - vector.x * (targetDistance + ROUTE_CLEARANCE),
+      y: targetCenter.y - vector.y * (targetDistance + ROUTE_CLEARANCE)
+    },
+    target: {
+      x: targetCenter.x - vector.x * targetDistance,
+      y: targetCenter.y - vector.y * targetDistance
+    }
   };
 };
 
 const segmentIntersectsBox = (start, end, box) => {
-  if (Math.abs(start.y - end.y) < 0.01) {
-    const left = Math.min(start.x, end.x);
-    const right = Math.max(start.x, end.x);
-    return start.y > box.y && start.y < box.y + box.height && right > box.x && left < box.x + box.width;
+  const intervals = [];
+  for (const axis of ["x", "y"]) {
+    const delta = end[axis] - start[axis];
+    const lower = box[axis];
+    const upper = box[axis] + (axis === "x" ? box.width : box.height);
+    if (Math.abs(delta) < 0.0001) {
+      if (start[axis] <= lower || start[axis] >= upper) return false;
+      intervals.push([0, 1]);
+      continue;
+    }
+    const first = (lower - start[axis]) / delta;
+    const second = (upper - start[axis]) / delta;
+    intervals.push([Math.min(first, second), Math.max(first, second)]);
   }
-  if (Math.abs(start.x - end.x) < 0.01) {
-    const top = Math.min(start.y, end.y);
-    const bottom = Math.max(start.y, end.y);
-    return start.x > box.x && start.x < box.x + box.width && bottom > box.y && top < box.y + box.height;
-  }
-  return false;
+  const entry = Math.max(0, intervals[0][0], intervals[1][0]);
+  const exit = Math.min(1, intervals[0][1], intervals[1][1]);
+  return exit - entry > 0.0001;
 };
 
 const segmentsCross = (leftStart, leftEnd, rightStart, rightEnd) => {
-  const leftHorizontal = Math.abs(leftStart.y - leftEnd.y) < 0.01;
-  const rightHorizontal = Math.abs(rightStart.y - rightEnd.y) < 0.01;
-  if (leftHorizontal === rightHorizontal) return false;
-  const horizontalStart = leftHorizontal ? leftStart : rightStart;
-  const horizontalEnd = leftHorizontal ? leftEnd : rightEnd;
-  const verticalStart = leftHorizontal ? rightStart : leftStart;
-  const verticalEnd = leftHorizontal ? rightEnd : leftEnd;
-  const crossing = { x: verticalStart.x, y: horizontalStart.y };
-  const withinHorizontal =
-    crossing.x > Math.min(horizontalStart.x, horizontalEnd.x) && crossing.x < Math.max(horizontalStart.x, horizontalEnd.x);
-  const withinVertical =
-    crossing.y > Math.min(verticalStart.y, verticalEnd.y) && crossing.y < Math.max(verticalStart.y, verticalEnd.y);
-  return withinHorizontal && withinVertical;
+  const leftDelta = { x: leftEnd.x - leftStart.x, y: leftEnd.y - leftStart.y };
+  const rightDelta = { x: rightEnd.x - rightStart.x, y: rightEnd.y - rightStart.y };
+  const denominator = leftDelta.x * rightDelta.y - leftDelta.y * rightDelta.x;
+  if (Math.abs(denominator) < 0.0001) return false;
+  const offset = { x: rightStart.x - leftStart.x, y: rightStart.y - leftStart.y };
+  const leftRatio = (offset.x * rightDelta.y - offset.y * rightDelta.x) / denominator;
+  const rightRatio = (offset.x * leftDelta.y - offset.y * leftDelta.x) / denominator;
+  return leftRatio > 0.0001 && leftRatio < 0.9999 && rightRatio > 0.0001 && rightRatio < 0.9999;
 };
 
 const compressRoute = (points) => {
@@ -186,9 +199,7 @@ const compressRoute = (points) => {
 
 const routeMidpoint = (route) => {
   if (route.length < 2) return route[0] || { x: 0, y: 0 };
-  const lengths = route.slice(1).map((point, index) =>
-    Math.abs(point.x - route[index].x) + Math.abs(point.y - route[index].y)
-  );
+  const lengths = route.slice(1).map((point, index) => Math.hypot(point.x - route[index].x, point.y - route[index].y));
   const half = lengths.reduce((sum, length) => sum + length, 0) / 2;
   let travelled = 0;
   for (let index = 0; index < lengths.length; index += 1) {
@@ -204,14 +215,21 @@ const routeMidpoint = (route) => {
   return route.at(-1);
 };
 
-const orthogonalRoute = (source, target, obstacles, existingRoutes) => {
-  const ports = routePorts(source, target);
+const orthogonalRoute = (source, target, obstacles, existingRoutes, direction) => {
+  const ports = routePorts(source, target, direction);
   const expandedObstacles = obstacles.map((box) => ({
     x: box.x - ROUTE_CLEARANCE,
     y: box.y - ROUTE_CLEARANCE,
     width: box.width + ROUTE_CLEARANCE * 2,
     height: box.height + ROUTE_CLEARANCE * 2
   }));
+  const directRoute = [ports.source, ports.target];
+  const directIsClear = expandedObstacles.every((box) => !segmentIntersectsBox(ports.source, ports.target, box));
+  const directCrossesRoute = existingRoutes.some((route) =>
+    route.slice(1).some((point, index) => segmentsCross(ports.source, ports.target, route[index], point))
+  );
+  if (directIsClear && !directCrossesRoute) return directRoute;
+
   const xs = [...new Set([ports.start.x, ports.end.x, ...expandedObstacles.flatMap((box) => [box.x, box.x + box.width])])].sort(
     (left, right) => left - right
   );
@@ -405,10 +423,10 @@ const runComposedLayout = async (workspace, options = {}) => {
     const previousFrame = canvas.layout?.frames?.[frameId] || {};
     const width = isRoot
       ? contentRight + sidePadding
-      : Math.max(MIN_FRAME_WIDTH, contentRight + FRAME_SIDE_PADDING, previousFrame.pinned ? previousFrame.width || 0 : 0);
+      : Math.max(MIN_FRAME_WIDTH, contentRight + FRAME_SIDE_PADDING);
     const height = isRoot
       ? contentBottom + bottomPadding
-      : Math.max(MIN_FRAME_HEIGHT, contentBottom + FRAME_BOTTOM_PADDING, previousFrame.pinned ? previousFrame.height || 0 : 0);
+      : Math.max(MIN_FRAME_HEIGHT, contentBottom + FRAME_BOTTOM_PADDING);
 
     if (!isRoot) {
       frameLayouts[frameId] = {
@@ -444,7 +462,7 @@ const runComposedLayout = async (workspace, options = {}) => {
       const obstacles = allNodeBoxes
         .filter(([nodeId]) => nodeId !== link.sourceNodeId && nodeId !== link.targetNodeId)
         .map(([, box]) => box);
-      const route = source && target ? orthogonalRoute(source, target, obstacles, routedRoutes) : previous.route || [];
+      const route = source && target ? orthogonalRoute(source, target, obstacles, routedRoutes, direction) : previous.route || [];
       if (route.length) routedRoutes.push(route);
       nextLinkLayout[link.id] = {
         ...previous,

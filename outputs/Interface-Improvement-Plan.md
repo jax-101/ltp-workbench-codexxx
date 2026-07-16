@@ -243,11 +243,24 @@ Incluye:
 - Rutas ortogonales que evitan entidades y penalizan cruces.
 - Transiciones de ida, Undo y Redo para Layout mediante categoria transaccional explicita.
 
+### Build 3B.1: rutas legibles y frames ajustados
+
+Estado: implementado; pendiente de validacion manual.
+
+Incluye:
+
+- Rectas como primera opcion cuando no atraviesan entidades ni cruzan otras rutas.
+- Rutas ortogonales reservadas para conflictos que requieren un desvio.
+- Puertos coherentes con `Top to Bottom`, `Bottom to Top`, `Left to Right` y `Right to Left`.
+- La misma direccion de puertos durante Layout, transiciones y arrastre manual.
+- Recalculo del tamano de frames fijados sin mover su posicion.
+- Regresion especifica con siete links en `Bottom to Top` y frame anfitrion sobredimensionado.
+
 Seguimiento de la iteracion:
 
 - F-036: contencion y exclusion geometrica estrictas implementadas en 3B.0.
 - F-038: insercion direccional sin alterar la forma existente.
-- F-043: primera version de rutas con evitacion de entidades y penalizacion de cruces implementada en 3B.0.
+- F-043: rutas simples primero y puertos direccionales implementados en 3B.1.
 - F-047: indicacion de direccion pendiente de aplicar.
 - F-052: transiciones animadas de Layout, Undo y Redo implementadas en 3B.0.
 - F-057: recolocacion espacial dentro del frame destino implementada en 3B.0.

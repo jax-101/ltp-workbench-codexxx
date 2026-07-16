@@ -303,7 +303,8 @@ const runVisualTest = async (mainWindow) => {
     "group-moved",
     "group-undo",
     "group-redo",
-    "multi-connect"
+    "multi-connect",
+    "readable-routing"
   ];
   const evidenceDirectory = path.join(app.getAppPath(), "outputs", "test-evidence", buildInfo.id);
   await fs.mkdir(evidenceDirectory, { recursive: true });

@@ -400,3 +400,15 @@ Razon: un unico grafo plano no puede garantizar contencion ni exclusion. La recu
 Decision: cada entrada de historial conserva una categoria independiente de su etiqueta visible. Layout usa `spatial.layout`, y el renderer decide animar Undo/Redo a partir de esa categoria.
 
 Razon: deducir comportamiento desde textos como `Apply layout` es fragil ante traduccion o renombrado. La categoria convierte la animacion en parte estable del contrato de la operacion.
+
+### D-065: Las rutas usan la geometria mas simple que satisface las restricciones
+
+Decision: cada link intenta primero una recta entre los lados preferentes que determina la direccion del diagrama. Solo usa una ruta ortogonal cuando la recta invade una entidad o cruza otra ruta de forma evitable.
+
+Razon: minimizar cruces no implica maximizar codos. Las rectas preservan mejor la lectura del arbol cuando el layout ya ha separado correctamente sus capas.
+
+### D-066: Fijar un frame conserva posicion, no dimensiones obsoletas
+
+Decision: Layout mantiene las coordenadas de un frame fijado, pero recalcula su ancho y alto a partir del contenido actual, los subframes y los margenes definidos.
+
+Razon: conservar simultaneamente posicion y tamano impide que el frame se ajuste tras borrar, mover o reorganizar entidades. El pin expresa un ancla espacial, no un bloqueo de su caja.

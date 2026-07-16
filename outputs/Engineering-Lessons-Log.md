@@ -412,9 +412,19 @@ Aprendizaje: en geometria anidada, una mutacion local cambia la caja que observa
 
 Aplicacion futura: modelar cada frame como unidad rigida al desplazarlo, validar relaciones no ancestrales en todo el canvas y hacer que las pruebas informen tanto conflictos locales como globales.
 
+### L-045: Optimizar una metrica visual puede empeorar la lectura
+
+Fecha: 2026-07-16
+
+Evidencia: el primer enrutador evitaba entidades y penalizaba cruces, pero convertia todas las conexiones en rutas ortogonales. El resultado era geometricamente valido y, aun asi, mucho mas dificil de seguir que las rectas provisionales mostradas al mover un nodo.
+
+Aprendizaje: una regla como evitar cruces debe convivir con una funcion de coste perceptiva que premie simplicidad, continuidad y direccion. Cumplir restricciones duras no sustituye elegir la representacion mas clara entre las soluciones validas.
+
+Aplicacion futura: probar primero la geometria minima, escalar a rutas complejas solo ante un conflicto demostrado y comparar siempre el resultado automatico con el estado provisional que el usuario considera legible.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-045`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-046`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

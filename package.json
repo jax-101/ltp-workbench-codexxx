@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3B.0",
-    "name": "Composed Layout",
+    "id": "3B.1",
+    "name": "Readable Routing",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",

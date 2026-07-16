@@ -319,7 +319,7 @@ Criterios de aceptacion:
 
 Feedback: un frame debe contener completamente todas las entidades que le pertenecen. Una entidad que no pertenece al frame ni a uno de sus descendientes no puede quedar visualmente dentro de sus limites.
 
-Estado: implementado en el build `3B.0` y pendiente de validacion manual. Layout usa la jerarquia completa del canvas; el validador comprueba contencion, exclusion y colisiones. El arrastre colectivo busca espacio libre, amplia el destino y propaga el crecimiento por sus ancestros.
+Estado: implementado en el build `3B.0` y refinado en `3B.1`, pendiente de validacion manual. Layout usa la jerarquia completa del canvas; el validador comprueba contencion, exclusion y colisiones. El arrastre colectivo busca espacio libre, amplia el destino y propaga el crecimiento por sus ancestros. Un frame fijado conserva su posicion, pero vuelve a ajustar sus dimensiones al contenido.
 
 Validacion 3A.1: confirmado visualmente que una entidad puede quedar encima de un frame al que no pertenece. Se mantiene como objetivo principal de 3B.
 
@@ -430,7 +430,7 @@ Criterios de aceptacion:
 
 Feedback: despues de aplicar Layout, las flechas no deberian cruzarse si es posible ni pasar por debajo de las entidades.
 
-Estado: implementacion inicial en el build `3B.0` y pendiente de validacion manual. Layout genera rutas ortogonales, trata las entidades como obstaculos y penaliza cruces con rutas ya calculadas. Queda por valorar visualmente si los corredores respecto a frames necesitan reglas adicionales.
+Estado: refinado en el build `3B.1` y pendiente de validacion manual. Layout intenta primero una recta; si atraviesa una entidad o cruza otra ruta de forma evitable, calcula un desvio ortogonal. Los puertos siguen la direccion: por ejemplo, en `Bottom to Top` la flecha sale por arriba del origen y entra por abajo del destino. La misma regla se mantiene durante el arrastre manual.
 
 Criterios de aceptacion:
 
@@ -440,6 +440,8 @@ Criterios de aceptacion:
 - Las puntas terminan en el borde correcto del destino.
 - La animacion de Layout interpola tambien las rutas sin ocultarlas bajo nodos.
 - Cuando un cruce sea inevitable, se mantiene legible y estable.
+- Una conexion recta se conserva cuando no invade entidades ni introduce cruces.
+- Los lados de salida y entrada coinciden con la direccion preferente del diagrama.
 
 ### F-044: Listado completo de atajos en el panel izquierdo
 
