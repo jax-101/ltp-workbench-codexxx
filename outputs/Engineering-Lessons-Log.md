@@ -382,9 +382,19 @@ Aprendizaje: normalizar atajos entre plataformas ayuda solo cuando representan l
 
 Aplicacion futura: modelar `Command`, `Control` y el modificador principal como conceptos separados; comprobar colisiones sobre eventos reales por plataforma y mostrar en la ayuda exactamente el binding que se ejecuta.
 
+### L-042: Un modelo compuesto necesita un layout compuesto
+
+Fecha: 2026-07-16
+
+Evidencia: la reasignacion logica permitio mover entidades y frames entre contenedores, pero Layout seguia organizando todos los nodos como un grafo plano y recalculaba solamente el frame anfitrion del arbol. `ROOT`, frames hermanos y jerarquias nuevas quedaban fuera de su modelo espacial.
+
+Aprendizaje: anadir jerarquia al dominio sin incorporarla al motor geometrico deja dos representaciones validas por separado pero contradictorias en pantalla. Calcular limites despues de un layout plano no equivale a disponer contenedores compuestos.
+
+Aplicacion futura: hacer que el grafo de layout refleje la misma jerarquia que el modelo, probar movimientos entre ramas antes de cerrar la migracion y validar simultaneamente pertenencia, contencion, exclusion y estabilidad de grupos fijados.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-042`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-043`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

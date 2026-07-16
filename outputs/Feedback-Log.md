@@ -327,6 +327,8 @@ Validacion 3A.4: confirmado tambien el caso inverso: una entidad pertenece corre
 
 Prueba visual automatizada 3A.5: el arrastre colectivo mueve correctamente tres nodos y conserva sus distancias, pero los superpone con entidades existentes en el frame destino. El escenario queda marcado como fallo hasta que 3B pueda ampliar el frame o desplazar contenido sin colisiones.
 
+Validacion 3A.6: despues de reasignar entidades o frames con `Cmd+P` y `Cmd+F`, Layout no recompone correctamente el canvas. El algoritmo actual dispone todos los nodos como un unico grafo y solo recalcula el subarbol del frame anfitrion del arbol; ignora la composicion espacial de `ROOT`, frames hermanos y jerarquias reasignadas. Los frames fijados tampoco pueden adaptar sus limites.
+
 Criterios de aceptacion:
 
 - Cada entidad queda completamente dentro del frame al que pertenece directamente.
@@ -631,7 +633,7 @@ Criterios de aceptacion:
 
 Feedback: `Cmd+P` debe sacar la seleccion un nivel hacia su frame padre. `Cmd+F` debe mostrar exclusivamente frames, incluido el root, con hints para elegir el nuevo destino.
 
-Estado: implementado en el build `3A.6` y pendiente de validacion manual. Las pruebas visuales automatizadas cubren entidades, frames completos, `ROOT`, prevencion de ciclos y Undo/Redo. El ajuste geometrico del destino permanece dentro de F-036 para 3B.
+Estado: implementado en el build `3A.6` y validado manualmente el 2026-07-16 para `Cmd+P`, `Cmd+F` y la navegacion independiente con `Ctrl+P/F`. El ajuste geometrico y la recomposicion mediante Layout permanecen dentro de F-036 para 3B.
 
 Criterios de aceptacion:
 

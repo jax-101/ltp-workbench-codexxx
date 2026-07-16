@@ -209,7 +209,7 @@ Antes de 3B se completa la siguiente iteracion de teclado.
 
 ## Iteracion 3A.6: reasignacion de frames con teclado
 
-Estado: implementada como build `3A.6`; pruebas automaticas superadas y pendiente de validacion manual.
+Estado: implementada como build `3A.6` y validada manualmente el 2026-07-16. La reasignacion logica funciona; la recomposicion espacial posterior queda como primer objetivo de 3B.
 
 Incluye:
 
@@ -227,6 +227,8 @@ Criterios de aceptacion:
 - Cada reasignacion completa se deshace y rehace como una sola intencion.
 
 ## Iteracion 3B: geometria de frames e insercion incremental
+
+Prioridad inicial: sustituir el layout plano por un layout compuesto que trate `ROOT`, frames hermanos, frames anidados y entidades directas como una sola jerarquia espacial.
 
 Incluye:
 
