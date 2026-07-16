@@ -372,9 +372,19 @@ Aprendizaje: validar IDs, pertenencia y coordenadas relativas puede producir un 
 
 Aplicacion futura: combinar aserciones de dominio con deteccion geometrica y capturas; hacer fallar la prueba cuando haya solapamientos aunque la transaccion sea correcta; y revisar visualmente una muestra de los estados generados.
 
+### L-041: Los modificadores parecidos no son semanticamente intercambiables
+
+Fecha: 2026-07-16
+
+Evidencia: la abstraccion `primary` trataba `Cmd` y `Ctrl` como equivalentes. Al anadir `Cmd+P` y `Cmd+F` para cambiar la estructura, tambien interceptaba `Ctrl+P` y `Ctrl+F`, reservados para desplazar el canvas.
+
+Aprendizaje: normalizar atajos entre plataformas ayuda solo cuando representan la misma intencion. Si una plataforma asigna significados distintos a dos modificadores, el modelo de bindings debe conservar esa diferencia.
+
+Aplicacion futura: modelar `Command`, `Control` y el modificador principal como conceptos separados; comprobar colisiones sobre eventos reales por plataforma y mostrar en la ayuda exactamente el binding que se ejecuta.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-041`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-042`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

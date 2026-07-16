@@ -631,7 +631,7 @@ Criterios de aceptacion:
 
 Feedback: `Cmd+P` debe sacar la seleccion un nivel hacia su frame padre. `Cmd+F` debe mostrar exclusivamente frames, incluido el root, con hints para elegir el nuevo destino.
 
-Estado: planificado para 3B sobre el modelo de canvas compuesto de 3A.4.
+Estado: implementado en el build `3A.6` y pendiente de validacion manual. Las pruebas visuales automatizadas cubren entidades, frames completos, `ROOT`, prevencion de ciclos y Undo/Redo. El ajuste geometrico del destino permanece dentro de F-036 para 3B.
 
 Criterios de aceptacion:
 

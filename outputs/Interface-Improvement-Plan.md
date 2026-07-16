@@ -205,6 +205,27 @@ Criterios de aceptacion:
 - Seleccionar el frame del arbol muestra el resumen de Goal, CSF, NC, Assumption, subframes y links internos.
 - Los datos actuales migran sin perder nodos, links, posiciones ni frame activo.
 
+Antes de 3B se completa la siguiente iteracion de teclado.
+
+## Iteracion 3A.6: reasignacion de frames con teclado
+
+Estado: implementada como build `3A.6`; pruebas automaticas superadas y pendiente de validacion manual.
+
+Incluye:
+
+- F-057: subir las raices seleccionadas al padre con `Cmd+P`.
+- F-057: elegir un frame destino con `Cmd+F` y hints exclusivos de frames.
+- Destino sintetico `ROOT`, prevencion de ciclos y una sola operacion de Undo/Redo.
+- Separacion estricta entre `Cmd+P/F` estructural y `Ctrl+P/F` de navegacion.
+
+Criterios de aceptacion:
+
+- Una entidad cambia de contenedor sin cambiar de arbol logico ni perder links.
+- Un frame viaja con todo su subarbol y no puede entrar en si mismo ni en sus descendientes.
+- Una seleccion combinada procesa solo sus raices explicitas, sin duplicar movimientos.
+- `Cmd+P` y `Cmd+F` no interfieren con el desplazamiento por `Ctrl+P` y `Ctrl+F`.
+- Cada reasignacion completa se deshace y rehace como una sola intencion.
+
 ## Iteracion 3B: geometria de frames e insercion incremental
 
 Incluye:
@@ -214,7 +235,7 @@ Incluye:
 - F-043: rutas de links con minimizacion de cruces y evitacion de obstaculos.
 - F-047: indicacion de direccion pendiente de aplicar.
 - F-052: transiciones animadas al deshacer y rehacer operaciones espaciales.
-- F-057: mover seleccion al padre con `Cmd+P` o a un frame elegido con `Cmd+F`.
+- Completar F-057 con recolocacion espacial dentro del frame destino.
 - Completar F-058 con contencion geometrica del arrastre colectivo.
 - Completar F-035 con garantias espaciales al mover entidades entre frames.
 - Layout compuesto por frames y soporte de frames anidados.

@@ -366,6 +366,15 @@ const selectElement = async (id, options = {}) => {
   const nextType = elementType(id);
   hintBuffer = "";
 
+  if (mode === "frame-target") {
+    if (nextType !== "frame" || !validFrameTargetIds().has(id)) {
+      setStatus("Choose a valid destination frame");
+      return;
+    }
+    await moveSelectionToFrame(id);
+    return;
+  }
+
   if (mode === "connection") {
     if (nextType !== "node") {
       hintsVisible = true;
@@ -464,6 +473,32 @@ const visibleHintEntries = () => {
   const query = searchText.trim().toLowerCase();
   const viewport = logicalViewport();
   const entries = [];
+
+  if (mode === "frame-target") {
+    const validTargets = validFrameTargetIds();
+    if (validTargets.has(rootFrameId())) {
+      entries.push({
+        id: rootFrameId(),
+        type: "frame",
+        x: viewport.left + 18,
+        y: viewport.top + 24,
+        label: "ROOT"
+      });
+    }
+    for (const frame of canvas().frames.filter((candidate) => candidate.id !== rootFrameId() && validTargets.has(candidate.id))) {
+      const box = layoutFrame(frame.id);
+      if (!boxIntersectsViewport(box, viewport)) continue;
+      entries.push({
+        id: frame.id,
+        type: "frame",
+        x: clamp(box.x + 16, viewport.left + 12, viewport.right - 34),
+        y: clamp(box.y + 16, viewport.top + 12, viewport.bottom - 28),
+        label: frame.name
+      });
+    }
+    const labels = generateHintLabels(entries.length);
+    return entries.map((entry, index) => ({ ...entry, hint: labels[index] }));
+  }
 
   for (const frame of canvas().frames.filter((candidate) => candidate.id !== rootFrameId())) {
     const box = layoutFrame(frame.id);
@@ -771,6 +806,127 @@ const frameDepth = (frameId) => {
     frame = frames[frame.parentFrameId];
   }
   return depth;
+};
+
+const frameDescendantIds = (frameId, includeSelf = false) => {
+  const descendants = new Set(includeSelf ? [frameId] : []);
+  const collect = (id) => {
+    for (const childId of frameById()[id]?.childFrameIds || []) {
+      if (descendants.has(childId)) continue;
+      descendants.add(childId);
+      collect(childId);
+    }
+  };
+  collect(frameId);
+  return descendants;
+};
+
+const selectedMovableRoots = () => {
+  const explicitFrameIds = new Set(
+    [...selectionRootIds].filter((id) => Boolean(frameById()[id]) && id !== rootFrameId())
+  );
+  const topFrameIds = [...explicitFrameIds].filter((frameId) => {
+    let parentId = frameById()[frameId]?.parentFrameId;
+    while (parentId) {
+      if (explicitFrameIds.has(parentId)) return false;
+      parentId = frameById()[parentId]?.parentFrameId;
+    }
+    return true;
+  });
+  const selectedFrameClosure = new Set(topFrameIds.flatMap((frameId) => [...frameDescendantIds(frameId, true)]));
+  const nodeIds = [...selectionRootIds].filter((id) => {
+    const node = nodeById()[id];
+    return Boolean(node) && !selectedFrameClosure.has(node.frameId);
+  });
+  return [
+    ...topFrameIds.map((id) => ({ id, type: "frame" })),
+    ...nodeIds.map((id) => ({ id, type: "node" }))
+  ];
+};
+
+const validFrameTargetIds = () => {
+  const invalid = new Set();
+  for (const root of selectedMovableRoots()) {
+    if (root.type !== "frame") continue;
+    for (const frameId of frameDescendantIds(root.id, true)) invalid.add(frameId);
+  }
+  return new Set(canvas().frames.filter((frame) => !invalid.has(frame.id)).map((frame) => frame.id));
+};
+
+const applyFrameMoves = async (moves, label) => {
+  const effectiveMoves = moves.filter(({ id, type, targetFrameId }) => {
+    if (!frameById()[targetFrameId]) return false;
+    if (type === "node") return nodeById()[id]?.frameId !== targetFrameId;
+    return frameById()[id]?.parentFrameId !== targetFrameId && !frameDescendantIds(id, true).has(targetFrameId);
+  });
+  if (!effectiveMoves.length) {
+    mode = "navigation";
+    hintsVisible = false;
+    setStatus("Selection is already at that frame level");
+    render();
+    return false;
+  }
+
+  for (const move of effectiveMoves.filter((candidate) => candidate.type === "frame")) {
+    const frame = frameById()[move.id];
+    const previousParent = frameById()[frame.parentFrameId];
+    const targetFrame = frameById()[move.targetFrameId];
+    if (previousParent) previousParent.childFrameIds = previousParent.childFrameIds.filter((id) => id !== frame.id);
+    if (!targetFrame.childFrameIds.includes(frame.id)) targetFrame.childFrameIds.push(frame.id);
+    frame.parentFrameId = targetFrame.id;
+    frame.updatedAt = now();
+  }
+
+  for (const move of effectiveMoves.filter((candidate) => candidate.type === "node")) {
+    const node = nodeById()[move.id];
+    const targetFrame = frameById()[move.targetFrameId];
+    for (const frame of canvas().frames) frame.nodeIds = frame.nodeIds.filter((id) => id !== node.id);
+    if (!targetFrame.nodeIds.includes(node.id)) targetFrame.nodeIds.push(node.id);
+    node.frameId = targetFrame.id;
+    node.updatedAt = now();
+  }
+
+  mode = "navigation";
+  hintsVisible = false;
+  multiSelectionMode = false;
+  await persist(label);
+  rebuildSelection();
+  setStatus(`${effectiveMoves.length} selected root${effectiveMoves.length === 1 ? "" : "s"} moved`);
+  render();
+  focusCanvas();
+  return true;
+};
+
+const moveSelectionToParent = async () => {
+  const moves = selectedMovableRoots()
+    .map((root) => {
+      if (root.type === "node") {
+        const currentFrame = frameById()[nodeById()[root.id]?.frameId];
+        return currentFrame?.parentFrameId ? { ...root, targetFrameId: currentFrame.parentFrameId } : null;
+      }
+      const currentParent = frameById()[frameById()[root.id]?.parentFrameId];
+      return currentParent?.parentFrameId ? { ...root, targetFrameId: currentParent.parentFrameId } : null;
+    })
+    .filter(Boolean);
+  if (!moves.length) {
+    setStatus("The selected roots cannot move any higher");
+    return;
+  }
+  await applyFrameMoves(moves, "Move selection to parent frame");
+};
+
+const moveSelectionToFrame = async (targetFrameId) => {
+  if (!validFrameTargetIds().has(targetFrameId)) {
+    setStatus("That frame cannot contain the current selection");
+    return;
+  }
+  const roots = selectedMovableRoots();
+  await applyFrameMoves(
+    roots.map((root) => ({ ...root, targetFrameId })),
+    "Move selection to frame"
+  );
+  activeFrameId = targetFrameId;
+  updateViewState();
 };
 
 const frameAtPoint = (point) => {
@@ -1193,6 +1349,22 @@ const toggleMultiSelect = () => {
   render();
 };
 
+const beginFrameTargetMode = () => {
+  const roots = selectedMovableRoots();
+  if (!roots.length) {
+    setStatus("Select one or more nodes or frames before choosing a destination frame");
+    return;
+  }
+  multiSelectionMode = false;
+  connectionSourceId = null;
+  connectionSourceIds.clear();
+  hintsVisible = false;
+  mode = "frame-target";
+  fitView();
+  showHints();
+  setStatus(`Choose a destination frame for ${roots.length} selected root${roots.length === 1 ? "" : "s"}`);
+};
+
 const displayShortcutKey = (key) =>
   ({
     " ": "Space",
@@ -1207,7 +1379,8 @@ const displayShortcutKey = (key) =>
 
 const formatShortcutBinding = (binding) => {
   const parts = [];
-  if (binding.primary) parts.push("Cmd/Ctrl");
+  if (binding.command) parts.push("Cmd");
+  else if (binding.primary) parts.push("Cmd/Ctrl");
   if (binding.control) parts.push("Ctrl");
   if (binding.alt) parts.push("Alt");
   if (binding.shift) parts.push("Shift");
@@ -1643,7 +1816,7 @@ const cancelContext = (options = {}) => {
     return;
   }
 
-  if (mode === "connection" || mode === "editing" || multiSelectionMode || connectionSourceIds.size) {
+  if (mode === "connection" || mode === "frame-target" || mode === "editing" || multiSelectionMode || connectionSourceIds.size) {
     if (mode === "editing") restoreInspectorAfterEditing();
     mode = "navigation";
     connectionSourceId = null;
@@ -2235,7 +2408,9 @@ const bindEvents = () => {
 
 const bindingMatchesEvent = (binding, event) => {
   const primaryPressed = event.metaKey || event.ctrlKey;
-  if (binding.primary) {
+  if (binding.command) {
+    if (!event.metaKey || event.ctrlKey) return false;
+  } else if (binding.primary) {
     if (!primaryPressed) return false;
   } else if (binding.control) {
     if (!event.ctrlKey || event.metaKey) return false;
@@ -2261,6 +2436,8 @@ const executeCommand = (command) => {
     commandPalette: () => setStatus("Command palette placeholder: use H, N, A, L, F, P, /"),
     showHints: toggleHints,
     toggleMultiSelect,
+    moveSelectionToParent,
+    chooseSelectionFrame: beginFrameTargetMode,
     createNode: createNodeInViewport,
     createParentNode: () => createNode(selectedNode()?.frameId || activeFrameId, "necessaryCondition", "New parent/above condition"),
     createSupportingNode,
@@ -2557,6 +2734,11 @@ window.__ltpSmokeTest = async () => {
         bindings.every((binding) => displayedBindings.includes(formatShortcutBinding(binding)))
       );
     });
+  const commandAndControlBindingsStayDistinct =
+    commandForEvent(new KeyboardEvent("keydown", { key: "p", metaKey: true })) === "moveSelectionToParent" &&
+    commandForEvent(new KeyboardEvent("keydown", { key: "f", metaKey: true })) === "chooseSelectionFrame" &&
+    commandForEvent(new KeyboardEvent("keydown", { key: "p", ctrlKey: true })) === "panUp" &&
+    commandForEvent(new KeyboardEvent("keydown", { key: "f", ctrlKey: true })) === "panRight";
 
   const initialShell = document.querySelector(".canvas-shell");
   initialShell.scrollLeft = Math.min(120, initialShell.scrollWidth - initialShell.clientWidth);
@@ -2897,6 +3079,7 @@ window.__ltpSmokeTest = async () => {
       hintButtonToggles &&
       multiSelectToggles &&
       allShortcutsListed &&
+      commandAndControlBindingsStayDistinct &&
       viewportPreserved &&
       arrowEndsAtEdge &&
       fullTextPreviewWorks &&
@@ -2961,6 +3144,7 @@ window.__ltpSmokeTest = async () => {
     hintButtonToggles,
     multiSelectToggles,
     allShortcutsListed,
+    commandAndControlBindingsStayDistinct,
     viewportPreserved,
     arrowEndsAtEdge,
     fullTextPreviewWorks,
@@ -3019,6 +3203,16 @@ window.__ltpVisualTestStep = async (step) => {
     }
     return predicate();
   };
+  const pressKey = async (key, options = {}) => {
+    document.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...options }));
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  };
+  const chooseHintTarget = async (id) => {
+    const hint = hintEntries.find((entry) => entry.id === id)?.hint;
+    if (!hint) return false;
+    for (const key of hint) await pressKey(key);
+    return true;
+  };
 
   if (step === "baseline") {
     multiSelectionMode = false;
@@ -3031,7 +3225,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3A.5" && hostVisible && rootHidden, "Build 3A.5 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3A.6" && hostVisible && rootHidden, "Build 3A.6 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3040,6 +3234,81 @@ window.__ltpVisualTestStep = async (step) => {
     const summary = document.querySelector(".frame-inventory")?.textContent || "";
     const ok = ["Goal:", "CSF:", "NC:", "Frames:", "Links:"].every((label) => summary.includes(label));
     return result("Semantic Goal Tree summary", ok, "Selecting Goal Tree exposes type, frame and internal-link counts.");
+  }
+
+  if (step === "entity-frame-target-open") {
+    const sourceFrame = activeCanvas.frames.find((frame) => frame.treeId === activeTree.id && frame.nodeIds.length >= 3);
+    const nodeId = sourceFrame?.nodeIds[0];
+    visualTestState.keyboardNodeId = nodeId;
+    visualTestState.keyboardNodeOriginalFrameId = sourceFrame?.id;
+    replaceSelection(nodeId);
+    await pressKey("f", { metaKey: true });
+    const rootHintVisible = hintEntries.some((entry) => entry.id === rootFrameId());
+    const onlyFrames = hintEntries.length > 0 && hintEntries.every((entry) => entry.type === "frame");
+    return result("Choose an entity destination with Cmd+F", mode === "frame-target" && rootHintVisible && onlyFrames, "Cmd+F shows only valid frames and includes the conceptual ROOT target.");
+  }
+
+  if (step === "entity-moved-to-root") {
+    const targetChosen = await chooseHintTarget(rootFrameId());
+    const moved = await waitFor(() => nodeById()[visualTestState.keyboardNodeId]?.frameId === rootFrameId());
+    return result("Move an entity to ROOT by hint", targetChosen && moved && mode === "navigation", "Typing ROOT's hint moves the selected entity without using the mouse.");
+  }
+
+  if (step === "entity-moved-to-parent") {
+    await moveSelectionToFrame(visualTestState.keyboardNodeOriginalFrameId);
+    const expectedParentId = frameById()[visualTestState.keyboardNodeOriginalFrameId]?.parentFrameId;
+    await pressKey("p", { metaKey: true });
+    const moved = await waitFor(() => nodeById()[visualTestState.keyboardNodeId]?.frameId === expectedParentId);
+    return result("Move an entity to its parent with Cmd+P", moved, "Cmd+P moves the explicitly selected entity one frame level upward.");
+  }
+
+  if (step === "frame-target-open") {
+    const sourceFrame = activeCanvas.frames.find(
+      (frame) => frame.parentFrameId === activeTree.hostFrameId && frame.childFrameIds.length === 0
+    );
+    const targetFrame = activeCanvas.frames.find(
+      (frame) => frame.parentFrameId === activeTree.hostFrameId && frame.id !== sourceFrame?.id
+    );
+    visualTestState.keyboardFrameId = sourceFrame?.id;
+    visualTestState.keyboardFrameOriginalParentId = sourceFrame?.parentFrameId;
+    visualTestState.keyboardFrameTargetId = targetFrame?.id;
+    replaceSelection(sourceFrame?.id);
+    await pressKey("f", { metaKey: true });
+    const excludesCycleTargets = !hintEntries.some((entry) => entry.id === sourceFrame?.id);
+    const targetAvailable = hintEntries.some((entry) => entry.id === targetFrame?.id);
+    return result("Choose a frame destination with Cmd+F", mode === "frame-target" && excludesCycleTargets && targetAvailable, "Frame hints exclude the selected frame and its descendants, preventing hierarchy cycles.");
+  }
+
+  if (step === "frame-moved-inside-frame") {
+    const targetChosen = await chooseHintTarget(visualTestState.keyboardFrameTargetId);
+    const moved = await waitFor(
+      () => frameById()[visualTestState.keyboardFrameId]?.parentFrameId === visualTestState.keyboardFrameTargetId
+    );
+    return result("Move a frame by keyboard hint", targetChosen && moved, "Typing a frame hint reparents the selected frame while preserving its subtree.");
+  }
+
+  if (step === "frame-moved-to-parent") {
+    await pressKey("p", { metaKey: true });
+    const moved = await waitFor(
+      () => frameById()[visualTestState.keyboardFrameId]?.parentFrameId === visualTestState.keyboardFrameOriginalParentId
+    );
+    return result("Move a frame to its parent with Cmd+P", moved, "Cmd+P lifts the selected frame one level and keeps its contents attached.");
+  }
+
+  if (step === "frame-parent-undo") {
+    await pressKey("z", { metaKey: true });
+    const undone = await waitFor(
+      () => frameById()[visualTestState.keyboardFrameId]?.parentFrameId === visualTestState.keyboardFrameTargetId
+    );
+    return result("Undo keyboard frame movement", undone, "One Cmd+Z restores the complete frame subtree to its previous parent.");
+  }
+
+  if (step === "frame-parent-redo") {
+    await pressKey("z", { metaKey: true, shiftKey: true });
+    const redone = await waitFor(
+      () => frameById()[visualTestState.keyboardFrameId]?.parentFrameId === visualTestState.keyboardFrameOriginalParentId
+    );
+    return result("Redo keyboard frame movement", redone, "One Cmd+Shift+Z reapplies the complete frame movement.");
   }
 
   if (step === "multi-open") {

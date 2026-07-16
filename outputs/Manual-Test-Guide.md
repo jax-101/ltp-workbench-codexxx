@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.5`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.6`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -24,7 +24,7 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta seleccion, arrastre, Undo/Redo y conexion, y guarda nueve capturas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional o geometrica. En el build 3A.5 se espera un fallo conocido de F-036: el grupo movido puede colisionar con entidades existentes en el frame destino.
+El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, arrastre, Undo/Redo y conexion, y guarda capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional o geometrica. En el build 3A.6 se espera un unico fallo conocido de F-036: el grupo movido puede colisionar con entidades existentes en el frame destino.
 
 ## Prueba 1: hint de dos letras
 
@@ -242,6 +242,20 @@ Resultado esperado: `Root` es el espacio global ilimitado, `Goal Tree` es un fra
 7. Repite la seleccion, pulsa `L` y elige un nodo destino.
 
 Resultado esperado: `M` representa una seleccion general reutilizable; el arrastre afecta al grupo completo y `L` usa sus nodos como fuentes sin mezclar ambos estados.
+
+## Prueba 21: mover seleccion entre frames solo con teclado
+
+1. Selecciona una entidad dentro de un frame hijo y pulsa `Cmd+P`.
+2. Comprueba en el inspector que ahora pertenece al frame padre; pulsa `Cmd+Z` y `Cmd+Shift+Z`.
+3. Con la entidad seleccionada, pulsa `Cmd+F` y comprueba que los hints corresponden solo a frames e incluyen `ROOT`.
+4. Escribe el hint de otro frame y comprueba el nuevo valor `Frame` del inspector.
+5. Selecciona un frame que contenga entidades, pulsa `Cmd+F` y elige otro frame.
+6. Comprueba en la ruta superior que el frame completo es ahora hijo del destino y que conserva su contenido.
+7. Pulsa `Cmd+P` para devolverlo un nivel hacia arriba.
+8. En modo `Cmd+F`, pulsa `Ctrl+G` y comprueba que no se modifica nada.
+9. Comprueba que `Ctrl+P` y `Ctrl+F` siguen desplazando la vista, mientras `Cmd+P` y `Cmd+F` modifican la estructura.
+
+Resultado esperado: entidades, selecciones y frames completos cambian de contenedor sin raton, sin ciclos ni perdida de links; cada operacion se deshace completa y los atajos de navegacion permanecen independientes.
 
 ## Registro de resultados
 

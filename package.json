@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3A.5",
-    "name": "Collective Selection",
+    "id": "3A.6",
+    "name": "Keyboard Reparenting",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
