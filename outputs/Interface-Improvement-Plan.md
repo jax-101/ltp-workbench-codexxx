@@ -576,6 +576,24 @@ Evidencia:
 - Bateria visual general `37/37 PASS`.
 - Informes locales en `outputs/shortcut-audit/3C.11/` y `outputs/test-evidence/3C.11/`.
 
+### Build 3C.12: prioridad contextual de hints
+
+Estado: implementado y validado automaticamente y por inspeccion visual.
+
+Incluye:
+
+- Letras sin modificadores reservadas para hints mientras la seleccion multiple esta activa.
+- `Enter` como finalizacion explicita que conserva la seleccion.
+- `Esc` para limpiar primero una secuencia parcial y despues cancelar el modo.
+- `Ctrl+G` para cancelar y limpiar el conjunto.
+- Alfabeto completo disponible en seleccion multiple, incluidas `M`, `L` y `H`.
+
+Evidencia:
+
+- Smoke test con un hint sintetico `AM` en estado `PASS`.
+- Auditoria completa `43/43 PASS`, con captura especifica de dos entidades seleccionadas.
+- Regresion visual general `37/37 PASS`; el escenario 21 finaliza con `Enter` y el 25 conecta el grupo con `L`.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:

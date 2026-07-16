@@ -655,15 +655,16 @@ Criterios de aceptacion:
 
 ### F-058: Seleccion multiple general y arrastre colectivo
 
-Feedback: `M` debe activar y desactivar una seleccion multiple general. Si se arrastra una entidad que pertenece a esa seleccion, deben desplazarse juntas todas las entidades seleccionadas.
+Feedback: `M` debe activar una seleccion multiple general. Si se arrastra una entidad que pertenece a esa seleccion, deben desplazarse juntas todas las entidades seleccionadas.
 
-Estado: interaccion implementada en `3A.5`; contencion y exclusion geometricas completadas en el build `3B.0`, pendientes de validacion manual. El arrastre colectivo conserva distancias, busca una posicion libre, crece el frame cuando es necesario y se guarda como una sola operacion reversible.
+Estado: interaccion implementada en `3A.5`; contencion y exclusion geometricas completadas en `3B.0`. El build `3C.12` da prioridad al lector de hints dentro del modo y usa `Enter` para finalizar, evitando colisiones entre etiquetas y comandos de una sola letra.
 
 Criterios de aceptacion:
 
-- Pulsar `M` entra en seleccion multiple y pulsarlo de nuevo cierra los hints sin limpiar la seleccion.
+- Pulsar `M` entra en seleccion multiple y `Enter` cierra los hints sin limpiar la seleccion.
 - Los hints de seleccion multiple admiten nodos, links y frames.
-- `L` usa solamente los nodos de la seleccion general como fuentes y mantiene separado el estado de conexion.
+- Mientras el modo esta activo, todas las letras pertenecen al hint, incluidas `M` y `L`.
+- Tras finalizar con `Enter`, `L` usa solamente los nodos de la seleccion general como fuentes.
 - Arrastrar un nodo explicitamente seleccionado mueve todos los nodos explicitamente seleccionados conservando sus distancias relativas.
 - El grupo cambia de frame en una unica transaccion y Undo lo devuelve completo.
 - La contencion final y el crecimiento del frame cumplen F-036 en 3B.
@@ -876,3 +877,19 @@ Criterios de aceptacion:
 - `Shift+A` crea y conecta la condicion padre; `A` crea y conecta la condicion de soporte.
 - Las entidades creadas quedan separadas, visibles y no obligan a un frame a englobar elementos ajenos.
 - El informe inicial conserva los falsos positivos y fallos reales para explicar el diagnostico.
+
+### F-072: Prioridad contextual para hints de seleccion multiple
+
+Feedback: una etiqueta de hint que contiene `M` no puede seleccionarse porque la pulsacion se interpreta como cierre de la seleccion multiple.
+
+Estado: implementado en `3C.12`.
+
+Criterios de aceptacion:
+
+- `M` inicia la seleccion multiple solo fuera de ese modo.
+- Dentro del modo, cualquier letra sin modificadores alimenta el buffer de hints.
+- Una secuencia como `AM` selecciona su entidad y mantiene abierto el modo.
+- `Enter` finaliza la seleccion multiple conservando sus elementos.
+- `Esc` limpia primero una secuencia parcial; con el buffer vacio cancela el modo.
+- `Ctrl+G` cancela el modo y limpia la seleccion.
+- Los comandos modificados, como `Cmd+F`, siguen disponibles dentro del modo.

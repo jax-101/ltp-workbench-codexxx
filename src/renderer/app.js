@@ -458,7 +458,7 @@ const selectElement = async (id, options = {}) => {
     toggleSelectionRoot(id);
     hintsVisible = true;
     hintEntries = visibleHintEntries();
-    setStatus(`${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected. Press L to connect selected nodes.`);
+    setStatus(`${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected. Press Enter to finish.`);
     render();
     return;
   }
@@ -491,8 +491,7 @@ const selectElement = async (id, options = {}) => {
   render();
 };
 
-const hintAlphabetForMode = () =>
-  multiSelectionMode && mode !== "connection" ? hintAlphabet.replace("L", "").replace("M", "") : hintAlphabet;
+const hintAlphabetForMode = () => (multiSelectionMode ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : hintAlphabet);
 
 const generateHintLabels = (count, alphabet = hintAlphabetForMode()) => {
   const labels = [...alphabet];
@@ -1772,37 +1771,44 @@ const beginConnection = () => {
   setStatus(`Connection mode: choose target node for ${sourceIds.length} source${sourceIds.length === 1 ? "" : "s"}`);
 };
 
+const finishMultiSelect = () => {
+  if (!multiSelectionMode) return;
+  multiSelectionMode = false;
+  hintsVisible = false;
+  hintBuffer = "";
+  multiSelectionFrameSeedIds.clear();
+  setStatus(`Multi-select finished: ${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected`);
+  render();
+};
+
 const toggleMultiSelect = () => {
-  multiSelectionMode = !multiSelectionMode;
+  if (multiSelectionMode) {
+    finishMultiSelect();
+    return;
+  }
+
+  multiSelectionMode = true;
   mode = "navigation";
   connectionSourceId = null;
   hintBuffer = "";
 
-  if (multiSelectionMode) {
-    const explicitFrameIds = [...selectionRootIds].filter((id) => Boolean(frameById()[id]));
-    const explicitNonFrameIds = [...selectionRootIds].filter((id) => !frameById()[id]);
-    const staleActiveFrameSelection =
-      selectedElementType !== "frame" &&
-      explicitNonFrameIds.length > 0 &&
-      explicitFrameIds.length === 1 &&
-      explicitFrameIds[0] === activeFrameId;
-    if (staleActiveFrameSelection) {
-      selectionRootIds.delete(activeFrameId);
-      rebuildSelection();
-    }
-    multiSelectionFrameSeedIds =
-      selectionRootIds.size > 0 && [...selectionRootIds].every((id) => Boolean(frameById()[id]))
-        ? new Set(selectionRootIds)
-        : new Set();
-    showHints();
-    setStatus(`${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected. Choose more, then press M to finish.`);
-    return;
+  const explicitFrameIds = [...selectionRootIds].filter((id) => Boolean(frameById()[id]));
+  const explicitNonFrameIds = [...selectionRootIds].filter((id) => !frameById()[id]);
+  const staleActiveFrameSelection =
+    selectedElementType !== "frame" &&
+    explicitNonFrameIds.length > 0 &&
+    explicitFrameIds.length === 1 &&
+    explicitFrameIds[0] === activeFrameId;
+  if (staleActiveFrameSelection) {
+    selectionRootIds.delete(activeFrameId);
+    rebuildSelection();
   }
-
-  hintsVisible = false;
-  multiSelectionFrameSeedIds.clear();
-  setStatus(`Multi-select finished: ${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected`);
-  render();
+  multiSelectionFrameSeedIds =
+    selectionRootIds.size > 0 && [...selectionRootIds].every((id) => Boolean(frameById()[id]))
+      ? new Set(selectionRootIds)
+      : new Set();
+  showHints();
+  setStatus(`${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected. Choose more, then press Enter to finish.`);
 };
 
 const beginFrameTargetMode = () => {
@@ -2434,7 +2440,9 @@ const cancelContext = (options = {}) => {
     multiSelectionFrameSeedIds.clear();
     connectionSourceIds.clear();
     hintsVisible = false;
-    setStatus("Current mode cancelled");
+    hintBuffer = "";
+    if (options.clearSelection) replaceSelection(null);
+    setStatus(options.clearSelection ? "Current mode cancelled and selection cleared" : "Current mode cancelled");
     render();
     scheduleViewStatePersist();
     focusCanvas();
@@ -3062,6 +3070,12 @@ const handleKeydown = async (event) => {
       closeCommandPalette();
       return;
     }
+    if (multiSelectionMode && hintBuffer) {
+      hintBuffer = "";
+      setStatus("Hint sequence cleared. Press Enter to finish multi-selection.");
+      render();
+      return;
+    }
     cancelContext();
     return;
   }
@@ -3125,6 +3139,18 @@ const handleKeydown = async (event) => {
 
   if (isTextField) return;
 
+  if (multiSelectionMode && event.key === "Enter") {
+    event.preventDefault();
+    finishMultiSelect();
+    return;
+  }
+
+  if (multiSelectionMode && !event.ctrlKey && !event.metaKey && !event.altKey && /^[a-z]$/i.test(event.key)) {
+    event.preventDefault();
+    handleHintKey(event.key);
+    return;
+  }
+
   if (command === "showHints") {
     event.preventDefault();
     toggleHints();
@@ -3134,16 +3160,6 @@ const handleKeydown = async (event) => {
   if (command === "toggleMultiSelect") {
     event.preventDefault();
     toggleMultiSelect();
-    return;
-  }
-
-  if (
-    multiSelectionMode &&
-    command === "beginConnection" &&
-    [...selectionRootIds].some((id) => Boolean(nodeById()[id]))
-  ) {
-    event.preventDefault();
-    beginConnection();
     return;
   }
 
@@ -3321,8 +3337,25 @@ window.__ltpSmokeTest = async () => {
   replaceSelection(activeTree.nodes[0].id);
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true }));
   const multiSelectOpens = multiSelectionMode && hintsVisible;
+  const multiHintTargetId = activeTree.nodes[1].id;
+  hintEntries = [{ id: multiHintTargetId, type: "node", x: 0, y: 0, label: "AM", hint: "AM" }];
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true, cancelable: true }));
+  const multiHintPrefixAccepted = multiSelectionMode && hintBuffer === "A";
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  const escapeClearsPartialHint = multiSelectionMode && hintBuffer === "" && hintsVisible;
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true, cancelable: true }));
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true }));
-  const multiSelectToggles = multiSelectOpens && !multiSelectionMode && !hintsVisible;
+  await Promise.resolve();
+  const multiHintWithMWorks =
+    multiSelectOpens &&
+    multiHintPrefixAccepted &&
+    escapeClearsPartialHint &&
+    multiSelectionMode &&
+    hintBuffer === "" &&
+    selectionRootIds.has(multiHintTargetId);
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+  const enterFinishesMultiSelect =
+    multiHintWithMWorks && !multiSelectionMode && !hintsVisible && selectionRootIds.has(multiHintTargetId);
 
   activeFrameId = selectedTestFrame.id;
   replaceSelection(selectedTestFrame.id);
@@ -3831,7 +3864,8 @@ window.__ltpSmokeTest = async () => {
       twoLetterHintWorks &&
       keyboardHintsToggle &&
       hintButtonToggles &&
-      multiSelectToggles &&
+      multiHintWithMWorks &&
+      enterFinishesMultiSelect &&
       multiSelectionDropsContextFrame &&
       formerContextFrameIsAvailableAsTarget &&
       allShortcutsListed &&
@@ -3915,7 +3949,8 @@ window.__ltpSmokeTest = async () => {
     twoLetterHintWorks,
     keyboardHintsToggle,
     hintButtonToggles,
-    multiSelectToggles,
+    multiHintWithMWorks,
+    enterFinishesMultiSelect,
     multiSelectionDropsContextFrame,
     formerContextFrameIsAvailableAsTarget,
     allShortcutsListed,
@@ -4139,7 +4174,20 @@ window.__ltpShortcutAuditStep = async (command, bindingIndex) => {
 
   if (command === "toggleMultiSelect") {
     await press();
-    return result(multiSelectionMode && hintsVisible, `Multi-selection=${multiSelectionMode}; hints visible=${hintsVisible}.`);
+    const opens = multiSelectionMode && hintsVisible;
+    const targetNode = tree().nodes.find((node) => !selectionRootIds.has(node.id));
+    hintEntries = targetNode ? [{ id: targetNode.id, type: "node", x: 0, y: 0, label: "AM", hint: "AM" }] : [];
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true, cancelable: true }));
+    const prefixAccepted = hintBuffer === "A" && multiSelectionMode;
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true }));
+    await Promise.resolve();
+    const selectsThroughM = Boolean(targetNode && selectionRootIds.has(targetNode.id) && multiSelectionMode);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    const finishesWithEnter = !multiSelectionMode && !hintsVisible && Boolean(targetNode && selectionRootIds.has(targetNode.id));
+    return result(
+      opens && prefixAccepted && selectsThroughM && finishesWithEnter,
+      `Opened=${opens}; AM prefix accepted=${prefixAccepted}; M selected target=${selectsThroughM}; Enter finished and retained selection=${finishesWithEnter}.`
+    );
   }
 
   if (command === "moveSelectionToParent") {
@@ -4478,7 +4526,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.11" && hostVisible && rootHidden, "Build 3C.11 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.12" && hostVisible && rootHidden, "Build 3C.12 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -4799,9 +4847,9 @@ window.__ltpVisualTestStep = async (step) => {
   }
 
   if (step === "multi-closed") {
-    toggleMultiSelect();
+    await pressKey("Enter");
     const retained = visualTestState.nodeIds.every((id) => selectionRootIds.has(id));
-    return result("Close multi-selection with M", retained && !multiSelectionMode && !hintsVisible, "The second M hides hints without clearing the selected group.");
+    return result("Finish multi-selection with Enter", retained && !multiSelectionMode && !hintsVisible, "Enter hides hints without clearing the selected group.");
   }
 
   if (step === "group-moved") {

@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.11`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.12`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -22,7 +22,7 @@ Para terminar, cierra la aplicacion con `Cmd+Q`.
 npm run test:shortcuts
 ```
 
-El comando prueba los 34 comandos y sus 43 combinaciones sobre copias limpias del ejemplo. Guarda `report.md`, `report.json` y una captura por binding en `outputs/shortcut-audit/3C.11/`. Un resultado correcto termina con `passed: 43` y `failed: 0`.
+El comando prueba los 34 comandos y sus 43 combinaciones sobre copias limpias del ejemplo. Guarda `report.md`, `report.json` y una captura por binding en `outputs/shortcut-audit/3C.12/`. Un resultado correcto termina con `passed: 43` y `failed: 0`.
 
 ## Prueba visual automatizada
 
@@ -271,11 +271,11 @@ Resultado esperado: `Root` es el espacio global ilimitado, `Goal Tree` es un fra
 
 1. Pulsa `M` y comprueba que aparecen hints para nodos, links y frames.
 2. Elige dos o tres nodos mediante sus letras.
-3. Pulsa `M` de nuevo y comprueba que los hints desaparecen sin perder la seleccion.
+3. Pulsa `Enter` y comprueba que los hints desaparecen sin perder la seleccion.
 4. Arrastra uno de los nodos seleccionados a otro frame.
 5. Comprueba que todos los nodos seleccionados se desplazan juntos y conservan sus distancias relativas.
 6. Pulsa `Cmd+Z` y comprueba que todo el grupo vuelve en una sola operacion.
-7. Repite la seleccion, pulsa `L` y elige un nodo destino.
+7. Repite la seleccion, finaliza con `Enter`, pulsa `L` y elige un nodo destino.
 
 Resultado esperado: `M` representa una seleccion general reutilizable; el arrastre afecta al grupo completo y `L` usa sus nodos como fuentes sin mezclar ambos estados.
 
@@ -344,7 +344,7 @@ Resultado esperado: cada frame optimiza primero su contenido. Sin relaciones usa
 1. Selecciona un frame que contenga o pueda contener entidades.
 2. Pulsa `M`.
 3. Elige dos entidades mediante sus letras.
-4. Pulsa `M` de nuevo para cerrar la seleccion multiple.
+4. Pulsa `Enter` para cerrar la seleccion multiple.
 5. Comprueba que la barra indica `Selected: 2`, sin contar el frame inicial.
 6. Pulsa `Cmd+F`.
 7. Comprueba que Root, Goal Tree y todos los frames validos tienen una letra, incluido el frame seleccionado en el paso 1.
@@ -398,7 +398,7 @@ Resultado esperado: puertos, posicion transversal y tamano del frame cooperan pa
 
 1. Selecciona una entidad `NC` y pulsa `Shift+Tab`.
 2. Comprueba que pasa a `Assumption`; sigue pulsando y comprueba que recorre ciclicamente los Types disponibles.
-3. Pulsa `M`, selecciona varias entidades con Types diferentes y cierra con `M`.
+3. Pulsa `M`, selecciona varias entidades con Types diferentes y cierra con `Enter`.
 4. Pulsa `Shift+Tab` una vez y comprueba que todas pasan a `CSF`, el primer Type repetible del Goal Tree.
 5. Pulsa de nuevo y comprueba que todas pasan juntas a `NC`; pulsa otra vez para `Assumption` y otra para volver a `CSF`.
 6. Pulsa `Cmd+Z` una vez y comprueba que todo el grupo vuelve conjuntamente a `Assumption`.
@@ -417,7 +417,7 @@ Resultado esperado: la seleccion individual continua desde su valor; la seleccio
 6. Comprueba que el control circular central de esa flecha permanece visible aunque los demas hints esten ocultos.
 7. Selecciona un frame y compara la seleccion principal azul con las entidades y links incluidos, que deben conservar una indicacion dorada secundaria.
 8. Cambia el zoom entre 35%, 100% y 200% y comprueba que el grosor perceptible del link seleccionado se mantiene.
-9. Pulsa `M`, elige tres entidades y cierra la seleccion con `M`; comprueba que las tres permanecen resaltadas en azul.
+9. Pulsa `M`, elige tres entidades y cierra la seleccion con `Enter`; comprueba que las tres permanecen resaltadas en azul.
 10. Repite con `Shift+click` o `Cmd+click` sobre dos entidades y comprueba que ambas se muestran seleccionadas.
 
 Resultado esperado: la seleccion primaria se identifica inmediatamente por varios signos visuales y nunca se confunde con el Type ni con los elementos incluidos colectivamente. Todos los elementos elegidos explicitamente permanecen resaltados, aunque solo el ultimo alimente el inspector.
@@ -434,6 +434,18 @@ Resultado esperado: la seleccion primaria se identifica inmediatamente por vario
 8. Comprueba que ninguna entidad ajena queda dentro del frame ampliado.
 
 Resultado esperado: la paleta permite encontrar y ejecutar comandos sin raton. `A` y `Shift+A` producen subgrafos completos, visibles y geometricamente coherentes.
+
+## Prueba 32: hints con letras de comandos
+
+1. Pulsa `M` para iniciar una seleccion multiple con suficientes elementos visibles para obtener hints de dos letras.
+2. Elige una entidad cuyo hint contenga `M`, por ejemplo `AM`.
+3. Comprueba que la `M` completa el hint, selecciona la entidad y no cierra el modo.
+4. Empieza otra secuencia y pulsa `Esc`; comprueba que solo se limpia la secuencia parcial.
+5. Pulsa `Enter` y comprueba que los hints desaparecen conservando la seleccion.
+6. Pulsa `L` y elige un destino para confirmar que la seleccion finalizada se reutiliza como origen.
+7. Repite y usa `Ctrl+G`; comprueba que se cancelan el modo y la seleccion.
+
+Resultado esperado: las letras siempre forman parte del hint dentro de la seleccion multiple; las acciones de finalizar, cancelar y conectar no compiten con las etiquetas.
 
 ## Registro de resultados
 

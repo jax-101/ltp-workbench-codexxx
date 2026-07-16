@@ -496,3 +496,9 @@ Razon: mantener manualmente otra lista de atajos permite que el panel, el matche
 Decision: `A` crea una entidad de soporte y el link hacia la seleccion; `Shift+A` crea una condicion padre y el link desde la seleccion. Ambos dejan activa la nueva entidad y buscan una posicion libre que preserve contencion y exclusion de frames.
 
 Razon: un comando llamado parent o supporting condition no esta completo si solo crea una caja. La relacion es parte de su significado, y una operacion semanticamente correcta sigue siendo defectuosa si el resultado aparece solapado o deforma su frame sobre elementos ajenos.
+
+### D-081: El modo contextual posee las letras sin modificadores
+
+Decision: mientras la seleccion multiple esta activa, cualquier letra sin modificadores se interpreta como parte de un hint antes de consultar comandos globales. `Enter` finaliza conservando la seleccion, `Esc` limpia primero el buffer parcial y `Ctrl+G` cancela y limpia. Los comandos con modificadores, como `Cmd+F`, permanecen disponibles.
+
+Razon: una `M` no puede significar de forma determinista a la vez caracter de una etiqueta y cierre inmediato del modo. Dar propiedad de las letras al contexto elimina la ambiguedad para todo el alfabeto y evita mantener listas crecientes de excepciones.

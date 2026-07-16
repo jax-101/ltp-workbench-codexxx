@@ -662,9 +662,19 @@ Aprendizaje: las aserciones funcionales y geometricas pueden omitir una composic
 
 Aplicacion futura: revisar visualmente casos representativos tras cada nueva suite; traducir cada defecto observado a una invariante; comprobar cajas completas y pertenencia; y no cerrar una prueba solo porque el dato final sea correcto.
 
+### L-070: El contexto activo debe poseer las teclas que usa como datos
+
+Fecha: 2026-07-16
+
+Evidencia: durante la seleccion multiple, una `M` intermedia de un hint se resolvia antes como el comando global que cerraba el modo. Excluir letras concretas del alfabeto evitaba algunos choques, pero reducia el espacio de etiquetas y dejaba el mismo riesgo para otros comandos.
+
+Aprendizaje: cuando una interfaz modal interpreta caracteres como datos, ese contexto debe recibirlos antes que los atajos globales. Si una misma tecla pretende ser simultaneamente dato y salida del modo, la interaccion es ambigua por construccion.
+
+Aplicacion futura: ordenar el enrutamiento por contexto; reservar teclas no ambiguas como `Enter` y `Esc` para finalizar o cancelar; mantener comandos modificados disponibles; y probar secuencias que contengan cada tecla global relevante.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-070`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-071`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 
