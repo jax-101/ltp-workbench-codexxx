@@ -10,6 +10,21 @@ const LAYER_SPACING = 96;
 const MIN_FRAME_WIDTH = 300;
 const MIN_FRAME_HEIGHT = 180;
 const ROUTE_CLEARANCE = 14;
+const STABILITY_DISTANCE = 120;
+const LONG_LINK_DISTANCE = 480;
+const MINIMUM_LAYOUT_IMPROVEMENT = 0.15;
+
+const QUALITY_WEIGHTS = Object.freeze({
+  crossing: 750,
+  obstacle: 1100,
+  directionException: 500,
+  averageLength: 0.35,
+  maximumLength: 0.9,
+  longLinkSquared: 1 / 60,
+  emptyRatio: 200,
+  averageMovementExcess: 1.5,
+  maximumMovementExcess: 1.5
+});
 
 const elkDirection = (direction) =>
   ({
@@ -277,7 +292,40 @@ const relaxDirectionEdges = (itemIds, edges) => {
   return { edges: relaxed, reversed };
 };
 
-const candidateQuality = (items, children, edges, direction) => {
+const relativeMovement = (children, referenceChildren) => {
+  if (!referenceChildren?.length || referenceChildren.length !== children.length) {
+    return { average: 0, maximum: 0, averageExcess: 0, maximumExcess: 0 };
+  }
+  const currentById = new Map(referenceChildren.map((child) => [child.id, centerOf(child)]));
+  const candidateCenters = children.map((child) => ({ id: child.id, ...centerOf(child) }));
+  if (candidateCenters.some((point) => !currentById.has(point.id))) {
+    return { average: 0, maximum: 0, averageExcess: 0, maximumExcess: 0 };
+  }
+  const candidateCentroid = candidateCenters.reduce(
+    (sum, point) => ({ x: sum.x + point.x / candidateCenters.length, y: sum.y + point.y / candidateCenters.length }),
+    { x: 0, y: 0 }
+  );
+  const currentCentroid = [...currentById.values()].reduce(
+    (sum, point) => ({ x: sum.x + point.x / currentById.size, y: sum.y + point.y / currentById.size }),
+    { x: 0, y: 0 }
+  );
+  const distances = candidateCenters.map((point) => {
+    const current = currentById.get(point.id);
+    return Math.hypot(
+      (point.x - candidateCentroid.x) - (current.x - currentCentroid.x),
+      (point.y - candidateCentroid.y) - (current.y - currentCentroid.y)
+    );
+  });
+  const excesses = distances.map((distance) => Math.max(0, distance - STABILITY_DISTANCE));
+  return {
+    average: distances.reduce((sum, distance) => sum + distance, 0) / distances.length,
+    maximum: Math.max(...distances, 0),
+    averageExcess: excesses.reduce((sum, distance) => sum + distance, 0) / excesses.length,
+    maximumExcess: Math.max(...excesses, 0)
+  };
+};
+
+const candidateQuality = (items, children, edges, direction, referenceChildren = null) => {
   const boxes = new Map(
     children.map((child) => [child.id, { x: child.x || 0, y: child.y || 0, width: child.width, height: child.height }])
   );
@@ -324,29 +372,55 @@ const candidateQuality = (items, children, edges, direction) => {
       if (segmentIntersectsBox(segment.start, segment.end, expanded)) obstacles += 1;
     }
   }
-  const left = Math.min(...children.map((child) => child.x || 0), 0);
-  const top = Math.min(...children.map((child) => child.y || 0), 0);
-  const right = Math.max(...children.map((child) => (child.x || 0) + child.width), 0);
-  const bottom = Math.max(...children.map((child) => (child.y || 0) + child.height), 0);
+  const left = children.length ? Math.min(...children.map((child) => child.x || 0)) : 0;
+  const top = children.length ? Math.min(...children.map((child) => child.y || 0)) : 0;
+  const right = children.length ? Math.max(...children.map((child) => (child.x || 0) + child.width)) : 0;
+  const bottom = children.length ? Math.max(...children.map((child) => (child.y || 0) + child.height)) : 0;
+  const lengths = segments.map((segment) => Math.hypot(segment.end.x - segment.start.x, segment.end.y - segment.start.y));
+  const length = lengths.reduce((sum, segmentLength) => sum + segmentLength, 0);
+  const maximumLength = Math.max(...lengths, 0);
+  const averageLength = lengths.length ? length / lengths.length : 0;
+  const area = Math.max(0, (right - left) * (bottom - top));
+  const occupiedArea = children.reduce((sum, child) => sum + child.width * child.height, 0);
+  const emptyArea = Math.max(0, area - occupiedArea);
+  const emptyRatio = occupiedArea ? emptyArea / occupiedArea : 0;
+  const movement = relativeMovement(children, referenceChildren);
+  const directionExceptions = segments.filter((segment) => segment.directionException).length;
+  const longLinkExcess = Math.max(0, maximumLength - LONG_LINK_DISTANCE);
+  const score =
+    crossings * QUALITY_WEIGHTS.crossing +
+    obstacles * QUALITY_WEIGHTS.obstacle +
+    directionExceptions * QUALITY_WEIGHTS.directionException +
+    averageLength * QUALITY_WEIGHTS.averageLength +
+    maximumLength * QUALITY_WEIGHTS.maximumLength +
+    longLinkExcess * longLinkExcess * QUALITY_WEIGHTS.longLinkSquared +
+    emptyRatio * QUALITY_WEIGHTS.emptyRatio +
+    movement.averageExcess * QUALITY_WEIGHTS.averageMovementExcess +
+    movement.maximumExcess * QUALITY_WEIGHTS.maximumMovementExcess;
   return {
     crossings,
     obstacles,
-    directionExceptions: segments.filter((segment) => segment.directionException).length,
-    length: Math.round(
-      segments.reduce((sum, segment) => sum + Math.hypot(segment.end.x - segment.start.x, segment.end.y - segment.start.y), 0)
-    ),
-    area: Math.round((right - left) * (bottom - top))
+    directionExceptions,
+    length: Math.round(length),
+    averageLength: Math.round(averageLength),
+    maximumLength: Math.round(maximumLength),
+    area: Math.round(area),
+    emptyArea: Math.round(emptyArea),
+    emptyRatio: Math.round(emptyRatio * 1000) / 1000,
+    averageRelativeMovement: Math.round(movement.average),
+    maximumRelativeMovement: Math.round(movement.maximum),
+    score: Math.round(score * 100) / 100
   };
 };
 
 const compareCandidateQuality = (left, right) => {
-  for (const key of ["crossings", "obstacles", "directionExceptions", "length", "area"]) {
+  for (const key of ["score", "crossings", "obstacles", "maximumLength", "length", "area"]) {
     if (left[key] !== right[key]) return left[key] - right[key];
   }
   return 0;
 };
 
-const optimizedElkLayout = async (elk, graph, items, edges, direction, optimize) => {
+const optimizedElkLayout = async (elk, graph, items, edges, direction, optimize, currentChildren = null) => {
   const baseOptions = graph.layoutOptions;
   const strictConfigs = optimize
     ? [
@@ -385,7 +459,7 @@ const optimizedElkLayout = async (elk, graph, items, edges, direction, optimize)
       },
       edges: config.edges
     });
-    const quality = candidateQuality(items, laidOut.children || [], edges, direction);
+    const quality = candidateQuality(items, laidOut.children || [], edges, direction, currentChildren);
     const candidate = {
       laidOut,
       quality,
@@ -393,7 +467,39 @@ const optimizedElkLayout = async (elk, graph, items, edges, direction, optimize)
     };
     if (!best || compareCandidateQuality(candidate.quality, best.quality) < 0) best = candidate;
   }
-  return { ...best, candidates: configs.length };
+  if (!currentChildren?.length) return { ...best, candidates: configs.length };
+
+  const currentQuality = candidateQuality(items, currentChildren, edges, direction, currentChildren);
+  const improvement = currentQuality.score
+    ? (currentQuality.score - best.quality.score) / currentQuality.score
+    : 0;
+  if (improvement < MINIMUM_LAYOUT_IMPROVEMENT) {
+    return {
+      laidOut: { ...graph, children: currentChildren },
+      quality: currentQuality,
+      config: {
+        placement: "CURRENT",
+        seed: null,
+        relaxed: false,
+        preserved: true,
+        improvement: Math.round(improvement * 1000) / 1000,
+        baselineScore: currentQuality.score,
+        selectedScore: currentQuality.score
+      },
+      candidates: configs.length
+    };
+  }
+  return {
+    ...best,
+    config: {
+      ...best.config,
+      preserved: false,
+      improvement: Math.round(improvement * 1000) / 1000,
+      baselineScore: currentQuality.score,
+      selectedScore: best.quality.score
+    },
+    candidates: configs.length
+  };
 };
 
 const compressRoute = (points) => {
@@ -654,7 +760,24 @@ const runComposedLayout = async (workspace, options = {}) => {
     const sidePadding = isRoot ? ROOT_MARGIN : FRAME_SIDE_PADDING;
     const topPadding = isRoot ? ROOT_MARGIN : FRAME_TOP_PADDING;
     const bottomPadding = isRoot ? ROOT_MARGIN : FRAME_BOTTOM_PADDING;
+    const previousParent = isRoot ? null : canvas.layout?.frames?.[frameId];
+    const currentChildren = items
+      .map((item) => {
+        const previous = item.type === "frame"
+          ? canvas.layout?.frames?.[item.id]
+          : previousNodeBox(nodeOwners, item.id);
+        if (!previous) return null;
+        return {
+          id: item.id,
+          x: previous.x - (previousParent?.x || 0),
+          y: previous.y - (previousParent?.y || 0),
+          width: item.width,
+          height: item.height
+        };
+      })
+      .filter(Boolean);
     let elkChildren = [];
+    let preserveCurrentLayout = false;
     if (items.length) {
       const graphEdges = collapsedEdges(frameId, links, nodeOwners, frameById);
       const goalTreeRanks = frame.kind === "diagram" && diagramDefinition?.layering === "distanceToSink"
@@ -691,11 +814,27 @@ const runComposedLayout = async (workspace, options = {}) => {
         edges: graphEdges
       };
       const optimize = !isRoot && frame.kind === "diagram" && items.length >= 4 && graphEdges.length >= 3 && !items.some((item) => item.pinned);
-      const selectedLayout = await optimizedElkLayout(elk, graph, items, graphEdges, direction, optimize);
+      const canCompareCurrent =
+        !isRoot &&
+        frame.kind === "diagram" &&
+        graphEdges.length > 0 &&
+        currentChildren.length === items.length &&
+        !items.some((item) => item.pinned);
+      const selectedLayout = await optimizedElkLayout(
+        elk,
+        graph,
+        items,
+        graphEdges,
+        direction,
+        optimize,
+        canCompareCurrent ? currentChildren : null
+      );
       elkChildren = selectedLayout.laidOut.children || [];
+      preserveCurrentLayout = Boolean(selectedLayout.config?.preserved);
       if (optimize) {
         optimization[frameId] = {
-          strategy: "multi-start-layered",
+          strategy: "weighted-stable-layered",
+          minimumImprovement: MINIMUM_LAYOUT_IMPROVEMENT,
           candidates: selectedLayout.candidates,
           ...selectedLayout.config,
           ...selectedLayout.quality
@@ -704,11 +843,18 @@ const runComposedLayout = async (workspace, options = {}) => {
     }
 
     const elkPositions = new Map(elkChildren.map((child) => [child.id, child]));
-    const previousParent = isRoot ? null : canvas.layout?.frames?.[frameId];
     for (const item of items) {
       const laidOut = elkPositions.get(item.id) || { x: 0, y: 0 };
-      item.x = Math.round((laidOut.x || 0) + sidePadding);
-      item.y = Math.round((laidOut.y || 0) + topPadding);
+      item.x = Math.round((laidOut.x || 0) + (preserveCurrentLayout ? 0 : sidePadding));
+      item.y = Math.round((laidOut.y || 0) + (preserveCurrentLayout ? 0 : topPadding));
+    }
+    if (preserveCurrentLayout && items.length) {
+      const offsetX = Math.max(0, sidePadding - Math.min(...items.map((item) => item.x)));
+      const offsetY = Math.max(0, topPadding - Math.min(...items.map((item) => item.y)));
+      for (const item of items) {
+        item.x += offsetX;
+        item.y += offsetY;
+      }
     }
     if (!isRoot && frame.kind === "container") {
       compactContainerItems(items, direction, sidePadding, topPadding, spacingNodeNode);
@@ -721,7 +867,7 @@ const runComposedLayout = async (workspace, options = {}) => {
       item.x = Math.max(isRoot ? 24 : sidePadding, Math.round(previous.x - (previousParent?.x || 0)));
       item.y = Math.max(isRoot ? 24 : topPadding, Math.round(previous.y - (previousParent?.y || 0)));
     }
-    resolveItemCollisions(items, direction);
+    if (!preserveCurrentLayout) resolveItemCollisions(items, direction);
 
     const nodeLayouts = {};
     const frameLayouts = {};

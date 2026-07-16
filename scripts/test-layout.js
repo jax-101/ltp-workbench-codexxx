@@ -195,6 +195,20 @@ const run = async () => {
   const distinctGoalArrivals = new Set(goalArrivals.map((point) => `${point.x}:${point.y}`));
   const goalBox = complexTree.layout.nodes[complexGoal.id];
   const csfRows = new Set(complexCsfs.map((node) => complexTree.layout.nodes[node.id].y));
+  const complexOptimization = complexTree.layout.optimization[complexTree.hostFrameId];
+  const initialComplexNodes = treeFor(complexFixture).layout.nodes;
+  const preservedComplexNodes = complexTree.layout.nodes;
+  const complexAnchorId = complexTree.nodes[0].id;
+  const relativePositionsPreserved = complexTree.nodes.every((node) => {
+    const initial = initialComplexNodes[node.id];
+    const initialAnchor = initialComplexNodes[complexAnchorId];
+    const result = preservedComplexNodes[node.id];
+    const resultAnchor = preservedComplexNodes[complexAnchorId];
+    return (
+      result.x - resultAnchor.x === initial.x - initialAnchor.x &&
+      result.y - resultAnchor.y === initial.y - initialAnchor.y
+    );
+  });
   assert.equal(complexTree.nodes.length, 18, "the permanent complex fixture should retain all reference entities");
   assert.equal(complexTree.links.length, 21, "the permanent complex fixture should retain cross-branch links");
   assert.equal(csfGoalLinks.length, 3, "all three CSFs must point directly to the Goal");
@@ -204,10 +218,25 @@ const run = async () => {
   assert(goalArrivals.every((point) => point.y === goalBox.y + goalBox.height), "BT arrows must enter through the Goal bottom edge");
   assert.deepEqual(validateComposedGeometry(complexResult), [], "the complex fixture must preserve composed geometry");
   assert.equal(complexTree.layout.quality.crossings, 0, "the complex fixture should avoid independent route crossings");
-  assert(complexTree.layout.quality.straightRoutes >= 19, "the complex fixture should keep nearly every route straight");
-  assert(complexTree.layout.quality.bends <= 2, "the complex fixture should need at most two bends");
+  assert(complexTree.layout.quality.straightRoutes >= 18, "the stable complex fixture should keep most routes straight");
+  assert(complexTree.layout.quality.bends <= 8, "preserving the mental map should not create excessive bends");
+  assert.equal(complexOptimization.preserved, true, "a marginal or negative ELK result must preserve the current layout");
+  assert(complexOptimization.improvement < 0.15, "the preserved layout must remain below the clear-improvement threshold");
+  assert(relativePositionsPreserved, "preserving the current layout must keep every relative node position");
 
-  console.log("Composed layout tests passed: directional ports, distributed arrowheads, complex routing, fitted frames, nesting, pins and determinism.");
+  const scattered = structuredClone(complexFixture);
+  const scatteredTree = treeFor(scattered);
+  scatteredTree.nodes.forEach((node, index) => {
+    scatteredTree.layout.nodes[node.id].x = 80 + index * 430;
+    scatteredTree.layout.nodes[node.id].y = 80 + (index % 3) * 220;
+  });
+  const scatteredResult = await runComposedLayout(scattered);
+  const scatteredOptimization = treeFor(scatteredResult).layout.optimization[scatteredTree.hostFrameId];
+  assert.equal(scatteredOptimization.preserved, false, "a clearly inferior current layout must be replaced");
+  assert(scatteredOptimization.improvement >= 0.15, "ELK must clear the 15% threshold before replacing current positions");
+  assert.deepEqual(validateComposedGeometry(scatteredResult), [], "the improved scattered layout must remain geometrically valid");
+
+  console.log("Composed layout tests passed: weighted quality, 15% stability gate, directional ports, routing, frames, nesting and determinism.");
 };
 
 run().catch((error) => {

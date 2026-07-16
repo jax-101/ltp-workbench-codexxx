@@ -282,12 +282,28 @@ Incluye:
 - Regresion compartida entre validacion de modelo, pruebas de Layout y capturas visuales.
 - Resultado de referencia: cero cruces, 20 rutas rectas, dos codos y cero problemas geometricos.
 
+### Build 3B.4: estabilidad del mapa mental
+
+Estado: implementado; pendiente de validacion manual.
+
+Incluye:
+
+- Sustitucion de la prioridad lexicografica por una puntuacion ponderada y explicable.
+- Penalizacion de desplazamiento relativo por encima de 120 px.
+- Penalizacion de area vacia y baja densidad del diagrama.
+- Penalizacion fuerte y cuadratica del enlace mas largo por encima de 480 px.
+- Candidato `CURRENT` evaluado junto a todas las variantes ELK.
+- Umbral de mejora minima del 15% antes de reemplazar la disposicion actual.
+- Estado visible que informa cuando Layout conserva el mapa actual.
+- Regresiones para una disposicion estable que debe conservarse y otra dispersa que ELK debe sustituir.
+
 Seguimiento de la iteracion:
 
 - F-036: contencion y exclusion geometrica estrictas implementadas en 3B.0.
 - F-038: insercion direccional sin alterar la forma existente.
 - F-043: rutas simples en 3B.1, optimizacion multiarranque en 3B.2 y caso complejo permanente en 3B.3.
 - F-059: fixture complejo, capas semanticas y puntas separadas implementados en 3B.3.
+- F-060: puntuacion ponderada, candidato actual y umbral del 15% implementados en 3B.4.
 - F-047: indicacion de direccion pendiente de aplicar.
 - F-052: transiciones animadas de Layout, Undo y Redo implementadas en 3B.0.
 - F-057: recolocacion espacial dentro del frame destino implementada en 3B.0.

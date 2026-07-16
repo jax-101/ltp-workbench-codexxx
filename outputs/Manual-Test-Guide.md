@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3B.3`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3B.4`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -24,7 +24,7 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, Layout compuesto, arrastre, Undo/Redo y conexion, y termina cargando el caso complejo permanente. Guarda capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional, geometrica o perceptiva. En el build 3B.3 las 22 comprobaciones deben terminar en `PASS`.
+El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, Layout compuesto, arrastre, Undo/Redo y conexion, y termina cargando el caso complejo permanente. Guarda capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional, geometrica o perceptiva. En el build 3B.4 las 22 comprobaciones deben terminar en `PASS`.
 
 La captura `22-readable-routing.png` debe mostrar 18 entidades, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
 
@@ -37,6 +37,8 @@ npm run test:complex
 ```
 
 La primera apertura carga el fixture de 18 entidades y 21 links. Los cambios posteriores se guardan en un workspace de prueba independiente.
+
+En el caso complejo bien ordenado, pulsa `Layout` y comprueba que el estado indica que se conserva la disposicion actual porque ELK no supera el margen del 15%. Las posiciones relativas de los nodos no deben cambiar.
 
 ## Prueba 1: hint de dos letras
 

@@ -1414,11 +1414,17 @@ const runAutoLayout = async () => {
     await animateToLayout(nextWorkspace);
     await persist("Apply layout", "spatial.layout");
     const quality = tree()?.layout?.quality;
-    setStatus(
-      quality
-        ? `Layout optimized: ${quality.crossings} crossings, ${quality.bends} bends, ${quality.directionExceptions} direction exceptions`
-        : "Composed layout updated"
-    );
+    const optimization = tree()?.layout?.optimization?.[tree()?.hostFrameId];
+    if (optimization?.preserved) {
+      const improvement = Math.max(0, Math.round((optimization.improvement || 0) * 100));
+      setStatus(`Current layout kept: ELK improvement ${improvement}% is below the 15% threshold`);
+    } else {
+      setStatus(
+        quality
+          ? `Layout optimized: ${quality.crossings} crossings, ${quality.bends} bends, ${quality.directionExceptions} direction exceptions`
+          : "Composed layout updated"
+      );
+    }
     render();
   } finally {
     layoutAnimating = false;
@@ -3392,7 +3398,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3B.3" && hostVisible && rootHidden, "Build 3B.3 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3B.4" && hostVisible && rootHidden, "Build 3B.4 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3723,7 +3729,8 @@ window.__ltpVisualTestStep = async (step) => {
     const arrowMarkerScreenWidth = Number(document.querySelector("#arrow")?.getAttribute("markerWidth")) * zoomLevel;
     const arrowMarkersStayReadable = arrowMarkerScreenWidth >= 10;
     const quality = laidOutTree.layout.quality;
-    const mostlyStraight = quality.straightRoutes >= laidOutTree.links.length - 2;
+    const mostlyStraight = quality.straightRoutes >= laidOutTree.links.length - 3;
+    const stableLayoutKept = laidOutTree.layout.optimization?.[hostFrame.id]?.preserved === true;
     const frameContainsDiagram = issues.length === 0;
     fitView();
     return result(
@@ -3738,8 +3745,9 @@ window.__ltpVisualTestStep = async (step) => {
         arrowMarkersStayReadable &&
         quality.crossings === 0 &&
         mostlyStraight &&
+        stableLayoutKept &&
         frameContainsDiagram,
-      `18 entities, 21 links, CSF to Goal=${csfGoalLinks.length}, CSF layers=${csfRows.size}, distinct arrow arrivals=${distinctArrivals}, visible arrow markers=${arrowMarkersVisible}, arrow width=${arrowMarkerScreenWidth.toFixed(1)}px, crossings=${quality.crossings}, straight=${quality.straightRoutes}, bends=${quality.bends}, geometry issues=${issues.length}.`
+      `18 entities, 21 links, current layout kept=${stableLayoutKept}, CSF to Goal=${csfGoalLinks.length}, CSF layers=${csfRows.size}, distinct arrow arrivals=${distinctArrivals}, arrow width=${arrowMarkerScreenWidth.toFixed(1)}px, crossings=${quality.crossings}, straight=${quality.straightRoutes}, bends=${quality.bends}, geometry issues=${issues.length}.`
     );
   }
 

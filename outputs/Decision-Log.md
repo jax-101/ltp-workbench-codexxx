@@ -430,3 +430,9 @@ Razon: una captura sirve para comunicar el problema, pero no fija con precision 
 Decision: la definicion de Goal Tree declara una estratificacion por distancia al Goal. Los links que comparten un lado de una entidad reciben puertos ordenados y separados. Las puntas compensan el zoom para conservar un tamano estable en pantalla.
 
 Razon: cero cruces no basta si un CSF aparece mezclado con NC o varias puntas terminan superpuestas. La jerarquia de dominio, la separacion de llegadas y la escala perceptiva son restricciones distintas que deben verificarse expresamente.
+
+### D-070: La disposicion actual compite contra ELK con un umbral de mejora
+
+Decision: Layout evalua `CURRENT` y todas las variantes ELK mediante una puntuacion ponderada. El candidato ELK ganador se aplica solo si su coste es al menos un 15% menor que el actual. En otro caso se conservan las posiciones relativas existentes.
+
+Razon: recalcular no equivale a mejorar. Un umbral explicito protege el mapa mental del usuario frente a diferencias pequenas o ruido heuristico, mientras permite reemplazar composiciones claramente deficientes.

@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3B.3",
-    "name": "Complex Goal Tree Baseline",
+    "id": "3B.4",
+    "name": "Mental Map Stability",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",

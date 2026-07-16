@@ -452,9 +452,19 @@ Aprendizaje: zoom y transformaciones separan las unidades del modelo de los pixe
 
 Aplicacion futura: comprobar tamanos efectivos despues de aplicar zoom; compensar la escala de marcadores, handles y badges; y definir criterios perceptivos minimos junto a las aserciones estructurales.
 
+### L-049: Una heuristica necesita una opcion de no actuar
+
+Fecha: 2026-07-16
+
+Evidencia: el layout multiarranque encontraba una solucion con cero cruces, pero dispersaba ramas bien ordenadas, creaba un gran espacio vacio y alargaba un enlace transversal. La seleccion lexicografica seguia considerandola ganadora porque un cruce tenia prioridad absoluta.
+
+Aprendizaje: cuando una heuristica modifica trabajo humano, el estado actual debe ser un candidato real y la mejora debe superar un margen significativo. Sin una opcion de no actuar, el optimizador confunde diferencia con progreso.
+
+Aplicacion futura: puntuar estabilidad, densidad y valores extremos ademas de promedios; comparar contra una linea base; exigir una mejora porcentual; y registrar por que se aplico o rechazo cada resultado automatico.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-049`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-050`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

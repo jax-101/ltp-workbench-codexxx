@@ -678,3 +678,19 @@ Criterios de aceptacion:
 - El caso mantiene los links cruzados y los habilitadores compartidos de la referencia.
 - Layout produce cero cruces independientes, no atraviesa entidades y conserva la mayoria de rutas rectas.
 - El frame Goal Tree se ajusta para contener completamente el resultado.
+
+### F-060: Layout solo sustituye una disposicion cuando mejora claramente
+
+Feedback: una reduccion minima de cruces no debe dominar sobre la estabilidad del mapa mental, el espacio vacio y los enlaces excesivamente largos. Si ELK no mejora al menos un 15% la disposicion actual, debe conservarse el layout del usuario.
+
+Estado: implementado en `3B.4`. La disposicion actual se evalua como candidato `CURRENT` con la misma funcion ponderada que las variantes ELK.
+
+Criterios de aceptacion:
+
+- El desplazamiento se mide de forma relativa al centroide, para no penalizar una traslacion rigida del diagrama.
+- Los movimientos inferiores a 120 px no reciben penalizacion de estabilidad.
+- La puntuacion incluye densidad, area vacia, longitud media y longitud maxima.
+- Los enlaces que superan 480 px reciben una penalizacion cuadratica adicional.
+- Cruces, obstaculos y excepciones direccionales permanecen en la funcion de coste, pero ningun cruce minimo decide por si solo.
+- ELK sustituye `CURRENT` solamente cuando reduce la puntuacion al menos un 15%.
+- Conservar `CURRENT` mantiene todas las posiciones relativas y permite reajustar el frame para preservar contencion.
