@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.6`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.7`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -382,6 +382,19 @@ Resultado esperado: ambos estilos representan exactamente el mismo diagrama y la
 8. Comprueba que el borde del Goal Tree contiene por completo el resultado y se ajusta al espacio ocupado.
 
 Resultado esperado: puertos, posicion transversal y tamano del frame cooperan para reducir cruces. Las caras preferentes y las capas no cambian, y la punta nunca oculta el inicio de la aproximacion perpendicular.
+
+## Prueba 29: ciclo individual y colectivo de Types
+
+1. Selecciona una entidad `NC` y pulsa `Shift+Tab`.
+2. Comprueba que pasa a `Assumption`; sigue pulsando y comprueba que recorre ciclicamente los Types disponibles.
+3. Pulsa `M`, selecciona varias entidades con Types diferentes y cierra con `M`.
+4. Pulsa `Shift+Tab` una vez y comprueba que todas pasan a `CSF`, el primer Type repetible del Goal Tree.
+5. Pulsa de nuevo y comprueba que todas pasan juntas a `NC`; pulsa otra vez para `Assumption` y otra para volver a `CSF`.
+6. Pulsa `Cmd+Z` una vez y comprueba que todo el grupo vuelve conjuntamente a `Assumption`.
+7. Entra en un campo del inspector y pulsa `Shift+Tab`.
+8. Comprueba que cambia el foco de campo y no modifica ningun Type.
+
+Resultado esperado: la seleccion individual continua desde su valor; la seleccion multiple se sincroniza y recorre un unico ciclo. Los Types unicos no aparecen como destino colectivo y el historial trata cada pulsacion como una operacion atomica.
 
 ## Registro de resultados
 

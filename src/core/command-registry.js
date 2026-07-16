@@ -1,5 +1,6 @@
 const { LtpError } = require("./errors");
 const { current, isDraft } = require("immer");
+const { getDiagramDefinition } = require("./diagram-registry");
 
 const cloneValue = (value) => structuredClone(isDraft(value) ? current(value) : value);
 
@@ -51,8 +52,43 @@ const createCommandRegistry = () => {
     const tree = findTree(draft, payload.treeId);
     const node = tree.nodes.find((candidate) => candidate.id === payload.nodeId);
     if (!node) throw new LtpError("NODE_NOT_FOUND", `Node ${payload.nodeId} was not found`, { nodeId: payload.nodeId });
+    if (payload.field === "type") {
+      const typeDefinition = getDiagramDefinition(tree.type)?.nodeTypes.find((candidate) => candidate.id === payload.value);
+      if (!typeDefinition) {
+        throw new LtpError("NODE_TYPE_INVALID", `Type ${payload.value} is not allowed in ${tree.type}`, { type: payload.value });
+      }
+      if (typeDefinition.unique && tree.nodes.some((candidate) => candidate.id !== node.id && candidate.type === payload.value)) {
+        throw new LtpError("NODE_TYPE_UNIQUE", `Type ${payload.value} can only be used once`, { type: payload.value });
+      }
+    }
     node[payload.field] = payload.value;
     node.updatedAt = context.now;
+    tree.updatedAt = context.now;
+  });
+
+  register("nodes.update-type", (draft, payload, context) => {
+    const tree = findTree(draft, payload.treeId);
+    const nodeIds = [...new Set(payload.nodeIds || [])];
+    if (!nodeIds.length) throw new LtpError("NODE_SELECTION_EMPTY", "nodes.update-type requires at least one node");
+    const nodes = nodeIds.map((nodeId) => {
+      const node = tree.nodes.find((candidate) => candidate.id === nodeId);
+      if (!node) throw new LtpError("NODE_NOT_FOUND", `Node ${nodeId} was not found`, { nodeId });
+      return node;
+    });
+    const typeDefinition = getDiagramDefinition(tree.type)?.nodeTypes.find((candidate) => candidate.id === payload.value);
+    if (!typeDefinition) {
+      throw new LtpError("NODE_TYPE_INVALID", `Type ${payload.value} is not allowed in ${tree.type}`, { type: payload.value });
+    }
+    if (
+      typeDefinition.unique &&
+      (nodes.length > 1 || tree.nodes.some((candidate) => !nodeIds.includes(candidate.id) && candidate.type === payload.value))
+    ) {
+      throw new LtpError("NODE_TYPE_UNIQUE", `Type ${payload.value} can only be used once`, { type: payload.value });
+    }
+    for (const node of nodes) {
+      node.type = payload.value;
+      node.updatedAt = context.now;
+    }
     tree.updatedAt = context.now;
   });
 

@@ -88,6 +88,42 @@ const run = async () => {
       .every((link) => !childSelection.has(link.id))
   );
 
+  const typeCycleNodeIds = fixtureTree.nodes
+    .filter((node) => node.type === "necessaryCondition")
+    .slice(0, 2)
+    .map((node) => node.id);
+  const typeCycleEngine = new TransactionEngine(fixture);
+  const synchronizedTypes = await typeCycleEngine.execute({
+    commandId: "cycle-selected-types",
+    type: "nodes.update-type",
+    label: "Cycle selected entity Types",
+    expectedRevision: 0,
+    payload: { treeId: fixtureTree.id, nodeIds: typeCycleNodeIds, value: "assumption" }
+  });
+  assert(
+    synchronizedTypes.workspace.trees[0].nodes
+      .filter((node) => typeCycleNodeIds.includes(node.id))
+      .every((node) => node.type === "assumption"),
+    "a multi-entity Type change must update every selected node atomically"
+  );
+  const synchronizedTypesUndone = await typeCycleEngine.undo();
+  assert(
+    synchronizedTypesUndone.workspace.trees[0].nodes
+      .filter((node) => typeCycleNodeIds.includes(node.id))
+      .every((node) => node.type === "necessaryCondition"),
+    "one Undo must restore the complete multi-entity Type change"
+  );
+  await assert.rejects(
+    typeCycleEngine.execute({
+      commandId: "invalid-duplicate-goals",
+      type: "nodes.update-type",
+      label: "Invalid unique Type",
+      expectedRevision: 2,
+      payload: { treeId: fixtureTree.id, nodeIds: typeCycleNodeIds, value: "goal" }
+    }),
+    (error) => error.code === "NODE_TYPE_UNIQUE"
+  );
+
   const persisted = [];
   const engine = new TransactionEngine(fixture, {
     clock: () => "2026-07-15T12:00:00.000Z",
@@ -174,7 +210,7 @@ const run = async () => {
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 
-  console.log("Core tests passed: canvas migration, selection, patches, undo/redo, validation, idempotency, dry-run and concurrency.");
+  console.log("Core tests passed: canvas migration, selection, atomic Type cycling, patches, undo/redo, validation, idempotency, dry-run and concurrency.");
 };
 
 run().catch((error) => {

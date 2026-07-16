@@ -592,9 +592,19 @@ Aprendizaje: antes de sustituir el algoritmo principal conviene identificar que 
 
 Aplicacion futura: enumerar variables libres y restricciones duras por separado; generar una diversidad acotada de candidatos; puntuar la geometria que realmente se renderiza; y exigir pruebas perceptivas en unidades de pantalla cuando intervienen zoom o marcadores.
 
+### L-063: Una edicion colectiva necesita una referencia comun
+
+Fecha: 2026-07-16
+
+Evidencia: ciclar independientemente el tipo de varios nodos mantenia sus diferencias iniciales. El usuario esperaba que la primera pulsacion normalizara el grupo y que las siguientes lo recorrieran como una unidad.
+
+Aprendizaje: una operacion masiva no siempre equivale a repetir una operacion individual. Cuando el objetivo es clasificar un grupo, conviene definir un estado inicial comun, una secuencia compartida y una frontera transaccional unica.
+
+Aplicacion futura: especificar por separado semantica individual y colectiva; reiniciar sesiones al cambiar su alcance; validar cardinalidades antes de mutar; y probar que un solo Undo revierte el lote completo.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-063`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-064`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

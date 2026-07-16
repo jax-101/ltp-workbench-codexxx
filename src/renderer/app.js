@@ -29,6 +29,7 @@ let layoutAnimationConnectionsTracked = false;
 let historyState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel: null, undoCategory: null, redoCategory: null, revision: 0 };
 let workspaceOperationQueue = Promise.resolve();
 let visualTestState = {};
+let multiTypeCycleState = { signature: null, index: -1 };
 
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace("H", "");
@@ -59,6 +60,9 @@ const assumptionsForLink = (linkId) => (tree()?.assumptions || []).filter((assum
 const selectedSourceNodeIds = () => [...connectionSourceIds].filter((id) => Boolean(nodeById()[id]));
 const diagramDefinition = () => diagramDefinitions[tree()?.type] || diagramDefinitions.goalTree;
 const diagramNodeTypes = () => diagramDefinition()?.nodeTypes || [];
+const resetTypeCycle = () => {
+  multiTypeCycleState = { signature: null, index: -1 };
+};
 
 const elementType = (id) => {
   if (nodeById()[id]) return "node";
@@ -78,12 +82,14 @@ const rebuildSelection = () => {
 };
 
 const replaceSelection = (id) => {
+  resetTypeCycle();
   selectedElementId = elementType(id) === "unknown" ? null : id;
   selectionRootIds = new Set(selectedElementId ? [selectedElementId] : []);
   rebuildSelection();
 };
 
 const toggleSelectionRoot = (id) => {
+  resetTypeCycle();
   if (selectionRootIds.has(id)) {
     selectionRootIds.delete(id);
     if (selectedElementId === id) selectedElementId = [...selectionRootIds].at(-1) || null;
@@ -638,12 +644,59 @@ const handleHintKey = (key) => {
 };
 
 const updateNode = async (id, field, value) => {
+  if (field === "type") resetTypeCycle();
   await executeDomainCommand(
     "node.update",
     { treeId: tree().id, nodeId: id, field, value },
     `Edit ${nodeTypeLabel(nodeById()[id]?.type || "node")}`
   );
   render();
+};
+
+const cycleSelectedNodeTypes = async () => {
+  const nodeIds = [...selectionRootIds].filter((id) => Boolean(nodeById()[id]));
+  if (!nodeIds.length) {
+    setStatus("Select one or more entities before cycling Type");
+    return;
+  }
+
+  const selectedIds = new Set(nodeIds);
+  const availableTypes = diagramNodeTypes().filter((typeDefinition) => {
+    if (!typeDefinition.unique) return true;
+    if (nodeIds.length > 1) return false;
+    return !tree().nodes.some((node) => node.type === typeDefinition.id && !selectedIds.has(node.id));
+  });
+  if (!availableTypes.length) {
+    setStatus("No compatible entity Types are available");
+    return;
+  }
+
+  let nextIndex;
+  if (nodeIds.length === 1) {
+    const currentIndex = availableTypes.findIndex((typeDefinition) => typeDefinition.id === nodeById()[nodeIds[0]].type);
+    nextIndex = (currentIndex + 1 + availableTypes.length) % availableTypes.length;
+    resetTypeCycle();
+  } else {
+    const signature = `${tree().id}:${[...nodeIds].sort().join(",")}:${availableTypes.map((type) => type.id).join(",")}`;
+    nextIndex = multiTypeCycleState.signature === signature
+      ? (multiTypeCycleState.index + 1) % availableTypes.length
+      : 0;
+    multiTypeCycleState = { signature, index: nextIndex };
+  }
+
+  const nextType = availableTypes[nextIndex];
+  await executeDomainCommand(
+    "nodes.update-type",
+    { treeId: tree().id, nodeIds, value: nextType.id },
+    nodeIds.length === 1 ? "Cycle entity Type" : "Cycle selected entity Types"
+  );
+  setStatus(
+    nodeIds.length === 1
+      ? `Type: ${nextType.label}`
+      : `${nodeIds.length} entities synchronized as ${nextType.label}`
+  );
+  render();
+  focusCanvas();
 };
 
 const updateFrame = async (id, field, value) => {
@@ -2730,6 +2783,7 @@ const executeCommand = (command) => {
     undo: () => moveHistory("undo"),
     redo: () => moveHistory("redo"),
     deleteSelection: requestDeleteSelection,
+    cycleNodeTypes: cycleSelectedNodeTypes,
     panUp: () => panViewport(0, -80),
     panDown: () => panViewport(0, 80),
     panLeft: () => panViewport(-80, 0),
@@ -3370,6 +3424,41 @@ window.__ltpSmokeTest = async () => {
   await requestDeleteSelection(rootFrameId());
   const rootFrameIsProtected = Boolean(frameById()[rootFrameId()]);
 
+  const typeCycleIds = tree().nodes
+    .filter((node) => node.type !== "goal")
+    .slice(0, 2)
+    .map((node) => node.id);
+  replaceSelection(typeCycleIds[0]);
+  const singleTypeOptions = diagramNodeTypes().filter(
+    (typeDefinition) =>
+      !typeDefinition.unique ||
+      !tree().nodes.some((node) => node.id !== typeCycleIds[0] && node.type === typeDefinition.id)
+  );
+  const singleTypeBefore = nodeById()[typeCycleIds[0]].type;
+  const singleTypeIndex = singleTypeOptions.findIndex((typeDefinition) => typeDefinition.id === singleTypeBefore);
+  const expectedSingleType = singleTypeOptions[(singleTypeIndex + 1 + singleTypeOptions.length) % singleTypeOptions.length].id;
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true }));
+  const singleTypeCycleWorks = await waitFor(() => nodeById()[typeCycleIds[0]]?.type === expectedSingleType);
+  await workspaceOperationQueue;
+
+  replaceSelection(typeCycleIds[0]);
+  toggleSelectionRoot(typeCycleIds[1]);
+  const repeatableTypes = diagramNodeTypes().filter((typeDefinition) => !typeDefinition.unique);
+  const pressTypeCycle = async (expectedType) => {
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true }));
+    const changed = await waitFor(() => typeCycleIds.every((nodeId) => nodeById()[nodeId]?.type === expectedType));
+    await workspaceOperationQueue;
+    return changed;
+  };
+  const multiTypeCycleResets = await pressTypeCycle(repeatableTypes[0].id);
+  const multiTypeCycleAdvances = await pressTypeCycle(repeatableTypes[1].id);
+  await pressTypeCycle(repeatableTypes[2].id);
+  const multiTypeCycleWraps = await pressTypeCycle(repeatableTypes[0].id);
+  await moveHistory("undo");
+  const multiTypeCycleUndoIsAtomic = typeCycleIds.every(
+    (nodeId) => nodeById()[nodeId]?.type === repeatableTypes[2].id
+  );
+
   hintEntries = visibleHintEntries();
   const finalTree = tree();
   const finalCanvas = canvas();
@@ -3451,6 +3540,11 @@ window.__ltpSmokeTest = async () => {
       entityCanEnterFrame &&
       groupDragPreservesSelection &&
       rootFrameIsProtected &&
+      singleTypeCycleWorks &&
+      multiTypeCycleResets &&
+      multiTypeCycleAdvances &&
+      multiTypeCycleWraps &&
+      multiTypeCycleUndoIsAtomic &&
       Object.keys(commandBindings).length >= 10 &&
       Boolean(exportResult.path),
     nodes: finalTree.nodes.length,
@@ -3524,6 +3618,11 @@ window.__ltpSmokeTest = async () => {
     entityCanEnterFrame,
     groupDragPreservesSelection,
     rootFrameIsProtected,
+    singleTypeCycleWorks,
+    multiTypeCycleResets,
+    multiTypeCycleAdvances,
+    multiTypeCycleWraps,
+    multiTypeCycleUndoIsAtomic,
     exportPath: exportResult.path
   };
 };
@@ -3637,7 +3736,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.6" && hostVisible && rootHidden, "Build 3C.6 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.7" && hostVisible && rootHidden, "Build 3C.7 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {

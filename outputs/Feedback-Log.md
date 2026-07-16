@@ -413,18 +413,20 @@ Criterios de aceptacion:
 
 ### F-042: Ciclar el tipo con Shift+Tab
 
-Feedback: con una o varias entidades seleccionadas, `Shift+Tab` debe recorrer ciclicamente su tipo.
+Feedback: con una entidad seleccionada, `Shift+Tab` avanza desde su tipo actual. Con varias entidades, la primera pulsacion sincroniza todas en el inicio de la lista y las siguientes recorren juntas la lista de forma ciclica.
 
-Estado: pendiente para la iteracion 3C. La iteracion 3A ya aporta la seleccion general y el orden declarativo de tipos que necesita esta operacion.
+Estado: implementado en `3C.7` sobre la seleccion general y el orden declarativo de tipos.
 
 Criterios de aceptacion:
 
 - Solo se aplica a entidades y nunca a frames o links.
-- Cada entidad avanza al siguiente tipo permitido por el diagrama.
+- Una entidad avanza al siguiente tipo permitido desde su valor actual.
+- Varias entidades se sincronizan primero en el primer tipo repetible permitido y despues avanzan juntas.
 - El ciclo y su orden proceden de la definicion del tipo de diagrama.
 - La operacion funciona sobre una seleccion individual o multiple.
 - Dentro de un campo de edicion, `Shift+Tab` conserva la navegacion normal de foco.
-- Se respetan restricciones estructurales, como tipos unicos o cardinalidades.
+- Se respetan restricciones estructurales: un tipo `unique` no puede aplicarse a varias entidades ni duplicarse.
+- Todo el grupo cambia en una transaccion y un unico Undo lo restaura.
 
 ### F-043: Enrutado de flechas sin cruces ni entidades atravesadas
 

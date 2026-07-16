@@ -486,6 +486,24 @@ Evidencia:
 - Bateria visual `3C.6` con 37 escenarios en estado `PASS`.
 - Captura `26-readable-routing.png`: puertos distribuidos y curvas enderezadas antes de cada punta.
 
+### Build 3C.7: ciclo colectivo de Types
+
+Estado: implementado y validado automaticamente.
+
+Incluye:
+
+- Binding declarativo `Shift+Tab` visible en el panel Keyboard.
+- Avance individual desde el Type actual.
+- Reinicio y recorrido sincronizado para selecciones multiples.
+- Filtrado de Types `unique` incompatibles.
+- Comando atomico `nodes.update-type` compartible con futuras interfaces headless.
+- Undo y Redo del grupo como una sola operacion.
+
+Evidencia:
+
+- Prueba de nucleo para cambio multiple, Undo y rechazo de varios Goals.
+- Smoke test de Electron verifica avance individual, reinicio, avance, ciclo y Undo atomico.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:
