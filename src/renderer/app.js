@@ -19,7 +19,6 @@ let viewportState = { left: 0, top: 0 };
 let viewportSize = { width: 720, height: 560 };
 let zoomLevel = 1;
 let panelState = { leftOpen: true, rightOpen: true };
-let deleteCandidateId = null;
 let viewPersistTimer = null;
 let editingRightPanelWasOpen = null;
 let layoutAnimating = false;
@@ -335,7 +334,6 @@ const reconcileUiAfterHistory = () => {
   }
   rebuildSelection();
   previewNodeId = nodeById()[previewNodeId] ? previewNodeId : null;
-  deleteCandidateId = null;
   mode = "navigation";
 };
 
@@ -1971,14 +1969,6 @@ const toggleNodePreview = () => {
 };
 
 const cancelContext = (options = {}) => {
-  if (deleteCandidateId) {
-    deleteCandidateId = null;
-    setStatus("Deletion cancelled");
-    render();
-    focusCanvas();
-    return;
-  }
-
   if (previewNodeId) {
     closeNodePreview();
     setStatus("Preview closed");
@@ -2019,41 +2009,7 @@ const cancelContext = (options = {}) => {
   focusCanvas();
 };
 
-const deletionImpact = (id = deleteCandidateId) => {
-  const activeTree = tree();
-  const type = elementType(id);
-  if (type === "link") {
-    return { type, label: "link", nodes: 0, frames: 0, links: 1 };
-  }
-  if (type === "node") {
-    const node = nodeById()[id];
-    const links = activeTree.links.filter((link) => link.sourceNodeId === id || link.targetNodeId === id).length;
-    return { type, label: node?.shortLabel || node?.statement || "node", nodes: 1, frames: 0, links };
-  }
-  if (type === "frame") {
-    const frameIds = new Set();
-    const collectFrames = (frameId) => {
-      if (frameIds.has(frameId)) return;
-      frameIds.add(frameId);
-      for (const childId of frameById()[frameId]?.childFrameIds || []) collectFrames(childId);
-    };
-    collectFrames(id);
-    const nodeIds = new Set(activeTree.nodes.filter((node) => frameIds.has(node.frameId)).map((node) => node.id));
-    const links = activeTree.links.filter(
-      (link) => nodeIds.has(link.sourceNodeId) || nodeIds.has(link.targetNodeId)
-    ).length;
-    return {
-      type,
-      label: frameById()[id]?.name || "frame",
-      nodes: nodeIds.size,
-      frames: frameIds.size,
-      links
-    };
-  }
-  return { type: "unknown", label: "selection", nodes: 0, frames: 0, links: 0 };
-};
-
-const requestDeleteSelection = (id = selectedElementId) => {
+const requestDeleteSelection = async (id = selectedElementId) => {
   const type = elementType(id);
   if (type === "unknown") {
     setStatus("Select a node, link, or frame to delete");
@@ -2064,28 +2020,14 @@ const requestDeleteSelection = (id = selectedElementId) => {
     return;
   }
   previewNodeId = null;
-  deleteCandidateId = id;
-  render();
-  app.querySelector("[data-action='confirm-delete']")?.focus();
-};
-
-const removeLinks = (linkIds) => {
-  const activeTree = tree();
-  activeTree.links = activeTree.links.filter((link) => !linkIds.has(link.id));
-  activeTree.assumptions = activeTree.assumptions.filter((assumption) => !linkIds.has(assumption.linkId));
-  for (const linkId of linkIds) delete activeTree.layout.links[linkId];
-};
-
-const confirmDeletion = async () => {
   const activeTree = tree();
   const activeCanvas = canvas();
-  const id = deleteCandidateId;
-  const type = elementType(id);
-  if (type === "unknown") {
-    deleteCandidateId = null;
-    render();
-    return;
-  }
+
+  const removeLinks = (linkIds) => {
+    activeTree.links = activeTree.links.filter((link) => !linkIds.has(link.id));
+    activeTree.assumptions = activeTree.assumptions.filter((assumption) => !linkIds.has(assumption.linkId));
+    for (const linkId of linkIds) delete activeTree.layout.links[linkId];
+  };
 
   if (type === "link") {
     removeLinks(new Set([id]));
@@ -2135,7 +2077,6 @@ const confirmDeletion = async () => {
     if (frameIds.has(activeFrameId)) activeFrameId = activeTree.hostFrameId;
   }
 
-  deleteCandidateId = null;
   replaceSelection(null);
   connectionSourceIds.clear();
   mode = "navigation";
@@ -2143,23 +2084,6 @@ const confirmDeletion = async () => {
   setStatus("Selection deleted");
   render();
   focusCanvas();
-};
-
-const renderDeleteConfirmation = () => {
-  if (!deleteCandidateId) return "";
-  const impact = deletionImpact();
-  return `
-    <div class="delete-backdrop" data-action="cancel-delete">
-      <section class="delete-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title">
-        <h2 id="delete-title">Delete ${escapeHtml(impact.label)}?</h2>
-        <p>This removes ${impact.nodes} node(s), ${impact.frames} frame(s), and ${impact.links} link(s), including related assumptions and layout data.</p>
-        <div class="delete-actions">
-          <button data-action="cancel-delete">Cancel</button>
-          <button class="danger-action" data-action="confirm-delete">Delete</button>
-        </div>
-      </section>
-    </div>
-  `;
 };
 
 const renderNodePreview = () => {
@@ -2351,7 +2275,6 @@ const render = () => {
       ${renderInspector()}
     </div>
     ${renderNodePreview()}
-    ${renderDeleteConfirmation()}
   `;
   bindEvents();
   restoreViewport();
@@ -2516,7 +2439,6 @@ const bindEvents = () => {
     button.addEventListener("click", (event) => {
       const action = button.dataset.action;
       if (action === "close-node-preview" && button.classList.contains("node-preview-backdrop") && event.target !== button) return;
-      if (action === "cancel-delete" && button.classList.contains("delete-backdrop") && event.target !== button) return;
       if (action === "layout") runAutoLayout();
       if (action === "undo") moveHistory("undo");
       if (action === "redo") moveHistory("redo");
@@ -2535,8 +2457,6 @@ const bindEvents = () => {
       if (action === "toggle-right-panel") togglePanel("right");
       if (action === "activate-root-frame") setActiveFrame(rootFrameId());
       if (action === "delete-selection") requestDeleteSelection();
-      if (action === "cancel-delete") cancelContext();
-      if (action === "confirm-delete") confirmDeletion();
     });
   });
 
@@ -2652,20 +2572,6 @@ const handleKeydown = async (event) => {
     cancelContext();
     return;
   }
-
-  if (deleteCandidateId && event.key === "Enter") {
-    event.preventDefault();
-    await confirmDeletion();
-    return;
-  }
-
-  if (deleteCandidateId && event.ctrlKey && !event.metaKey && event.key.toLowerCase() === "g") {
-    event.preventDefault();
-    cancelContext();
-    return;
-  }
-
-  if (deleteCandidateId) return;
 
   if (previewNodeId && event.key === " ") {
     event.preventDefault();
@@ -2911,7 +2817,10 @@ window.__ltpSmokeTest = async () => {
     commandForEvent(new KeyboardEvent("keydown", { key: "p", metaKey: true })) === "moveSelectionToParent" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "f", metaKey: true })) === "chooseSelectionFrame" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "p", ctrlKey: true })) === "panUp" &&
-    commandForEvent(new KeyboardEvent("keydown", { key: "f", ctrlKey: true })) === "panRight";
+    commandForEvent(new KeyboardEvent("keydown", { key: "f", ctrlKey: true })) === "panRight" &&
+    commandForEvent(new KeyboardEvent("keydown", { key: "d", ctrlKey: true })) === "deleteSelection" &&
+    commandForEvent(new KeyboardEvent("keydown", { key: "Delete" })) === "deleteSelection" &&
+    commandForEvent(new KeyboardEvent("keydown", { key: "Backspace" })) === "deleteSelection";
 
   const initialShell = document.querySelector(".canvas-shell");
   initialShell.scrollLeft = Math.min(120, initialShell.scrollWidth - initialShell.clientWidth);
@@ -3128,13 +3037,22 @@ window.__ltpSmokeTest = async () => {
   const temporaryLinkId = await createLink(linkSourceId, linkTargetId);
   await addAssumptionToSelectedLink();
   const temporaryAssumptionId = selectedLink()?.assumptionIds.at(-1);
-  requestDeleteSelection(temporaryLinkId);
-  const deleteConfirmationWorks = Boolean(document.querySelector(".delete-dialog"));
-  document.dispatchEvent(new KeyboardEvent("keydown", { key: "g", ctrlKey: true, bubbles: true, cancelable: true }));
-  const deleteCancellationWorks = !deleteCandidateId && Boolean(linkById()[temporaryLinkId]);
-  requestDeleteSelection(temporaryLinkId);
-  await confirmDeletion();
+  replaceSelection(temporaryLinkId);
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "d", ctrlKey: true, bubbles: true, cancelable: true }));
+  const ctrlDDeletesImmediately = await waitFor(() => !linkById()[temporaryLinkId]);
+  await workspaceOperationQueue;
+  const deleteHasNoConfirmation = !document.querySelector(".delete-dialog");
   const linkDeletionCleansReferences =
+    !linkById()[temporaryLinkId] &&
+    !tree().assumptions.some((assumption) => assumption.id === temporaryAssumptionId) &&
+    !tree().layout.links[temporaryLinkId];
+  await moveHistory("undo");
+  const deleteUndoRestores =
+    Boolean(linkById()[temporaryLinkId]) &&
+    tree().assumptions.some((assumption) => assumption.id === temporaryAssumptionId) &&
+    Boolean(tree().layout.links[temporaryLinkId]);
+  await moveHistory("redo");
+  const deleteRedoReapplies =
     !linkById()[temporaryLinkId] &&
     !tree().assumptions.some((assumption) => assumption.id === temporaryAssumptionId) &&
     !tree().layout.links[temporaryLinkId];
@@ -3144,16 +3062,14 @@ window.__ltpSmokeTest = async () => {
   const cascadeLinkId = await createLink(cascadeSourceId, cascadeTargetId);
   await addAssumptionToSelectedLink();
   const cascadeAssumptionId = selectedLink()?.assumptionIds.at(-1);
-  requestDeleteSelection(cascadeSourceId);
-  await confirmDeletion();
+  await requestDeleteSelection(cascadeSourceId);
   const nodeDeletionCascades =
     !nodeById()[cascadeSourceId] &&
     !linkById()[cascadeLinkId] &&
     !tree().assumptions.some((assumption) => assumption.id === cascadeAssumptionId) &&
     !tree().layout.nodes[cascadeSourceId] &&
     canvas().frames.every((frame) => !frame.nodeIds.includes(cascadeSourceId));
-  requestDeleteSelection(cascadeTargetId);
-  await confirmDeletion();
+  await requestDeleteSelection(cascadeTargetId);
 
   await createFrame();
   const temporaryFrameId = selectedElementId;
@@ -3208,8 +3124,7 @@ window.__ltpSmokeTest = async () => {
     frameById()[temporaryFrameId].nodeIds.includes(frameNodeId) &&
     tree().links.length === linkCountBeforeFrameMove &&
     Boolean(linkById()[frameLinkId]);
-  requestDeleteSelection(temporaryFrameId);
-  await confirmDeletion();
+  await requestDeleteSelection(temporaryFrameId);
   const frameDeletionCascades =
     !frameById()[temporaryFrameId] &&
     !nodeById()[frameNodeId] &&
@@ -3218,8 +3133,8 @@ window.__ltpSmokeTest = async () => {
     !canvas().layout.frames[temporaryFrameId] &&
     !tree().layout.nodes[frameNodeId] &&
     canvas().frames.every((frame) => !frame.childFrameIds.includes(temporaryFrameId));
-  requestDeleteSelection(rootFrameId());
-  const rootFrameIsProtected = deleteCandidateId === null && Boolean(frameById()[rootFrameId()]);
+  await requestDeleteSelection(rootFrameId());
+  const rootFrameIsProtected = Boolean(frameById()[rootFrameId()]);
 
   hintEntries = visibleHintEntries();
   const finalTree = tree();
@@ -3285,9 +3200,11 @@ window.__ltpSmokeTest = async () => {
       rightPanelCollapses &&
       diagramDirectionIsAdjustable &&
       animatedLayoutWorks &&
-      deleteConfirmationWorks &&
-      deleteCancellationWorks &&
+      ctrlDDeletesImmediately &&
+      deleteHasNoConfirmation &&
       linkDeletionCleansReferences &&
+      deleteUndoRestores &&
+      deleteRedoReapplies &&
       nodeDeletionCascades &&
       frameDeletionCascades &&
       entityCanLeaveFrame &&
@@ -3350,9 +3267,11 @@ window.__ltpSmokeTest = async () => {
     rightPanelCollapses,
     diagramDirectionIsAdjustable,
     animatedLayoutWorks,
-    deleteConfirmationWorks,
-    deleteCancellationWorks,
+    ctrlDDeletesImmediately,
+    deleteHasNoConfirmation,
     linkDeletionCleansReferences,
+    deleteUndoRestores,
+    deleteRedoReapplies,
     nodeDeletionCascades,
     frameDeletionCascades,
     entityCanLeaveFrame,
@@ -3472,7 +3391,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3B.4" && hostVisible && rootHidden, "Build 3B.4 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3B.4.1" && hostVisible && rootHidden, "Build 3B.4.1 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {

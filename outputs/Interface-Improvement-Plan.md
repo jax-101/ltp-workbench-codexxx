@@ -297,6 +297,18 @@ Incluye:
 - Estado visible que informa cuando Layout conserva el mapa actual.
 - Regresiones para una disposicion estable que debe conservarse y otra dispersa que ELK debe sustituir.
 
+### Build 3B.4.1: borrado inmediato
+
+Estado: implementado.
+
+Incluye:
+
+- Eliminacion completa del dialogo de confirmacion de borrado.
+- `Ctrl+D` como tercer binding del comando, junto con `Delete` y `Backspace`.
+- Limpieza atomica de dependencias y restauracion completa mediante Undo.
+- Proteccion conservada para root y frame principal del arbol.
+- Prueba automatizada del atajo, ausencia del modal y borrado en cascada.
+
 ### Build 3B.5: frames como unidades de layout
 
 Estado: linea base visual y generador determinista implementados; correccion del motor pendiente.

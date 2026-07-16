@@ -442,3 +442,9 @@ Razon: recalcular no equivale a mejorar. Un umbral explicito protege el mapa men
 Decision: los escenarios visuales pseudoaleatorios declaran una semilla, una densidad de links y una estructura de frames. La prueba exige generacion y colocacion repetibles, pero registra los defectos de calidad como `needs work` mientras sirven de linea base y aun no forman parte del contrato de aceptacion.
 
 Razon: una captura aleatoria irrepetible no permite depurar ni comparar versiones. Al mismo tiempo, hacer fallar toda la suite por un defecto que la propia prueba acaba de descubrir impediria usarla como instrumento intermedio. Separar ejecucion correcta de evaluacion visual conserva ambos significados.
+
+### D-072: El borrado frecuente usa Undo en lugar de confirmacion modal
+
+Decision: borrar una seleccion valida es inmediato. La aplicacion conserva las protecciones estructurales y registra el borrado como una transaccion atomica reversible, pero no solicita confirmacion previa.
+
+Razon: un dialogo en cada borrado interrumpe un flujo de edicion intensivo. Cuando la operacion puede deshacerse completamente y los elementos irremplazables estan protegidos, Undo ofrece recuperacion sin convertir cada accion normal en una decision modal.

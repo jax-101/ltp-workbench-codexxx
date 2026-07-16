@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3B.4`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3B.4.1`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -161,16 +161,17 @@ Resultado esperado: el minimapa permanece fijo; el rectangulo se hace pequeno al
 
 Resultado esperado: los circulos `L` estan ocultos normalmente, aparecen de forma discreta al interactuar y todos se muestran durante hint mode.
 
-## Prueba 12: borrado seguro
+## Prueba 12: borrado inmediato y reversible
 
 1. Crea dos nodos de prueba y un link entre ellos.
 2. Selecciona el link y pulsa `Delete`.
-3. Cancela una vez con `Esc` o `Ctrl+G`.
-4. Repite y confirma con `Enter` o el boton `Delete`.
-5. Borra uno de los nodos.
-6. Selecciona un frame no raiz y prueba su borrado.
+3. Comprueba que desaparece inmediatamente y pulsa `Cmd+Z` para recuperarlo.
+4. Selecciona de nuevo el link y pulsa `Ctrl+D`.
+5. Borra uno de los nodos con `Backspace` y comprueba que desaparecen sus links dependientes.
+6. Selecciona un frame no raiz, borralo y deshaz la operacion.
+7. Intenta borrar el frame raiz.
 
-Resultado esperado: siempre aparece confirmacion, cancelar no cambia datos y confirmar elimina tambien las relaciones dependientes. El frame raiz permanece protegido.
+Resultado esperado: no aparece ningun dialogo de confirmacion. `Delete`, `Backspace` y `Ctrl+D` ejecutan el mismo borrado atomico; Undo restaura la operacion completa y el frame raiz permanece protegido.
 
 ## Prueba 13: layout animado y direccion
 

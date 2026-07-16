@@ -18,7 +18,7 @@ window.LTP_COMMAND_BINDINGS = Object.freeze({
   cancelContext: [{ key: "g", control: true }],
   undo: [{ key: "z", primary: true, shift: false }],
   redo: [{ key: "z", primary: true, shift: true }, { key: "y", primary: true }],
-  deleteSelection: [{ key: "Delete" }, { key: "Backspace" }],
+  deleteSelection: [{ key: "Delete" }, { key: "Backspace" }, { key: "d", control: true }],
   panUp: [{ key: "ArrowUp" }, { key: "p", control: true }],
   panDown: [{ key: "ArrowDown" }, { key: "n", control: true }],
   panLeft: [{ key: "ArrowLeft" }, { key: "b", control: true }],

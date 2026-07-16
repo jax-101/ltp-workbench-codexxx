@@ -472,9 +472,19 @@ Aprendizaje: una prueba aleatoria se vuelve una herramienta de ingenieria cuando
 
 Aplicacion futura: registrar semilla y parametros junto a cada evidencia; conservar escenarios representativos; afirmar determinismo e integridad desde el principio; y promover gradualmente cruces, colisiones o umbrales perceptivos desde observaciones a criterios obligatorios cuando se implemente la correccion.
 
+### L-051: La reversibilidad puede sustituir confirmaciones repetitivas
+
+Fecha: 2026-07-16
+
+Evidencia: borrar un nodo, link o frame abria siempre un dialogo, incluso cuando el usuario estaba limpiando el diagrama de forma deliberada. La operacion ya se guardaba como una transaccion atomica y el root estaba protegido, por lo que la confirmacion anadia friccion sin cubrir un riesgo no recuperable.
+
+Aprendizaje: las confirmaciones son adecuadas para acciones irreversibles, excepcionales o de gran alcance incierto. En operaciones frecuentes y completamente reversibles, una proteccion estructural combinada con Undo reduce errores sin interrumpir cada intencion.
+
+Aplicacion futura: clasificar acciones destructivas por reversibilidad y alcance; proteger invariantes de dominio; mostrar el resultado inmediatamente; y reservar modales para perdidas que Undo no pueda restaurar con garantias.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-051`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-052`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

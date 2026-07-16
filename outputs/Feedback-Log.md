@@ -710,3 +710,19 @@ Criterios de aceptacion:
 - La puntuacion y el umbral del 15% se aplican en cada nivel de la jerarquia.
 - Aplicar Layout no convierte una cuadricula interna legible en una columna salvo que la topologia lo exija y la puntuacion demuestre una mejora clara.
 - Frames hermanos y anidados no se solapan, y ningun nodo queda dentro de un frame al que no pertenece.
+
+### F-062: Borrado inmediato con Ctrl+D
+
+Feedback: la confirmacion modal al borrar distrae demasiado. El borrado debe ejecutarse directamente y admitir `Ctrl+D`, ademas de `Delete` y `Backspace`.
+
+Estado: implementado en `3B.4.1`.
+
+Criterios de aceptacion:
+
+- `Delete`, `Backspace` y `Ctrl+D` ejecutan exactamente el mismo comando.
+- No aparece ninguna ventana de confirmacion.
+- Nodos, links y frames no protegidos se borran en una unica transaccion.
+- Los links, assumptions y datos de layout dependientes se eliminan atomicamente.
+- Undo restaura la operacion completa.
+- El root conceptual y el frame principal del arbol siguen protegidos.
+- Los atajos de borrado no se ejecutan mientras se edita un campo de texto.
