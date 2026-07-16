@@ -472,3 +472,9 @@ Razon: tratar puertos, coordenadas transversales y limites del contenedor como c
 Decision: `Shift+Tab` usa el orden de tipos del registro. Sobre una entidad avanza desde el tipo actual; sobre varias inicia una sesion de ciclo que las lleva al primer tipo repetible y despues incrementa un indice comun. Cambiar la seleccion reinicia esa sesion. El cambio completo se ejecuta mediante `nodes.update-type` como una transaccion atomica.
 
 Razon: avanzar cada entidad desde un tipo distinto conserva la heterogeneidad y hace dificil predecir el resultado colectivo. Sincronizar crea una operacion de clasificacion rapida, mientras la transaccion unica garantiza que historial, validacion y futuras interfaces headless observen una sola intencion.
+
+### D-077: La insercion reserva espacio para sus controles temporales
+
+Decision: la colocacion consecutiva de `N` compara rectangulos completos y usa una cuadricula con 44 unidades de separacion. Esta reserva incluye el area superior donde aparecen los hints. Si una nueva fila rebasa un frame finito, se amplian ese frame y sus ancestros para conservar contencion.
+
+Razon: evitar que dos origenes coincidan no evita que sus entidades o etiquetas se tapen. Los controles temporales tambien forman parte de la geometria de uso y deben influir en la separacion minima aunque no se persistan como elementos del dominio.

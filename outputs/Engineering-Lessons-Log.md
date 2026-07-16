@@ -602,9 +602,19 @@ Aprendizaje: una operacion masiva no siempre equivale a repetir una operacion in
 
 Aplicacion futura: especificar por separado semantica individual y colectiva; reiniciar sesiones al cambiar su alcance; validar cardinalidades antes de mutar; y probar que un solo Undo revierte el lote completo.
 
+### L-064: Evitar coincidencias de origen no garantiza una interfaz sin solapes
+
+Fecha: 2026-07-16
+
+Evidencia: la insercion consideraba libre una posicion a solo 18 unidades de otra porque comparaba la distancia entre origenes con un umbral de 12. Las entidades de 250 por 72 y sus hints quedaban practicamente superpuestos.
+
+Aprendizaje: la deteccion espacial debe comparar las cajas reales, sus margenes funcionales y los elementos transitorios que participan en la interaccion. Un punto libre puede seguir produciendo una composicion inutilizable.
+
+Aplicacion futura: modelar zonas ocupadas y de seguridad; probar secuencias repetidas, no solo una insercion; y verificar controles superpuestos en coordenadas de pantalla cuando mantienen tamano constante con zoom.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-064`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-065`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

@@ -504,6 +504,23 @@ Evidencia:
 - Prueba de nucleo para cambio multiple, Undo y rechazo de varios Goals.
 - Smoke test de Electron verifica avance individual, reinicio, avance, ciclo y Undo atomico.
 
+### Build 3C.8: insercion legible con N
+
+Estado: implementado y validado automaticamente.
+
+Incluye:
+
+- Sustitucion del desplazamiento diagonal de 18 unidades por una cuadricula adaptada al viewport.
+- Colision calculada con las cajas completas de las entidades.
+- Margen funcional de 44 unidades para cajas y hints.
+- Ampliacion recursiva de frames para mantener contencion.
+- Insercion incremental sin ejecutar Layout ni mover entidades existentes.
+
+Evidencia:
+
+- Smoke test crea cuatro entidades consecutivas dentro del mismo contexto.
+- Las cuatro conservan separacion de cajas y sus cuatro hints son simultaneamente legibles.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:

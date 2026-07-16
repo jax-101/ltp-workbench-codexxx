@@ -202,15 +202,17 @@ Criterios de aceptacion:
 
 ### F-027: Crear nodos dentro del viewport actual
 
-Feedback: al pulsar `N`, el nuevo nodo debe aparecer cerca de la esquina superior izquierda de la zona del canvas que el usuario esta viendo, no en la posicion por defecto del frame si esta fuera de pantalla.
+Feedback: al pulsar `N`, el nuevo nodo debe aparecer cerca de la esquina superior izquierda de la zona visible. Al crear varias entidades seguidas dentro de un frame deben quedar suficientemente separadas para que las etiquetas de `M` sean legibles.
 
-Estado: implementado en la iteracion 1.1 y validado por el usuario el 2026-07-15. La posicion inicial se calcula desde el viewport y se mantiene dentro del frame activo cuando hay espacio visible suficiente.
+Estado: implementado en la iteracion 1.1 y reforzado en `3C.8`. La posicion usa una cuadricula libre calculada con las cajas completas y reserva espacio para los hints.
 
 Criterios de aceptacion:
 
 - El nodo nuevo aparece visible sin mover automaticamente el viewport.
-- Varios nodos consecutivos se desplazan ligeramente para no solaparse por completo.
+- Varios nodos consecutivos conservan al menos 44 unidades entre sus cajas.
+- Los hints de `M` de las entidades recien creadas no se superponen.
 - La posicion se mantiene dentro del frame activo cuando sea posible.
+- El frame y sus ancestros crecen para contener una fila adicional sin ejecutar Layout.
 
 ### F-028: Ctrl+G como cancelacion comoda
 

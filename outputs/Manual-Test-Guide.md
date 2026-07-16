@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.7`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.8`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -101,10 +101,13 @@ Resultado esperado: el primer `Enter` comienza la edicion, `Shift+Enter` crea un
 ## Prueba 6: crear dentro del viewport
 
 1. Desplaza el canvas hacia la derecha o hacia abajo.
-2. Pulsa `N`.
-3. Pulsa `N` otra vez.
+2. Activa como contexto un frame finito.
+3. Pulsa `N` cuatro veces seguidas.
+4. Comprueba que las cuatro entidades forman una cuadricula o columna con espacio visible entre ellas.
+5. Pulsa `M` y comprueba que las cuatro etiquetas se leen y pueden elegirse por separado.
+6. Comprueba que el frame contiene completamente las cuatro entidades.
 
-Resultado esperado: ambos nodos aparecen en la zona visible, cerca de su esquina superior izquierda, y sus posiciones estan ligeramente desplazadas.
+Resultado esperado: las entidades aparecen cerca de la zona visible sin solaparse. Los hints tampoco se superponen y el frame crece si necesita otra fila.
 
 ## Prueba 7: cancelar con Ctrl+G
 

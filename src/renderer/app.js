@@ -33,6 +33,8 @@ let multiTypeCycleState = { signature: null, index: -1 };
 
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace("H", "");
+const NODE_INSERTION_GAP = 44;
+const FRAME_CONTENT_PADDING = 28;
 const commandBindings = window.LTP_COMMAND_BINDINGS || {};
 const commandLabels = window.LTP_COMMAND_LABELS || {};
 const diagramDefinitions = window.LTP_DIAGRAM_REGISTRY.DIAGRAM_DEFINITIONS;
@@ -753,21 +755,56 @@ const viewportNodePosition = (frame, width = 250, height = 72) => {
     ? { x: intersection.left, y: intersection.top }
     : { x: viewport.left + 42, y: viewport.top + 52 };
   const existingBoxes = Object.values(tree()?.layout?.nodes || {});
+  const availableRight = fitsActiveFrame ? intersection.right : viewport.right - 42;
+  const availableWidth = Math.max(width, availableRight - base.x);
+  const columnCount = Math.max(
+    1,
+    Math.floor((availableWidth + NODE_INSERTION_GAP) / (width + NODE_INSERTION_GAP))
+  );
 
-  for (let index = 0; index < 24; index += 1) {
+  for (let index = 0; index < 48; index += 1) {
     const candidate = {
-      x: Math.round(base.x + (index % 6) * 18),
-      y: Math.round(base.y + Math.floor(index / 6) * 18),
+      x: Math.round(base.x + (index % columnCount) * (width + NODE_INSERTION_GAP)),
+      y: Math.round(base.y + Math.floor(index / columnCount) * (height + NODE_INSERTION_GAP)),
       width,
       height
     };
     const positionOccupied = existingBoxes.some(
-      (box) => Math.abs(candidate.x - box.x) < 12 && Math.abs(candidate.y - box.y) < 12
+      (box) =>
+        candidate.x < box.x + box.width + NODE_INSERTION_GAP &&
+        candidate.x + candidate.width + NODE_INSERTION_GAP > box.x &&
+        candidate.y < box.y + box.height + NODE_INSERTION_GAP &&
+        candidate.y + candidate.height + NODE_INSERTION_GAP > box.y
     );
     if (!positionOccupied) return candidate;
   }
 
-  return { x: Math.round(base.x), y: Math.round(base.y), width, height };
+  return {
+    x: Math.round(base.x),
+    y: Math.round(base.y + 48 * (height + NODE_INSERTION_GAP)),
+    width,
+    height
+  };
+};
+
+const expandFrameHierarchyToContain = (frameId, contentBox) => {
+  const frame = frameById()[frameId];
+  if (!frame || frame.id === rootFrameId()) return;
+  const frameBox = canvas().layout.frames[frame.id];
+  if (!frameBox) return;
+  const right = Math.max(
+    frameBox.x + frameBox.width,
+    contentBox.x + contentBox.width + FRAME_CONTENT_PADDING
+  );
+  const bottom = Math.max(
+    frameBox.y + frameBox.height,
+    contentBox.y + contentBox.height + FRAME_CONTENT_PADDING
+  );
+  frameBox.x = Math.min(frameBox.x, contentBox.x - FRAME_CONTENT_PADDING);
+  frameBox.y = Math.min(frameBox.y, contentBox.y - FRAME_CONTENT_PADDING);
+  frameBox.width = Math.ceil(right - frameBox.x);
+  frameBox.height = Math.ceil(bottom - frameBox.y);
+  if (frame.parentFrameId) expandFrameHierarchyToContain(frame.parentFrameId, frameBox);
 };
 
 const createNode = async (
@@ -815,6 +852,7 @@ const createNode = async (
     pinned: false,
     layoutSource: "manual"
   };
+  expandFrameHierarchyToContain(frame.id, activeTree.layout.nodes[id]);
   replaceSelection(id);
   connectionSourceIds.clear();
   multiSelectionMode = false;
@@ -3196,11 +3234,45 @@ window.__ltpSmokeTest = async () => {
   const viewportNodeBox = layoutNode(viewportNodeId);
   const secondViewportNodeId = await createNodeInViewport();
   const secondViewportNodeBox = layoutNode(secondViewportNodeId);
+  const thirdViewportNodeId = await createNodeInViewport();
+  const fourthViewportNodeId = await createNodeInViewport();
+  const consecutiveViewportNodeIds = [viewportNodeId, secondViewportNodeId, thirdViewportNodeId, fourthViewportNodeId];
+  const consecutiveViewportNodeBoxes = consecutiveViewportNodeIds.map((nodeId) => layoutNode(nodeId));
   const nodeCreatedInViewport =
     viewportNodeBox.x >= placementViewportLeft &&
     viewportNodeBox.x + viewportNodeBox.width <= placementViewportRight;
   const consecutiveNodesAreOffset =
     viewportNodeBox.x !== secondViewportNodeBox.x || viewportNodeBox.y !== secondViewportNodeBox.y;
+  const consecutiveNodesKeepClearance = consecutiveViewportNodeBoxes.every((box, index) =>
+    consecutiveViewportNodeBoxes.slice(index + 1).every(
+      (other) =>
+        box.x + box.width + NODE_INSERTION_GAP <= other.x ||
+        other.x + other.width + NODE_INSERTION_GAP <= box.x ||
+        box.y + box.height + NODE_INSERTION_GAP <= other.y ||
+        other.y + other.height + NODE_INSERTION_GAP <= box.y
+    )
+  );
+  const createdNodeHintEntries = visibleHintEntries().filter((entry) => consecutiveViewportNodeIds.includes(entry.id));
+  const consecutiveNodeHintsReadable =
+    createdNodeHintEntries.length === consecutiveViewportNodeIds.length &&
+    createdNodeHintEntries.every((entry, index) =>
+      createdNodeHintEntries.slice(index + 1).every(
+        (other) =>
+          Math.abs(entry.x - other.x) * zoomLevel >= 40 ||
+          Math.abs(entry.y - other.y) * zoomLevel >= 26
+      )
+    );
+  const creationFrameId = nodeById()[viewportNodeId]?.frameId;
+  const creationFrameBox = layoutFrame(creationFrameId);
+  const consecutiveNodesStayInsideFrame =
+    creationFrameId === rootFrameId() ||
+    consecutiveViewportNodeBoxes.every(
+      (box) =>
+        box.x >= creationFrameBox.x &&
+        box.y >= creationFrameBox.y &&
+        box.x + box.width <= creationFrameBox.x + creationFrameBox.width &&
+        box.y + box.height <= creationFrameBox.y + creationFrameBox.height
+    );
 
   fitView();
   hideHints();
@@ -3513,6 +3585,9 @@ window.__ltpSmokeTest = async () => {
       ctrlGClearsSelection &&
       nodeCreatedInViewport &&
       consecutiveNodesAreOffset &&
+      consecutiveNodesKeepClearance &&
+      consecutiveNodeHintsReadable &&
+      consecutiveNodesStayInsideFrame &&
       hintsRemainUsableAfterZoom &&
       hintBadgesKeepReadableSize &&
       linkIndicatorsFollowHintMode &&
@@ -3591,6 +3666,9 @@ window.__ltpSmokeTest = async () => {
     ctrlGClearsSelection,
     nodeCreatedInViewport,
     consecutiveNodesAreOffset,
+    consecutiveNodesKeepClearance,
+    consecutiveNodeHintsReadable,
+    consecutiveNodesStayInsideFrame,
     hintsRemainUsableAfterZoom,
     hintBadgesKeepReadableSize,
     linkIndicatorsFollowHintMode,
@@ -3736,7 +3814,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.7" && hostVisible && rootHidden, "Build 3C.7 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.8" && hostVisible && rootHidden, "Build 3C.8 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
