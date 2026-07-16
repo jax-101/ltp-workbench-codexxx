@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.9`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.10`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -409,8 +409,10 @@ Resultado esperado: la seleccion individual continua desde su valor; la seleccio
 6. Comprueba que el control circular central de esa flecha permanece visible aunque los demas hints esten ocultos.
 7. Selecciona un frame y compara la seleccion principal azul con las entidades y links incluidos, que deben conservar una indicacion dorada secundaria.
 8. Cambia el zoom entre 35%, 100% y 200% y comprueba que el grosor perceptible del link seleccionado se mantiene.
+9. Pulsa `M`, elige tres entidades y cierra la seleccion con `M`; comprueba que las tres permanecen resaltadas en azul.
+10. Repite con `Shift+click` o `Cmd+click` sobre dos entidades y comprueba que ambas se muestran seleccionadas.
 
-Resultado esperado: la seleccion primaria se identifica inmediatamente por varios signos visuales y nunca se confunde con el Type ni con los elementos incluidos colectivamente.
+Resultado esperado: la seleccion primaria se identifica inmediatamente por varios signos visuales y nunca se confunde con el Type ni con los elementos incluidos colectivamente. Todos los elementos elegidos explicitamente permanecen resaltados, aunque solo el ultimo alimente el inspector.
 
 ## Registro de resultados
 

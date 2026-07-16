@@ -481,6 +481,6 @@ Razon: evitar que dos origenes coincidan no evita que sus entidades o etiquetas 
 
 ### D-078: La seleccion primaria tiene un lenguaje visual propio y estable con zoom
 
-Decision: entidades y links seleccionados usan un azul exclusivo, un refuerzo de forma y un halo, mientras los elementos incluidos conservan una indicacion dorada secundaria. Los trazos SVG de seleccion no escalan con el canvas y el control central de un link seleccionado no depende del estado global de hints.
+Decision: todos los elementos que son raices explicitas de la seleccion usan un azul exclusivo, un refuerzo de forma y un halo, mientras los elementos incorporados por el cierre de seleccion conservan una indicacion dorada secundaria. El ultimo elemento activo se mantiene como referencia del inspector, pero no determina por si solo el resaltado. Los trazos SVG de seleccion no escalan con el canvas y el control central de un link seleccionado no depende del estado global de hints.
 
 Razon: reutilizar colores de Types obliga a interpretar el significado por tono y un trazo que se reduce con zoom deja de comunicar estado. La seleccion es una condicion operativa y debe reconocerse de inmediato por color, grosor y contorno, incluso sobre elementos semanticamente coloreados o en vistas alejadas.

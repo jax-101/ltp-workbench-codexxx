@@ -622,9 +622,19 @@ Aprendizaje: los estados de interaccion deben tener un canal visual propio, redu
 
 Aplicacion futura: reservar colores para estados operativos; reforzarlos con forma o contorno; definir en unidades de pantalla los detalles criticos; y comprobar estilos calculados junto con capturas a distintos niveles de zoom.
 
+### L-066: El elemento activo no equivale al conjunto seleccionado
+
+Fecha: 2026-07-16
+
+Evidencia: la seleccion multiple conservaba correctamente todas sus raices para mover, borrar o cambiar Type, pero el renderer aplicaba la clase principal solo al ultimo elemento activo. Los demas se mostraban como contenido incluido y parecian no estar seleccionados.
+
+Aprendizaje: foco, elemento activo, raices explicitas y cierre derivado son estados relacionados pero distintos. Colapsarlos en una unica referencia produce interfaces que ejecutan una operacion colectiva sin comunicar correctamente su alcance.
+
+Aplicacion futura: modelar cada estado por separado; derivar el estilo de pertenencia desde el conjunto correspondiente; reservar el elemento activo para inspector o foco; y probar selecciones de al menos dos elementos tanto por teclado como por raton.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-066`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-067`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

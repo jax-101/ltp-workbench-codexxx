@@ -539,6 +539,23 @@ Evidencia:
 - Smoke test verifica trazo de 5 px y control central visible en un link seleccionado.
 - Bateria visual `3C.9` con 37 escenarios en estado `PASS`.
 
+### Build 3C.10: resaltado de seleccion multiple explicita
+
+Estado: implementado y validado automaticamente.
+
+Incluye:
+
+- Separacion entre el ultimo elemento activo y las raices explicitas de la seleccion.
+- Resaltado azul simultaneo de todas las entidades, frames y links elegidos con `M` o seleccion aditiva.
+- Indicacion dorada limitada a descendientes y links incorporados automaticamente.
+- Misma semantica visual para seleccion por teclado y raton.
+
+Evidencia:
+
+- Smoke test verifica que dos entidades explicitas poseen `selected` y no `selection-included`.
+- Captura `20-multi-selected.png` comprueba tres entidades resaltadas simultaneamente al 35%.
+- Bateria visual `3C.10` con 37 escenarios en estado `PASS`.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:

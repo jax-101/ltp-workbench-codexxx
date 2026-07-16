@@ -1814,8 +1814,8 @@ const renderFrames = () => {
     .map((frame) => {
       const box = layoutFrame(frame.id);
       const active = frame.id === activeFrameId ? "active" : "";
-      const selected = frame.id === selectedElementId ? "selected" : "";
-      const included = selectionIds.has(frame.id) && frame.id !== selectedElementId ? "selection-included" : "";
+      const selected = selectionRootIds.has(frame.id) ? "selected" : "";
+      const included = selectionIds.has(frame.id) && !selectionRootIds.has(frame.id) ? "selection-included" : "";
       const collapsed = frame.collapsed ? "collapsed" : "";
       const inventory = frame.collapsed ? frameInventory(frame.id) : null;
       const entityCount = inventory ? inventory.types.reduce((total, [, count]) => total + count, 0) : 0;
@@ -1887,8 +1887,8 @@ const renderNodes = () =>
     .nodes.filter(nodeIsVisible)
     .map((node) => {
       const box = layoutNode(node.id);
-      const selected = node.id === selectedElementId ? "selected" : "";
-      const included = selectionIds.has(node.id) && node.id !== selectedElementId ? "selection-included" : "";
+      const selected = selectionRootIds.has(node.id) ? "selected" : "";
+      const included = selectionIds.has(node.id) && !selectionRootIds.has(node.id) ? "selection-included" : "";
       const multiSelected = connectionSourceIds.has(node.id) ? "multi-selected" : "";
       return `
         <button class="tree-node ${selected} ${included} ${multiSelected} node-${node.type}" data-element-id="${node.id}" data-element-type="node"
@@ -2016,8 +2016,8 @@ const renderLinks = () => {
       const sourceBox = visibleEndpointBox(link.sourceNodeId);
       const targetBox = visibleEndpointBox(link.targetNodeId);
       const { source, target, vector } = linkEndpoints(sourceBox, targetBox);
-      const selected = link.id === selectedElementId ? "selected" : "";
-      const included = selectionIds.has(link.id) && link.id !== selectedElementId ? "selection-included" : "";
+      const selected = selectionRootIds.has(link.id) ? "selected" : "";
+      const included = selectionIds.has(link.id) && !selectionRootIds.has(link.id) ? "selection-included" : "";
       const marker = selected ? "arrow-selected" : included ? "arrow-included" : "arrow";
       const linkLayout = layoutLink(link.id);
       const routeMatchesProjection =
@@ -2041,8 +2041,8 @@ const renderLinks = () => {
   const hitTargets = visibleLinks
     .map((link) => {
       const label = layoutLink(link.id).labelPosition || { x: 0, y: 0 };
-      const selected = link.id === selectedElementId ? "selected" : "";
-      const included = selectionIds.has(link.id) && link.id !== selectedElementId ? "selection-included" : "";
+      const selected = selectionRootIds.has(link.id) ? "selected" : "";
+      const included = selectionIds.has(link.id) && !selectionRootIds.has(link.id) ? "selection-included" : "";
       const hintVisible = hintsVisible ? "hint-visible" : "";
       return `
         <button class="link-target ${selected} ${included} ${hintVisible}" data-element-id="${link.id}" data-element-type="link" style="left:${label.x - 12}px;top:${label.y - 12}px;" title="${escapeHtml(link.meaning)}">L</button>
@@ -3538,6 +3538,12 @@ window.__ltpSmokeTest = async () => {
     Number.parseFloat(selectedNodeStyle.borderTopWidth) >= 3 &&
     selectedNodeStyle.boxShadow !== "none" &&
     selectedNodeStyle.backgroundColor !== "rgb(255, 255, 255)";
+  toggleSelectionRoot(typeCycleIds[1]);
+  render();
+  const multiSelectionIsProminent = [typeCycleIds[0], typeCycleIds[1]].every((nodeId) => {
+    const element = document.querySelector(`[data-element-id="${nodeId}"]`);
+    return element?.classList.contains("selected") && !element.classList.contains("selection-included");
+  });
   const visibleSelectionLink = tree().links.find(linkIsVisible);
   replaceSelection(visibleSelectionLink.id);
   render();
@@ -3639,6 +3645,7 @@ window.__ltpSmokeTest = async () => {
       multiTypeCycleWraps &&
       multiTypeCycleUndoIsAtomic &&
       nodeSelectionIsProminent &&
+      multiSelectionIsProminent &&
       linkSelectionIsProminent &&
       Object.keys(commandBindings).length >= 10 &&
       Boolean(exportResult.path),
@@ -3722,6 +3729,7 @@ window.__ltpSmokeTest = async () => {
     multiTypeCycleWraps,
     multiTypeCycleUndoIsAtomic,
     nodeSelectionIsProminent,
+    multiSelectionIsProminent,
     linkSelectionIsProminent,
     exportPath: exportResult.path
   };
@@ -3836,7 +3844,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.9" && hostVisible && rootHidden, "Build 3C.9 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.10" && hostVisible && rootHidden, "Build 3C.10 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {

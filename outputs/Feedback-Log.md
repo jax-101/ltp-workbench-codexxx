@@ -848,11 +848,12 @@ Criterios de aceptacion:
 
 Feedback: al seleccionar entidades o flechas, la indicacion visual no destacaba lo suficiente sobre los colores semanticos del diagrama.
 
-Estado: implementado en `3C.9`.
+Estado: implementado en `3C.9` y corregido para selecciones multiples en `3C.10`.
 
 Criterios de aceptacion:
 
 - Una entidad seleccionada usa borde azul de 3 px, fondo tenue y un halo exterior visible.
+- Todas las entidades, frames o links elegidos explicitamente conservan el resaltado principal, no solo el ultimo elemento activo.
 - La seleccion principal se distingue de los elementos incluidos por una seleccion de frame o grupo.
 - Una flecha seleccionada mantiene un trazo azul de 5 px visibles aunque cambie el zoom.
 - La punta seleccionada aumenta de tamano y conserva el mismo color que el enlace.
