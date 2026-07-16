@@ -412,3 +412,9 @@ Razon: minimizar cruces no implica maximizar codos. Las rectas preservan mejor l
 Decision: Layout mantiene las coordenadas de un frame fijado, pero recalcula su ancho y alto a partir del contenido actual, los subframes y los margenes definidos.
 
 Razon: conservar simultaneamente posicion y tamano impide que el frame se ajuste tras borrar, mover o reorganizar entidades. El pin expresa un ancla espacial, no un bloqueo de su caja.
+
+### D-067: Layout elige entre varias soluciones mediante una funcion de calidad
+
+Decision: los frames de diagrama con suficiente complejidad ejecutan varias configuraciones deterministas de ELK. Se comparan por cruces, entidades atravesadas, excepciones de direccion, longitud y area. Entre las candidatas se incluye una jerarquia relajada que puede invertir una arista solo para el calculo espacial; el link real conserva su sentido.
+
+Razon: una unica ejecucion de un algoritmo heuristico puede producir una ordenacion mediocre. Ademas, tratar la direccion como restriccion absoluta crea capas y desvios innecesarios cuando un nodo participa simultaneamente en un atajo y en una cadena mas larga.

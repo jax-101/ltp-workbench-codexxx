@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3B.1`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3B.2`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -24,7 +24,7 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, Layout compuesto, arrastre, Undo/Redo y conexion, y guarda capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional o geometrica. En el build 3B.1 todas las comprobaciones deben terminar en `PASS`.
+El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, Layout compuesto, arrastre, Undo/Redo y conexion, y guarda capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional o geometrica. En el build 3B.2 todas las comprobaciones deben terminar en `PASS`.
 
 ## Prueba 1: hint de dos letras
 
@@ -265,16 +265,18 @@ Resultado esperado: entidades, selecciones y frames completos cambian de contene
 
 ## Prueba 22: rutas despues de Layout
 
-1. Selecciona `Bottom to Top` y prepara un Goal, tres entidades en la capa siguiente y cuatro en la inferior.
-2. Conecta tres entidades con el Goal y las cuatro inferiores con entidades de la capa intermedia.
-3. Pulsa `Layout`.
-4. Recorre visualmente cada flecha desde origen hasta destino.
-5. Comprueba que las conexiones sin obstaculos son rectas.
-6. Comprueba que cada flecha sale por arriba de su origen y entra por abajo de su destino.
-7. Observa el frame Goal Tree y comprueba que se ajusta al contenido, tambien si estaba fijado.
-8. Mueve una entidad y comprueba que las rectas provisionales mantienen los mismos lados de conexion.
+1. Selecciona `Bottom to Top` y prepara un Goal, cuatro entidades en la capa siguiente y cinco en la inferior.
+2. Conecta tres entidades con el Goal y las cinco inferiores con entidades de la capa intermedia.
+3. Conecta la cuarta entidad intermedia directamente con el Goal y tambien con una entidad inferior que ya conduzca al Goal por otra rama.
+4. Pulsa `Layout`.
+5. Recorre visualmente cada flecha desde origen hasta destino.
+6. Comprueba que las conexiones sin obstaculos son rectas y que no hay cruces.
+7. Comprueba que predominan las flechas hacia arriba y que solo la relacion secundaria usa otra direccion.
+8. Comprueba que el estado informa `0 crossings`, `0 bends` y `1 direction exceptions`.
+9. Observa el frame Goal Tree y comprueba que se ajusta al contenido, tambien si estaba fijado.
+10. Mueve una entidad y comprueba que las rectas provisionales mantienen lados de conexion coherentes.
 
-Resultado esperado: predominan las rectas; solo aparecen codos cuando resuelven un obstaculo o cruce, ninguna ruta atraviesa entidades y el frame queda cenido al arbol sin perder su posicion fijada.
+Resultado esperado: el arbol ocupa tres capas, los 11 links son rectos, no hay cruces ni entidades atravesadas, existe una sola excepcion direccional explicable y el frame queda cenido sin perder su posicion fijada.
 
 ## Registro de resultados
 

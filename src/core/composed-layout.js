@@ -128,10 +128,20 @@ const directionVector = (direction) =>
     RL: { x: -1, y: 0 }
   })[direction] || { x: 0, y: 1 };
 
+const effectiveDirectionVector = (source, target, direction) => {
+  const preferred = directionVector(direction);
+  const sourceCenter = centerOf(source);
+  const targetCenter = centerOf(target);
+  const delta = { x: targetCenter.x - sourceCenter.x, y: targetCenter.y - sourceCenter.y };
+  if (delta.x * preferred.x + delta.y * preferred.y > 0.0001) return preferred;
+  if (Math.abs(delta.x) > Math.abs(delta.y)) return { x: delta.x >= 0 ? 1 : -1, y: 0 };
+  return { x: 0, y: delta.y >= 0 ? 1 : -1 };
+};
+
 const routePorts = (source, target, direction) => {
   const sourceCenter = centerOf(source);
   const targetCenter = centerOf(target);
-  const vector = directionVector(direction);
+  const vector = effectiveDirectionVector(source, target, direction);
   const sourceDistance = vector.x ? source.width / 2 : source.height / 2;
   const targetDistance = vector.x ? target.width / 2 : target.height / 2;
   return {
@@ -185,6 +195,160 @@ const segmentsCross = (leftStart, leftEnd, rightStart, rightEnd) => {
   return leftRatio > 0.0001 && leftRatio < 0.9999 && rightRatio > 0.0001 && rightRatio < 0.9999;
 };
 
+const shortestSinkRanks = (itemIds, edges) => {
+  const outgoing = new Map(itemIds.map((id) => [id, []]));
+  const incoming = new Map(itemIds.map((id) => [id, []]));
+  for (const edge of edges) {
+    const source = edge.sources[0];
+    const target = edge.targets[0];
+    outgoing.get(source)?.push(target);
+    incoming.get(target)?.push(source);
+  }
+  const ranks = new Map();
+  const queue = itemIds.filter((id) => !(outgoing.get(id)?.length)).map((id) => ({ id, rank: 0 }));
+  while (queue.length) {
+    const current = queue.shift();
+    if ((ranks.get(current.id) ?? Number.POSITIVE_INFINITY) <= current.rank) continue;
+    ranks.set(current.id, current.rank);
+    for (const predecessor of incoming.get(current.id) || []) queue.push({ id: predecessor, rank: current.rank + 1 });
+  }
+  return ranks;
+};
+
+const relaxDirectionEdges = (itemIds, edges) => {
+  const ranks = shortestSinkRanks(itemIds, edges);
+  let reversed = 0;
+  const relaxed = edges.map((edge) => {
+    const source = edge.sources[0];
+    const target = edge.targets[0];
+    const sourceRank = ranks.get(source);
+    const targetRank = ranks.get(target);
+    if (!Number.isFinite(sourceRank) || !Number.isFinite(targetRank) || sourceRank > targetRank) return edge;
+    reversed += 1;
+    return { ...edge, sources: [target], targets: [source] };
+  });
+  return { edges: relaxed, reversed };
+};
+
+const candidateQuality = (items, children, edges, direction) => {
+  const boxes = new Map(
+    children.map((child) => [child.id, { x: child.x || 0, y: child.y || 0, width: child.width, height: child.height }])
+  );
+  const segments = edges
+    .map((edge) => {
+      const sourceId = edge.sources[0];
+      const targetId = edge.targets[0];
+      const source = boxes.get(sourceId);
+      const target = boxes.get(targetId);
+      if (!source || !target) return null;
+      const ports = routePorts(source, target, direction);
+      const preferred = directionVector(direction);
+      const sourceCenter = centerOf(source);
+      const targetCenter = centerOf(target);
+      return {
+        sourceId,
+        targetId,
+        start: ports.source,
+        end: ports.target,
+        directionException:
+          (targetCenter.x - sourceCenter.x) * preferred.x + (targetCenter.y - sourceCenter.y) * preferred.y <= 0.0001
+      };
+    })
+    .filter(Boolean);
+  let crossings = 0;
+  for (let index = 0; index < segments.length; index += 1) {
+    for (let otherIndex = index + 1; otherIndex < segments.length; otherIndex += 1) {
+      const left = segments[index];
+      const right = segments[otherIndex];
+      if ([left.sourceId, left.targetId].some((id) => id === right.sourceId || id === right.targetId)) continue;
+      if (segmentsCross(left.start, left.end, right.start, right.end)) crossings += 1;
+    }
+  }
+  let obstacles = 0;
+  for (const segment of segments) {
+    for (const [itemId, box] of boxes) {
+      if (itemId === segment.sourceId || itemId === segment.targetId) continue;
+      const expanded = {
+        x: box.x - ROUTE_CLEARANCE,
+        y: box.y - ROUTE_CLEARANCE,
+        width: box.width + ROUTE_CLEARANCE * 2,
+        height: box.height + ROUTE_CLEARANCE * 2
+      };
+      if (segmentIntersectsBox(segment.start, segment.end, expanded)) obstacles += 1;
+    }
+  }
+  const left = Math.min(...children.map((child) => child.x || 0), 0);
+  const top = Math.min(...children.map((child) => child.y || 0), 0);
+  const right = Math.max(...children.map((child) => (child.x || 0) + child.width), 0);
+  const bottom = Math.max(...children.map((child) => (child.y || 0) + child.height), 0);
+  return {
+    crossings,
+    obstacles,
+    directionExceptions: segments.filter((segment) => segment.directionException).length,
+    length: Math.round(
+      segments.reduce((sum, segment) => sum + Math.hypot(segment.end.x - segment.start.x, segment.end.y - segment.start.y), 0)
+    ),
+    area: Math.round((right - left) * (bottom - top))
+  };
+};
+
+const compareCandidateQuality = (left, right) => {
+  for (const key of ["crossings", "obstacles", "directionExceptions", "length", "area"]) {
+    if (left[key] !== right[key]) return left[key] - right[key];
+  }
+  return 0;
+};
+
+const optimizedElkLayout = async (elk, graph, items, edges, direction, optimize) => {
+  const baseOptions = graph.layoutOptions;
+  const strictConfigs = optimize
+    ? [
+        { placement: "BRANDES_KOEPF", seed: 1 },
+        { placement: "BRANDES_KOEPF", seed: 2 },
+        { placement: "BRANDES_KOEPF", seed: 4 },
+        { placement: "NETWORK_SIMPLEX", seed: 4 },
+        { placement: "NETWORK_SIMPLEX", seed: 7 }
+      ]
+    : [{ placement: "BRANDES_KOEPF", seed: 1 }];
+  const relaxed = relaxDirectionEdges(items.map((item) => item.id), edges);
+  const configs = [
+    ...strictConfigs.map((config) => ({ ...config, relaxed: false, edges })),
+    ...(optimize && relaxed.reversed
+      ? [
+          { placement: "NETWORK_SIMPLEX", seed: 7, relaxed: true, edges: relaxed.edges },
+          { placement: "NETWORK_SIMPLEX", seed: 11, relaxed: true, edges: relaxed.edges },
+          { placement: "BRANDES_KOEPF", seed: 2, relaxed: true, edges: relaxed.edges },
+          { placement: "BRANDES_KOEPF", seed: 4, relaxed: true, edges: relaxed.edges }
+        ]
+      : [])
+  ];
+  let best = null;
+  for (const config of configs) {
+    const laidOut = await elk.layout({
+      ...graph,
+      layoutOptions: {
+        ...baseOptions,
+        "elk.randomSeed": String(config.seed),
+        "elk.layered.thoroughness": "30",
+        "elk.layered.crossingMinimization.greedySwitch.type": "TWO_SIDED",
+        "elk.layered.crossingMinimization.greedySwitch.activationThreshold": "0",
+        "elk.layered.nodePlacement.strategy": config.placement,
+        "elk.layered.nodePlacement.favorStraightEdges": "true",
+        "elk.layered.nodePlacement.bk.edgeStraightening": "IMPROVE_STRAIGHTNESS"
+      },
+      edges: config.edges
+    });
+    const quality = candidateQuality(items, laidOut.children || [], edges, direction);
+    const candidate = {
+      laidOut,
+      quality,
+      config: { placement: config.placement, seed: config.seed, relaxed: config.relaxed }
+    };
+    if (!best || compareCandidateQuality(candidate.quality, best.quality) < 0) best = candidate;
+  }
+  return { ...best, candidates: configs.length };
+};
+
 const compressRoute = (points) => {
   const unique = points.filter(
     (point, index) => index === 0 || point.x !== points[index - 1].x || point.y !== points[index - 1].y
@@ -215,7 +379,7 @@ const routeMidpoint = (route) => {
   return route.at(-1);
 };
 
-const orthogonalRoute = (source, target, obstacles, existingRoutes, direction) => {
+const orthogonalRoute = (source, target, obstacles, existingRoutes, direction, link) => {
   const ports = routePorts(source, target, direction);
   const expandedObstacles = obstacles.map((box) => ({
     x: box.x - ROUTE_CLEARANCE,
@@ -225,9 +389,21 @@ const orthogonalRoute = (source, target, obstacles, existingRoutes, direction) =
   }));
   const directRoute = [ports.source, ports.target];
   const directIsClear = expandedObstacles.every((box) => !segmentIntersectsBox(ports.source, ports.target, box));
-  const directCrossesRoute = existingRoutes.some((route) =>
-    route.slice(1).some((point, index) => segmentsCross(ports.source, ports.target, route[index], point))
-  );
+  const directCrossesRoute = existingRoutes.some((existing) => {
+    const sharedNodeId = existing.nodeIds.find(
+      (nodeId) => nodeId === link.sourceNodeId || nodeId === link.targetNodeId
+    );
+    return existing.points
+      .slice(1)
+      .some((point, index) => {
+        const endpointIndex = index + 1;
+        const touchesSharedNode =
+          sharedNodeId &&
+          ((existing.nodeIds[0] === sharedNodeId && endpointIndex === 1) ||
+            (existing.nodeIds[1] === sharedNodeId && endpointIndex === existing.points.length - 1));
+        return !touchesSharedNode && segmentsCross(ports.source, ports.target, existing.points[index], point);
+      });
+  });
   if (directIsClear && !directCrossesRoute) return directRoute;
 
   const xs = [...new Set([ports.start.x, ports.end.x, ...expandedObstacles.flatMap((box) => [box.x, box.x + box.width])])].sort(
@@ -274,9 +450,17 @@ const orthogonalRoute = (source, target, obstacles, existingRoutes, direction) =
       const distance = Math.abs(nextPoint.x - currentPoint.x) + Math.abs(nextPoint.y - currentPoint.y);
       const bend = current.heading !== "start" && current.heading !== candidate.heading ? 36 : 0;
       let crossingPenalty = 0;
-      for (const route of existingRoutes) {
-        for (let index = 1; index < route.length; index += 1) {
-          if (segmentsCross(currentPoint, nextPoint, route[index - 1], route[index])) crossingPenalty += 180;
+      for (const existing of existingRoutes) {
+        const sharedNodeId = existing.nodeIds.find(
+          (nodeId) => nodeId === link.sourceNodeId || nodeId === link.targetNodeId
+        );
+        for (let index = 1; index < existing.points.length; index += 1) {
+          const touchesSharedNode =
+            sharedNodeId &&
+            ((existing.nodeIds[0] === sharedNodeId && index === 1) ||
+              (existing.nodeIds[1] === sharedNodeId && index === existing.points.length - 1));
+          if (touchesSharedNode) continue;
+          if (segmentsCross(currentPoint, nextPoint, existing.points[index - 1], existing.points[index])) crossingPenalty += 180;
         }
       }
       const nextCost = current.cost + distance + bend + crossingPenalty;
@@ -307,6 +491,68 @@ const orthogonalRoute = (source, target, obstacles, existingRoutes, direction) =
   return compressRoute([ports.source, ports.start, ...middle, ports.end, ports.target]);
 };
 
+const routedLayoutQuality = (links, nodeLayouts, linkLayouts, direction) => {
+  let crossings = 0;
+  let bends = 0;
+  let length = 0;
+  let straightRoutes = 0;
+  let directionExceptions = 0;
+  const routes = links.map((link) => {
+    const route = linkLayouts[link.id]?.route || [];
+    bends += Math.max(0, route.length - 2);
+    if (route.length === 2) straightRoutes += 1;
+    for (let index = 1; index < route.length; index += 1) {
+      length += Math.hypot(route[index].x - route[index - 1].x, route[index].y - route[index - 1].y);
+    }
+    const source = nodeLayouts[link.sourceNodeId];
+    const target = nodeLayouts[link.targetNodeId];
+    if (source && target) {
+      const sourceCenter = centerOf(source);
+      const targetCenter = centerOf(target);
+      const preferred = directionVector(direction);
+      if ((targetCenter.x - sourceCenter.x) * preferred.x + (targetCenter.y - sourceCenter.y) * preferred.y <= 0.0001) {
+        directionExceptions += 1;
+      }
+    }
+    return { link, route };
+  });
+  for (let index = 0; index < routes.length; index += 1) {
+    for (let otherIndex = index + 1; otherIndex < routes.length; otherIndex += 1) {
+      const left = routes[index];
+      const right = routes[otherIndex];
+      const sharedNodeId = [left.link.sourceNodeId, left.link.targetNodeId].find(
+        (id) => id === right.link.sourceNodeId || id === right.link.targetNodeId
+      );
+      let pairCrosses = false;
+      for (let leftIndex = 1; leftIndex < left.route.length && !pairCrosses; leftIndex += 1) {
+        for (let rightIndex = 1; rightIndex < right.route.length; rightIndex += 1) {
+          const leftTouchesShared =
+            sharedNodeId &&
+            ((left.link.sourceNodeId === sharedNodeId && leftIndex === 1) ||
+              (left.link.targetNodeId === sharedNodeId && leftIndex === left.route.length - 1));
+          const rightTouchesShared =
+            sharedNodeId &&
+            ((right.link.sourceNodeId === sharedNodeId && rightIndex === 1) ||
+              (right.link.targetNodeId === sharedNodeId && rightIndex === right.route.length - 1));
+          if (leftTouchesShared && rightTouchesShared) continue;
+          if (segmentsCross(left.route[leftIndex - 1], left.route[leftIndex], right.route[rightIndex - 1], right.route[rightIndex])) {
+            pairCrosses = true;
+            break;
+          }
+        }
+      }
+      if (pairCrosses) crossings += 1;
+    }
+  }
+  return {
+    crossings,
+    bends,
+    straightRoutes,
+    directionExceptions,
+    length: Math.round(length)
+  };
+};
+
 const runComposedLayout = async (workspace, options = {}) => {
   const nextWorkspace = structuredClone(workspace);
   const activeTree = options.treeId
@@ -331,8 +577,11 @@ const runComposedLayout = async (workspace, options = {}) => {
   const layoutContainer = async (frameId, isRoot = false) => {
     const frame = frameById.get(frameId);
     const childResults = new Map();
+    const optimization = {};
     for (const childFrameId of frame.childFrameIds || []) {
-      childResults.set(childFrameId, await layoutContainer(childFrameId, false));
+      const childResult = await layoutContainer(childFrameId, false);
+      childResults.set(childFrameId, childResult);
+      Object.assign(optimization, childResult.optimization);
     }
 
     const items = [];
@@ -359,6 +608,7 @@ const runComposedLayout = async (workspace, options = {}) => {
     const bottomPadding = isRoot ? ROOT_MARGIN : FRAME_BOTTOM_PADDING;
     let elkChildren = [];
     if (items.length) {
+      const graphEdges = collapsedEdges(frameId, links, nodeOwners, frameById);
       const graph = {
         id: `container-${frameId}`,
         layoutOptions: {
@@ -370,10 +620,19 @@ const runComposedLayout = async (workspace, options = {}) => {
           "elk.edgeRouting": "ORTHOGONAL"
         },
         children: items.map(({ id, width, height }) => ({ id, width, height })),
-        edges: collapsedEdges(frameId, links, nodeOwners, frameById)
+        edges: graphEdges
       };
-      const laidOut = await elk.layout(graph);
-      elkChildren = laidOut.children || [];
+      const optimize = !isRoot && frame.kind === "diagram" && items.length >= 4 && graphEdges.length >= 3 && !items.some((item) => item.pinned);
+      const selectedLayout = await optimizedElkLayout(elk, graph, items, graphEdges, direction, optimize);
+      elkChildren = selectedLayout.laidOut.children || [];
+      if (optimize) {
+        optimization[frameId] = {
+          strategy: "multi-start-layered",
+          candidates: selectedLayout.candidates,
+          ...selectedLayout.config,
+          ...selectedLayout.quality
+        };
+      }
     }
 
     const elkPositions = new Map(elkChildren.map((child) => [child.id, child]));
@@ -440,7 +699,7 @@ const runComposedLayout = async (workspace, options = {}) => {
       };
     }
 
-    return { width, height, nodeLayouts, frameLayouts };
+    return { width, height, nodeLayouts, frameLayouts, optimization };
   };
 
   const result = await layoutContainer(canvas.rootFrameId, true);
@@ -462,8 +721,10 @@ const runComposedLayout = async (workspace, options = {}) => {
       const obstacles = allNodeBoxes
         .filter(([nodeId]) => nodeId !== link.sourceNodeId && nodeId !== link.targetNodeId)
         .map(([, box]) => box);
-      const route = source && target ? orthogonalRoute(source, target, obstacles, routedRoutes, direction) : previous.route || [];
-      if (route.length) routedRoutes.push(route);
+      const route = source && target ? orthogonalRoute(source, target, obstacles, routedRoutes, direction, link) : previous.route || [];
+      if (route.length) {
+        routedRoutes.push({ points: route, nodeIds: [link.sourceNodeId, link.targetNodeId] });
+      }
       nextLinkLayout[link.id] = {
         ...previous,
         route,
@@ -479,6 +740,8 @@ const runComposedLayout = async (workspace, options = {}) => {
       engine: "elk-composed",
       direction,
       lastRunAt: new Date().toISOString(),
+      optimization: result.optimization,
+      quality: routedLayoutQuality(tree.links || [], nextNodeLayout, nextLinkLayout, direction),
       nodes: nextNodeLayout,
       links: nextLinkLayout
     };

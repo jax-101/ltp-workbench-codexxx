@@ -430,7 +430,7 @@ Criterios de aceptacion:
 
 Feedback: despues de aplicar Layout, las flechas no deberian cruzarse si es posible ni pasar por debajo de las entidades.
 
-Estado: refinado en el build `3B.1` y pendiente de validacion manual. Layout intenta primero una recta; si atraviesa una entidad o cruza otra ruta de forma evitable, calcula un desvio ortogonal. Los puertos siguen la direccion: por ejemplo, en `Bottom to Top` la flecha sale por arriba del origen y entra por abajo del destino. La misma regla se mantiene durante el arrastre manual.
+Estado: refinado en los builds `3B.1` y `3B.2`, pendiente de validacion manual. Layout intenta primero una recta; si atraviesa una entidad o cruza otra ruta de forma evitable, calcula un desvio ortogonal. En diagramas complejos ejecuta nueve variantes deterministas de ELK y selecciona por cruces, obstaculos, excepciones de direccion, longitud y area. La direccion es preferente: puede aceptar una excepcion si evita una capa y desvios mucho peores. La misma regla de puertos se mantiene durante el arrastre manual.
 
 Criterios de aceptacion:
 
@@ -442,6 +442,7 @@ Criterios de aceptacion:
 - Cuando un cruce sea inevitable, se mantiene legible y estable.
 - Una conexion recta se conserva cuando no invade entidades ni introduce cruces.
 - Los lados de salida y entrada coinciden con la direccion preferente del diagrama.
+- Las excepciones direccionales quedan cuantificadas y solo se aceptan tras mejorar cruces y obstaculos.
 
 ### F-044: Listado completo de atajos en el panel izquierdo
 

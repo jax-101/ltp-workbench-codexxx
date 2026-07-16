@@ -131,17 +131,21 @@ const run = async () => {
   const directCanvas = canvasFor(direct);
   const directRoot = frameFor(direct, directCanvas.rootFrameId);
   const directHost = frameFor(direct, directTree.hostFrameId);
-  directTree.nodes = directTree.nodes.slice(0, 8);
+  directTree.nodes = directTree.nodes.slice(0, 10);
   const directNodeIds = directTree.nodes.map((node) => node.id);
-  const [goalId, firstId, secondId, thirdId, fourthId, fifthId, sixthId, seventhId] = directNodeIds;
+  const [goalId, firstId, secondId, thirdId, fourthId, fifthId, sixthId, seventhId, eighthId, shortcutId] = directNodeIds;
   directTree.links = [
     { id: "direct-a", sourceNodeId: firstId, targetNodeId: goalId },
     { id: "direct-b", sourceNodeId: secondId, targetNodeId: goalId },
     { id: "direct-c", sourceNodeId: thirdId, targetNodeId: goalId },
     { id: "direct-d", sourceNodeId: fourthId, targetNodeId: firstId },
-    { id: "direct-e", sourceNodeId: fifthId, targetNodeId: secondId },
-    { id: "direct-f", sourceNodeId: sixthId, targetNodeId: thirdId },
-    { id: "direct-g", sourceNodeId: seventhId, targetNodeId: thirdId }
+    { id: "direct-e", sourceNodeId: fifthId, targetNodeId: firstId },
+    { id: "direct-f", sourceNodeId: sixthId, targetNodeId: secondId },
+    { id: "direct-g", sourceNodeId: seventhId, targetNodeId: thirdId },
+    { id: "direct-h", sourceNodeId: sixthId, targetNodeId: firstId },
+    { id: "direct-i", sourceNodeId: eighthId, targetNodeId: thirdId },
+    { id: "direct-j", sourceNodeId: shortcutId, targetNodeId: goalId },
+    { id: "direct-k", sourceNodeId: shortcutId, targetNodeId: sixthId }
   ];
   directTree.layout.direction = "BT";
   directTree.layout.nodes = Object.fromEntries(
@@ -160,8 +164,22 @@ const run = async () => {
   };
   const directResult = await runComposedLayout(direct);
   const directRoutes = directTree.links.map((link) => treeFor(directResult).layout.links[link.id].route);
-  assert(directRoutes.every((route) => route.length === 2), "unobstructed tree links should remain straight");
+  const directLayout = treeFor(directResult).layout;
+  const directLayerPositions = directNodeIds
+    .map((nodeId) => directLayout.nodes[nodeId].y + directLayout.nodes[nodeId].height / 2)
+    .sort((left, right) => left - right);
+  const directLayerCount = directLayerPositions.reduce(
+    (state, position) =>
+      position - state.last > 48 ? { count: state.count + 1, last: position } : state,
+    { count: 0, last: Number.NEGATIVE_INFINITY }
+  ).count;
+  assert(directRoutes.every((route) => route.length === 2), "the optimized complex tree should keep every link straight");
   assert.deepEqual(validateComposedGeometry(directResult), [], "straight routes must preserve every geometry invariant");
+  assert.equal(directLayout.quality.crossings, 0, "the optimized complex tree should have no route crossings");
+  assert.equal(directLayout.quality.bends, 0, "the optimized complex tree should not introduce bends");
+  assert.equal(directLayout.quality.directionExceptions, 1, "one secondary link may oppose the preferred direction");
+  assert.equal(directLayerCount, 3, "direction relaxation should avoid an unnecessary fourth layer");
+  assert.equal(directLayout.optimization[directHost.id].relaxed, true, "the optimizer should select the relaxed candidate");
   assert(canvasFor(directResult).layout.frames[directHost.id].width < 1800, "the host frame should shrink to its content");
 
   console.log("Composed layout tests passed: directional ports, straight routes, fitted frames, nesting, pins and determinism.");

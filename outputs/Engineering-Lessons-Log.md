@@ -422,9 +422,19 @@ Aprendizaje: una regla como evitar cruces debe convivir con una funcion de coste
 
 Aplicacion futura: probar primero la geometria minima, escalar a rutas complejas solo ante un conflicto demostrado y comparar siempre el resultado automatico con el estado provisional que el usuario considera legible.
 
+### L-046: Las preferencias deben modelarse como costes, no como restricciones
+
+Fecha: 2026-07-16
+
+Evidencia: un nodo enlazaba directamente con el Goal y tambien con una condicion situada dos pasos por debajo. Forzar todas las flechas `Bottom to Top` lo colocaba en una cuarta capa y obligaba a un desvio largo; la composicion mas clara usaba tres capas y una sola flecha secundaria en sentido contrario.
+
+Aprendizaje: cuando el producto habla de una direccion preferente, convertirla en una restriccion dura puede sacrificar legibilidad global. Una funcion de coste permite aceptar una excepcion pequena si elimina cruces, obstaculos y complejidad mucho mayores.
+
+Aplicacion futura: declarar que reglas son invariantes y cuales preferencias; producir varias soluciones deterministas; compararlas con metricas ordenadas; y exponer las excepciones para que el resultado siga siendo explicable.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-046`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-047`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

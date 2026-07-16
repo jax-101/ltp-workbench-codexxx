@@ -256,11 +256,23 @@ Incluye:
 - Recalculo del tamano de frames fijados sin mover su posicion.
 - Regresion especifica con siete links en `Bottom to Top` y frame anfitrion sobredimensionado.
 
+### Build 3B.2: optimizacion multiarranque de cruces
+
+Estado: implementado; pendiente de validacion manual.
+
+Incluye:
+
+- Nueve candidatos deterministas por frame de diagrama complejo, combinando semillas y colocadores de ELK.
+- Variante estricta y variante con jerarquia direccional relajada basada en distancia minima al Goal.
+- Seleccion lexicografica por cruces, entidades atravesadas, excepciones direccionales, longitud y area.
+- Metricas finales persistidas: cruces, codos, rectas, longitud y excepciones de direccion.
+- Regresion del caso de 10 entidades y 11 links: tres capas, cero cruces, cero codos y una excepcion.
+
 Seguimiento de la iteracion:
 
 - F-036: contencion y exclusion geometrica estrictas implementadas en 3B.0.
 - F-038: insercion direccional sin alterar la forma existente.
-- F-043: rutas simples primero y puertos direccionales implementados en 3B.1.
+- F-043: rutas simples primero en 3B.1 y optimizacion multiarranque implementada en 3B.2.
 - F-047: indicacion de direccion pendiente de aplicar.
 - F-052: transiciones animadas de Layout, Undo y Redo implementadas en 3B.0.
 - F-057: recolocacion espacial dentro del frame destino implementada en 3B.0.

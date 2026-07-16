@@ -1413,7 +1413,12 @@ const runAutoLayout = async () => {
     setStatus("Repositioning diagram...");
     await animateToLayout(nextWorkspace);
     await persist("Apply layout", "spatial.layout");
-    setStatus("Composed layout updated");
+    const quality = tree()?.layout?.quality;
+    setStatus(
+      quality
+        ? `Layout optimized: ${quality.crossings} crossings, ${quality.bends} bends, ${quality.directionExceptions} direction exceptions`
+        : "Composed layout updated"
+    );
     render();
   } finally {
     layoutAnimating = false;
@@ -1722,13 +1727,20 @@ const selectionCenter = () => {
 const linkEndpoints = (sourceBox, targetBox) => {
   const sourceCenter = centerOf(sourceBox);
   const targetCenter = centerOf(targetBox);
-  const vector =
+  const preferred =
     ({
       TB: { x: 0, y: 1 },
       BT: { x: 0, y: -1 },
       LR: { x: 1, y: 0 },
       RL: { x: -1, y: 0 }
     })[tree()?.layout?.direction] || { x: 0, y: 1 };
+  const delta = { x: targetCenter.x - sourceCenter.x, y: targetCenter.y - sourceCenter.y };
+  const vector =
+    delta.x * preferred.x + delta.y * preferred.y > 0.0001
+      ? preferred
+      : Math.abs(delta.x) > Math.abs(delta.y)
+        ? { x: delta.x >= 0 ? 1 : -1, y: 0 }
+        : { x: 0, y: delta.y >= 0 ? 1 : -1 };
   const sourceDistance = vector.x ? sourceBox.width / 2 : sourceBox.height / 2;
   const targetDistance = vector.x ? targetBox.width / 2 : targetBox.height / 2;
   return {
@@ -3378,7 +3390,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3B.1" && hostVisible && rootHidden, "Build 3B.1 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3B.2" && hostVisible && rootHidden, "Build 3B.2 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3677,17 +3689,21 @@ window.__ltpVisualTestStep = async (step) => {
   if (step === "readable-routing") {
     const hostFrame = frameById()[activeTree.hostFrameId];
     const rootFrame = frameById()[rootFrameId()];
-    const routingNodes = activeTree.nodes.slice(0, 8);
+    const routingNodes = activeTree.nodes.slice(0, 10);
     const routingNodeIds = routingNodes.map((node) => node.id);
-    const [goalId, firstId, secondId, thirdId, fourthId, fifthId, sixthId, seventhId] = routingNodeIds;
+    const [goalId, firstId, secondId, thirdId, fourthId, fifthId, sixthId, seventhId, eighthId, shortcutId] = routingNodeIds;
     const linkPairs = [
       [firstId, goalId],
       [secondId, goalId],
       [thirdId, goalId],
       [fourthId, firstId],
-      [fifthId, secondId],
-      [sixthId, thirdId],
-      [seventhId, thirdId]
+      [fifthId, firstId],
+      [sixthId, secondId],
+      [seventhId, thirdId],
+      [sixthId, firstId],
+      [eighthId, thirdId],
+      [shortcutId, goalId],
+      [shortcutId, sixthId]
     ];
 
     activeTree.nodes = routingNodes;
@@ -3737,18 +3753,22 @@ window.__ltpVisualTestStep = async (step) => {
     const issues = await window.ltpPrototype.validateLayout(workspaceData);
     const routes = activeTree.links.map((link) => activeTree.layout.links[link.id]?.route || []);
     const straight = routes.every((route) => route.length === 2);
-    const directional = activeTree.links.every((link) => {
-      const route = activeTree.layout.links[link.id]?.route || [];
-      const source = layoutNode(link.sourceNodeId);
-      const target = layoutNode(link.targetNodeId);
-      return route[0]?.y === source.y && route.at(-1)?.y === target.y + target.height;
-    });
+    const quality = tree().layout.quality;
+    const optimization = tree().layout.optimization?.[hostFrame.id];
+    const layerCenters = routingNodeIds
+      .map((nodeId) => layoutNode(nodeId).y + layoutNode(nodeId).height / 2)
+      .sort((left, right) => left - right);
+    const layers = layerCenters.reduce(
+      (state, position) =>
+        position - state.last > 48 ? { count: state.count + 1, last: position } : state,
+      { count: 0, last: Number.NEGATIVE_INFINITY }
+    ).count;
     const fitted = layoutFrame(hostFrame.id).width < 1800 && layoutFrame(hostFrame.id).height < 900;
     fitView();
     return result(
-      "Prefer straight directional routes",
-      issues.length === 0 && straight && directional && fitted,
-      `Seven links are straight=${straight}, Bottom-to-Top ports=${directional}, frame fitted=${fitted}, geometry issues=${issues.length}.`
+      "Optimize a complex crossing case",
+      issues.length === 0 && straight && quality.crossings === 0 && quality.directionExceptions === 1 && layers === 3 && optimization?.relaxed && fitted,
+      `Eleven links straight=${straight}, crossings=${quality.crossings}, direction exceptions=${quality.directionExceptions}, layers=${layers}, relaxed=${Boolean(optimization?.relaxed)}, frame fitted=${fitted}, geometry issues=${issues.length}.`
     );
   }
 
