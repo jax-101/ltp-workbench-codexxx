@@ -562,9 +562,19 @@ Aprendizaje: el lugar donde se crea o edita no debe confundirse con el conjunto 
 
 Aplicacion futura: modelar por separado contexto, foco, seleccion provisional y seleccion confirmada; mostrar el alcance efectivo de cada comando; y probar transiciones en las que una seleccion comienza desde un contenedor activo.
 
+### L-060: Una preferencia visual puede ser una restriccion semantica
+
+Fecha: 2026-07-16
+
+Evidencia: la funcion de calidad permitia invertir una arista aciclica a cambio de ahorrar una capa y reducir longitud. La puntuacion era geometricamente razonable, pero la flecha descendente hacia `MIRARLO` contradecia la lectura causal del Goal Tree.
+
+Aprendizaje: no toda metrica debe vivir en una suma ponderada. Si violar una propiedad cambia el significado del modelo, esa propiedad debe filtrar candidatos como restriccion dura antes de comparar cruces, area o estabilidad. Las excepciones inevitables deben quedar ligadas a una causa estructural verificable, como un ciclo.
+
+Aplicacion futura: separar factibilidad de calidad; documentar que restricciones proceden del dominio; registrar las relajaciones temporales; y probar tanto el caso sin excepciones como el caso minimo que obliga a una.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-060`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-061`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

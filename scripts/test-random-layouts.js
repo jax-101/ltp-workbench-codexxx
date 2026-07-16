@@ -68,6 +68,7 @@ const run = async () => {
       bends: quality.bends,
       straightRoutes: quality.straightRoutes,
       directionExceptions: quality.directionExceptions,
+      cycleBreaks: quality.cycleBreaks,
       length: quality.length,
       geometryIssues: issues.length,
       issueCodes: Object.entries(issueCodes).map(([code, count]) => `${code}:${count}`).join(", ") || "none"

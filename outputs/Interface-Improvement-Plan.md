@@ -425,6 +425,27 @@ Evidencia:
 - Bateria visual `3C.3` con 36 escenarios en estado `PASS`.
 - Captura `28-multi-entity-frame-targets.png`: Root, Goal Tree y el frame de contexto muestran hints `A`, `B` y `C`.
 
+### Build 3C.4: capas estrictas y ciclos
+
+Estado: implementado y validado automaticamente y visualmente.
+
+Incluye:
+
+- Eliminacion de inversiones de enlaces aciclicos usadas anteriormente para ahorrar capas.
+- Ranking por camino mas largo que garantiza avance estricto de cada arista del DAG.
+- Ruptura determinista de ciclos mediante `greedyFeedbackArc`, declarada en el registro del diagrama.
+- Restauracion de los links semanticos despues de calcular posiciones.
+- Rechazo de `CURRENT` por inviabilidad aunque ELK no supere el margen de mejora del 15%.
+- Metricas `cycleBreaks`, `cycleBreakEdgeIds` y `forcedByDirection` para diagnostico.
+
+Evidencia:
+
+- El workspace que contenia `MIRARLO` termina con `0 directionExceptions` y `0 cycleBreaks`.
+- Una regresion aciclica con atajo usa cuatro capas sin invertir relaciones.
+- Una regresion ciclica de tres nodos conserva los tres links y registra una sola ruptura temporal.
+- Bateria visual `3C.4` con 37 escenarios en estado `PASS`.
+- Captura `29-cycle-breaking.png`: una unica excepcion visible y necesaria dentro del ciclo.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:

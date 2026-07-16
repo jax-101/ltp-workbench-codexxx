@@ -14,8 +14,12 @@ const strictConfigurations = (optimize) =>
         { placement: "BRANDES_KOEPF", seed: 1 },
         { placement: "BRANDES_KOEPF", seed: 2 },
         { placement: "BRANDES_KOEPF", seed: 4 },
+        { placement: "BRANDES_KOEPF", seed: 6 },
         { placement: "NETWORK_SIMPLEX", seed: 4 },
-        { placement: "NETWORK_SIMPLEX", seed: 7 }
+        { placement: "NETWORK_SIMPLEX", seed: 7 },
+        { placement: "NETWORK_SIMPLEX", seed: 9 },
+        { placement: "NETWORK_SIMPLEX", seed: 11 },
+        { placement: "NETWORK_SIMPLEX", seed: 13 }
       ]
     : [{ placement: "BRANDES_KOEPF", seed: 1 }];
 
@@ -30,7 +34,6 @@ const createElkLayeredEngine = () => {
         containerId,
         items,
         edges,
-        relaxedEdges,
         direction,
         spacingNodeNode,
         spacingLayer,
@@ -38,17 +41,7 @@ const createElkLayeredEngine = () => {
         optimize
       } = problem;
       const strictConfigs = strictConfigurations(optimize);
-      const configs = [
-        ...strictConfigs.map((config) => ({ ...config, relaxed: false, edges })),
-        ...(optimize && relaxedEdges
-          ? [
-              { placement: "NETWORK_SIMPLEX", seed: 7, relaxed: true, edges: relaxedEdges },
-              { placement: "NETWORK_SIMPLEX", seed: 11, relaxed: true, edges: relaxedEdges },
-              { placement: "BRANDES_KOEPF", seed: 2, relaxed: true, edges: relaxedEdges },
-              { placement: "BRANDES_KOEPF", seed: 4, relaxed: true, edges: relaxedEdges }
-            ]
-          : [])
-      ];
+      const configs = strictConfigs.map((config) => ({ ...config, edges }));
       const candidates = [];
 
       for (const config of configs) {
@@ -82,7 +75,7 @@ const createElkLayeredEngine = () => {
         });
         candidates.push({
           children: laidOut.children || [],
-          config: { placement: config.placement, seed: config.seed, relaxed: config.relaxed }
+          config: { placement: config.placement, seed: config.seed }
         });
       }
 

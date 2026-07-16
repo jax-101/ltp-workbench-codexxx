@@ -4,6 +4,7 @@ const DIAGRAM_DEFINITIONS = Object.freeze({
     label: "Goal Tree",
     defaultDirection: "TB",
     layering: "distanceToSink",
+    cycleBreaking: Object.freeze({ strategy: "greedyFeedbackArc", restoreSemanticEdges: true }),
     directions: Object.freeze(["TB", "BT", "LR", "RL"]),
     defaultNodeType: "necessaryCondition",
     nodeTypes: Object.freeze([

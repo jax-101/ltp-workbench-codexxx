@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.3`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.4`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -24,11 +24,11 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta minimizacion de frames, layout interno, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo y conexion, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 36 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
+El comando abre un workspace aislado, ejecuta minimizacion de frames, layout interno, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo, conexion y ruptura de ciclos, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 37 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
 
 Las capturas `03` a `06` muestran minimizar, Undo, Redo y expandir. La captura `26-readable-routing.png` debe mostrar 18 entidades, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
 
-La captura `27-internal-frame-layout.png` comprueba que tres entidades independientes forman una cuadricula compacta. La captura `28-multi-entity-frame-targets.png` comprueba que un frame usado inicialmente como contexto reaparece como destino tras seleccionar dos entidades con `M`. Las capturas `29` a `36` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
+La captura `27-internal-frame-layout.png` comprueba que tres entidades independientes forman una cuadricula compacta. La captura `28-multi-entity-frame-targets.png` comprueba que un frame usado inicialmente como contexto reaparece como destino tras seleccionar dos entidades con `M`. La captura `29-cycle-breaking.png` comprueba que un ciclo conserva sus tres links y produce una unica excepcion. Las capturas `30` a `37` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, excepciones, rupturas, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
 
 ```bash
 npm run test:layout-random
@@ -291,13 +291,13 @@ Resultado esperado: entidades, selecciones y frames completos cambian de contene
 3. Conecta la cuarta entidad intermedia directamente con el Goal y tambien con una entidad inferior que ya conduzca al Goal por otra rama.
 4. Pulsa `Layout`.
 5. Recorre visualmente cada flecha desde origen hasta destino.
-6. Comprueba que las conexiones sin obstaculos son rectas y que no hay cruces.
-7. Comprueba que predominan las flechas hacia arriba y que solo la relacion secundaria usa otra direccion.
-8. Comprueba que el estado informa `0 crossings`, `0 bends` y `1 direction exceptions`.
+6. Comprueba que las conexiones sin obstaculos son rectas y que los cruces se reducen cuanto sea posible.
+7. Comprueba que todas las flechas apuntan hacia arriba, incluida la relacion secundaria.
+8. Comprueba que el estado informa `0 direction exceptions` y `0 cycle breaks`.
 9. Observa el frame Goal Tree y comprueba que se ajusta al contenido, tambien si estaba fijado.
 10. Mueve una entidad y comprueba que las rectas provisionales mantienen lados de conexion coherentes.
 
-Resultado esperado: el arbol ocupa tres capas, los 11 links son rectos, no hay cruces ni entidades atravesadas, existe una sola excepcion direccional explicable y el frame queda cenido sin perder su posicion fijada.
+Resultado esperado: el atajo crea una cuarta capa si es necesario; ningun link atraviesa entidades ni apunta en direccion contraria, y el frame queda cenido sin perder su posicion fijada.
 
 ## Prueba 23: minimizar y expandir un frame
 
@@ -342,6 +342,19 @@ Resultado esperado: cada frame optimiza primero su contenido. Sin relaciones usa
 10. Comprueba que ese frame y sus descendientes no aparecen como destino, evitando un ciclo.
 
 Resultado esperado: el frame activo sirve como contexto provisional al elegir entidades, pero no se mueve con ellas ni desaparece de los destinos. Los frames elegidos explicitamente siguen sujetos a las protecciones de jerarquia.
+
+## Prueba 26: ruptura y restauracion de un ciclo
+
+1. Crea tres entidades `A`, `B` y `C` dentro del mismo frame.
+2. Crea los links `A -> B`, `B -> C` y `C -> A`.
+3. Selecciona `Bottom to Top` y pulsa `Layout`.
+4. Comprueba que dos flechas avanzan hacia arriba y una vuelve hacia abajo para cerrar el ciclo.
+5. Comprueba que siguen existiendo exactamente los tres links con sus origenes y destinos originales.
+6. Comprueba que el estado informa `1 direction exception` y `1 cycle break`.
+7. Elimina `C -> A` y vuelve a pulsar `Layout`.
+8. Comprueba que las tres entidades forman ahora capas aciclicas, con `0 direction exceptions` y `0 cycle breaks`.
+
+Resultado esperado: Layout rompe el ciclo solo en su grafo temporal. La relacion restaurada explica la unica flecha contraria; al desaparecer el ciclo, desaparece tambien toda excepcion.
 
 ## Registro de resultados
 

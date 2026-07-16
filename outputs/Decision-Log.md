@@ -415,9 +415,9 @@ Razon: conservar simultaneamente posicion y tamano impide que el frame se ajuste
 
 ### D-067: Layout elige entre varias soluciones mediante una funcion de calidad
 
-Decision: los frames de diagrama con suficiente complejidad ejecutan varias configuraciones deterministas de ELK. Se comparan por cruces, entidades atravesadas, excepciones de direccion, longitud y area. Entre las candidatas se incluye una jerarquia relajada que puede invertir una arista solo para el calculo espacial; el link real conserva su sentido.
+Decision: los frames de diagrama con suficiente complejidad ejecutan varias configuraciones deterministas de ELK. Se comparan por cruces, entidades atravesadas, longitud, area y estabilidad. La variante relajada que invertia atajos aciclicos queda retirada por `D-073`; todas las candidatas reciben el mismo DAG preparado.
 
-Razon: una unica ejecucion de un algoritmo heuristico puede producir una ordenacion mediocre. Ademas, tratar la direccion como restriccion absoluta crea capas y desvios innecesarios cuando un nodo participa simultaneamente en un atajo y en una cadena mas larga.
+Razon: una unica ejecucion de un algoritmo heuristico puede producir una ordenacion mediocre. La diversidad de candidatos debe optimizar la geometria sin cambiar las restricciones semanticas del grafo.
 
 ### D-068: Los casos visuales de referencia son fixtures de dominio
 
@@ -433,7 +433,7 @@ Razon: cero cruces no basta si un CSF aparece mezclado con NC o varias puntas te
 
 ### D-070: La disposicion actual compite contra ELK con un umbral de mejora
 
-Decision: Layout evalua `CURRENT` y todas las variantes ELK mediante una puntuacion ponderada. El candidato ELK ganador se aplica solo si su coste es al menos un 15% menor que el actual. En otro caso se conservan las posiciones relativas existentes.
+Decision: Layout evalua `CURRENT` y todas las variantes ELK mediante una puntuacion ponderada. Entre layouts factibles, el candidato ELK ganador se aplica solo si su coste es al menos un 15% menor que el actual. Un `CURRENT` que incumple una restriccion dura, incluida la direccion de un DAG, no puede acogerse al umbral.
 
 Razon: recalcular no equivale a mejorar. Un umbral explicito protege el mapa mental del usuario frente a diferencias pequenas o ruido heuristico, mientras permite reemplazar composiciones claramente deficientes.
 
@@ -448,3 +448,9 @@ Razon: una captura aleatoria irrepetible no permite depurar ni comparar versione
 Decision: borrar una seleccion valida es inmediato. La aplicacion conserva las protecciones estructurales y registra el borrado como una transaccion atomica reversible, pero no solicita confirmacion previa.
 
 Razon: un dialogo en cada borrado interrumpe un flujo de edicion intensivo. Cuando la operacion puede deshacerse completamente y los elementos irremplazables estan protegidos, Undo ofrece recuperacion sin convertir cada accion normal en una decision modal.
+
+### D-073: La direccion es estricta salvo para restaurar ciclos
+
+Decision: antes de invocar ELK, el coordinador calcula un orden aciclico. En un DAG conserva todas las aristas. Si detecta ciclos, aplica una aproximacion determinista de feedback arc set, invierte solo esas aristas en el grafo de layout y calcula rangos por el camino mas largo al destino. Tras obtener posiciones, enruta todos los links con sus extremos semanticos originales.
+
+Razon: una flecha invertida en un DAG comunica una dependencia distinta y no puede intercambiarse por compacidad. Un ciclo, en cambio, hace matematicamente imposible que todas las aristas avancen sobre un unico eje; registrar la ruptura temporal hace explicable y comprobable la excepcion inevitable.

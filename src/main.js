@@ -323,6 +323,7 @@ const runVisualTest = async (mainWindow) => {
     "readable-routing",
     "internal-frame-layout",
     "multi-entity-frame-targets",
+    "cycle-breaking",
     "random-sparse-4101-before",
     "random-sparse-4101-after",
     "random-cross-frame-4102-before",
@@ -333,6 +334,7 @@ const runVisualTest = async (mainWindow) => {
     "random-fan-in-4104-after"
   ];
   const evidenceDirectory = path.join(app.getAppPath(), "outputs", "test-evidence", buildInfo.id);
+  await fs.rm(evidenceDirectory, { recursive: true, force: true });
   await fs.mkdir(evidenceDirectory, { recursive: true });
   const results = [];
 

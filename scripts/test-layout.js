@@ -66,6 +66,8 @@ const run = async () => {
     assert.deepEqual(validateComposedGeometry(laidOut), [], `${direction} layout must satisfy composed geometry`);
     assert.equal(treeFor(laidOut).layout.engine, "elk-composed");
     assert.equal(treeFor(laidOut).layout.direction, direction);
+    assert.equal(treeFor(laidOut).layout.quality.directionExceptions, 0, `${direction} DAG links must follow direction`);
+    assert.equal(treeFor(laidOut).layout.quality.cycleBreaks, 0, `${direction} DAG must not break any layout edge`);
     for (const link of treeFor(laidOut).links) {
       const route = treeFor(laidOut).layout.links[link.id].route;
       const source = treeFor(laidOut).layout.nodes[link.sourceNodeId];
@@ -273,7 +275,7 @@ const run = async () => {
   assert(connectedTargetBox.y > firstSourceBox.y, "the target must occupy the next preferred-direction layer");
   assert.equal(
     connectedTree.layout.optimization["frame-three-connected"].candidates,
-    5,
+    9,
     "an internal connected frame must evaluate the layered layout variants"
   );
   assert.deepEqual(validateComposedGeometry(connectedResult), [], "an internally layered container must remain valid");
@@ -325,14 +327,56 @@ const run = async () => {
       position - state.last > 48 ? { count: state.count + 1, last: position } : state,
     { count: 0, last: Number.NEGATIVE_INFINITY }
   ).count;
-  assert(directRoutes.every((route) => route.length === 2), "the optimized complex tree should keep every link straight");
+  assert(directRoutes.filter((route) => route.length === 2).length >= 8, "strict layering should keep most links straight");
   assert.deepEqual(validateComposedGeometry(directResult), [], "straight routes must preserve every geometry invariant");
-  assert.equal(directLayout.quality.crossings, 0, "the optimized complex tree should have no route crossings");
-  assert.equal(directLayout.quality.bends, 0, "the optimized complex tree should not introduce bends");
-  assert.equal(directLayout.quality.directionExceptions, 1, "one secondary link may oppose the preferred direction");
-  assert.equal(directLayerCount, 3, "direction relaxation should avoid an unnecessary fourth layer");
+  assert(directLayout.quality.crossings <= 2, "strict layering should keep route crossings bounded");
+  assert(directLayout.quality.bends <= 6, "strict layering should keep bends bounded");
+  assert.equal(directLayout.quality.directionExceptions, 0, "an acyclic graph must follow the preferred direction");
+  assert.equal(directLayout.quality.cycleBreaks, 0, "an acyclic graph must not break any edge for layout");
+  assert.equal(directLayerCount, 4, "the shortcut must preserve a fourth layer instead of reversing an edge");
   assert.equal(directLayout.optimization[directHost.id].candidates, 9, "the optimizer should compare every deterministic candidate");
   assert(canvasFor(directResult).layout.frames[directHost.id].width < 1800, "the host frame should shrink to its content");
+
+  const cyclic = structuredClone(fixture);
+  const cyclicTree = treeFor(cyclic);
+  const cyclicCanvas = canvasFor(cyclic);
+  const cyclicRoot = frameFor(cyclic, cyclicCanvas.rootFrameId);
+  const cyclicHost = frameFor(cyclic, cyclicTree.hostFrameId);
+  const cyclicNodes = cyclicTree.nodes.slice(0, 3);
+  const cyclicNodeIds = cyclicNodes.map((node) => node.id);
+  cyclicTree.nodes = cyclicNodes;
+  cyclicTree.links = [
+    { id: "cycle-a", sourceNodeId: cyclicNodeIds[0], targetNodeId: cyclicNodeIds[1] },
+    { id: "cycle-b", sourceNodeId: cyclicNodeIds[1], targetNodeId: cyclicNodeIds[2] },
+    { id: "cycle-c", sourceNodeId: cyclicNodeIds[2], targetNodeId: cyclicNodeIds[0] }
+  ];
+  const cyclicLinksBeforeLayout = structuredClone(cyclicTree.links);
+  cyclicTree.layout.direction = "BT";
+  cyclicTree.layout.nodes = Object.fromEntries(
+    Object.entries(cyclicTree.layout.nodes).filter(([id]) => cyclicNodeIds.includes(id))
+  );
+  cyclicTree.layout.links = {};
+  cyclicCanvas.frames = [cyclicRoot, cyclicHost];
+  cyclicRoot.childFrameIds = [cyclicHost.id];
+  cyclicHost.childFrameIds = [];
+  cyclicHost.nodeIds = cyclicNodeIds;
+  cyclicTree.nodes.forEach((node) => {
+    node.frameId = cyclicHost.id;
+  });
+  cyclicCanvas.layout.frames = {
+    [cyclicHost.id]: { x: 60, y: 60, width: 900, height: 700, pinned: false, layoutSource: "manual" }
+  };
+  const cyclicResult = await runComposedLayout(cyclic);
+  const cyclicLayout = treeFor(cyclicResult).layout;
+  assert.deepEqual(treeFor(cyclicResult).links, cyclicLinksBeforeLayout, "cycle breaking must not change semantic links");
+  assert.equal(cyclicLayout.quality.cycleBreaks, 1, "a three-node cycle should require one temporary break");
+  assert.equal(cyclicLayout.quality.directionExceptions, 1, "only the restored cycle edge may oppose the direction");
+  assert.equal(
+    cyclicLayout.optimization[cyclicHost.id].cycleBreakEdgeIds.length,
+    1,
+    "the temporarily reversed layout edge must be recorded"
+  );
+  assert.deepEqual(validateComposedGeometry(cyclicResult), [], "a restored semantic cycle must remain geometrically valid");
 
   const complexResult = await runComposedLayout(complexFixture);
   const complexTree = treeFor(complexResult);

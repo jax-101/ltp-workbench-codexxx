@@ -277,39 +277,96 @@ const segmentsCross = (leftStart, leftEnd, rightStart, rightEnd) => {
   return leftRatio > 0.0001 && leftRatio < 0.9999 && rightRatio > 0.0001 && rightRatio < 0.9999;
 };
 
-const shortestSinkRanks = (itemIds, edges) => {
+const longestSinkRanks = (itemIds, edges) => {
   const outgoing = new Map(itemIds.map((id) => [id, []]));
-  const incoming = new Map(itemIds.map((id) => [id, []]));
+  const incomingCount = new Map(itemIds.map((id) => [id, 0]));
   for (const edge of edges) {
     const source = edge.sources[0];
     const target = edge.targets[0];
     outgoing.get(source)?.push(target);
-    incoming.get(target)?.push(source);
+    if (incomingCount.has(target)) incomingCount.set(target, incomingCount.get(target) + 1);
   }
-  const ranks = new Map();
-  const queue = itemIds.filter((id) => !(outgoing.get(id)?.length)).map((id) => ({ id, rank: 0 }));
+  const itemOrder = new Map(itemIds.map((id, index) => [id, index]));
+  const queue = itemIds.filter((id) => incomingCount.get(id) === 0);
+  const topologicalOrder = [];
+  const sortQueue = () => queue.sort((left, right) => itemOrder.get(left) - itemOrder.get(right));
+  sortQueue();
   while (queue.length) {
-    const current = queue.shift();
-    if ((ranks.get(current.id) ?? Number.POSITIVE_INFINITY) <= current.rank) continue;
-    ranks.set(current.id, current.rank);
-    for (const predecessor of incoming.get(current.id) || []) queue.push({ id: predecessor, rank: current.rank + 1 });
+    const id = queue.shift();
+    topologicalOrder.push(id);
+    for (const target of outgoing.get(id) || []) {
+      incomingCount.set(target, incomingCount.get(target) - 1);
+      if (incomingCount.get(target) === 0) {
+        queue.push(target);
+        sortQueue();
+      }
+    }
+  }
+  if (topologicalOrder.length !== itemIds.length) return new Map();
+  const ranks = new Map();
+  for (const id of topologicalOrder.reverse()) {
+    ranks.set(id, Math.max(0, ...(outgoing.get(id) || []).map((target) => (ranks.get(target) || 0) + 1)));
   }
   return ranks;
 };
 
-const relaxDirectionEdges = (itemIds, edges) => {
-  const ranks = shortestSinkRanks(itemIds, edges);
-  let reversed = 0;
-  const relaxed = edges.map((edge) => {
+const breakCyclesForLayout = (itemIds, edges) => {
+  const itemOrder = new Map(itemIds.map((id, index) => [id, index]));
+  const remaining = new Set(itemIds);
+  const left = [];
+  const right = [];
+  const degrees = (id) => {
+    let incoming = 0;
+    let outgoing = 0;
+    for (const edge of edges) {
+      const source = edge.sources[0];
+      const target = edge.targets[0];
+      if (!remaining.has(source) || !remaining.has(target)) continue;
+      if (source === id) outgoing += 1;
+      if (target === id) incoming += 1;
+    }
+    return { incoming, outgoing };
+  };
+  const byOriginalOrder = (first, second) => itemOrder.get(first) - itemOrder.get(second);
+
+  while (remaining.size) {
+    const sinks = [...remaining].filter((id) => degrees(id).outgoing === 0).sort(byOriginalOrder);
+    if (sinks.length) {
+      for (const id of sinks) {
+        remaining.delete(id);
+        right.unshift(id);
+      }
+      continue;
+    }
+    const sources = [...remaining].filter((id) => degrees(id).incoming === 0).sort(byOriginalOrder);
+    if (sources.length) {
+      for (const id of sources) {
+        remaining.delete(id);
+        left.push(id);
+      }
+      continue;
+    }
+    const pivot = [...remaining].sort((first, second) => {
+      const firstDegrees = degrees(first);
+      const secondDegrees = degrees(second);
+      const scoreDifference =
+        secondDegrees.outgoing - secondDegrees.incoming - (firstDegrees.outgoing - firstDegrees.incoming);
+      return scoreDifference || byOriginalOrder(first, second);
+    })[0];
+    remaining.delete(pivot);
+    left.push(pivot);
+  }
+
+  const order = new Map([...left, ...right].map((id, index) => [id, index]));
+  const reversedEdgeIds = [];
+  const layoutEdges = edges.map((edge) => {
     const source = edge.sources[0];
     const target = edge.targets[0];
-    const sourceRank = ranks.get(source);
-    const targetRank = ranks.get(target);
-    if (!Number.isFinite(sourceRank) || !Number.isFinite(targetRank) || sourceRank > targetRank) return edge;
-    reversed += 1;
+    if (order.get(source) < order.get(target)) return edge;
+    reversedEdgeIds.push(edge.id);
     return { ...edge, sources: [target], targets: [source] };
   });
-  return { edges: relaxed, reversed };
+  return { edges: layoutEdges, reversed: reversedEdgeIds.length, reversedEdgeIds };
 };
 
 const relativeMovement = (children, referenceChildren) => {
@@ -440,9 +497,18 @@ const compareCandidateQuality = (left, right) => {
   return 0;
 };
 
-const selectLayoutCandidate = async (engine, problem, items, edges, direction, currentChildren = null) => {
+const selectLayoutCandidate = async (
+  engine,
+  problem,
+  items,
+  edges,
+  direction,
+  currentChildren = null,
+  maximumDirectionExceptions = Number.POSITIVE_INFINITY
+) => {
   const candidates = await engine.generateCandidates(problem);
   let best = null;
+  let bestFeasible = null;
   for (const generated of candidates) {
     const quality = candidateQuality(items, generated.children, edges, direction, currentChildren);
     const candidate = {
@@ -451,21 +517,28 @@ const selectLayoutCandidate = async (engine, problem, items, edges, direction, c
       config: generated.config
     };
     if (!best || compareCandidateQuality(candidate.quality, best.quality) < 0) best = candidate;
+    if (
+      quality.directionExceptions <= maximumDirectionExceptions &&
+      (!bestFeasible || compareCandidateQuality(candidate.quality, bestFeasible.quality) < 0)
+    ) {
+      bestFeasible = candidate;
+    }
   }
+  best = bestFeasible || best;
   if (!currentChildren?.length) return { ...best, candidates: candidates.length };
 
   const currentQuality = candidateQuality(items, currentChildren, edges, direction, currentChildren);
+  const currentIsFeasible = currentQuality.directionExceptions <= maximumDirectionExceptions;
   const improvement = currentQuality.score
     ? (currentQuality.score - best.quality.score) / currentQuality.score
     : 0;
-  if (improvement < MINIMUM_LAYOUT_IMPROVEMENT) {
+  if (currentIsFeasible && improvement < MINIMUM_LAYOUT_IMPROVEMENT) {
     return {
       laidOut: { children: currentChildren },
       quality: currentQuality,
       config: {
         placement: "CURRENT",
         seed: null,
-        relaxed: false,
         preserved: true,
         improvement: Math.round(improvement * 1000) / 1000,
         baselineScore: currentQuality.score,
@@ -479,6 +552,7 @@ const selectLayoutCandidate = async (engine, problem, items, edges, direction, c
     config: {
       ...best.config,
       preserved: false,
+      forcedByDirection: !currentIsFeasible,
       improvement: Math.round(improvement * 1000) / 1000,
       baselineScore: currentQuality.score,
       selectedScore: best.quality.score
@@ -841,8 +915,9 @@ const runComposedLayout = async (workspace, options = {}) => {
     let preserveCurrentLayout = false;
     if (items.length) {
       graphEdges = collapsedEdges(frameId, links, nodeOwners, frameById);
-      const goalTreeRanks = frame.kind === "diagram" && diagramDefinition?.layering === "distanceToSink"
-        ? shortestSinkRanks(items.map((item) => item.id), graphEdges)
+      const cycleBreak = breakCyclesForLayout(items.map((item) => item.id), graphEdges);
+      const goalTreeRanks = diagramDefinition?.layering === "distanceToSink"
+        ? longestSinkRanks(items.map((item) => item.id), cycleBreak.edges)
         : new Map();
       const maximumGoalTreeRank = goalTreeRanks.size ? Math.max(...goalTreeRanks.values()) : 0;
       const rankPartitions = goalTreeRanks.size === items.length
@@ -860,14 +935,12 @@ const runComposedLayout = async (workspace, options = {}) => {
         currentChildren.length === items.length &&
         !collectionHasOverlaps(currentChildren) &&
         !items.some((item) => item.pinned);
-      const relaxed = relaxDirectionEdges(items.map((item) => item.id), graphEdges);
       const selectedLayout = await selectLayoutCandidate(
         layoutEngine,
         {
           containerId: frameId,
           items,
-          edges: graphEdges,
-          relaxedEdges: relaxed.reversed ? relaxed.edges : null,
+          edges: cycleBreak.edges,
           direction,
           spacingNodeNode,
           spacingLayer,
@@ -877,15 +950,19 @@ const runComposedLayout = async (workspace, options = {}) => {
         items,
         graphEdges,
         direction,
-        canCompareCurrent ? currentChildren : null
+        canCompareCurrent ? currentChildren : null,
+        cycleBreak.reversed
       );
       elkChildren = selectedLayout.laidOut.children || [];
       preserveCurrentLayout = Boolean(selectedLayout.config?.preserved);
-      if (optimize) {
+      if (optimize || cycleBreak.reversed) {
         optimization[frameId] = {
           strategy: "weighted-stable-layered",
           minimumImprovement: MINIMUM_LAYOUT_IMPROVEMENT,
           candidates: selectedLayout.candidates,
+          cycleBreakingStrategy: diagramDefinition?.cycleBreaking?.strategy || "greedyFeedbackArc",
+          cycleBreaks: cycleBreak.reversed,
+          cycleBreakEdgeIds: cycleBreak.reversedEdgeIds,
           ...selectedLayout.config,
           ...selectedLayout.quality
         };
@@ -1037,13 +1114,18 @@ const runComposedLayout = async (workspace, options = {}) => {
             : previous.labelPosition || { x: 0, y: 0 }
       };
     }
+    const quality = routedLayoutQuality(visibleProjectedLinks, endpointLayouts, nextLinkLayout, direction);
+    quality.cycleBreaks = Object.values(result.optimization || {}).reduce(
+      (sum, entry) => sum + (entry.cycleBreaks || 0),
+      0
+    );
     tree.layout = {
       ...(tree.layout || {}),
       engine: `${layoutEngine.id}-composed`,
       direction,
       lastRunAt: new Date().toISOString(),
       optimization: result.optimization,
-      quality: routedLayoutQuality(visibleProjectedLinks, endpointLayouts, nextLinkLayout, direction),
+      quality,
       nodes: nextNodeLayout,
       links: nextLinkLayout
     };

@@ -1473,7 +1473,7 @@ const runAutoLayout = async (options = {}) => {
     } else {
       setStatus(
         quality
-          ? `Layout optimized: ${quality.crossings} crossings, ${quality.bends} bends, ${quality.directionExceptions} direction exceptions`
+          ? `Layout optimized: ${quality.crossings} crossings, ${quality.bends} bends, ${quality.directionExceptions} direction exceptions, ${quality.cycleBreaks || 0} cycle breaks`
           : "Composed layout updated"
       );
     }
@@ -3508,7 +3508,7 @@ window.__ltpVisualTestStep = async (step) => {
     return result(
       `Random ${scenarioId} layout after ELK (seed ${seed})`,
       document.querySelectorAll(".tree-node").length === randomTree.nodes.length,
-      `crossings=${quality.crossings}, bends=${quality.bends}, straight=${quality.straightRoutes}, route length=${quality.length}, vertical frames=${verticalFrames.length}, maximum frame ratio=${maximumAspectRatio.toFixed(2)}, geometry issues=${issues.length} (${issueSummary}).`,
+      `crossings=${quality.crossings}, bends=${quality.bends}, straight=${quality.straightRoutes}, direction exceptions=${quality.directionExceptions}, cycle breaks=${quality.cycleBreaks || 0}, route length=${quality.length}, vertical frames=${verticalFrames.length}, maximum frame ratio=${maximumAspectRatio.toFixed(2)}, geometry issues=${issues.length} (${issueSummary}).`,
       issues.length || verticalFrames.length || maximumAspectRatio > 2.5 ? "needs work" : "clean"
     );
   }
@@ -3524,7 +3524,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.3" && hostVisible && rootHidden, "Build 3C.3 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.4" && hostVisible && rootHidden, "Build 3C.4 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3799,7 +3799,7 @@ window.__ltpVisualTestStep = async (step) => {
 
   if (step === "composed-layout-undo") {
     await pressKey("z", { metaKey: true });
-    const completed = await waitFor(() => statusText.startsWith("Undid: Apply layout") && !layoutAnimating, 2500);
+    const completed = await waitFor(() => statusText.startsWith("Undid: Apply layout") && !layoutAnimating, 4500);
     const previous = visualTestState.composedPreLayout;
     const restored =
       JSON.stringify(activeTree.layout.nodes) === JSON.stringify(previous.nodes) &&
@@ -3810,7 +3810,7 @@ window.__ltpVisualTestStep = async (step) => {
 
   if (step === "composed-layout-redo") {
     await pressKey("z", { metaKey: true, shiftKey: true });
-    const completed = await waitFor(() => statusText.startsWith("Redid: Apply layout") && !layoutAnimating, 2500);
+    const completed = await waitFor(() => statusText.startsWith("Redid: Apply layout") && !layoutAnimating, 4500);
     const issues = await window.ltpPrototype.validateLayout(workspaceData);
     fitView();
     return result("Redo composed layout with transition", completed && issues.length === 0 && layoutAnimationFrameCount > 2, "Redo reapplies valid composed geometry and animates the movement.");
@@ -4051,6 +4051,52 @@ window.__ltpVisualTestStep = async (step) => {
       "Choose a destination after selecting entities with M",
       Boolean(seedFrame) && nodeIds.length === 2 && onlyEntitiesSelected && mode === "frame-target" && seedFrameAvailable && onlyFrameTargets,
       `Seed frame exists=${Boolean(seedFrame)}; selected nodes=${nodeIds.length}; only entities selected=${onlyEntitiesSelected}; original active frame available=${seedFrameAvailable}; frame targets only=${onlyFrameTargets}.`
+    );
+  }
+
+  if (step === "cycle-breaking") {
+    cancelContext();
+    const cycleFrame = canvas().frames.find((frame) => frame.name === "Three entity frame");
+    const nodeIds = tree()
+      .nodes.filter((node) => node.frameId === cycleFrame?.id)
+      .slice(0, 3)
+      .map((node) => node.id);
+    const linkIds = [];
+    if (nodeIds.length === 3) {
+      for (const [sourceNodeId, targetNodeId] of [
+        [nodeIds[0], nodeIds[1]],
+        [nodeIds[1], nodeIds[2]],
+        [nodeIds[2], nodeIds[0]]
+      ]) {
+        linkIds.push(
+          await createLink(sourceNodeId, targetNodeId, {
+            selectCreated: false,
+            persistAfter: false,
+            renderAfter: false
+          })
+        );
+      }
+      await persist("Create visual cycle fixture");
+      await runAutoLayout();
+    }
+    const semanticCyclePreserved = linkIds.every((linkId, index) => {
+      const link = linkById()[linkId];
+      return link?.sourceNodeId === nodeIds[index] && link?.targetNodeId === nodeIds[(index + 1) % nodeIds.length];
+    });
+    const cycleOptimization = tree().layout.optimization?.[cycleFrame?.id];
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    replaceSelection(cycleFrame?.id);
+    render();
+    fitView();
+    return result(
+      "Break a cycle only for layered placement",
+      nodeIds.length === 3 &&
+        semanticCyclePreserved &&
+        cycleOptimization?.cycleBreaks === 1 &&
+        tree().layout.quality?.cycleBreaks === 1 &&
+        tree().layout.quality?.directionExceptions === 1 &&
+        issues.length === 0,
+      `Nodes=${nodeIds.length}; semantic links preserved=${semanticCyclePreserved}; cycle breaks=${tree().layout.quality?.cycleBreaks}; direction exceptions=${tree().layout.quality?.directionExceptions}; geometry issues=${issues.length}.`
     );
   }
 

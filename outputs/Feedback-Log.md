@@ -430,7 +430,7 @@ Criterios de aceptacion:
 
 Feedback: despues de aplicar Layout, las flechas no deberian cruzarse si es posible ni pasar por debajo de las entidades.
 
-Estado: refinado en los builds `3B.1` y `3B.2`, pendiente de validacion manual. Layout intenta primero una recta; si atraviesa una entidad o cruza otra ruta de forma evitable, calcula un desvio ortogonal. En diagramas complejos ejecuta nueve variantes deterministas de ELK y selecciona por cruces, obstaculos, excepciones de direccion, longitud y area. La direccion es preferente: puede aceptar una excepcion si evita una capa y desvios mucho peores. La misma regla de puertos se mantiene durante el arrastre manual.
+Estado: refinado en los builds `3B.1`, `3B.2` y `3C.4`, pendiente de validacion manual. Layout intenta primero una recta; si atraviesa una entidad o cruza otra ruta de forma evitable, calcula un desvio ortogonal. En diagramas complejos ejecuta nueve variantes deterministas de ELK y selecciona por cruces, obstaculos, longitud y area. Desde `3C.4`, la direccion es estricta para grafos aciclicos y las excepciones solo pueden proceder de enlaces restaurados tras romper temporalmente un ciclo. La misma regla de puertos se mantiene durante el arrastre manual.
 
 Criterios de aceptacion:
 
@@ -442,7 +442,7 @@ Criterios de aceptacion:
 - Cuando un cruce sea inevitable, se mantiene legible y estable.
 - Una conexion recta se conserva cuando no invade entidades ni introduce cruces.
 - Los lados de salida y entrada coinciden con la direccion preferente del diagrama.
-- Las excepciones direccionales quedan cuantificadas y solo se aceptan tras mejorar cruces y obstaculos.
+- Las excepciones direccionales quedan cuantificadas y solo se aceptan cuando corresponden a rupturas temporales de ciclos detectados.
 
 ### F-044: Listado completo de atajos en el panel izquierdo
 
@@ -788,3 +788,20 @@ Criterios de aceptacion:
 - Si el usuario elige otro frame como primer elemento durante `M`, la seleccion de frames sigue siendo intencional y se conserva.
 - Un frame seleccionado explicitamente y sus descendientes continuan excluidos como destinos para impedir ciclos.
 - La barra de estado y el cierre de seleccion reflejan solamente las raices que realmente se moveran.
+
+### F-067: Capas estrictas y ruptura explicita de ciclos
+
+Feedback: en direccion `Bottom to Top`, una flecha que llegaba al nodo `MIRARLO` apuntaba hacia abajo aunque el grafo no tenia bucles. Si no hay ciclos, todas las relaciones deben seguir la direccion preferente. Si existe un ciclo, Layout puede romper temporalmente la relacion mas adecuada, colocar el grafo y restaurarla despues.
+
+Estado: implementado en `3C.4`. Se ha eliminado la variante relajada que invertia atajos aciclicos para ahorrar capas. El registro de Goal Tree declara ahora una estrategia `greedyFeedbackArc`; el coordinador obtiene un DAG de layout, calcula rangos por el camino mas largo al destino y conserva intactos los links semanticos.
+
+Criterios de aceptacion:
+
+- Un DAG tiene `0 directionExceptions` y `0 cycleBreaks` en cualquiera de las cuatro direcciones.
+- Cada enlace aciclico conecta capas estrictamente consecutivas o separadas en la direccion preferente.
+- Los atajos pueden crear capas adicionales, pero nunca una flecha invertida.
+- Un ciclo se transforma temporalmente en DAG mediante un conjunto determinista y reducido de aristas de retorno.
+- Las aristas rotas solo cambian para la entrada de ELK; origen, destino e identidad de los links persistidos no se modifican.
+- Tras restaurar el ciclo, las unicas excepciones direccionales permitidas corresponden a `cycleBreaks` registrados.
+- El umbral de estabilidad del 15% solo compara layouts factibles; no conserva una disposicion aciclica con flechas invertidas.
+- Frames anidados aplican la misma regla dentro de cada nivel jerarquico.
