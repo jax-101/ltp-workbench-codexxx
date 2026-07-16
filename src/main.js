@@ -322,6 +322,7 @@ const runVisualTest = async (mainWindow) => {
     "multi-connect",
     "readable-routing",
     "internal-frame-layout",
+    "multi-entity-frame-targets",
     "random-sparse-4101-before",
     "random-sparse-4101-after",
     "random-cross-frame-4102-before",

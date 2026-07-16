@@ -552,9 +552,19 @@ Aprendizaje: en optimizacion jerarquica, una posicion anterior no es automaticam
 
 Aplicacion futura: recalcular cajas de abajo arriba, descartar candidatos infactibles y aplicar estabilidad solo entre soluciones que cumplen contencion, exclusion y ausencia de solapamientos.
 
+### L-059: El contexto activo y la seleccion explicita son estados distintos
+
+Fecha: 2026-07-16
+
+Evidencia: al entrar en seleccion multiple desde un frame activo, ese frame permanecia como raiz explicita mientras el usuario elegia entidades. `Cmd+F` lo excluia correctamente para evitar un ciclo, pero la interfaz solo hacia evidente la seleccion de las entidades y el frame parecia desaparecer sin motivo de la lista de destinos.
+
+Aprendizaje: el lugar donde se crea o edita no debe confundirse con el conjunto sobre el que actuara el siguiente comando. Cuando ambos estados comparten representacion, una preseleccion conveniente puede convertirse en una restriccion invisible y producir un comportamiento tecnicamente coherente pero incomprensible.
+
+Aplicacion futura: modelar por separado contexto, foco, seleccion provisional y seleccion confirmada; mostrar el alcance efectivo de cada comando; y probar transiciones en las que una seleccion comienza desde un contenedor activo.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-059`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-060`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

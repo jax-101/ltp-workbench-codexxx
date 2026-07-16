@@ -6,6 +6,7 @@ let selectionRootIds = new Set();
 let selectionIds = new Set();
 let connectionSourceIds = new Set();
 let multiSelectionMode = false;
+let multiSelectionFrameSeedIds = new Set();
 let activeFrameId = null;
 let mode = "navigation";
 let connectionSourceId = null;
@@ -437,6 +438,11 @@ const selectElement = async (id, options = {}) => {
   }
 
   if (multiSelectionMode) {
+    if (nextType !== "frame" && multiSelectionFrameSeedIds.size) {
+      for (const frameId of multiSelectionFrameSeedIds) selectionRootIds.delete(frameId);
+      rebuildSelection();
+    }
+    multiSelectionFrameSeedIds.clear();
     if (nextType === "frame") activeFrameId = id;
     toggleSelectionRoot(id);
     hintsVisible = true;
@@ -1549,12 +1555,28 @@ const toggleMultiSelect = () => {
   hintBuffer = "";
 
   if (multiSelectionMode) {
+    const explicitFrameIds = [...selectionRootIds].filter((id) => Boolean(frameById()[id]));
+    const explicitNonFrameIds = [...selectionRootIds].filter((id) => !frameById()[id]);
+    const staleActiveFrameSelection =
+      selectedElementType !== "frame" &&
+      explicitNonFrameIds.length > 0 &&
+      explicitFrameIds.length === 1 &&
+      explicitFrameIds[0] === activeFrameId;
+    if (staleActiveFrameSelection) {
+      selectionRootIds.delete(activeFrameId);
+      rebuildSelection();
+    }
+    multiSelectionFrameSeedIds =
+      selectionRootIds.size > 0 && [...selectionRootIds].every((id) => Boolean(frameById()[id]))
+        ? new Set(selectionRootIds)
+        : new Set();
     showHints();
     setStatus(`${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected. Choose more, then press M to finish.`);
     return;
   }
 
   hintsVisible = false;
+  multiSelectionFrameSeedIds.clear();
   setStatus(`Multi-select finished: ${selectionRootIds.size} element${selectionRootIds.size === 1 ? "" : "s"} selected`);
   render();
 };
@@ -1566,6 +1588,7 @@ const beginFrameTargetMode = () => {
     return;
   }
   multiSelectionMode = false;
+  multiSelectionFrameSeedIds.clear();
   connectionSourceId = null;
   connectionSourceIds.clear();
   hintsVisible = false;
@@ -2049,6 +2072,7 @@ const cancelContext = (options = {}) => {
     mode = "navigation";
     connectionSourceId = null;
     multiSelectionMode = false;
+    multiSelectionFrameSeedIds.clear();
     connectionSourceIds.clear();
     hintsVisible = false;
     setStatus("Current mode cancelled");
@@ -2871,6 +2895,25 @@ window.__ltpSmokeTest = async () => {
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true }));
   const multiSelectToggles = multiSelectOpens && !multiSelectionMode && !hintsVisible;
 
+  activeFrameId = selectedTestFrame.id;
+  replaceSelection(selectedTestFrame.id);
+  toggleMultiSelect();
+  await selectElement(activeTree.nodes[0].id);
+  await selectElement(activeTree.nodes[1].id);
+  toggleMultiSelect();
+  const multiSelectionDropsContextFrame =
+    selectionRootIds.size === 2 &&
+    selectionRootIds.has(activeTree.nodes[0].id) &&
+    selectionRootIds.has(activeTree.nodes[1].id) &&
+    !selectionRootIds.has(selectedTestFrame.id);
+  beginFrameTargetMode();
+  const formerContextFrameIsAvailableAsTarget =
+    mode === "frame-target" && hintEntries.some((entry) => entry.id === selectedTestFrame.id);
+  cancelContext();
+  activeFrameId = initialActiveFrameId;
+  replaceSelection(activeTree.nodes[0].id);
+  render();
+
   panelState.leftOpen = true;
   render();
   const shortcutDetails = document.querySelector(".shortcut-details");
@@ -3250,6 +3293,8 @@ window.__ltpSmokeTest = async () => {
       keyboardHintsToggle &&
       hintButtonToggles &&
       multiSelectToggles &&
+      multiSelectionDropsContextFrame &&
+      formerContextFrameIsAvailableAsTarget &&
       allShortcutsListed &&
       commandAndControlBindingsStayDistinct &&
       cmdXPreservesNativeCut &&
@@ -3318,6 +3363,8 @@ window.__ltpSmokeTest = async () => {
     keyboardHintsToggle,
     hintButtonToggles,
     multiSelectToggles,
+    multiSelectionDropsContextFrame,
+    formerContextFrameIsAvailableAsTarget,
     allShortcutsListed,
     commandAndControlBindingsStayDistinct,
     cmdXPreservesNativeCut,
@@ -3477,7 +3524,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.2" && hostVisible && rootHidden, "Build 3C.2 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.3" && hostVisible && rootHidden, "Build 3C.3 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3977,6 +4024,33 @@ window.__ltpVisualTestStep = async (step) => {
       "Optimize three independent entities inside a frame",
       distinctColumns > 1 && distinctRows <= 2 && contained && issues.length === 0,
       `Columns=${distinctColumns}; rows=${distinctRows}; frame=${frameBox.width}x${frameBox.height}; contained=${contained}; geometry issues=${issues.length}.`
+    );
+  }
+
+  if (step === "multi-entity-frame-targets") {
+    const seedFrame =
+      frameById()[activeFrameId] ||
+      canvas().frames.find((frame) => frame.id !== rootFrameId() && frame.id !== tree().hostFrameId);
+    const nodeIds = tree()
+      .nodes.filter((node) => node.frameId !== seedFrame?.id)
+      .slice(0, 2)
+      .map((node) => node.id);
+    replaceSelection(seedFrame?.id);
+    multiSelectionMode = false;
+    toggleMultiSelect();
+    for (const nodeId of nodeIds) await selectElement(nodeId);
+    toggleMultiSelect();
+    const onlyEntitiesSelected =
+      nodeIds.every((nodeId) => selectionRootIds.has(nodeId)) &&
+      !selectionRootIds.has(seedFrame?.id) &&
+      [...selectionRootIds].every((id) => Boolean(nodeById()[id]));
+    await pressKey("f", { metaKey: true });
+    const seedFrameAvailable = hintEntries.some((entry) => entry.id === seedFrame?.id);
+    const onlyFrameTargets = hintEntries.length > 0 && hintEntries.every((entry) => entry.type === "frame");
+    return result(
+      "Choose a destination after selecting entities with M",
+      Boolean(seedFrame) && nodeIds.length === 2 && onlyEntitiesSelected && mode === "frame-target" && seedFrameAvailable && onlyFrameTargets,
+      `Seed frame exists=${Boolean(seedFrame)}; selected nodes=${nodeIds.length}; only entities selected=${onlyEntitiesSelected}; original active frame available=${seedFrameAvailable}; frame targets only=${onlyFrameTargets}.`
     );
   }
 

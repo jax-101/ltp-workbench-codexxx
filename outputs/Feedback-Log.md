@@ -773,3 +773,18 @@ Criterios de aceptacion:
 - Dentro de inputs y textareas, el atajo conserva la accion nativa de cortar texto.
 - `Cmd+-` continua reservado al zoom y `-` permanece como alternativa sin modificador.
 - La ayuda de teclado muestra ambos bindings.
+
+### F-066: El frame de contexto no debe quedar ocultamente seleccionado por M
+
+Feedback: tras seleccionar varias entidades con `M` y pulsar `Cmd+F`, uno de los frames visibles no recibia letra. Solo aparecian Root, Goal Tree y otro frame.
+
+Estado: corregido en `3C.3`. El frame ausente seguia siendo una raiz de seleccion explicita heredada del contexto activo. Por ello se excluia correctamente como destino para impedir que un frame entrase dentro de si mismo, aunque la interfaz parecia mostrar solo las entidades elegidas.
+
+Criterios de aceptacion:
+
+- Si `M` empieza con un frame seleccionado y la primera eleccion es una entidad, ese frame se interpreta como contexto provisional y deja de ser una raiz de seleccion.
+- Las siguientes entidades se acumulan sin volver a incorporar el frame activo.
+- `Cmd+F` muestra Root y todos los frames validos, incluido el antiguo frame de contexto.
+- Si el usuario elige otro frame como primer elemento durante `M`, la seleccion de frames sigue siendo intencional y se conserva.
+- Un frame seleccionado explicitamente y sus descendientes continuan excluidos como destinos para impedir ciclos.
+- La barra de estado y el cierre de seleccion reflejan solamente las raices que realmente se moveran.

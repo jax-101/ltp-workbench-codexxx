@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.2`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.3`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -24,11 +24,11 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta minimizacion de frames, layout interno, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo y conexion, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 35 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
+El comando abre un workspace aislado, ejecuta minimizacion de frames, layout interno, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo y conexion, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 36 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
 
 Las capturas `03` a `06` muestran minimizar, Undo, Redo y expandir. La captura `26-readable-routing.png` debe mostrar 18 entidades, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
 
-La captura `27-internal-frame-layout.png` comprueba que tres entidades independientes forman una cuadricula compacta. Las capturas `28` a `35` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
+La captura `27-internal-frame-layout.png` comprueba que tres entidades independientes forman una cuadricula compacta. La captura `28-multi-entity-frame-targets.png` comprueba que un frame usado inicialmente como contexto reaparece como destino tras seleccionar dos entidades con `M`. Las capturas `29` a `36` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
 
 ```bash
 npm run test:layout-random
@@ -327,6 +327,21 @@ Resultado esperado: minimizar cambia solo la proyeccion visual, no el contenido 
 8. Repite Layout y comprueba que el resultado es estable.
 
 Resultado esperado: cada frame optimiza primero su contenido. Sin relaciones usa una cuadricula compacta; con relaciones usa las capas de ELK y despues participa como una caja completa en el layout del padre.
+
+## Prueba 25: elegir frame de destino despues de M
+
+1. Selecciona un frame que contenga o pueda contener entidades.
+2. Pulsa `M`.
+3. Elige dos entidades mediante sus letras.
+4. Pulsa `M` de nuevo para cerrar la seleccion multiple.
+5. Comprueba que la barra indica `Selected: 2`, sin contar el frame inicial.
+6. Pulsa `Cmd+F`.
+7. Comprueba que Root, Goal Tree y todos los frames validos tienen una letra, incluido el frame seleccionado en el paso 1.
+8. Cancela con `Ctrl+G` sin mover las entidades.
+9. Repite la operacion seleccionando explicitamente un frame como parte de la seleccion multiple.
+10. Comprueba que ese frame y sus descendientes no aparecen como destino, evitando un ciclo.
+
+Resultado esperado: el frame activo sirve como contexto provisional al elegir entidades, pero no se mueve con ellas ni desaparece de los destinos. Los frames elegidos explicitamente siguen sujetos a las protecciones de jerarquia.
 
 ## Registro de resultados
 

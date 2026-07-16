@@ -408,6 +408,23 @@ Incluye:
 - Los campos de texto mantienen el comportamiento nativo de cortar.
 - La regresion visual de minimizar y expandir usa el nuevo atajo principal.
 
+### Build 3C.3: destinos de frame tras seleccion multiple
+
+Estado: implementado y validado automaticamente y visualmente.
+
+Incluye:
+
+- Separacion entre el frame activo usado como contexto y las raices seleccionadas para mover.
+- Eliminacion del frame provisional cuando `M` comienza a acumular entidades.
+- Conservacion de la proteccion contra mover un frame dentro de si mismo o de sus descendientes.
+- Regresion funcional del estado ambiguo y captura visual con todos los destinos validos etiquetados.
+
+Evidencia:
+
+- Smoke test con dos entidades seleccionadas y el antiguo frame de contexto disponible como destino.
+- Bateria visual `3C.3` con 36 escenarios en estado `PASS`.
+- Captura `28-multi-entity-frame-targets.png`: Root, Goal Tree y el frame de contexto muestran hints `A`, `B` y `C`.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:
