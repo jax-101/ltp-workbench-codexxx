@@ -621,6 +621,30 @@ Criterios de aceptacion:
 - Goal Tree puede exportarse, volver a importarse y ejecutarse sin depender de una definicion hardcodeada.
 - El assessment detallado queda en `outputs/Diagram-Architecture-Assessment.md`.
 
+### 3C.13.1: gates de cierre 5-hats
+
+Estado: revision completada; gates pendientes de ejecucion.
+
+Antes de estabilizar el schema publico se cierran estos contratos:
+
+- Glosario semantico ejecutable para necesidad, suficiencia, causas `OR`,
+  junction `AND`, conflicto, assumptions y ruptura temporal de ciclos.
+- Fixtures-oraculo de Goal Tree, CRT, EC y FRT con verbalizaciones, errores duros
+  y advertencias metodologicas esperadas.
+- Separacion explicita entre definicion, instancia semantica, layout, view state
+  y estado efimero.
+- Migracion aditiva y reversible desde `0.2`, con corpus de workspaces reales.
+- Semantica atomica de seleccion, borrar, copiar/pegar y Undo para relaciones
+  n-arias y junctions derivadas.
+- Politica de version, serializacion canonica, hash, migradores y modo rescate.
+- Threat model del loader: sin codigo arbitrario, rutas confinadas, schema y
+  limites de tamano, profundidad y complejidad.
+- Presupuestos medibles de apertura, validacion, layout y preview.
+
+Gate: el contrato permanece interno hasta que Goal Tree conserve paridad, CRT
+funcione de extremo a extremo sin ramas de dominio en operaciones comunes y un
+spike de EC no obligue a cambiar la forma base del kernel.
+
 ### 3C.14: kernel semantico y prueba vertical CRT
 
 Estado: planificado despues de 3C.13 y antes de copiar/pegar subgrafos.
@@ -636,9 +660,18 @@ Incluye:
 
 Gate: no se inicia la implementacion completa de EC/FRT hasta que Goal Tree y CRT compartan el mismo kernel sin ramas especificas en las operaciones comunes.
 
+Subgates:
+
+- `3C.14a`: kernel interno y migracion aditiva con paridad de Goal Tree.
+- `3C.14b`: CRT vertical en core, CLI, renderer, teclado y layout.
+- `3C.14c`: spike de EC para validar topologia, roles y assumptions antes de
+  publicar el formato. Si exige cambiar el kernel, se repiten las pruebas de
+  Goal Tree y CRT.
+
 ### 3C.15: formato de definicion y herramientas headless
 
-Estado: planificado despues del kernel y antes del Diagram Studio visual.
+Estado: planificado despues de la paridad Goal Tree, la vertical CRT, el spike
+EC y las operaciones colectivas n-arias; antes del Diagram Studio visual.
 
 Incluye:
 
@@ -648,6 +681,10 @@ Incluye:
 - DSL declarativo sin JavaScript arbitrario.
 - CLI para crear, validar, inspeccionar, probar y empaquetar definiciones.
 - Fixture minimo creado sin editar el codigo fuente.
+- Serializacion canonica, versiones inmutables y migradores versionados.
+- Apertura read-only de rescate cuando una definicion falta o es incompatible.
+- Limites de recursos, confinamiento de rutas y diagnosticos seguros para
+  paquetes importados.
 
 Criterios de aceptacion:
 
@@ -656,6 +693,10 @@ Criterios de aceptacion:
 - Una definicion invalida produce errores localizados y no corrompe el workspace.
 - Cambiar una definicion publicada crea una nueva version; las instancias existentes siguen fijadas a la anterior.
 - CLI y aplicacion producen el mismo resultado de validacion y compilacion.
+- El hash de una definicion es reproducible entre CLI y aplicacion.
+- Una instancia puede previsualizar, aplicar y revertir una migracion de
+  definicion sin perder datos.
+- Un paquete invalido no impide abrir el workspace en modo seguro.
 
 ## Iteracion 3C: operaciones sobre selecciones
 
@@ -675,6 +716,8 @@ Criterios de aceptacion:
 - Cambiar tipos respeta la definicion y restricciones del diagrama.
 - Ningun atajo interfiere con la edicion de texto.
 - Una configuracion invalida informa de colisiones y conserva un keymap recuperable.
+- Una seleccion parcial de una relacion n-aria tiene un cierre documentado y el
+  mismo resultado en UI, CLI, copiar, borrar y Undo.
 
 ## Iteracion 3D: frames jerarquicos
 
@@ -738,9 +781,18 @@ Incluye:
 - Preview vivo sobre fixtures y diagnostico de errores o capacidades ausentes.
 - Biblioteca de definiciones oficiales, personales y del workspace.
 - Implementacion de paquetes completos sobre el kernel y formato entregados en 3C.14/3C.15.
-- CRT como primera prueba vertical; EC y FRT como siguiente flujo trazable.
+- FRT como siguiente paquete oficial y flujo trazable despues de las verticales
+  Goal Tree, CRT y EC usadas para estabilizar el formato.
 - PrT y TrT como validacion de condicion necesaria y pasos compuestos.
 - Personalizacion de combinaciones de teclas sobre el registro interno de comandos.
+
+Gate de entrada:
+
+- Goal Tree, CRT y EC se cargan por el mismo contrato sin codigo privilegiado.
+- El formato ha sobrevivido al menos una migracion de definicion ida/vuelta.
+- Las operaciones colectivas, Undo/Redo y CLI cubren relaciones n-arias.
+- Existen diagnosticos, limites de recursos y modo rescate para definiciones
+  invalidas o ausentes.
 
 Criterios de aceptacion:
 
@@ -757,4 +809,7 @@ Criterios de aceptacion:
 - Seleccion general -> cierre de frame -> copiar/borrar/cambiar tipo.
 - Frame activo -> raiz ilimitada -> insercion incremental -> layout compuesto.
 - Contencion de frames -> vista enfocada -> colapso -> rutas externas.
-- Assessment multi-diagrama -> kernel semantico -> formato declarativo -> operaciones colectivas -> CRT vertical -> Diagram Studio -> EC/FRT -> PrT/TrT.
+- Assessment multi-diagrama -> fixtures-oraculo -> kernel interno y migracion
+  aditiva -> paridad Goal Tree -> CRT vertical -> spike EC -> operaciones
+  colectivas n-arias -> formato declarativo y CLI -> FRT y trazabilidad ->
+  Diagram Studio -> PrT/TrT.

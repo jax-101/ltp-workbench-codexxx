@@ -692,9 +692,28 @@ Aprendizaje: la mejor prueba de una arquitectura de extensiones es que el propio
 
 Aplicacion futura: dogfood del formato desde la primera migracion; fijar versiones por instancia; compartir compilador entre UI y CLI; evitar codigo arbitrario en datos; y definir explicitamente la frontera entre capacidades componibles y nuevas primitives que requieren codigo de confianza.
 
+### L-073: Un contrato extensible se estabiliza despues de sus contraejemplos
+
+Fecha: 2026-07-16
+
+Evidencia: la arquitectura propuesta podia describir Goal Tree y anticipaba
+relaciones n-arias, pero CRT introduce suficiencia y junctions, mientras EC
+fuerza topologia canonica, conflicto y assumptions con cardinalidades distintas.
+Definir el formato publico antes de ejecutar esos casos dejaba decisiones
+semanticas importantes escondidas como enums aparentemente estables.
+
+Aprendizaje: una extension API no se valida con el caso del que fue extraida.
+Necesita al menos un segundo caso estructuralmente distinto y un contraejemplo
+que tensione sus limites antes de prometer compatibilidad.
+
+Aplicacion futura: mantener el contrato interno; congelar fixtures-oraculo;
+implementar verticales completas; definir criterios que invaliden la hipotesis;
+y publicar el formato solo cuando varias extensiones reales funcionen sin ramas
+privilegiadas ni cambios en las primitivas base.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-073`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-074`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

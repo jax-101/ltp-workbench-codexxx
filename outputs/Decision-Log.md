@@ -514,3 +514,17 @@ Razon: los diagramas alternan causa suficiente y condicion necesaria, admiten op
 Decision: Goal Tree, CRT, FRT, EC, PrT y TrT se entregaran como paquetes declarativos versionados. El runtime y la CLI los cargaran con el mismo compilador que las definiciones creadas o bifurcadas por el usuario. El futuro Diagram Studio editara esos paquetes, no codigo fuente ni un modelo paralelo.
 
 Razon: hardcodear los diagramas oficiales y ofrecer extensibilidad solo para casos secundarios crea dos productos y dos niveles de capacidad. Una unica ruta de carga obliga a que el contrato sea suficiente, comprobable y portable. Prohibir JavaScript arbitrario mantiene seguridad, determinismo y compatibilidad headless.
+
+### D-084: El formato publico se gana mediante verticales semanticas
+
+Decision: `diagram-definition` permanecera como contrato interno hasta demostrar
+paridad de Goal Tree, una implementacion vertical de CRT y un spike de EC sobre
+el mismo kernel. El cambio de schema sera aditivo y reversible. Las operaciones
+colectivas sobre relaciones n-arias se cerraran antes de congelar la version
+publica, y Diagram Studio no comenzara hasta superar los gates de migracion,
+seguridad y portabilidad.
+
+Razon: una abstraccion probada solo con Goal Tree puede parecer generica y aun
+ocultar supuestos binarios, jerarquicos o visuales. Publicarla o construir un
+editor sobre ella demasiado pronto convierte cada descubrimiento metodologico
+posterior en una ruptura de compatibilidad.
