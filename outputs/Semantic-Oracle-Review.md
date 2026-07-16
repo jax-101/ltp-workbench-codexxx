@@ -67,34 +67,58 @@ Validar:
 
 ```mermaid
 flowchart RL
-  flow["NEED: Protect system flow"] --> objective["OBJECTIVE: Operate profitably and reliably"]
-  cost["NEED: Control unit cost"] --> objective
-  small["WANT: Produce small batches"] --> flow
-  large["WANT: Produce large batches"] --> cost
-  small -. "CONFLICT" .- large
-  injection["INJECTION: Use buffer-based replenishment"] -. "challenges assumption" .-> large
+  d["D - WANT: Produce small batches"] --> b["B - NEED: Protect system flow"] --> a["A - OBJECTIVE: Operate profitably and reliably"]
+  dp["D' - WANT: Produce large batches"] --> c["C - NEED: Control operating cost"] --> a
+  d <-. "CONFLICT" .-> dp
 ```
+
+La posicion canonica es parte del oraculo, no una preferencia cosmetica:
+
+| Fila | Columna A | Columna needs | Columna wants |
+| --- | --- | --- | --- |
+| Rama superior | `A` compartido | `B` | `D` |
+| Rama inferior | `A` compartido | `C` | `D'` |
+
+Las dos ramas permanecen paralelas: `D -> B -> A` y `D' -> C -> A`. `B` debe
+quedar alineado con `D`; `C`, con `D'`. El conflicto solo une `D` y `D'`.
 
 Lecturas clave:
 
-- Ambos needs son necesarios para el objetivo.
-- Cada want es percibido como necesario para su need.
+- `B` y `C` son needs necesarios para `A`; no estan en conflicto.
+- `D` es el want percibido como necesario para `B` y `D'` para `C`.
 - `CONFLICT` no es `XOR`: puede proceder de una restriccion contextual.
-- La injection desafia la assumption de que solo large batches controlan coste.
+- La injection desafia una assumption concreta; no apunta genericamente al want.
 
-Assumptions oraculo:
+Assumptions oraculo: hay tres para cada uno de los cinco break points.
 
-- Protecting flow es indispensable para el objetivo.
-- Controlling unit cost es indispensable para el objetivo.
-- Solo small batches pueden proteger flow.
-- Solo large batches pueden controlar unit cost.
-- El recurso no puede producir small y large batches al mismo tiempo.
+- Flechas rectas `B-A`, `C-A`, `D-B` y `D'-C`: se formulan leyendo "in order
+  to OUTPUT, we must have INPUT because...". La assumption debe explicar la
+  existencia de esa necesidad, no repetir ninguno de los dos statements.
+- Conflicto `D-D'`: se formula "D and D' are in conflict because..." y debe
+  explicar que falta para poder tener ambos, por ejemplo una regla, metodo,
+  conocimiento, medida compartida, confianza o voluntad de cooperar.
+- El fixture conserva cada assumption como objeto seleccionable asociado a su
+  flecha o al conflicto. No son notas de texto agregadas al diagrama.
 
 Validar:
 
 - Objective, needs y wants ocupan sus roles canonicos.
+- Las ramas no se cruzan ni intercambian needs o wants.
 - El conflicto reside entre wants, no entre needs.
+- Ninguna de las cinco relaciones queda sin assumptions; tres por relacion es
+  el minimo recomendado del oraculo de trabajo.
 - Una injection es una propuesta hasta que FRT la valida.
+
+Fuentes contrastadas:
+
+- Dettmer, *The Logical Thinking Process*, capitulo 5, pp. 165-176: elementos,
+  cinco break points y assumptions ocultas en cada flecha.
+- *Behind the Cloud*, capitulo 5, pp. 41-66: reglas para assumptions de las
+  cuatro flechas rectas y recomendacion de tres o cuatro por flecha examinada.
+- *Behind the Cloud*, capitulo 17, pp. 174-185: reglas especificas para `D-D'`
+  y pregunta "what is missing?".
+- `inputs/Course Transcriptions/05 - Evaporating Cloud.txt`: conflicto en wants,
+  needs no negociables y repeticion del proceso para cada tramo.
 
 ## 4. Future Reality Tree
 

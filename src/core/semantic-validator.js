@@ -67,6 +67,26 @@ const validateSemanticGraph = (graph, contract = defaultContract) => {
   const relationById = new Map(relations.map((relation) => [relation.id, relation]));
   const assumptionById = new Map(assumptions.map((assumption) => [assumption.id, assumption]));
 
+  if (graph.reviewState && !contract.reviewStates.includes(graph.reviewState)) {
+    addIssue(issues, "ERROR", "REVIEW_STATE_INVALID", "reviewState", `${graph.reviewState} is invalid`);
+  }
+
+  const requiredRoles = profile.requiredRoles || {};
+  const allowedRoles = new Set(Object.keys(requiredRoles));
+  for (const element of elements) {
+    if (element.role && !allowedRoles.has(element.role)) {
+      addIssue(issues, "ERROR", "ROLE_NOT_ALLOWED", `elements.${element.id}.role`, `${element.role} is not a canonical role`);
+    }
+  }
+  for (const [role, expectedType] of Object.entries(requiredRoles)) {
+    const matches = elements.filter((element) => element.role === role);
+    if (matches.length !== 1) {
+      addIssue(issues, "ERROR", "ROLE_CARDINALITY", `elements.role.${role}`, `Role ${role} must occur exactly once`);
+    } else if (matches[0].type !== expectedType) {
+      addIssue(issues, "ERROR", "ROLE_TYPE_MISMATCH", `elements.${matches[0].id}.role`, `Role ${role} requires ${expectedType}`);
+    }
+  }
+
   for (const element of elements) {
     if (!profile.allowedElementTypes.includes(element.type)) {
       addIssue(issues, "ERROR", "ELEMENT_TYPE_NOT_ALLOWED", `elements.${element.id}.type`, `${element.type} is not allowed`);
@@ -150,6 +170,25 @@ const validateSemanticGraph = (graph, contract = defaultContract) => {
     if (subject.kind === "CONFLICT" && relation.type !== "CONFLICT") {
       addIssue(issues, "ERROR", "ASSUMPTION_CONFLICT_MISMATCH", assumptionPath, "Conflict scope requires a conflict relation");
     }
+    if (relation.type === "CONFLICT" && profile.assumptionPolicy?.conflictSubjectKind && subject.kind !== profile.assumptionPolicy.conflictSubjectKind) {
+      addIssue(issues, "ERROR", "ASSUMPTION_CONFLICT_SCOPE_REQUIRED", assumptionPath, `Conflict assumptions must use ${profile.assumptionPolicy.conflictSubjectKind} scope`);
+    }
+  }
+
+  if (profile.assumptionPolicy) {
+    for (const relation of relations) {
+      const covered = assumptions.filter((assumption) => {
+        if (assumption.subject?.relationId !== relation.id) return false;
+        if (relation.type !== "CONFLICT") return true;
+        return assumption.subject.kind === profile.assumptionPolicy.conflictSubjectKind;
+      }).length;
+      if (covered < profile.assumptionPolicy.minimumPerRelation) {
+        const severity = graph.reviewState === "ACCEPTED" && profile.assumptionPolicy.acceptedReviewRequiresCoverage ? "ERROR" : "WARNING";
+        addIssue(issues, severity, "ASSUMPTION_COVERAGE_REQUIRED", `relations.${relation.id}`, `Relation ${relation.id} needs assumptions behind it`);
+      } else if (covered < profile.assumptionPolicy.recommendedPerRelation) {
+        addIssue(issues, "WARNING", "ASSUMPTION_DEPTH_RECOMMENDED", `relations.${relation.id}`, `Relation ${relation.id} should expose at least ${profile.assumptionPolicy.recommendedPerRelation} assumptions`);
+      }
+    }
   }
 
   for (const derivation of derivations) {
@@ -187,9 +226,17 @@ const validateSemanticGraph = (graph, contract = defaultContract) => {
   for (const pattern of profile.requiredRelationPatterns || []) {
     const count = relations.filter((relation) => {
       if (relation.type !== pattern.type) return false;
-      const inputMatches = relation.inputs.some((input) => elementById.get(input.elementId)?.type === pattern.inputType);
-      const outputMatches = pattern.outputType === null || relation.outputs.some((output) => elementById.get(output.elementId)?.type === pattern.outputType);
-      return inputMatches && outputMatches;
+      const inputElements = relation.inputs.map((input) => elementById.get(input.elementId));
+      const outputElements = relation.outputs.map((output) => elementById.get(output.elementId));
+      const inputMatches = pattern.inputRole
+        ? inputElements.some((element) => element?.role === pattern.inputRole)
+        : inputElements.some((element) => element?.type === pattern.inputType);
+      const secondInputMatches = !pattern.secondInputRole || inputElements.some((element) => element?.role === pattern.secondInputRole);
+      const outputMatches = pattern.outputType === null
+        || (pattern.outputRole
+          ? outputElements.some((element) => element?.role === pattern.outputRole)
+          : outputElements.some((element) => element?.type === pattern.outputType));
+      return inputMatches && secondInputMatches && outputMatches;
     }).length;
     if (count < pattern.min) {
       addIssue(issues, "ERROR", "RELATION_PATTERN_REQUIRED", `relations.${pattern.id}`, `${pattern.id} requires ${pattern.min} relation(s)`);

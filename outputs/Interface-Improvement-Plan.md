@@ -623,9 +623,10 @@ Criterios de aceptacion:
 
 ### 3C.13.1: gates de cierre 5-hats
 
-Estado: Gate B tecnicamente completado el 2026-07-16; validacion metodologica de
-los oraculos pendiente. Los gates de migracion, operaciones, seguridad y
-rendimiento permanecen pendientes.
+Estado: Gate B reabierto y corregido el 2026-07-16 tras la revision del EC. El
+contrato tecnico vuelve a estar en PASS; queda la confirmacion metodologica del
+oraculo corregido. Los gates de migracion, operaciones, seguridad y rendimiento
+permanecen pendientes.
 
 Antes de estabilizar el schema publico se cierran estos contratos:
 
@@ -657,6 +658,8 @@ Evidencia Gate B:
 - Contrato ejecutable y fixtures en `semantic-contract/v0.1/`.
 - 15 fixtures persistidos, 36 casos generados y mutaciones dirigidas en PASS.
 - Oraculos de Goal Tree, CRT, EC y FRT; microfixtures `AND/OR/MAG/XOR`.
+- EC reforzado con roles `A/B/C/D/D'`, ramas paralelas, cinco break points,
+  tres assumptions por relacion y prompts distintos para flecha y conflicto.
 - Hoja de revision metodologica en `outputs/Semantic-Oracle-Review.md`.
 - Core, modelo, layout, Electron smoke y regresion visual 37/37 en PASS.
 - Log completo en `outputs/Semantic-Contract-Test-Log.md`.
@@ -665,7 +668,8 @@ Evidencia Gate B:
 
 ### 3C.14: kernel semantico y prueba vertical CRT
 
-Estado: en curso. Gate B, migracion reversible, validador compartido, preview
+Estado: temporalmente pausado mientras se confirma la correccion metodologica
+del EC. Gate B, migracion reversible, validador compartido, preview
 CLI, refresco transaccional y primera vertical de comandos genericos de
 `3C.14a` estan implementados. La creacion/borrado n-ario y la paridad UI siguen
 pendientes.

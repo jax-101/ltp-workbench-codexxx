@@ -798,9 +798,43 @@ Aplicacion futura: declarar dependencias derivadas; centralizar su generacion;
 incluirlas en fingerprints y Undo/Redo; y probar el significado resultante, no
 solo que los IDs apunten a objetos existentes.
 
+### L-079: Algunos diagramas tienen una gramatica espacial, no solo un grafo
+
+Fecha: 2026-07-16
+
+Evidencia: el primer oraculo EC contenia los cinco elementos y las relaciones
+correctas por Type, pero no obligaba a mantener `B-D` y `C-D'` en filas
+paralelas. Un layout podia intercambiar ramas o dispersar los roles y seguir
+superando la validacion puramente topologica.
+
+Aprendizaje: cuando la posicion transmite papel argumental, el contrato de
+dominio debe declarar roles, ranks y alineaciones. Dejarlo como preferencia del
+layout elimina informacion aunque no se pierda ningun nodo o enlace.
+
+Aplicacion futura: separar coordenadas libres de constraints semanticos;
+validar roles antes del layout; compilar ranks canonicos al grafo neutral; y
+crear oraculos visuales que fallen ante ramas cruzadas o intercambiadas.
+
+### L-080: Las assumptions de una relacion son datos de trabajo de primer nivel
+
+Fecha: 2026-07-16
+
+Evidencia: las fuentes de EC describen cinco break points y recomiendan revelar
+varias assumptions por flecha. Ademas, la pregunta para `D-D'` no es la misma
+que para una flecha recta: busca que falta para que ambos wants coexistan.
+
+Aprendizaje: asociar una lista de notas al diagrama no preserva el razonamiento.
+Cada argumento necesita identidad, scope, prompt, estado de revision y
+trazabilidad hacia la injection que lo desafia.
+
+Aplicacion futura: modelar assumptions como objetos seleccionables; medir
+cobertura por relacion; distinguir prompts por tipo de subject; permitir drafts
+incompletos pero impedir aceptacion silenciosa; y probar borrado, copia y Undo
+de la assumption junto con su relacion.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-079`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-081`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

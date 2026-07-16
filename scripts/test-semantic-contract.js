@@ -68,6 +68,26 @@ const validateFixtureReference = (fixture) => {
   const relationById = new Map(relations.map((relation) => [relation.id, relation]));
   const assumptionById = new Map(assumptions.map((assumption) => [assumption.id, assumption]));
 
+  if (fixture.reviewState && !contract.reviewStates.includes(fixture.reviewState)) {
+    issue(issues, "ERROR", "REVIEW_STATE_INVALID", "reviewState", `${fixture.reviewState} is invalid`);
+  }
+
+  const requiredRoles = profile.requiredRoles || {};
+  const allowedRoles = new Set(Object.keys(requiredRoles));
+  for (const element of elements) {
+    if (element.role && !allowedRoles.has(element.role)) {
+      issue(issues, "ERROR", "ROLE_NOT_ALLOWED", `elements.${element.id}.role`, `${element.role} is not a canonical role`);
+    }
+  }
+  for (const [role, expectedType] of Object.entries(requiredRoles)) {
+    const matches = elements.filter((element) => element.role === role);
+    if (matches.length !== 1) {
+      issue(issues, "ERROR", "ROLE_CARDINALITY", `elements.role.${role}`, `Role ${role} must occur exactly once`);
+    } else if (matches[0].type !== expectedType) {
+      issue(issues, "ERROR", "ROLE_TYPE_MISMATCH", `elements.${matches[0].id}.role`, `Role ${role} requires ${expectedType}`);
+    }
+  }
+
   for (const element of elements) {
     if (!profile.allowedElementTypes.includes(element.type)) {
       issue(issues, "ERROR", "ELEMENT_TYPE_NOT_ALLOWED", `elements.${element.id}.type`, `${element.type} is not allowed`);
@@ -149,6 +169,25 @@ const validateFixtureReference = (fixture) => {
     if (subject.kind === "CONFLICT" && relation.type !== "CONFLICT") {
       issue(issues, "ERROR", "ASSUMPTION_CONFLICT_MISMATCH", assumptionPath, "Conflict scope requires a conflict relation");
     }
+    if (relation.type === "CONFLICT" && profile.assumptionPolicy?.conflictSubjectKind && subject.kind !== profile.assumptionPolicy.conflictSubjectKind) {
+      issue(issues, "ERROR", "ASSUMPTION_CONFLICT_SCOPE_REQUIRED", assumptionPath, `Conflict assumptions must use ${profile.assumptionPolicy.conflictSubjectKind} scope`);
+    }
+  }
+
+  if (profile.assumptionPolicy) {
+    for (const relation of relations) {
+      const covered = assumptions.filter((assumption) => {
+        if (assumption.subject?.relationId !== relation.id) return false;
+        if (relation.type !== "CONFLICT") return true;
+        return assumption.subject.kind === profile.assumptionPolicy.conflictSubjectKind;
+      }).length;
+      if (covered < profile.assumptionPolicy.minimumPerRelation) {
+        const severity = fixture.reviewState === "ACCEPTED" && profile.assumptionPolicy.acceptedReviewRequiresCoverage ? "ERROR" : "WARNING";
+        issue(issues, severity, "ASSUMPTION_COVERAGE_REQUIRED", `relations.${relation.id}`, `Relation ${relation.id} needs assumptions behind it`);
+      } else if (covered < profile.assumptionPolicy.recommendedPerRelation) {
+        issue(issues, "WARNING", "ASSUMPTION_DEPTH_RECOMMENDED", `relations.${relation.id}`, `Relation ${relation.id} should expose at least ${profile.assumptionPolicy.recommendedPerRelation} assumptions`);
+      }
+    }
   }
 
   for (const derivation of derivations) {
@@ -186,9 +225,17 @@ const validateFixtureReference = (fixture) => {
   for (const pattern of profile.requiredRelationPatterns || []) {
     const count = relations.filter((relation) => {
       if (relation.type !== pattern.type) return false;
-      const inputMatches = relation.inputs.some((input) => elementById.get(input.elementId)?.type === pattern.inputType);
-      const outputMatches = pattern.outputType === null || relation.outputs.some((output) => elementById.get(output.elementId)?.type === pattern.outputType);
-      return inputMatches && outputMatches;
+      const inputElements = relation.inputs.map((input) => elementById.get(input.elementId));
+      const outputElements = relation.outputs.map((output) => elementById.get(output.elementId));
+      const inputMatches = pattern.inputRole
+        ? inputElements.some((element) => element?.role === pattern.inputRole)
+        : inputElements.some((element) => element?.type === pattern.inputType);
+      const secondInputMatches = !pattern.secondInputRole || inputElements.some((element) => element?.role === pattern.secondInputRole);
+      const outputMatches = pattern.outputType === null
+        || (pattern.outputRole
+          ? outputElements.some((element) => element?.role === pattern.outputRole)
+          : outputElements.some((element) => element?.type === pattern.outputType));
+      return inputMatches && secondInputMatches && outputMatches;
     }).length;
     if (count < pattern.min) issue(issues, "ERROR", "RELATION_PATTERN_REQUIRED", `relations.${pattern.id}`, `${pattern.id} requires ${pattern.min} relation(s)`);
   }
@@ -238,6 +285,20 @@ const targetExpression = (fixture, targetId) => {
 
 const junctionId = (relation) => relation.renderMode === "JUNCTION" ? `junction:${relation.id}` : null;
 
+const assumptionPrompt = (fixture, relation) => {
+  const profile = contract.profiles[fixture.diagramType];
+  const template = profile.assumptionPolicy?.prompts?.[relation.type];
+  if (!template) return null;
+  const elementById = new Map(fixture.elements.map((element) => [element.id, element]));
+  const inputLabels = relation.inputs.map((input) => elementById.get(input.elementId)?.statement || input.elementId);
+  const outputLabel = relation.outputs[0] ? elementById.get(relation.outputs[0].elementId)?.statement || relation.outputs[0].elementId : "";
+  return template
+    .replace("{output}", outputLabel)
+    .replace("{input}", inputLabels[0] || "")
+    .replace("{input1}", inputLabels[0] || "")
+    .replace("{input2}", inputLabels[1] || "");
+};
+
 const loadFixtures = () => fs.readdirSync(root)
   .filter((name) => name.endsWith(".json") && name !== "contract.json")
   .flatMap((name) => {
@@ -263,6 +324,8 @@ for (const [name, profile] of Object.entries(contract.profiles)) {
   assert(profile.allowedCombinations.every((value) => contract.combinations[value]), `${name}: known combinations`);
   assert(profile.allowedRelationTypes.every((value) => contract.relationTypes[value]), `${name}: known relation types`);
 }
+assert.deepEqual(contract.profiles.EC.canonicalPresentation.columns, [["A"], ["B", "C"], ["D", "D_PRIME"]]);
+assert.deepEqual(contract.profiles.EC.canonicalPresentation.parallelBranches, [["D", "B", "A"], ["D_PRIME", "C", "A"]]);
 for (const fixture of fixtures) {
   const issues = validateFixture(fixture);
   assert.deepEqual(issues, validateFixtureReference(fixture), `${fixture.id}: shared validator parity`);
@@ -295,6 +358,19 @@ for (const fixture of fixtures) {
   for (const [scope, expectedCount] of Object.entries(fixture.expected.assumptionScopeCounts || {})) {
     const actualCount = (fixture.assumptions || []).filter((assumption) => assumption.subject?.kind === scope).length;
     assert.equal(actualCount, expectedCount, `${fixture.id}: assumption scope ${scope}`);
+  }
+  for (const [role, expectedType] of Object.entries(fixture.expected.roleTypes || {})) {
+    const matches = fixture.elements.filter((element) => element.role === role);
+    assert.equal(matches.length, 1, `${fixture.id}: canonical role ${role}`);
+    assert.equal(matches[0].type, expectedType, `${fixture.id}: canonical role type ${role}`);
+  }
+  for (const [relationId, expectedCount] of Object.entries(fixture.expected.assumptionsPerRelation || {})) {
+    const actualCount = fixture.assumptions.filter((assumption) => assumption.subject?.relationId === relationId).length;
+    assert.equal(actualCount, expectedCount, `${fixture.id}: assumptions for ${relationId}`);
+  }
+  for (const [relationId, expectedPrompt] of Object.entries(fixture.expected.assumptionPrompts || {})) {
+    const relation = fixture.relations.find((candidate) => candidate.id === relationId);
+    assert.equal(assumptionPrompt(fixture, relation), expectedPrompt, `${fixture.id}: assumption prompt ${relationId}`);
   }
 }
 
@@ -342,8 +418,44 @@ delete partialMag.relations[0].inputs[0].contribution;
 assert(validateFixture(partialMag).some((entry) => entry.code === "MAG_PARTIAL_QUANTIFICATION"), "Partial MAG quantification must fail");
 
 const brokenEc = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
-brokenEc.relations = brokenEc.relations.filter((relation) => relation.id !== "rel-want-large-cost");
+brokenEc.relations = brokenEc.relations.filter((relation) => relation.id !== "rel-d-prime-c");
 assert(validateFixture(brokenEc).some((entry) => entry.code === "RELATION_PATTERN_REQUIRED"), "Broken EC topology must fail");
+
+const crossedEcBranch = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
+crossedEcBranch.relations.find((relation) => relation.id === "rel-d-b").outputs[0].elementId = "need-cost";
+assert(
+  validateFixture(crossedEcBranch).some((entry) => entry.code === "RELATION_PATTERN_REQUIRED" && entry.path.includes("branch-d-b")),
+  "Crossed EC branches must fail"
+);
+
+const wrongEcRole = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
+wrongEcRole.elements.find((element) => element.id === "need-flow").role = "D";
+wrongEcRole.elements.find((element) => element.id === "want-small").role = "B";
+assert(validateFixture(wrongEcRole).some((entry) => entry.code === "ROLE_TYPE_MISMATCH"), "EC roles must retain canonical Types");
+
+const uncoveredEcArrow = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
+uncoveredEcArrow.assumptions = uncoveredEcArrow.assumptions.filter((assumption) => assumption.subject.relationId !== "rel-d-b");
+assert(
+  validateFixture(uncoveredEcArrow).some((entry) => entry.code === "ASSUMPTION_COVERAGE_REQUIRED" && entry.severity === "ERROR"),
+  "An accepted EC must cover every arrow with assumptions"
+);
+
+const shallowEcArrow = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
+const dBAssumptions = shallowEcArrow.assumptions.filter((assumption) => assumption.subject.relationId === "rel-d-b");
+shallowEcArrow.assumptions = shallowEcArrow.assumptions.filter(
+  (assumption) => assumption.subject.relationId !== "rel-d-b" || assumption.id === dBAssumptions[0].id
+);
+assert(
+  validateFixture(shallowEcArrow).some((entry) => entry.code === "ASSUMPTION_DEPTH_RECOMMENDED" && entry.severity === "WARNING"),
+  "EC assumption depth below three must remain visible"
+);
+
+const wrongConflictScope = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
+wrongConflictScope.assumptions.find((assumption) => assumption.id === "assumption-conflict-1").subject.kind = "RELATION";
+assert(
+  validateFixture(wrongConflictScope).some((entry) => entry.code === "ASSUMPTION_CONFLICT_SCOPE_REQUIRED"),
+  "Conflict assumptions require conflict scope"
+);
 
 const wrongLogicMode = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-goal-tree"));
 wrongLogicMode.logicMode = "SUFFICIENCY";

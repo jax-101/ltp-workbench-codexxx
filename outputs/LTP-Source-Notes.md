@@ -62,12 +62,26 @@ La nube contiene:
 - supuestos que sostienen las flechas;
 - injections como ideas de solucion, no soluciones verificadas.
 
+La forma canonica no es intercambiable: `A` es el objetivo comun; `B` y `C` son
+los needs; `D` y `D'` son los wants en conflicto. Visualmente son dos ramas
+paralelas, `D -> B -> A` y `D' -> C -> A`, y el conflicto une exclusivamente
+los wants.
+
+Dettmer identifica cinco break points con assumptions: las cuatro flechas de
+necesidad y el conflicto. Las flechas rectas se exploran completando "in order
+to..., we must... because...". El conflicto requiere otra regla: "D and D' are
+in conflict because...", buscando que regla, metodo, conocimiento, confianza o
+cooperacion falta para poder satisfacer ambos wants.
+
 Implicacion para la app:
 
 - una EC puede derivarse de un CRT, pero tambien puede ser punto de partida si el conflicto ya es visible;
 - requirements pueden venir del Goal Tree;
 - prerequisites pueden venir de politicas actuales, acciones propuestas o causas raiz;
 - las injections deben poder convertirse en entradas de un FRT para validacion.
+- cada flecha y el conflicto deben abrir un inspector propio de assumptions;
+- una EC aceptada no debe ocultar ningun break point sin revisar;
+- el layout debe fijar roles, columnas y paralelismo, no inferirlos solo por Type.
 
 ### 5. Rutas no lineales
 

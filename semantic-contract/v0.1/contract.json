@@ -107,11 +107,36 @@
         "NEED": { "min": 2, "max": 2 },
         "WANT": { "min": 2, "max": 2 }
       },
+      "requiredRoles": {
+        "A": "OBJECTIVE",
+        "B": "NEED",
+        "C": "NEED",
+        "D": "WANT",
+        "D_PRIME": "WANT"
+      },
       "requiredRelationPatterns": [
-        { "id": "needs-to-objective", "type": "NECESSITY", "inputType": "NEED", "outputType": "OBJECTIVE", "min": 2 },
-        { "id": "wants-to-needs", "type": "NECESSITY", "inputType": "WANT", "outputType": "NEED", "min": 2 },
-        { "id": "want-conflict", "type": "CONFLICT", "inputType": "WANT", "outputType": null, "min": 1 }
-      ]
+        { "id": "branch-b-a", "type": "NECESSITY", "inputRole": "B", "outputRole": "A", "min": 1 },
+        { "id": "branch-c-a", "type": "NECESSITY", "inputRole": "C", "outputRole": "A", "min": 1 },
+        { "id": "branch-d-b", "type": "NECESSITY", "inputRole": "D", "outputRole": "B", "min": 1 },
+        { "id": "branch-d-prime-c", "type": "NECESSITY", "inputRole": "D_PRIME", "outputRole": "C", "min": 1 },
+        { "id": "want-conflict", "type": "CONFLICT", "inputRole": "D", "secondInputRole": "D_PRIME", "outputType": null, "min": 1 }
+      ],
+      "assumptionPolicy": {
+        "minimumPerRelation": 1,
+        "recommendedPerRelation": 3,
+        "acceptedReviewRequiresCoverage": true,
+        "conflictSubjectKind": "CONFLICT",
+        "prompts": {
+          "NECESSITY": "In order to {output}, we must have {input} because...",
+          "CONFLICT": "{input1} and {input2} are in conflict because... What is missing that prevents us from having both?"
+        }
+      },
+      "canonicalPresentation": {
+        "direction": "RL",
+        "columns": [["A"], ["B", "C"], ["D", "D_PRIME"]],
+        "parallelBranches": [["D", "B", "A"], ["D_PRIME", "C", "A"]],
+        "conflictRoles": ["D", "D_PRIME"]
+      }
     },
     "FRT": {
       "logicMode": "SUFFICIENCY",

@@ -106,11 +106,25 @@ solucion.
 | --- | --- | --- | --- |
 | Goal Tree | Necesidad | `AND` | Un Goal, CSF recomendados 3-5, sin ciclos ni junctors |
 | CRT | Suficiencia | `OR` | Causas independientes, `AND`, assumptions y loop negativo |
-| EC | Necesidad | `AND` | A-B-C-D-D', conflicto, assumptions e injection |
+| EC | Necesidad | `AND` | Roles A-B-C-D-D', ramas paralelas, cinco break points, assumptions por relacion e injection |
 | FRT | Suficiencia | `OR` | Injection, `AND`, desired effect y negative branch |
 
 Los microfixtures verifican por separado `AND`, `OR`, `MAG`, `XOR`, aridad,
 render, referencias y ciclos prohibidos.
+
+### Contrato especifico de EC
+
+La EC no se valida solo contando un objective, dos needs y dos wants. Los roles
+son canonicos y unicos: `A=OBJECTIVE`, `B/C=NEED`, `D/D'=WANT`. Las relaciones
+deben formar exactamente las ramas `D -> B -> A` y `D' -> C -> A`, con conflicto
+entre `D` y `D'`. La presentacion recomendada usa direccion `RL`, tres columnas
+`[A] [B,C] [D,D']` y conserva las dos ramas en filas paralelas.
+
+El perfil exige cobertura de assumptions para las cinco relaciones cuando la
+EC esta `ACCEPTED`. Una EC en captura puede avisar de cobertura incompleta; una
+EC aceptada no puede dejar un break point sin assumptions. El oraculo conserva
+tres assumptions por relacion y usa scope `CONFLICT` obligatoriamente en
+`D-D'`.
 
 ## Validacion progresiva
 
@@ -129,6 +143,7 @@ render, referencias y ciclos prohibidos.
 - recomendacion metodologica, como CSF fuera de 3-5;
 - `MAG` sin contribuciones cuantificadas;
 - futuras reservas CLR que no invalidan la captura.
+- EC en borrador sin assumptions en una relacion o con menos de tres.
 
 ### Revision humana
 

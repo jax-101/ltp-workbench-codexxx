@@ -578,3 +578,29 @@ Razon: mantener dos grafos editables permite divergencias silenciosas que una
 migracion aparentemente reversible no puede resolver. Una envoltura temporal
 con deteccion de obsolescencia permite probar el nuevo contrato y volver atras
 sin datos perdidos, mientras se construye el punto de escritura definitivo.
+
+### D-089: La EC tiene roles y geometria canonicos
+
+Decision: una Evaporating Cloud asignara roles unicos `A=OBJECTIVE`,
+`B/C=NEED` y `D/D'=WANT`. El compilador de layout preservara tres columnas y
+dos ramas paralelas: `D -> B -> A` y `D' -> C -> A`. El conflicto conectara
+exclusivamente `D` y `D'`; no se permitira cruzar wants con el need de la otra
+rama aunque las cardinalidades sigan siendo validas.
+
+Razon: contar Types y enlaces comprueba una topologia debil, pero no la gramatica
+de la herramienta LTP. En una EC la posicion comunica el papel argumental y
+permite leer cada rama completa sin ambiguedad. Un layout libre puede producir
+un grafo conectado que ya no sea una Cloud metodologicamente reconocible.
+
+### D-090: Cada break point de EC posee assumptions inspeccionables
+
+Decision: las cuatro flechas rectas y el conflicto `D-D'` seran cinco subjects
+independientes de assumptions. Una EC `ACCEPTED` no podra dejar ninguno sin
+cobertura y el oraculo conservara tres assumptions por subject. Las flechas
+rectas usaran scope `RELATION`; el conflicto exigira scope `CONFLICT` y una
+formulacion que explique que falta para permitir ambos wants.
+
+Razon: las assumptions no decoran la Cloud; son el material sobre el que se
+descubre una injection. El conflicto requiere una pregunta diferente de una
+flecha de necesidad, y mezclar ambos scopes induce respuestas que defienden una
+rama en vez de explicar por que las dos posiciones no pueden coexistir.

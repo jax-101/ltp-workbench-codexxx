@@ -24,6 +24,9 @@ Estado tecnico de Gate B: `PASS`.
 - assumption asociada a un input ajeno;
 - cuantificacion parcial de `MAG`;
 - topologia EC incompleta;
+- ramas EC cruzadas o roles A-B-C-D-D' mal asignados;
+- EC aceptada con una flecha sin assumptions;
+- assumption de conflicto sin scope `CONFLICT`;
 - `logicMode` incompatible;
 - estado de derivacion desconocido;
 - conflicto proyectado incorrectamente como junctor.
@@ -36,6 +39,11 @@ Estado tecnico de Gate B: `PASS`.
 - `npm run test:layout`: PASS.
 - `npm run test:prototype`: PASS, incluido Electron smoke.
 - `npm run test:visual`: 37/37 PASS.
+
+Tras la correccion del oraculo EC, `npm run test:prototype -- --no-smoke`
+volvio a pasar completo. El reintento del smoke Electron no llego a lanzarse en
+dos ocasiones porque caduco la autorizacion externa; el ultimo smoke de la misma
+rama, anterior a esta correccion sin cambios de renderer, permanece en PASS.
 
 ## Hallazgo durante la revision
 
@@ -54,6 +62,11 @@ alternativas de una EC pueden ser incompatibles solo bajo las restricciones
 actuales; no siempre son mutuamente excluyentes por naturaleza. Una regresion
 impide volver a proyectar el conflicto como junctor.
 
+La revision de fuentes del 2026-07-16 reforzo el oraculo EC. El fixture contiene
+ahora roles canonicos, dos ramas paralelas y tres assumptions para cada uno de
+los cinco break points. Las mutaciones rechazan ramas cruzadas, roles
+intercambiados, cobertura ausente y scope incorrecto en `D-D'`.
+
 ## Pendiente
 
 - Validacion metodologica del usuario sobre los cuatro oraculos y sus
@@ -63,4 +76,5 @@ impide volver a proyectar el conflicto como junctor.
 - Capturas de junctions reales, que no pueden producirse hasta que el renderer
   del kernel exista en `3C.14b`.
 
-No se ha iniciado `3C.14a` ni se ha modificado el runtime `0.2`.
+`3C.14a` dispone ya de un incremento reversible separado. Esta correccion de
+Gate B modifica contrato y oraculos, no el renderer ni el schema publico `0.2`.
