@@ -3,6 +3,7 @@ const DIAGRAM_DEFINITIONS = Object.freeze({
     id: "goalTree",
     label: "Goal Tree",
     defaultDirection: "TB",
+    layering: "distanceToSink",
     directions: Object.freeze(["TB", "BT", "LR", "RL"]),
     defaultNodeType: "necessaryCondition",
     nodeTypes: Object.freeze([

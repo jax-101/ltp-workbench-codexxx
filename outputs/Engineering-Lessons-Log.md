@@ -432,9 +432,29 @@ Aprendizaje: cuando el producto habla de una direccion preferente, convertirla e
 
 Aplicacion futura: declarar que reglas son invariantes y cuales preferencias; producir varias soluciones deterministas; compararlas con metricas ordenadas; y exponer las excepciones para que el resultado siga siendo explicable.
 
+### L-047: Un ejemplo real se vuelve util cuando se convierte en contrato
+
+Fecha: 2026-07-16
+
+Evidencia: las primeras regresiones construian en codigo un grafo sintetico de 10 entidades. Una referencia real de 18 entidades revelo problemas que aquel caso no contenia: tipos mezclados entre capas, habilitadores compartidos, fan-in y puntas superpuestas.
+
+Aprendizaje: una captura comunica una observacion, pero un fixture versionado conserva topologia, semantica y expectativas. Compartirlo entre validacion, pruebas algoritmicas y pruebas visuales evita que cada nivel compruebe un problema ligeramente distinto.
+
+Aplicacion futura: convertir pronto los ejemplos representativos del usuario en datos estables; declarar aserciones de dominio ademas de metricas geometricas; y conservar casos pequenos solo para aislar propiedades especificas.
+
+### L-048: La legibilidad se mide en pantalla, no solo en el canvas
+
+Fecha: 2026-07-16
+
+Evidencia: las puntas de flecha tenian una geometria correcta y marcadores presentes, pero al encajar el caso complejo al 36% quedaban reducidas a unos cuatro pixeles. La prueba tecnica pasaba mientras la direccion apenas podia verse.
+
+Aprendizaje: zoom y transformaciones separan las unidades del modelo de los pixeles percibidos. Los indicadores de interaccion y direccion necesitan limites de tamano visual independientes de la escala del contenido.
+
+Aplicacion futura: comprobar tamanos efectivos despues de aplicar zoom; compensar la escala de marcadores, handles y badges; y definir criterios perceptivos minimos junto a las aserciones estructurales.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-047`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-049`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

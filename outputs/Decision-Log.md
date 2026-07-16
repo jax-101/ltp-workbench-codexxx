@@ -418,3 +418,15 @@ Razon: conservar simultaneamente posicion y tamano impide que el frame se ajuste
 Decision: los frames de diagrama con suficiente complejidad ejecutan varias configuraciones deterministas de ELK. Se comparan por cruces, entidades atravesadas, excepciones de direccion, longitud y area. Entre las candidatas se incluye una jerarquia relajada que puede invertir una arista solo para el calculo espacial; el link real conserva su sentido.
 
 Razon: una unica ejecucion de un algoritmo heuristico puede producir una ordenacion mediocre. Ademas, tratar la direccion como restriccion absoluta crea capas y desvios innecesarios cuando un nodo participa simultaneamente en un atajo y en una cadena mas larga.
+
+### D-068: Los casos visuales de referencia son fixtures de dominio
+
+Decision: el ejemplo complejo de Goal Tree se conserva como un workspace JSON independiente y versionado. Las pruebas de modelo, Layout y renderer cargan el mismo archivo en lugar de reconstruir una aproximacion distinta en cada suite.
+
+Razon: una captura sirve para comunicar el problema, pero no fija con precision entidades, links ni expectativas. Un fixture compartido convierte el ejemplo en un contrato reproducible y tambien puede consumirse desde herramientas headless.
+
+### D-069: Capas semanticas y puertos distribuidos forman parte del layout
+
+Decision: la definicion de Goal Tree declara una estratificacion por distancia al Goal. Los links que comparten un lado de una entidad reciben puertos ordenados y separados. Las puntas compensan el zoom para conservar un tamano estable en pantalla.
+
+Razon: cero cruces no basta si un CSF aparece mezclado con NC o varias puntas terminan superpuestas. La jerarquia de dominio, la separacion de llegadas y la escala perceptiva son restricciones distintas que deben verificarse expresamente.

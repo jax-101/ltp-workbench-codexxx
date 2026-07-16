@@ -1,0 +1,1568 @@
+{
+  "schemaVersion": "0.2",
+  "fixtureType": "complex-goal-tree-visual-regression",
+  "createdAt": "2026-07-16T12:00:00+02:00",
+  "updatedAt": "2026-07-16T12:00:00+02:00",
+  "workspace": {
+    "id": "ws-complex-money-goal",
+    "name": "Complex Goal Tree Visual Fixture",
+    "activeSystemId": "sys-money-goal",
+    "settings": {
+      "keyboardFirst": true,
+      "defaultLayoutEngine": "elk",
+      "defaultExportFormat": "markdown"
+    },
+    "systems": [
+      {
+        "id": "sys-money-goal",
+        "name": "Money Goal Tree",
+        "path": "systems/sys-money-goal/system.json",
+        "updatedAt": "2026-07-16T12:00:00+02:00"
+      }
+    ]
+  },
+  "systems": [
+    {
+      "schemaVersion": "0.1",
+      "id": "sys-money-goal",
+      "name": "Money Goal Tree",
+      "createdAt": "2026-07-16T12:00:00+02:00",
+      "updatedAt": "2026-07-16T12:00:00+02:00",
+      "profile": {
+        "description": "Stable complex Goal Tree used for layout and visual regression.",
+        "purpose": "Exercise fan-in, shared enablers, cross-branch links and arrowhead clarity.",
+        "owner": {
+          "name": "LTP Workbench",
+          "role": "Regression fixture"
+        },
+        "boundary": {
+          "summary": "The reference diagram supplied during interface review.",
+          "inside": [],
+          "outside": []
+        },
+        "spanOfControl": [],
+        "sphereOfInfluence": [],
+        "externalEnvironment": [],
+        "stakeholders": [],
+        "constraints": [],
+        "initialSymptoms": [],
+        "sourceIds": [],
+        "completeness": "minimumComplete"
+      },
+      "relationships": {
+        "parentSystemIds": [],
+        "childSystemIds": []
+      },
+      "sources": [],
+      "benchmarks": [
+        {
+          "id": "benchmark-money-goal-v1",
+          "type": "goalTree",
+          "treeId": "tree-money-goal-v1",
+          "status": "draft",
+          "isPrimary": true,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        }
+      ],
+      "perspectives": [
+        {
+          "id": "perspective-money-goal",
+          "name": "Benchmark",
+          "type": "benchmark",
+          "treeIds": [
+            "tree-money-goal-v1"
+          ],
+          "status": "active",
+          "origin": null
+        }
+      ]
+    }
+  ],
+  "trees": [
+    {
+      "schemaVersion": "0.2",
+      "id": "tree-money-goal-v1",
+      "systemId": "sys-money-goal",
+      "perspectiveId": "perspective-money-goal",
+      "type": "goalTree",
+      "name": "Make More Money - Complex Goal Tree",
+      "status": "draft",
+      "logicMode": "necessity",
+      "createdAt": "2026-07-16T12:00:00+02:00",
+      "updatedAt": "2026-07-16T12:00:00+02:00",
+      "nodes": [
+        {
+          "id": "node-money-goal",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "goal",
+          "statement": "Make more money now and in the future.",
+          "shortLabel": "Make more money now and in the future.",
+          "status": "draft",
+          "tags": [
+            "goal"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-csf-maximum-revenues",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "criticalSuccessFactor",
+          "statement": "Maximum revenues",
+          "shortLabel": "Maximum revenues",
+          "status": "draft",
+          "tags": [
+            "csf"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-csf-optimized-cost",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "criticalSuccessFactor",
+          "statement": "Optimized cost",
+          "shortLabel": "Optimized cost",
+          "status": "draft",
+          "tags": [
+            "csf"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-csf-high-return",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "criticalSuccessFactor",
+          "statement": "High return on investment",
+          "shortLabel": "High return on investment",
+          "status": "draft",
+          "tags": [
+            "csf"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-sales-fill-capacity",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Sales fill up production capacity",
+          "shortLabel": "Sales fill up production capacity",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-sufficient-production-capacity",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Sufficient production capacity",
+          "shortLabel": "Sufficient production capacity",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-efficient-production-operations",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Efficient production operations",
+          "shortLabel": "Efficient production operations",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-optimized-overhead",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Optimized overhead",
+          "shortLabel": "Optimized overhead",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-effective-capital-investment",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Effective capital investment",
+          "shortLabel": "Effective capital investment",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-high-market-demand",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "High market demand",
+          "shortLabel": "High market demand",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-world-class-production-methods",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "World-class production methods",
+          "shortLabel": "World-class production methods",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-state-of-the-art-equipment",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "State-of-the-art equipment",
+          "shortLabel": "State-of-the-art equipment",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-optimized-inventory-management",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Optimized inventory management",
+          "shortLabel": "Optimized inventory management",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-optimum-product-price",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Optimum product price",
+          "shortLabel": "Optimum product price",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-competitive-advantage",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Competitive advantage",
+          "shortLabel": "Competitive advantage",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-world-class-inventory-methods",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "World-class inventory management methods",
+          "shortLabel": "World-class inventory management methods",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-effective-marketing-sales",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Effective marketing and sales",
+          "shortLabel": "Effective marketing and sales",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "node-money-superior-employees",
+          "treeId": "tree-money-goal-v1",
+          "frameId": "frame-money-goal-tree",
+          "type": "necessaryCondition",
+          "statement": "Superior employees",
+          "shortLabel": "Superior employees",
+          "status": "draft",
+          "tags": [
+            "nc"
+          ],
+          "sourceIds": [],
+          "validation": {
+            "clarity": "unknown",
+            "entityExistence": "unknown",
+            "singleIdea": "unknown",
+            "completeSentence": "unknown",
+            "confidence": "medium",
+            "notes": ""
+          },
+          "promotedFrom": null,
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        }
+      ],
+      "links": [
+        {
+          "id": "link-money-csf-maximum-revenues-to-goal",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-csf-maximum-revenues",
+          "targetNodeId": "node-money-goal",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Maximum revenues is necessary for Make more money now and in the future..",
+          "verbalization": "In order to have Make more money now and in the future., we must have Maximum revenues.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-csf-optimized-cost-to-goal",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-csf-optimized-cost",
+          "targetNodeId": "node-money-goal",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Optimized cost is necessary for Make more money now and in the future..",
+          "verbalization": "In order to have Make more money now and in the future., we must have Optimized cost.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-csf-high-return-to-goal",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-csf-high-return",
+          "targetNodeId": "node-money-goal",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "High return on investment is necessary for Make more money now and in the future..",
+          "verbalization": "In order to have Make more money now and in the future., we must have High return on investment.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-sales-fill-capacity-to-csf-maximum-revenues",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-sales-fill-capacity",
+          "targetNodeId": "node-money-csf-maximum-revenues",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Sales fill up production capacity is necessary for Maximum revenues.",
+          "verbalization": "In order to have Maximum revenues, we must have Sales fill up production capacity.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-sufficient-production-capacity-to-csf-maximum-revenues",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-sufficient-production-capacity",
+          "targetNodeId": "node-money-csf-maximum-revenues",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Sufficient production capacity is necessary for Maximum revenues.",
+          "verbalization": "In order to have Maximum revenues, we must have Sufficient production capacity.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-efficient-production-operations-to-csf-optimized-cost",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-efficient-production-operations",
+          "targetNodeId": "node-money-csf-optimized-cost",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Efficient production operations is necessary for Optimized cost.",
+          "verbalization": "In order to have Optimized cost, we must have Efficient production operations.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-optimized-overhead-to-csf-optimized-cost",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-optimized-overhead",
+          "targetNodeId": "node-money-csf-optimized-cost",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Optimized overhead is necessary for Optimized cost.",
+          "verbalization": "In order to have Optimized cost, we must have Optimized overhead.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-effective-capital-investment-to-csf-high-return",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-effective-capital-investment",
+          "targetNodeId": "node-money-csf-high-return",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Effective capital investment is necessary for High return on investment.",
+          "verbalization": "In order to have High return on investment, we must have Effective capital investment.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-optimized-inventory-management-to-csf-high-return",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-optimized-inventory-management",
+          "targetNodeId": "node-money-csf-high-return",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Optimized inventory management is necessary for High return on investment.",
+          "verbalization": "In order to have High return on investment, we must have Optimized inventory management.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-high-market-demand-to-sales-fill-capacity",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-high-market-demand",
+          "targetNodeId": "node-money-sales-fill-capacity",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "High market demand is necessary for Sales fill up production capacity.",
+          "verbalization": "In order to have Sales fill up production capacity, we must have High market demand.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-optimum-product-price-to-high-market-demand",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-optimum-product-price",
+          "targetNodeId": "node-money-high-market-demand",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Optimum product price is necessary for High market demand.",
+          "verbalization": "In order to have High market demand, we must have Optimum product price.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-competitive-advantage-to-high-market-demand",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-competitive-advantage",
+          "targetNodeId": "node-money-high-market-demand",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Competitive advantage is necessary for High market demand.",
+          "verbalization": "In order to have High market demand, we must have Competitive advantage.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-effective-marketing-sales-to-competitive-advantage",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-effective-marketing-sales",
+          "targetNodeId": "node-money-competitive-advantage",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Effective marketing and sales is necessary for Competitive advantage.",
+          "verbalization": "In order to have Competitive advantage, we must have Effective marketing and sales.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-world-class-production-methods-to-efficient-production-operations",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-world-class-production-methods",
+          "targetNodeId": "node-money-efficient-production-operations",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "World-class production methods is necessary for Efficient production operations.",
+          "verbalization": "In order to have Efficient production operations, we must have World-class production methods.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-state-of-the-art-equipment-to-efficient-production-operations",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-state-of-the-art-equipment",
+          "targetNodeId": "node-money-efficient-production-operations",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "State-of-the-art equipment is necessary for Efficient production operations.",
+          "verbalization": "In order to have Efficient production operations, we must have State-of-the-art equipment.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-state-of-the-art-equipment-to-optimized-overhead",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-state-of-the-art-equipment",
+          "targetNodeId": "node-money-optimized-overhead",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "State-of-the-art equipment is necessary for Optimized overhead.",
+          "verbalization": "In order to have Optimized overhead, we must have State-of-the-art equipment.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-world-class-inventory-methods-to-optimized-inventory-management",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-world-class-inventory-methods",
+          "targetNodeId": "node-money-optimized-inventory-management",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "World-class inventory management methods is necessary for Optimized inventory management.",
+          "verbalization": "In order to have Optimized inventory management, we must have World-class inventory management methods.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-superior-employees-to-sufficient-production-capacity",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-superior-employees",
+          "targetNodeId": "node-money-sufficient-production-capacity",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Superior employees is necessary for Sufficient production capacity.",
+          "verbalization": "In order to have Sufficient production capacity, we must have Superior employees.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-superior-employees-to-competitive-advantage",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-superior-employees",
+          "targetNodeId": "node-money-competitive-advantage",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Superior employees is necessary for Competitive advantage.",
+          "verbalization": "In order to have Competitive advantage, we must have Superior employees.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-superior-employees-to-world-class-production-methods",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-superior-employees",
+          "targetNodeId": "node-money-world-class-production-methods",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Superior employees is necessary for World-class production methods.",
+          "verbalization": "In order to have World-class production methods, we must have Superior employees.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        },
+        {
+          "id": "link-money-superior-employees-to-optimized-inventory-management",
+          "treeId": "tree-money-goal-v1",
+          "sourceNodeId": "node-money-superior-employees",
+          "targetNodeId": "node-money-optimized-inventory-management",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "Superior employees is necessary for Optimized inventory management.",
+          "verbalization": "In order to have Optimized inventory management, we must have Superior employees.",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {
+            "status": "draft",
+            "clarity": "unknown",
+            "logicCheck": "necessity-verbalized",
+            "missingAssumptions": true,
+            "notes": ""
+          },
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        }
+      ],
+      "assumptions": [],
+      "layout": {
+        "engine": "elk",
+        "direction": "BT",
+        "lastRunAt": "2026-07-16T12:00:00+02:00",
+        "settings": {
+          "spacingNodeNode": 48,
+          "spacingLayer": 96,
+          "respectPinned": true,
+          "minimizeCrossings": true
+        },
+        "nodes": {
+          "node-money-goal": {
+            "x": 600,
+            "y": 70,
+            "width": 300,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-csf-maximum-revenues": {
+            "x": 120,
+            "y": 260,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-csf-optimized-cost": {
+            "x": 600,
+            "y": 260,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-csf-high-return": {
+            "x": 1080,
+            "y": 260,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-sales-fill-capacity": {
+            "x": 60,
+            "y": 450,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-sufficient-production-capacity": {
+            "x": 340,
+            "y": 450,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-efficient-production-operations": {
+            "x": 620,
+            "y": 450,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-optimized-overhead": {
+            "x": 900,
+            "y": 450,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-effective-capital-investment": {
+            "x": 1180,
+            "y": 450,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-high-market-demand": {
+            "x": 80,
+            "y": 640,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-world-class-production-methods": {
+            "x": 500,
+            "y": 640,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-state-of-the-art-equipment": {
+            "x": 780,
+            "y": 640,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-optimized-inventory-management": {
+            "x": 1060,
+            "y": 640,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-optimum-product-price": {
+            "x": 40,
+            "y": 820,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-competitive-advantage": {
+            "x": 320,
+            "y": 820,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-world-class-inventory-methods": {
+            "x": 1080,
+            "y": 820,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-effective-marketing-sales": {
+            "x": 300,
+            "y": 1000,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          },
+          "node-money-superior-employees": {
+            "x": 650,
+            "y": 1080,
+            "width": 250,
+            "height": 64,
+            "pinned": false,
+            "layoutSource": "manual"
+          }
+        },
+        "links": {
+          "link-money-csf-maximum-revenues-to-goal": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-csf-optimized-cost-to-goal": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-csf-high-return-to-goal": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-sales-fill-capacity-to-csf-maximum-revenues": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-sufficient-production-capacity-to-csf-maximum-revenues": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-efficient-production-operations-to-csf-optimized-cost": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-optimized-overhead-to-csf-optimized-cost": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-effective-capital-investment-to-csf-high-return": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-optimized-inventory-management-to-csf-high-return": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-high-market-demand-to-sales-fill-capacity": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-optimum-product-price-to-high-market-demand": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-competitive-advantage-to-high-market-demand": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-effective-marketing-sales-to-competitive-advantage": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-world-class-production-methods-to-efficient-production-operations": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-state-of-the-art-equipment-to-efficient-production-operations": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-state-of-the-art-equipment-to-optimized-overhead": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-world-class-inventory-methods-to-optimized-inventory-management": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-superior-employees-to-sufficient-production-capacity": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-superior-employees-to-competitive-advantage": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-superior-employees-to-world-class-production-methods": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "link-money-superior-employees-to-optimized-inventory-management": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      "canvasId": "canvas-money-goal",
+      "hostFrameId": "frame-money-goal-tree"
+    }
+  ],
+  "exports": [],
+  "canvases": [
+    {
+      "schemaVersion": "0.2",
+      "id": "canvas-money-goal",
+      "systemId": "sys-money-goal",
+      "name": "Complex Money Goal canvas",
+      "rootFrameId": "frame-canvas-root-money-goal",
+      "frames": [
+        {
+          "id": "frame-canvas-root-money-goal",
+          "canvasId": "canvas-money-goal",
+          "treeId": null,
+          "kind": "root",
+          "parentFrameId": null,
+          "name": "Root",
+          "semanticType": "workspaceRoot",
+          "collapsed": false,
+          "childFrameIds": [
+            "frame-money-goal-tree"
+          ],
+          "nodeIds": [],
+          "notes": "Infinite workspace root"
+        },
+        {
+          "id": "frame-money-goal-tree",
+          "canvasId": "canvas-money-goal",
+          "treeId": "tree-money-goal-v1",
+          "kind": "diagram",
+          "parentFrameId": "frame-canvas-root-money-goal",
+          "name": "Goal Tree",
+          "semanticType": "goalTree",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "node-money-goal",
+            "node-money-csf-maximum-revenues",
+            "node-money-csf-optimized-cost",
+            "node-money-csf-high-return",
+            "node-money-sales-fill-capacity",
+            "node-money-sufficient-production-capacity",
+            "node-money-efficient-production-operations",
+            "node-money-optimized-overhead",
+            "node-money-effective-capital-investment",
+            "node-money-high-market-demand",
+            "node-money-world-class-production-methods",
+            "node-money-state-of-the-art-equipment",
+            "node-money-optimized-inventory-management",
+            "node-money-optimum-product-price",
+            "node-money-competitive-advantage",
+            "node-money-world-class-inventory-methods",
+            "node-money-effective-marketing-sales",
+            "node-money-superior-employees"
+          ],
+          "notes": "Stable complex visual regression case",
+          "createdAt": "2026-07-16T12:00:00+02:00",
+          "updatedAt": "2026-07-16T12:00:00+02:00"
+        }
+      ],
+      "layout": {
+        "frames": {
+          "frame-money-goal-tree": {
+            "x": 48,
+            "y": 40,
+            "width": 1500,
+            "height": 1240,
+            "pinned": true,
+            "layoutSource": "manual"
+          }
+        }
+      },
+      "viewState": {
+        "activeFrameId": "frame-money-goal-tree",
+        "selectedElementId": "node-money-goal",
+        "selectionRootIds": [
+          "node-money-goal"
+        ],
+        "mode": "navigation",
+        "zoom": 0.8,
+        "pan": {
+          "x": 0,
+          "y": 0
+        },
+        "panels": {
+          "leftOpen": true,
+          "rightOpen": true
+        },
+        "breadcrumb": [
+          "Money Goal Tree",
+          "Benchmark",
+          "Goal Tree"
+        ]
+      },
+      "createdAt": "2026-07-16T12:00:00+02:00",
+      "updatedAt": "2026-07-16T12:00:00+02:00"
+    }
+  ]
+}

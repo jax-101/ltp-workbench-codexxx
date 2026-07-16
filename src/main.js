@@ -23,11 +23,13 @@ const buildLabel = () => `v${buildInfo.version} - build ${buildInfo.id} - ${buil
 const prototypeDataPath = () => {
   let fileName = "prototype-workspace.json";
   if (process.env.LTP_MANUAL_TEST === "1") fileName = "manual-test-workspace-v2.json";
+  if (process.env.LTP_COMPLEX_TEST === "1") fileName = "complex-goal-tree-manual-test.json";
   if (process.env.LTP_SMOKE_TEST === "1") fileName = "smoke-test-workspace.json";
   if (process.env.LTP_VISUAL_TEST === "1") fileName = "visual-test-workspace.json";
   return path.join(app.getPath("userData"), fileName);
 };
 const sampleDataPath = () => path.join(app.getAppPath(), "outputs", "sample-workspace-v0.1.json");
+const complexFixturePath = () => path.join(app.getAppPath(), "outputs", "complex-goal-tree-workspace-v0.1.json");
 const exportPath = () => path.join(app.getAppPath(), "outputs", "prototype-goal-tree-export.md");
 
 const fallbackWorkspace = () => ({
@@ -124,6 +126,15 @@ const loadWorkspace = async () => {
         workspace = fallbackWorkspace();
       }
       return workspace;
+    }
+  }
+
+  if (process.env.LTP_COMPLEX_TEST === "1") {
+    try {
+      return await readJson(prototypeDataPath());
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+      return readJson(complexFixturePath());
     }
   }
 
@@ -354,7 +365,7 @@ const createWindow = () => {
     height: 900,
     minWidth: 1120,
     minHeight: 720,
-    title: `LTP Workbench - ${buildLabel()}${process.env.LTP_MANUAL_TEST === "1" ? " - Manual Test" : ""}`,
+    title: `LTP Workbench - ${buildLabel()}${process.env.LTP_MANUAL_TEST === "1" ? " - Manual Test" : ""}${process.env.LTP_COMPLEX_TEST === "1" ? " - Complex Goal Tree Test" : ""}`,
     backgroundColor: "#f7f5ef",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -396,6 +407,7 @@ const createWindow = () => {
 };
 
 ipcMain.handle("workspace:load", async () => (await getWorkspaceEngine()).getSnapshot());
+ipcMain.handle("fixture:complex-goal-tree", async () => migrateWorkspace(await readJson(complexFixturePath())).workspace);
 ipcMain.handle("app:build-info", async () => buildInfo);
 ipcMain.handle("workspace:save", async (_event, workspace, options) => saveWorkspaceTransaction(workspace, options));
 ipcMain.handle("workspace:save-view", async (_event, canvasId, viewState) => saveViewStateTransaction(canvasId, viewState));

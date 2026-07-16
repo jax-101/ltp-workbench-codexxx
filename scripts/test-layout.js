@@ -5,6 +5,8 @@ const { runComposedLayout, validateComposedGeometry, boxContains, boxesOverlap }
 
 const fixturePath = path.join(__dirname, "..", "outputs", "sample-workspace-v0.1.json");
 const fixture = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
+const complexFixturePath = path.join(__dirname, "..", "outputs", "complex-goal-tree-workspace-v0.1.json");
+const complexFixture = JSON.parse(fs.readFileSync(complexFixturePath, "utf8"));
 
 const canvasFor = (workspace) => workspace.canvases[0];
 const treeFor = (workspace) => workspace.trees[0];
@@ -179,10 +181,33 @@ const run = async () => {
   assert.equal(directLayout.quality.bends, 0, "the optimized complex tree should not introduce bends");
   assert.equal(directLayout.quality.directionExceptions, 1, "one secondary link may oppose the preferred direction");
   assert.equal(directLayerCount, 3, "direction relaxation should avoid an unnecessary fourth layer");
-  assert.equal(directLayout.optimization[directHost.id].relaxed, true, "the optimizer should select the relaxed candidate");
+  assert.equal(directLayout.optimization[directHost.id].candidates, 9, "the optimizer should compare every deterministic candidate");
   assert(canvasFor(directResult).layout.frames[directHost.id].width < 1800, "the host frame should shrink to its content");
 
-  console.log("Composed layout tests passed: directional ports, straight routes, fitted frames, nesting, pins and determinism.");
+  const complexResult = await runComposedLayout(complexFixture);
+  const complexTree = treeFor(complexResult);
+  const complexGoal = complexTree.nodes.find((node) => node.type === "goal");
+  const complexCsfs = complexTree.nodes.filter((node) => node.type === "criticalSuccessFactor");
+  const csfGoalLinks = complexTree.links.filter(
+    (link) => complexCsfs.some((node) => node.id === link.sourceNodeId) && link.targetNodeId === complexGoal.id
+  );
+  const goalArrivals = csfGoalLinks.map((link) => complexTree.layout.links[link.id].route.at(-1));
+  const distinctGoalArrivals = new Set(goalArrivals.map((point) => `${point.x}:${point.y}`));
+  const goalBox = complexTree.layout.nodes[complexGoal.id];
+  const csfRows = new Set(complexCsfs.map((node) => complexTree.layout.nodes[node.id].y));
+  assert.equal(complexTree.nodes.length, 18, "the permanent complex fixture should retain all reference entities");
+  assert.equal(complexTree.links.length, 21, "the permanent complex fixture should retain cross-branch links");
+  assert.equal(csfGoalLinks.length, 3, "all three CSFs must point directly to the Goal");
+  assert.equal(csfRows.size, 1, "all three CSFs must share their semantic layer");
+  assert([...complexCsfs].every((node) => complexTree.layout.nodes[node.id].y > goalBox.y), "BT places the CSF layer below the Goal");
+  assert.equal(distinctGoalArrivals.size, 3, "CSF arrowheads must use distinct arrival points on the Goal");
+  assert(goalArrivals.every((point) => point.y === goalBox.y + goalBox.height), "BT arrows must enter through the Goal bottom edge");
+  assert.deepEqual(validateComposedGeometry(complexResult), [], "the complex fixture must preserve composed geometry");
+  assert.equal(complexTree.layout.quality.crossings, 0, "the complex fixture should avoid independent route crossings");
+  assert(complexTree.layout.quality.straightRoutes >= 19, "the complex fixture should keep nearly every route straight");
+  assert(complexTree.layout.quality.bends <= 2, "the complex fixture should need at most two bends");
+
+  console.log("Composed layout tests passed: directional ports, distributed arrowheads, complex routing, fitted frames, nesting, pins and determinism.");
 };
 
 run().catch((error) => {

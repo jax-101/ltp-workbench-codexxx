@@ -1758,6 +1758,8 @@ const linkEndpoints = (sourceBox, targetBox) => {
 const renderLinks = () => {
   const activeTree = tree();
   const size = canvasSize();
+  const markerScale = 1 / clamp(zoomLevel, 0.35, 2.5);
+  const markerNumber = (value) => Math.round(value * markerScale * 100) / 100;
   const lines = activeTree.links
     .map((link) => {
       const sourceBox = layoutNode(link.sourceNodeId);
@@ -1790,14 +1792,14 @@ const renderLinks = () => {
   return `
     <svg class="links-svg" width="${size.width}" height="${size.height}" viewBox="0 0 ${size.width} ${size.height}">
       <defs>
-        <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
-          <path d="M0,0 L0,8 L11,4 z" fill="#3f4945"></path>
+        <marker id="arrow" markerWidth="${markerNumber(12)}" markerHeight="${markerNumber(12)}" refX="${markerNumber(11)}" refY="${markerNumber(4)}" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L0,${markerNumber(8)} L${markerNumber(11)},${markerNumber(4)} z" fill="#3f4945"></path>
         </marker>
-        <marker id="arrow-selected" markerWidth="13" markerHeight="13" refX="11" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
-          <path d="M0,0 L0,9 L12,4.5 z" fill="#9f4f45"></path>
+        <marker id="arrow-selected" markerWidth="${markerNumber(13)}" markerHeight="${markerNumber(13)}" refX="${markerNumber(12)}" refY="${markerNumber(4.5)}" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L0,${markerNumber(9)} L${markerNumber(12)},${markerNumber(4.5)} z" fill="#9f4f45"></path>
         </marker>
-        <marker id="arrow-included" markerWidth="13" markerHeight="13" refX="11" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
-          <path d="M0,0 L0,9 L12,4.5 z" fill="#c58f2c"></path>
+        <marker id="arrow-included" markerWidth="${markerNumber(13)}" markerHeight="${markerNumber(13)}" refX="${markerNumber(12)}" refY="${markerNumber(4.5)}" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L0,${markerNumber(9)} L${markerNumber(12)},${markerNumber(4.5)} z" fill="#c58f2c"></path>
         </marker>
       </defs>
       ${lines}
@@ -3390,7 +3392,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3B.2" && hostVisible && rootHidden, "Build 3B.2 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3B.3" && hostVisible && rootHidden, "Build 3B.3 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3687,88 +3689,57 @@ window.__ltpVisualTestStep = async (step) => {
   }
 
   if (step === "readable-routing") {
-    const hostFrame = frameById()[activeTree.hostFrameId];
-    const rootFrame = frameById()[rootFrameId()];
-    const routingNodes = activeTree.nodes.slice(0, 10);
-    const routingNodeIds = routingNodes.map((node) => node.id);
-    const [goalId, firstId, secondId, thirdId, fourthId, fifthId, sixthId, seventhId, eighthId, shortcutId] = routingNodeIds;
-    const linkPairs = [
-      [firstId, goalId],
-      [secondId, goalId],
-      [thirdId, goalId],
-      [fourthId, firstId],
-      [fifthId, firstId],
-      [sixthId, secondId],
-      [seventhId, thirdId],
-      [sixthId, firstId],
-      [eighthId, thirdId],
-      [shortcutId, goalId],
-      [shortcutId, sixthId]
-    ];
-
-    activeTree.nodes = routingNodes;
-    routingNodes.forEach((node, index) => {
-      node.frameId = hostFrame.id;
-      node.type = index === 0 ? "goal" : "necessaryCondition";
-      node.statement = index === 0 ? "Goal" : `Necessary condition ${index}`;
-      node.shortLabel = node.statement;
-    });
-    activeTree.links = linkPairs.map(([sourceNodeId, targetNodeId], index) => ({
-      id: `visual-readable-link-${index + 1}`,
-      treeId: activeTree.id,
-      sourceNodeId,
-      targetNodeId,
-      type: "necessity",
-      meaning: "Necessary condition supports its parent",
-      verbalization: "In order to have the target, we must have the source",
-      assumptionIds: []
-    }));
-    activeTree.assumptions = [];
-    activeTree.layout.direction = "BT";
-    activeTree.layout.nodes = Object.fromEntries(
-      Object.entries(activeTree.layout.nodes || {}).filter(([nodeId]) => routingNodeIds.includes(nodeId))
-    );
-    activeTree.layout.links = {};
-
-    activeCanvas.frames = [rootFrame, hostFrame];
-    rootFrame.childFrameIds = [hostFrame.id];
-    rootFrame.nodeIds = [];
-    hostFrame.parentFrameId = rootFrame.id;
-    hostFrame.childFrameIds = [];
-    hostFrame.nodeIds = routingNodeIds;
-    activeCanvas.layout.frames = {
-      [hostFrame.id]: {
-        x: 60,
-        y: 48,
-        width: 1800,
-        height: 900,
-        pinned: true,
-        layoutSource: "manual"
-      }
-    };
-
+    const previousRevision = workspaceData.revision;
+    workspaceData = await window.ltpPrototype.loadComplexGoalTreeFixture();
+    workspaceData.revision = previousRevision;
+    const complexTree = tree();
+    const hostFrame = frameById()[complexTree.hostFrameId];
     activeFrameId = hostFrame.id;
+    multiSelectionMode = false;
+    connectionSourceIds.clear();
+    hintsVisible = false;
     replaceSelection(hostFrame.id);
+    await persist("Load complex Goal Tree visual fixture");
     await runAutoLayout();
     const issues = await window.ltpPrototype.validateLayout(workspaceData);
-    const routes = activeTree.links.map((link) => activeTree.layout.links[link.id]?.route || []);
-    const straight = routes.every((route) => route.length === 2);
-    const quality = tree().layout.quality;
-    const optimization = tree().layout.optimization?.[hostFrame.id];
-    const layerCenters = routingNodeIds
-      .map((nodeId) => layoutNode(nodeId).y + layoutNode(nodeId).height / 2)
-      .sort((left, right) => left - right);
-    const layers = layerCenters.reduce(
-      (state, position) =>
-        position - state.last > 48 ? { count: state.count + 1, last: position } : state,
-      { count: 0, last: Number.NEGATIVE_INFINITY }
-    ).count;
-    const fitted = layoutFrame(hostFrame.id).width < 1800 && layoutFrame(hostFrame.id).height < 900;
+    const laidOutTree = tree();
+    const goal = laidOutTree.nodes.find((node) => node.type === "goal");
+    const csfIds = new Set(
+      laidOutTree.nodes.filter((node) => node.type === "criticalSuccessFactor").map((node) => node.id)
+    );
+    const csfGoalLinks = laidOutTree.links.filter(
+      (link) => csfIds.has(link.sourceNodeId) && link.targetNodeId === goal.id
+    );
+    const csfRows = new Set([...csfIds].map((nodeId) => layoutNode(nodeId).y));
+    const goalArrivals = csfGoalLinks.map((link) => laidOutTree.layout.links[link.id].route.at(-1));
+    const distinctArrivals = new Set(goalArrivals.map((point) => `${point.x}:${point.y}`)).size;
+    const goalBox = layoutNode(goal.id);
+    const enterGoalEdge = goalArrivals.every((point) => point.y === goalBox.y + goalBox.height);
+    replaceSelection(goal.id);
+    render();
+    const arrowMarkersVisible = csfGoalLinks.every(
+      (link) => document.querySelector(`[data-link-id="${link.id}"]`)?.getAttribute("marker-end") === "url(#arrow)"
+    );
+    const arrowMarkerScreenWidth = Number(document.querySelector("#arrow")?.getAttribute("markerWidth")) * zoomLevel;
+    const arrowMarkersStayReadable = arrowMarkerScreenWidth >= 10;
+    const quality = laidOutTree.layout.quality;
+    const mostlyStraight = quality.straightRoutes >= laidOutTree.links.length - 2;
+    const frameContainsDiagram = issues.length === 0;
     fitView();
     return result(
-      "Optimize a complex crossing case",
-      issues.length === 0 && straight && quality.crossings === 0 && quality.directionExceptions === 1 && layers === 3 && optimization?.relaxed && fitted,
-      `Eleven links straight=${straight}, crossings=${quality.crossings}, direction exceptions=${quality.directionExceptions}, layers=${layers}, relaxed=${Boolean(optimization?.relaxed)}, frame fitted=${fitted}, geometry issues=${issues.length}.`
+      "Lay out the permanent complex Goal Tree fixture",
+      laidOutTree.nodes.length === 18 &&
+        laidOutTree.links.length === 21 &&
+        csfGoalLinks.length === 3 &&
+        csfRows.size === 1 &&
+        distinctArrivals === 3 &&
+        enterGoalEdge &&
+        arrowMarkersVisible &&
+        arrowMarkersStayReadable &&
+        quality.crossings === 0 &&
+        mostlyStraight &&
+        frameContainsDiagram,
+      `18 entities, 21 links, CSF to Goal=${csfGoalLinks.length}, CSF layers=${csfRows.size}, distinct arrow arrivals=${distinctArrivals}, visible arrow markers=${arrowMarkersVisible}, arrow width=${arrowMarkerScreenWidth.toFixed(1)}px, crossings=${quality.crossings}, straight=${quality.straightRoutes}, bends=${quality.bends}, geometry issues=${issues.length}.`
     );
   }
 

@@ -138,30 +138,77 @@ const effectiveDirectionVector = (source, target, direction) => {
   return { x: 0, y: delta.y >= 0 ? 1 : -1 };
 };
 
-const routePorts = (source, target, direction) => {
-  const sourceCenter = centerOf(source);
-  const targetCenter = centerOf(target);
-  const vector = effectiveDirectionVector(source, target, direction);
-  const sourceDistance = vector.x ? source.width / 2 : source.height / 2;
-  const targetDistance = vector.x ? target.width / 2 : target.height / 2;
+const pointOnBoxSide = (box, outward, fraction = 0.5) => {
+  const center = centerOf(box);
   return {
-    source: {
-      x: sourceCenter.x + vector.x * sourceDistance,
-      y: sourceCenter.y + vector.y * sourceDistance
-    },
+    x: outward.x ? center.x + outward.x * box.width / 2 : box.x + box.width * fraction,
+    y: outward.y ? center.y + outward.y * box.height / 2 : box.y + box.height * fraction
+  };
+};
+
+const routePorts = (source, target, direction, assignment = {}) => {
+  const vector = effectiveDirectionVector(source, target, direction);
+  const sourcePoint = pointOnBoxSide(source, vector, assignment.sourceFraction);
+  const targetPoint = pointOnBoxSide(
+    target,
+    { x: -vector.x, y: -vector.y },
+    assignment.targetFraction
+  );
+  return {
+    source: sourcePoint,
     start: {
-      x: sourceCenter.x + vector.x * (sourceDistance + ROUTE_CLEARANCE),
-      y: sourceCenter.y + vector.y * (sourceDistance + ROUTE_CLEARANCE)
+      x: sourcePoint.x + vector.x * ROUTE_CLEARANCE,
+      y: sourcePoint.y + vector.y * ROUTE_CLEARANCE
     },
     end: {
-      x: targetCenter.x - vector.x * (targetDistance + ROUTE_CLEARANCE),
-      y: targetCenter.y - vector.y * (targetDistance + ROUTE_CLEARANCE)
+      x: targetPoint.x - vector.x * ROUTE_CLEARANCE,
+      y: targetPoint.y - vector.y * ROUTE_CLEARANCE
     },
-    target: {
-      x: targetCenter.x - vector.x * targetDistance,
-      y: targetCenter.y - vector.y * targetDistance
-    }
+    target: targetPoint
   };
+};
+
+const distributedPortAssignments = (links, nodeLayouts, direction) => {
+  const groups = new Map();
+  const assignments = new Map(links.map((link) => [link.id, {}]));
+  const addEndpoint = (link, role, nodeId, otherNodeId, outward) => {
+    const box = nodeLayouts[nodeId];
+    const otherBox = nodeLayouts[otherNodeId];
+    if (!box || !otherBox) return;
+    const key = `${nodeId}:${outward.x}:${outward.y}`;
+    const entries = groups.get(key) || [];
+    entries.push({ linkId: link.id, role, box, otherCenter: centerOf(otherBox), outward });
+    groups.set(key, entries);
+  };
+
+  for (const link of links) {
+    const source = nodeLayouts[link.sourceNodeId];
+    const target = nodeLayouts[link.targetNodeId];
+    if (!source || !target) continue;
+    const vector = effectiveDirectionVector(source, target, direction);
+    addEndpoint(link, "source", link.sourceNodeId, link.targetNodeId, vector);
+    addEndpoint(link, "target", link.targetNodeId, link.sourceNodeId, { x: -vector.x, y: -vector.y });
+  }
+
+  for (const entries of groups.values()) {
+    const variesOnY = Boolean(entries[0].outward.x);
+    entries.sort((left, right) => {
+      const difference = variesOnY
+        ? left.otherCenter.y - right.otherCenter.y
+        : left.otherCenter.x - right.otherCenter.x;
+      return Math.abs(difference) > 0.001 ? difference : left.linkId.localeCompare(right.linkId);
+    });
+    const dimension = variesOnY ? entries[0].box.height : entries[0].box.width;
+    const margin = Math.min(28, dimension / 4);
+    entries.forEach((entry, index) => {
+      const position = entries.length === 1
+        ? dimension / 2
+        : margin + index * (dimension - margin * 2) / (entries.length - 1);
+      assignments.get(entry.linkId)[`${entry.role}Fraction`] = position / dimension;
+    });
+  }
+
+  return assignments;
 };
 
 const segmentIntersectsBox = (start, end, box) => {
@@ -379,8 +426,8 @@ const routeMidpoint = (route) => {
   return route.at(-1);
 };
 
-const orthogonalRoute = (source, target, obstacles, existingRoutes, direction, link) => {
-  const ports = routePorts(source, target, direction);
+const orthogonalRoute = (source, target, obstacles, existingRoutes, direction, link, portAssignment) => {
+  const ports = routePorts(source, target, direction, portAssignment);
   const expandedObstacles = obstacles.map((box) => ({
     x: box.x - ROUTE_CLEARANCE,
     y: box.y - ROUTE_CLEARANCE,
@@ -569,7 +616,8 @@ const runComposedLayout = async (workspace, options = {}) => {
   }
   const links = trees.flatMap((tree) => tree.links || []);
   const frameById = new Map(canvas.frames.map((frame) => [frame.id, frame]));
-  const direction = activeTree.layout?.direction || getDiagramDefinition(activeTree.type)?.defaultDirection || "TB";
+  const diagramDefinition = getDiagramDefinition(activeTree.type);
+  const direction = activeTree.layout?.direction || diagramDefinition?.defaultDirection || "TB";
   const spacingNodeNode = activeTree.layout?.settings?.spacingNodeNode || ITEM_SPACING;
   const spacingLayer = activeTree.layout?.settings?.spacingLayer || LAYER_SPACING;
   const elk = new ELK();
@@ -609,6 +657,18 @@ const runComposedLayout = async (workspace, options = {}) => {
     let elkChildren = [];
     if (items.length) {
       const graphEdges = collapsedEdges(frameId, links, nodeOwners, frameById);
+      const goalTreeRanks = frame.kind === "diagram" && diagramDefinition?.layering === "distanceToSink"
+        ? shortestSinkRanks(items.map((item) => item.id), graphEdges)
+        : new Map();
+      const maximumGoalTreeRank = goalTreeRanks.size ? Math.max(...goalTreeRanks.values()) : 0;
+      const rankPartitions = goalTreeRanks.size === items.length
+        ? new Map(
+            [...goalTreeRanks.entries()].map(([itemId, rank]) => [
+              itemId,
+              maximumGoalTreeRank - rank
+            ])
+          )
+        : new Map();
       const graph = {
         id: `container-${frameId}`,
         layoutOptions: {
@@ -617,9 +677,17 @@ const runComposedLayout = async (workspace, options = {}) => {
           "elk.spacing.nodeNode": String(spacingNodeNode),
           "elk.layered.spacing.nodeNodeBetweenLayers": String(spacingLayer),
           "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
-          "elk.edgeRouting": "ORTHOGONAL"
+          "elk.edgeRouting": "ORTHOGONAL",
+          ...(rankPartitions.size ? { "org.eclipse.elk.partitioning.activate": "true" } : {})
         },
-        children: items.map(({ id, width, height }) => ({ id, width, height })),
+        children: items.map(({ id, width, height }) => ({
+          id,
+          width,
+          height,
+          ...(rankPartitions.has(id)
+            ? { layoutOptions: { "org.eclipse.elk.partitioning.partition": String(rankPartitions.get(id)) } }
+            : {})
+        })),
         edges: graphEdges
       };
       const optimize = !isRoot && frame.kind === "diagram" && items.length >= 4 && graphEdges.length >= 3 && !items.some((item) => item.pinned);
@@ -714,6 +782,7 @@ const runComposedLayout = async (workspace, options = {}) => {
       if (result.nodeLayouts[node.id]) nextNodeLayout[node.id] = result.nodeLayouts[node.id];
     }
     const nextLinkLayout = {};
+    const portAssignments = distributedPortAssignments(tree.links || [], nextNodeLayout, direction);
     for (const link of tree.links || []) {
       const source = nextNodeLayout[link.sourceNodeId];
       const target = nextNodeLayout[link.targetNodeId];
@@ -721,7 +790,9 @@ const runComposedLayout = async (workspace, options = {}) => {
       const obstacles = allNodeBoxes
         .filter(([nodeId]) => nodeId !== link.sourceNodeId && nodeId !== link.targetNodeId)
         .map(([, box]) => box);
-      const route = source && target ? orthogonalRoute(source, target, obstacles, routedRoutes, direction, link) : previous.route || [];
+      const route = source && target
+        ? orthogonalRoute(source, target, obstacles, routedRoutes, direction, link, portAssignments.get(link.id))
+        : previous.route || [];
       if (route.length) {
         routedRoutes.push({ points: route, nodeIds: [link.sourceNodeId, link.targetNodeId] });
       }

@@ -268,11 +268,26 @@ Incluye:
 - Metricas finales persistidas: cruces, codos, rectas, longitud y excepciones de direccion.
 - Regresion del caso de 10 entidades y 11 links: tres capas, cero cruces, cero codos y una excepcion.
 
+### Build 3B.3: caso complejo de Goal Tree
+
+Estado: implementado; regresion visual automatizada superada. Pendiente de validacion manual.
+
+Incluye:
+
+- Fixture versionado de 18 entidades y 21 links basado en el Goal Tree complejo de referencia.
+- Tres CSF conectados directamente al Goal y alineados en una capa semantica.
+- Estratificacion configurable por diagrama mediante distancia al nodo objetivo.
+- Puertos distribuidos cuando varias conexiones comparten un lado de una entidad.
+- Puntas de flecha con tamano estable en pantalla al cambiar el zoom.
+- Regresion compartida entre validacion de modelo, pruebas de Layout y capturas visuales.
+- Resultado de referencia: cero cruces, 20 rutas rectas, dos codos y cero problemas geometricos.
+
 Seguimiento de la iteracion:
 
 - F-036: contencion y exclusion geometrica estrictas implementadas en 3B.0.
 - F-038: insercion direccional sin alterar la forma existente.
-- F-043: rutas simples primero en 3B.1 y optimizacion multiarranque implementada en 3B.2.
+- F-043: rutas simples en 3B.1, optimizacion multiarranque en 3B.2 y caso complejo permanente en 3B.3.
+- F-059: fixture complejo, capas semanticas y puntas separadas implementados en 3B.3.
 - F-047: indicacion de direccion pendiente de aplicar.
 - F-052: transiciones animadas de Layout, Undo y Redo implementadas en 3B.0.
 - F-057: recolocacion espacial dentro del frame destino implementada en 3B.0.

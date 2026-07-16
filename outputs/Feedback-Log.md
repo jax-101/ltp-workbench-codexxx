@@ -663,3 +663,18 @@ Criterios de aceptacion:
 - Arrastrar un nodo explicitamente seleccionado mueve todos los nodos explicitamente seleccionados conservando sus distancias relativas.
 - El grupo cambia de frame en una unica transaccion y Undo lo devuelve completo.
 - La contencion final y el crecimiento del frame cumplen F-036 en 3B.
+
+### F-059: Caso complejo permanente para Layout y claridad de flechas
+
+Feedback: reproducir como caso base el Goal Tree de referencia con un Goal, tres CSF y condiciones necesarias compartidas entre ramas. Los tres CSF apuntan directamente al Goal y sus puntas deben distinguirse.
+
+Estado: implementado en `3B.3`. El fixture estable contiene 18 entidades y 21 links. La regresion visual carga este archivo, aplica Layout y comprueba capas, rutas, geometria y puntas de flecha.
+
+Criterios de aceptacion:
+
+- Los tres CSF apuntan directamente al Goal y ocupan una misma capa semantica.
+- Las tres flechas llegan a puntos distintos del borde del Goal.
+- Las puntas conservan al menos 10 px en pantalla al encajar un diagrama grande.
+- El caso mantiene los links cruzados y los habilitadores compartidos de la referencia.
+- Layout produce cero cruces independientes, no atraviesa entidades y conserva la mayoria de rutas rectas.
+- El frame Goal Tree se ajusta para contener completamente el resultado.
