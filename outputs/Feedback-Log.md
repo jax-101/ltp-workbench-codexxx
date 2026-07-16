@@ -805,3 +805,20 @@ Criterios de aceptacion:
 - Tras restaurar el ciclo, las unicas excepciones direccionales permitidas corresponden a `cycleBreaks` registrados.
 - El umbral de estabilidad del 15% solo compara layouts factibles; no conserva una disposicion aciclica con flechas invertidas.
 - Frames anidados aplican la misma regla dentro de cada nivel jerarquico.
+
+### F-068: Flechas curvas configurables
+
+Feedback: interesa evaluar flechas curvas en lugar de rutas ortogonales.
+
+Estado: implementado como experimento reversible en `3C.5`. `CURVED` es la proyeccion inicial de Goal Tree y `ORTHOGONAL` permanece disponible en la barra superior. Ambos modos consumen la misma ruta neutral calculada por el coordinador.
+
+Criterios de aceptacion:
+
+- Cambiar entre `Curved` y `Orthogonal` no ejecuta Layout ni mueve entidades o frames.
+- Enlaces directos usan curvas cubicas con tangentes perpendiculares en origen y destino.
+- Rutas con desvio redondean sus esquinas sin abandonar el corredor libre de obstaculos.
+- Las puntas conservan orientacion, tamano estable con zoom y puertos distribuidos.
+- Las curvas no atraviesan entidades visibles ni detalles ocultos de frames minimizados.
+- Layout, Undo y Redo mantienen los enlaces unidos a sus extremos durante la transicion.
+- La preferencia se persiste en `tree.layout.settings.routingStyle` y es independiente de la semantica de los links.
+- El registro declarativo de cada diagrama puede elegir estilo inicial y estilos admitidos.

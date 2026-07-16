@@ -454,3 +454,9 @@ Razon: un dialogo en cada borrado interrumpe un flujo de edicion intensivo. Cuan
 Decision: antes de invocar ELK, el coordinador calcula un orden aciclico. En un DAG conserva todas las aristas. Si detecta ciclos, aplica una aproximacion determinista de feedback arc set, invierte solo esas aristas en el grafo de layout y calcula rangos por el camino mas largo al destino. Tras obtener posiciones, enruta todos los links con sus extremos semanticos originales.
 
 Razon: una flecha invertida en un DAG comunica una dependencia distinta y no puede intercambiarse por compacidad. Un ciclo, en cambio, hace matematicamente imposible que todas las aristas avancen sobre un unico eje; registrar la ruptura temporal hace explicable y comprobable la excepcion inevitable.
+
+### D-074: La ruta geometrica y su trazo visual son contratos separados
+
+Decision: el coordinador persiste una ruta neutral formada por puntos y libre de obstaculos. El renderer puede proyectarla como polilinea ortogonal o como curva suave. Los enlaces directos usan Bezier cubico con tangentes perpendiculares; los desvios usan curvas cuadraticas acotadas por la longitud de cada tramo.
+
+Razon: pedir a cada estilo visual que vuelva a resolver navegacion, cruces y obstaculos duplicaria la parte mas delicada del sistema. Separar topologia de representacion permite comparar legibilidad sin alterar posiciones, semantica, historial o garantias geometricas.

@@ -1435,11 +1435,19 @@ const animateToLayout = async (nextWorkspace) => {
           visibleEndpointBox(firstLink.sourceNodeId),
           visibleEndpointBox(firstLink.targetNodeId)
         );
+        const renderedStart = line?.tagName.toLowerCase() === "path"
+          ? line.getPointAtLength(0)
+          : { x: Number(line?.getAttribute("x1")), y: Number(line?.getAttribute("y1")) };
+        const renderedEnd = line?.tagName.toLowerCase() === "path"
+          ? line.getPointAtLength(line.getTotalLength())
+          : { x: Number(line?.getAttribute("x2")), y: Number(line?.getAttribute("y2")) };
         layoutAnimationConnectionsTracked =
           layoutAnimationConnectionsTracked &&
           Boolean(line) &&
-          Math.abs(Number(line?.getAttribute("x1")) - endpoints.source.x) < 0.01 &&
-          Math.abs(Number(line?.getAttribute("y2")) - endpoints.target.y) < 0.01;
+          Math.abs(renderedStart.x - endpoints.source.x) < 0.01 &&
+          Math.abs(renderedStart.y - endpoints.source.y) < 0.01 &&
+          Math.abs(renderedEnd.x - endpoints.target.x) < 0.01 &&
+          Math.abs(renderedEnd.y - endpoints.target.y) < 0.01;
       }
       if (linearProgress < 1) {
         requestAnimationFrame(step);
@@ -1764,6 +1772,17 @@ const layoutDirectionLabel = (direction) =>
     RL: "Right to left"
   })[direction] || direction;
 
+const routingStyle = () =>
+  tree()?.layout?.settings?.routingStyle || diagramDefinition()?.defaultRoutingStyle || "ORTHOGONAL";
+
+const updateRoutingStyle = async (style) => {
+  if (!diagramDefinition()?.routingStyles?.some((candidate) => candidate.id === style)) return;
+  tree().layout.settings = { ...(tree().layout.settings || {}), routingStyle: style };
+  await persist("Change link routing style");
+  setStatus(`Link routing: ${diagramDefinition().routingStyles.find((candidate) => candidate.id === style)?.label || style}`);
+  render();
+};
+
 const updateLayoutDirection = async (direction) => {
   if (!diagramDefinition()?.directions.includes(direction)) return;
   tree().layout.direction = direction;
@@ -1833,6 +1852,7 @@ const linkEndpoints = (sourceBox, targetBox) => {
   const sourceDistance = vector.x ? sourceBox.width / 2 : sourceBox.height / 2;
   const targetDistance = vector.x ? targetBox.width / 2 : targetBox.height / 2;
   return {
+    vector,
     source: {
       x: sourceCenter.x + vector.x * sourceDistance,
       y: sourceCenter.y + vector.y * sourceDistance
@@ -1842,6 +1862,46 @@ const linkEndpoints = (sourceBox, targetBox) => {
       y: targetCenter.y - vector.y * targetDistance
     }
   };
+};
+
+const pathNumber = (value) => Math.round(value * 100) / 100;
+
+const curvedLinkPath = (route, vector) => {
+  if (route.length < 2) return "";
+  const point = (candidate) => `${pathNumber(candidate.x)},${pathNumber(candidate.y)}`;
+  if (route.length === 2) {
+    const [source, target] = route;
+    const distance = Math.hypot(target.x - source.x, target.y - source.y);
+    const axialDistance = Math.abs((target.x - source.x) * vector.x + (target.y - source.y) * vector.y);
+    const handle = Math.min(140, Math.max(12, distance * 0.28), Math.max(12, axialDistance * 0.45));
+    const firstControl = { x: source.x + vector.x * handle, y: source.y + vector.y * handle };
+    const secondControl = { x: target.x - vector.x * handle, y: target.y - vector.y * handle };
+    return `M${point(source)} C${point(firstControl)} ${point(secondControl)} ${point(target)}`;
+  }
+
+  let path = `M${point(route[0])}`;
+  for (let index = 1; index < route.length - 1; index += 1) {
+    const previous = route[index - 1];
+    const corner = route[index];
+    const next = route[index + 1];
+    const incomingLength = Math.hypot(corner.x - previous.x, corner.y - previous.y);
+    const outgoingLength = Math.hypot(next.x - corner.x, next.y - corner.y);
+    const radius = Math.min(32, incomingLength / 2, outgoingLength / 2);
+    if (radius < 0.5) {
+      path += ` L${point(corner)}`;
+      continue;
+    }
+    const entry = {
+      x: corner.x - (corner.x - previous.x) / incomingLength * radius,
+      y: corner.y - (corner.y - previous.y) / incomingLength * radius
+    };
+    const exit = {
+      x: corner.x + (next.x - corner.x) / outgoingLength * radius,
+      y: corner.y + (next.y - corner.y) / outgoingLength * radius
+    };
+    path += ` L${point(entry)} Q${point(corner)} ${point(exit)}`;
+  }
+  return `${path} L${point(route.at(-1))}`;
 };
 
 const renderLinks = () => {
@@ -1854,7 +1914,7 @@ const renderLinks = () => {
     .map((link) => {
       const sourceBox = visibleEndpointBox(link.sourceNodeId);
       const targetBox = visibleEndpointBox(link.targetNodeId);
-      const { source, target } = linkEndpoints(sourceBox, targetBox);
+      const { source, target, vector } = linkEndpoints(sourceBox, targetBox);
       const selected = link.id === selectedElementId ? "selected" : "";
       const included = selectionIds.has(link.id) && link.id !== selectedElementId ? "selection-included" : "";
       const marker = selected ? "arrow-selected" : included ? "arrow-included" : "arrow";
@@ -1863,6 +1923,11 @@ const renderLinks = () => {
         linkLayout.projectedSourceId === visibleEndpointId(link.sourceNodeId) &&
         linkLayout.projectedTargetId === visibleEndpointId(link.targetNodeId);
       const route = routeMatchesProjection ? linkLayout.route || [] : [];
+      if (routingStyle() === "CURVED") {
+        const curvedRoute = !layoutAnimating && route.length >= 2 ? route : [source, target];
+        const path = curvedLinkPath(curvedRoute, vector);
+        return `<path class="tree-link-line link-curved ${selected} ${included}" data-link-id="${link.id}" d="${path}" marker-end="url(#${marker})" />`;
+      }
       if (!layoutAnimating && route.length >= 2) {
         const path = route.map((point, index) => `${index ? "L" : "M"}${point.x},${point.y}`).join(" ");
         return `<path class="tree-link-line ${selected} ${included}" data-link-id="${link.id}" d="${path}" marker-end="url(#${marker})" />`;
@@ -2233,6 +2298,14 @@ const renderCanvas = () => {
               )
               .join("")}
           </select>
+          <select class="routing-select" data-routing-style title="Link routing style" aria-label="Link routing style">
+            ${diagramDefinition().routingStyles
+              .map(
+                (style) =>
+                  `<option value="${style.id}" ${routingStyle() === style.id ? "selected" : ""}>${escapeHtml(style.label)}</option>`
+              )
+              .join("")}
+          </select>
           <button class="${hintsVisible ? "is-active" : ""}" data-action="hints" aria-pressed="${hintsVisible}">Hints</button>
           <button data-action="layout">Layout</button>
         </div>
@@ -2521,6 +2594,10 @@ const bindEvents = () => {
     updateLayoutDirection(event.target.value);
   });
 
+  app.querySelector("[data-routing-style]")?.addEventListener("change", (event) => {
+    updateRoutingStyle(event.target.value);
+  });
+
   app.querySelector("[data-active-frame]")?.addEventListener("change", (event) => {
     setActiveFrame(event.target.value);
   });
@@ -2787,6 +2864,8 @@ window.__ltpSmokeTest = async () => {
     document.querySelector(".build-identity")?.textContent === `v${buildInfo.version} | build ${buildInfo.id}`;
   const registryDrivesGoalTree =
     diagramDefinition().defaultDirection === "TB" &&
+    diagramDefinition().defaultRoutingStyle === "CURVED" &&
+    diagramDefinition().routingStyles.map((style) => style.id).join(",") === "CURVED,ORTHOGONAL" &&
     diagramNodeTypes().map((type) => type.id).join(",") ===
       "goal,criticalSuccessFactor,necessaryCondition,assumption";
   const selectedTestFrame = activeCanvas.frames.find((frame) => frame.id === activeTree.hostFrameId);
@@ -2965,6 +3044,21 @@ window.__ltpSmokeTest = async () => {
     linkLine.getAttribute("marker-end") === "url(#arrow)" &&
     (Number(linkLine.getAttribute("x2")) !== centerOf(targetBox).x ||
       Number(linkLine.getAttribute("y2")) !== centerOf(targetBox).y);
+  const routingStyleSelectorAvailable =
+    document.querySelector("[data-routing-style]")?.value === "CURVED" &&
+    document.querySelectorAll("[data-routing-style] option").length === 2;
+  const curvedRoutesRender =
+    document.querySelectorAll("path.link-curved").length === activeTree.links.filter(linkIsVisible).length &&
+    [...document.querySelectorAll("path.link-curved")].every((path) => /[CQ]/.test(path.getAttribute("d") || ""));
+  const originalRoutingStyle = tree().layout.settings?.routingStyle;
+  tree().layout.settings = { ...(tree().layout.settings || {}), routingStyle: "ORTHOGONAL" };
+  render();
+  const orthogonalComparisonRenders =
+    document.querySelectorAll("path.link-curved").length === 0 &&
+    [...document.querySelectorAll("path.tree-link-line")].every((path) => !/[CQ]/.test(path.getAttribute("d") || ""));
+  if (originalRoutingStyle) tree().layout.settings.routingStyle = originalRoutingStyle;
+  else delete tree().layout.settings.routingStyle;
+  render();
 
   openNodePreview(activeTree.nodes[0]?.id);
   const fullTextPreviewWorks = document.querySelector(".node-preview-dialog p")?.textContent === activeTree.nodes[0]?.statement;
@@ -3300,6 +3394,9 @@ window.__ltpSmokeTest = async () => {
       cmdXPreservesNativeCut &&
       viewportPreserved &&
       arrowEndsAtEdge &&
+      routingStyleSelectorAvailable &&
+      curvedRoutesRender &&
+      orthogonalComparisonRenders &&
       fullTextPreviewWorks &&
       enterStartsEditing &&
       shiftEnterKeepsEditing &&
@@ -3370,6 +3467,9 @@ window.__ltpSmokeTest = async () => {
     cmdXPreservesNativeCut,
     viewportPreserved,
     arrowEndsAtEdge,
+    routingStyleSelectorAvailable,
+    curvedRoutesRender,
+    orthogonalComparisonRenders,
     fullTextPreviewWorks,
     enterStartsEditing,
     shiftEnterKeepsEditing,
@@ -3524,7 +3624,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.4" && hostVisible && rootHidden, "Build 3C.4 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.5" && hostVisible && rootHidden, "Build 3C.5 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3974,6 +4074,37 @@ window.__ltpVisualTestStep = async (step) => {
     const mostlyStraight = quality.straightRoutes >= laidOutTree.links.length - 3;
     const stableLayoutKept = laidOutTree.layout.optimization?.[hostFrame.id]?.preserved === true;
     const frameContainsDiagram = issues.length === 0;
+    const curvedPaths = [...document.querySelectorAll("path.link-curved")];
+    const curvedRoutingVisible =
+      routingStyle() === "CURVED" &&
+      curvedPaths.length === laidOutTree.links.length &&
+      curvedPaths.every((path) => /[CQ]/.test(path.getAttribute("d") || ""));
+    const visibleObstacleBoxes = [
+      ...laidOutTree.nodes.filter(nodeIsVisible).map((node) => ({ id: node.id, box: layoutNode(node.id) })),
+      ...canvas().frames
+        .filter((frame) => frameIsVisible(frame) && frame.collapsed)
+        .map((frame) => ({ id: frame.id, box: layoutFrame(frame.id) }))
+    ];
+    const curvesAvoidEntities = curvedPaths.every((path) => {
+      const link = linkById()[path.dataset.linkId];
+      const excluded = new Set([visibleEndpointId(link.sourceNodeId), visibleEndpointId(link.targetNodeId)]);
+      const blockers = visibleObstacleBoxes.filter((candidate) => !excluded.has(candidate.id));
+      const length = path.getTotalLength();
+      for (let distance = 10; distance < length - 10; distance += 6) {
+        const point = path.getPointAtLength(distance);
+        if (
+          blockers.some(({ box }) =>
+            point.x > box.x + 1 &&
+            point.x < box.x + box.width - 1 &&
+            point.y > box.y + 1 &&
+            point.y < box.y + box.height - 1
+          )
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
     fitView();
     return result(
       "Lay out the permanent complex Goal Tree fixture",
@@ -3987,9 +4118,11 @@ window.__ltpVisualTestStep = async (step) => {
         arrowMarkersStayReadable &&
         quality.crossings === 0 &&
         mostlyStraight &&
+        curvedRoutingVisible &&
+        curvesAvoidEntities &&
         stableLayoutKept &&
         frameContainsDiagram,
-      `18 entities, 21 links, current layout kept=${stableLayoutKept}, CSF to Goal=${csfGoalLinks.length}, CSF layers=${csfRows.size}, distinct arrow arrivals=${distinctArrivals}, arrow width=${arrowMarkerScreenWidth.toFixed(1)}px, crossings=${quality.crossings}, straight=${quality.straightRoutes}, bends=${quality.bends}, geometry issues=${issues.length}.`
+      `18 entities, 21 links, current layout kept=${stableLayoutKept}, curved paths=${curvedRoutingVisible}, curves avoid entities=${curvesAvoidEntities}, CSF to Goal=${csfGoalLinks.length}, CSF layers=${csfRows.size}, distinct arrow arrivals=${distinctArrivals}, arrow width=${arrowMarkerScreenWidth.toFixed(1)}px, crossings=${quality.crossings}, straight=${quality.straightRoutes}, bends=${quality.bends}, geometry issues=${issues.length}.`
     );
   }
 

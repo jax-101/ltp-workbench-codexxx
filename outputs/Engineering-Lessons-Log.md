@@ -572,9 +572,19 @@ Aprendizaje: no toda metrica debe vivir en una suma ponderada. Si violar una pro
 
 Aplicacion futura: separar factibilidad de calidad; documentar que restricciones proceden del dominio; registrar las relajaciones temporales; y probar tanto el caso sin excepciones como el caso minimo que obliga a una.
 
+### L-061: Separar geometria y representacion hace baratos los experimentos visuales
+
+Fecha: 2026-07-16
+
+Evidencia: el enrutador ya calculaba puertos, corredores y desvios libres de obstaculos. Al conservar esos puntos y transformar solo el `path` SVG fue posible comparar flechas curvas y ortogonales sin tocar ELK, posiciones, links, Undo o el modelo headless.
+
+Aprendizaje: una decision visual reversible debe apoyarse sobre un contrato geometrico neutral. Si el aspecto esta acoplado al algoritmo que resuelve restricciones, cada experimento reabre problemas ya solucionados y resulta dificil atribuir mejoras o regresiones.
+
+Aplicacion futura: persistir intencion y geometria estable; derivar el trazo en la capa de presentacion; ofrecer comparacion con los mismos datos; y verificar tanto percepcion visual como invariantes mediante muestreo de la curva final.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-061`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-062`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

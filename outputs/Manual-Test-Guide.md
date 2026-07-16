@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.4`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.5`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -26,7 +26,7 @@ npm run test:visual
 
 El comando abre un workspace aislado, ejecuta minimizacion de frames, layout interno, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo, conexion y ruptura de ciclos, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 37 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
 
-Las capturas `03` a `06` muestran minimizar, Undo, Redo y expandir. La captura `26-readable-routing.png` debe mostrar 18 entidades, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
+Las capturas `03` a `06` muestran minimizar, Undo, Redo y expandir. La captura `26-readable-routing.png` debe mostrar 18 entidades, rutas curvas sin entidades atravesadas, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
 
 La captura `27-internal-frame-layout.png` comprueba que tres entidades independientes forman una cuadricula compacta. La captura `28-multi-entity-frame-targets.png` comprueba que un frame usado inicialmente como contexto reaparece como destino tras seleccionar dos entidades con `M`. La captura `29-cycle-breaking.png` comprueba que un ciclo conserva sus tres links y produce una unica excepcion. Las capturas `30` a `37` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, excepciones, rupturas, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
 
@@ -355,6 +355,20 @@ Resultado esperado: el frame activo sirve como contexto provisional al elegir en
 8. Comprueba que las tres entidades forman ahora capas aciclicas, con `0 direction exceptions` y `0 cycle breaks`.
 
 Resultado esperado: Layout rompe el ciclo solo en su grafo temporal. La relacion restaurada explica la unica flecha contraria; al desaparecer el ciclo, desaparece tambien toda excepcion.
+
+## Prueba 27: comparar Curved y Orthogonal
+
+1. Abre el caso complejo y selecciona `Curved` en el selector situado junto a la direccion.
+2. Comprueba que las entidades y el frame no cambian de posicion.
+3. Sigue visualmente varias ramas desde `Superior employees` hasta el Goal.
+4. Comprueba que las curvas salen y llegan perpendicularmente, no atraviesan entidades y conservan puntas visibles.
+5. Pulsa `Layout` y observa que las curvas acompanian el movimiento de las entidades.
+6. Pulsa `Cmd+Z` y `Cmd+Shift+Z`; comprueba que siguen conectadas durante ambas transiciones.
+7. Cambia el selector a `Orthogonal`.
+8. Comprueba que solo cambia el trazo y que posiciones, seleccion, zoom, links y frame activo permanecen iguales.
+9. Cierra y vuelve a abrir la aplicacion; comprueba que se conserva el estilo elegido.
+
+Resultado esperado: ambos estilos representan exactamente el mismo diagrama y la misma ruta geometrica. `Curved` mejora continuidad visual sin perder puertos, obstaculos o transiciones; `Orthogonal` permite una comparacion inmediata y reversible.
 
 ## Registro de resultados
 

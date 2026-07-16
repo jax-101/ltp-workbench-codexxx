@@ -6,6 +6,11 @@ const DIAGRAM_DEFINITIONS = Object.freeze({
     layering: "distanceToSink",
     cycleBreaking: Object.freeze({ strategy: "greedyFeedbackArc", restoreSemanticEdges: true }),
     directions: Object.freeze(["TB", "BT", "LR", "RL"]),
+    defaultRoutingStyle: "CURVED",
+    routingStyles: Object.freeze([
+      Object.freeze({ id: "CURVED", label: "Curved" }),
+      Object.freeze({ id: "ORTHOGONAL", label: "Orthogonal" })
+    ]),
     defaultNodeType: "necessaryCondition",
     nodeTypes: Object.freeze([
       Object.freeze({ id: "goal", label: "Goal", shortLabel: "Goal", unique: true }),

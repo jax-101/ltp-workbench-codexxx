@@ -358,7 +358,9 @@ Campos globales:
 - `engine`: por ejemplo `elk`.
 - `direction`: `TB`, `BT`, `LR`, `RL`.
 - `lastRunAt`.
-- `settings`.
+- `settings`, incluyendo `routingStyle`: `CURVED` u `ORTHOGONAL`.
+
+La ruta persistida sigue siendo una lista neutral de puntos que evita obstaculos. `routingStyle` controla su proyeccion visual y puede cambiarse sin recalcular posiciones ni modificar links semanticos.
 
 Fase 1 usa auto-layout por comando. No debe reordenar agresivamente sin accion del usuario.
 

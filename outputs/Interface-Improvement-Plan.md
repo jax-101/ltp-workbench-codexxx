@@ -446,6 +446,26 @@ Evidencia:
 - Bateria visual `3C.4` con 37 escenarios en estado `PASS`.
 - Captura `29-cycle-breaking.png`: una unica excepcion visible y necesaria dentro del ciclo.
 
+### Build 3C.5: representacion curva de links
+
+Estado: implementado y validado automaticamente y visualmente.
+
+Incluye:
+
+- Selector persistente `Curved / Orthogonal` en la barra superior.
+- `CURVED` como estilo inicial declarativo de Goal Tree.
+- Bezier cubico para enlaces directos con salida y llegada perpendiculares.
+- Redondeo cuadratico de rutas con obstaculos, conservando el corredor calculado.
+- Curvas actualizadas durante Layout, Undo y Redo.
+- Comparacion sin recalcular posiciones ni alterar links.
+
+Evidencia:
+
+- Smoke test verifica selector, comandos SVG curvos, modo ortogonal y transiciones.
+- El caso complejo renderiza 21 curvas, evita todas las entidades y conserva tres llegadas distintas al Goal.
+- Bateria visual `3C.5` con 37 escenarios en estado `PASS`.
+- Captura `26-readable-routing.png`: Goal Tree complejo completo en modo `Curved`.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:
