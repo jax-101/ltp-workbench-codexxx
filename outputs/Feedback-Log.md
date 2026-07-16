@@ -167,7 +167,16 @@ Estado: implementado en la iteracion 2.2 y validado por el usuario el 2026-07-15
 
 Feedback: cada diagrama tiene una lista de elementos con atributos propios, por ejemplo CSF y NC para Goal Tree. Seria interesante disponer de una infraestructura para definir nuevos diagramas y configurar Goal Tree, CRT, EC, etc. Esto haria la herramienta mas extensible y util.
 
-Estado: implementacion parcial en la iteracion 3A. Goal Tree ya obtiene tipos permitidos, etiquetas, orden y direccion predeterminada de un registro central compartido por Node y la interfaz. Siguen pendientes los atributos por tipo, reglas de link, validaciones y acciones para completar la infraestructura.
+Estado: implementacion parcial en la iteracion 3A y assessment multi-diagrama completado en `3C.13`. Goal Tree ya obtiene tipos permitidos, etiquetas, orden y direccion predeterminada de un registro central. La investigacion de CRT, FRT, EC, PrT y TrT demuestra que el registro debe incluir relaciones n-arias, proceso logico, topologia, validaciones, acciones y un compilador hacia ELK. La implementacion del kernel queda planificada en `3C.14`, antes de copiar/pegar subgrafos.
+
+Criterios arquitectonicos anadidos:
+
+- Junctions `AND/OR` representan relaciones logicas y no afirmaciones ficticias.
+- EC puede declarar una plantilla topologica sin forzar esa rigidez sobre CRT o FRT.
+- Goal Tree, CRT y FRT comparten infraestructura sin compartir necesariamente Types o reglas.
+- Un unico backend ELK consume un grafo neutral compilado desde cada definicion.
+- Assumptions pueden pertenecer a relaciones n-arias y las derivaciones entre diagramas se conservan aparte.
+- El nucleo, la CLI y Undo/Redo operan sobre IDs semanticos, no sobre artefactos sinteticos de layout.
 
 ### F-024: Texto cortado en entidades
 

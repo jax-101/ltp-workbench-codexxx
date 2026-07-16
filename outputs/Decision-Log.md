@@ -502,3 +502,9 @@ Razon: un comando llamado parent o supporting condition no esta completo si solo
 Decision: mientras la seleccion multiple esta activa, cualquier letra sin modificadores se interpreta como parte de un hint antes de consultar comandos globales. `Enter` finaliza conservando la seleccion, `Esc` limpia primero el buffer parcial y `Ctrl+G` cancela y limpia. Los comandos con modificadores, como `Cmd+F`, permanecen disponibles.
 
 Razon: una `M` no puede significar de forma determinista a la vez caracter de una etiqueta y cierre inmediato del modo. Dar propiedad de las letras al contexto elimina la ambiguedad para todo el alfabeto y evita mantener listas crecientes de excepciones.
+
+### D-082: Los diagramas comparten kernel, no una forma semantica unica
+
+Decision: Goal Tree, CRT, FRT, EC, PrT y TrT se modelaran como diagramas con elementos y relaciones n-arias definidos por un registro. Las junctions seran proyecciones seleccionables de relaciones y no nodos de contenido. Un compilador por definicion generara el `LayoutGraph` consumido por el unico backend ELK layered.
+
+Razon: los diagramas alternan causa suficiente y condicion necesaria, admiten operadores y topologias diferentes y asignan significado distinto a ciclos, assumptions e injections. Añadir flags a links binarios o condicionales al renderer mezclaria dominio y presentacion, y haria fragiles copiar/pegar, CLI, validacion y layout.

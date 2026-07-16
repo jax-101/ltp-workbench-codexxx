@@ -672,9 +672,19 @@ Aprendizaje: cuando una interfaz modal interpreta caracteres como datos, ese con
 
 Aplicacion futura: ordenar el enrutamiento por contexto; reservar teclas no ambiguas como `Enter` y `Esc` para finalizar o cancelar; mantener comandos modificados disponibles; y probar secuencias que contengan cada tecla global relevante.
 
+### L-071: La extensibilidad debe modelar diferencias estructurales, no solo catalogos
+
+Fecha: 2026-07-16
+
+Evidencia: el registro inicial podia cambiar Types, etiquetas y direccion de Goal Tree, pero CRT/FRT necesitan relaciones `AND/OR` y ciclos, EC tiene una topologia canonica y PrT cambia el proceso logico. Ninguna lista de Types resuelve esas diferencias sin introducir excepciones en el resto del sistema.
+
+Aprendizaje: una arquitectura extensible no se valida añadiendo otro nombre al catalogo, sino incorporando un segundo caso que difiera en estructura. El punto comun adecuado suele ser un contrato intermedio: semantica especifica por encima y servicios genericos por debajo.
+
+Aplicacion futura: elegir fixtures que fuercen aridad, topologia y reglas distintas; separar relaciones de su representacion visual; compilar a un modelo neutral para motores externos; y probar el segundo dominio antes de estabilizar operaciones transversales como copiar, borrar o exportar.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-071`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-072`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

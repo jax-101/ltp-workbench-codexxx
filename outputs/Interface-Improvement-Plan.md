@@ -594,6 +594,45 @@ Evidencia:
 - Auditoria completa `43/43 PASS`, con captura especifica de dos entidades seleccionadas.
 - Regresion visual general `37/37 PASS`; el escenario 21 finaliza con `Enter` y el 25 conecta el grupo con `L`.
 
+### 3C.13: arquitectura semantica multi-diagrama
+
+Estado: investigacion y assessment completados; implementacion pendiente.
+
+Motivo: CRT, FRT, EC, PrT y TrT no son variaciones cosmeticas de Goal Tree. Combinan logica de causa suficiente o condicion necesaria, relaciones `AND/OR`, ciclos, topologias canonicas, assumptions e injections. Las operaciones colectivas y headless no deben consolidarse sobre un modelo exclusivamente binario.
+
+Incluye:
+
+- Schema `0.3` basado en `diagrams`, `elements`, relaciones n-arias y `derivations` entre artefactos.
+- Junctions como proyeccion visual de relaciones, no como afirmaciones ficticias.
+- Registro con Types, atributos, relaciones, aridad, roles, reglas, acciones y layout por diagrama.
+- Compilador `Diagram -> LayoutGraph` que conserva un unico backend ELK layered.
+- Validacion comun, validacion especifica y CLR progresiva.
+- Migracion reversible del Goal Tree actual.
+
+Criterios de aceptacion:
+
+- Goal Tree `0.2` migra sin perder IDs, frames, posiciones, links, assumptions ni historial funcional.
+- Un fixture CRT representa causas independientes, una junction `AND` y un loop sin trucos en los Types.
+- Un fixture EC valida la topologia A-B-C-D-D', conflicto, assumptions e injection.
+- Un fixture FRT representa injection, DE, precondition y negative branch.
+- Copiar, borrar, Undo/Redo y CLI operan sobre relaciones n-arias de forma atomica.
+- ELK recibe exclusivamente el grafo neutral compilado y no contiene condicionales de dominio.
+- El assessment detallado queda en `outputs/Diagram-Architecture-Assessment.md`.
+
+### 3C.14: kernel semantico y prueba vertical CRT
+
+Estado: planificado despues de 3C.13 y antes de copiar/pegar subgrafos.
+
+Incluye:
+
+- Migracion de schema y repositorio.
+- Comandos genericos para elementos, relaciones y assumptions.
+- Validadores declarativos y projection adapter.
+- Render y edicion de junctions.
+- Fixture CRT pequeno probado en nucleo, CLI, layout y captura visual.
+
+Gate: no se inicia la implementacion completa de EC/FRT hasta que Goal Tree y CRT compartan el mismo kernel sin ramas especificas en las operaciones comunes.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:
@@ -670,10 +709,11 @@ Incluye:
 
 Incluye:
 
-- F-023: registro declarativo de tipos de diagrama.
-- Configuracion de tipos de nodo, atributos, links permitidos, logica, verbalizacion, validaciones y layout.
+- Implementacion de paquetes completos sobre el kernel entregado en 3C.14.
+- CRT como primera prueba vertical; EC y FRT como siguiente flujo trazable.
+- PrT y TrT como validacion de condicion necesaria y pasos compuestos.
+- Configuracion de Types, atributos, relaciones, logica, verbalizacion, validaciones, acciones y layout.
 - Personalizacion de combinaciones de teclas sobre el registro interno de comandos.
-- Goal Tree como primera definicion; CRT y EC como siguientes validaciones de la infraestructura.
 
 ## Dependencias principales
 
@@ -682,4 +722,4 @@ Incluye:
 - Seleccion general -> cierre de frame -> copiar/borrar/cambiar tipo.
 - Frame activo -> raiz ilimitada -> insercion incremental -> layout compuesto.
 - Contencion de frames -> vista enfocada -> colapso -> rutas externas.
-- Registro minimo de diagramas -> ciclo de tipos -> registro completo -> CRT/EC.
+- Assessment multi-diagrama -> kernel semantico -> operaciones colectivas -> CRT vertical -> EC/FRT -> PrT/TrT.
