@@ -462,9 +462,19 @@ Aprendizaje: cuando una heuristica modifica trabajo humano, el estado actual deb
 
 Aplicacion futura: puntuar estabilidad, densidad y valores extremos ademas de promedios; comparar contra una linea base; exigir una mejora porcentual; y registrar por que se aplico o rechazo cada resultado automatico.
 
+### L-050: La aleatoriedad visual necesita semilla y un oraculo gradual
+
+Fecha: 2026-07-16
+
+Evidencia: cuatro grafos con conexiones pseudoaleatorias mostraron un salto desde cero problemas geometricos en frames hermanos hasta 22 y 21 problemas al anidar frames. Sin semillas fijas, los casos `4103` y `4104` no habrian podido repetirse; si la prueba solo comprobara que Electron termino, la regresion habria quedado oculta, y si exigiera ya cero defectos no podria funcionar como linea base intermedia.
+
+Aprendizaje: una prueba aleatoria se vuelve una herramienta de ingenieria cuando combina reproducibilidad con un oraculo apropiado a la madurez del sistema. Conviene separar invariantes que ya deben bloquear la entrega de metricas diagnosticas que todavia describen el trabajo pendiente.
+
+Aplicacion futura: registrar semilla y parametros junto a cada evidencia; conservar escenarios representativos; afirmar determinismo e integridad desde el principio; y promover gradualmente cruces, colisiones o umbrales perceptivos desde observaciones a criterios obligatorios cuando se implemente la correccion.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-050`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-051`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

@@ -22,6 +22,11 @@ const steps = [
     args: ["run", "test:layout"]
   },
   {
+    name: "Test deterministic randomized layouts",
+    command: "npm",
+    args: ["run", "test:layout-random"]
+  },
+  {
     name: "Check main process syntax",
     command: process.execPath,
     args: ["--check", "src/main.js"]

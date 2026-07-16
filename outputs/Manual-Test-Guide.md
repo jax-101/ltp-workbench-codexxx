@@ -24,9 +24,15 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, Layout compuesto, arrastre, Undo/Redo y conexion, y termina cargando el caso complejo permanente. Guarda capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional, geometrica o perceptiva. En el build 3B.4 las 22 comprobaciones deben terminar en `PASS`.
+El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, Layout compuesto, arrastre, Undo/Redo y conexion, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 30 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si no puede ejecutar o representar un escenario; los defectos visuales de la linea base se etiquetan como `needs work` hasta completar 3B.5.
 
 La captura `22-readable-routing.png` debe mostrar 18 entidades, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
+
+Las capturas `23` a `30` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
+
+```bash
+npm run test:layout-random
+```
 
 ## Abrir el caso complejo
 

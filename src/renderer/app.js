@@ -3368,7 +3368,7 @@ window.__ltpVisualTestStep = async (step) => {
   await workspaceOperationQueue;
   const activeTree = tree();
   const activeCanvas = canvas();
-  const result = (title, ok, detail) => ({ title, ok: Boolean(ok), detail });
+  const result = (title, ok, detail, assessment = null) => ({ title, ok: Boolean(ok), detail, assessment });
   const waitFor = async (predicate, timeoutMs = 2500) => {
     const startedAt = Date.now();
     while (!predicate() && Date.now() - startedAt < timeoutMs) {
@@ -3386,6 +3386,80 @@ window.__ltpVisualTestStep = async (step) => {
     for (const key of hint) await pressKey(key);
     return true;
   };
+
+  const randomScenario = /^random-(sparse|cross-frame|nested|fan-in)-(\d+)-(before|after)$/.exec(step);
+  if (randomScenario) {
+    const [, scenarioId, seedText, phase] = randomScenario;
+    const seed = Number(seedText);
+    if (phase === "before") {
+      const previousRevision = workspaceData.revision;
+      workspaceData = await window.ltpPrototype.loadRandomLayoutFixture({ scenarioId, seed });
+      workspaceData.revision = previousRevision;
+      const randomTree = tree();
+      const randomCanvas = canvas();
+      activeFrameId = randomTree.hostFrameId;
+      multiSelectionMode = false;
+      connectionSourceIds.clear();
+      hintsVisible = false;
+      panelState = { leftOpen: false, rightOpen: false };
+      replaceSelection(randomTree.hostFrameId);
+      await persist(`Load randomized layout fixture ${scenarioId} ${seed}`);
+      render();
+      fitView();
+      const frameByNode = new Map(randomTree.nodes.map((node) => [node.id, node.frameId]));
+      const crossFrameLinks = randomTree.links.filter(
+        (link) => frameByNode.get(link.sourceNodeId) !== frameByNode.get(link.targetNodeId)
+      ).length;
+      const nestedFrames = randomCanvas.frames.filter(
+        (frame) => frame.parentFrameId && frame.parentFrameId !== randomCanvas.rootFrameId && frame.parentFrameId !== randomTree.hostFrameId
+      ).length;
+      return result(
+        `Random ${scenarioId} layout before ELK (seed ${seed})`,
+        document.querySelectorAll(".tree-node").length === randomTree.nodes.length,
+        `${randomTree.nodes.length} entities, ${randomTree.links.length} links, ${crossFrameLinks} cross-frame links and ${nestedFrames} nested frames.`,
+        "baseline"
+      );
+    }
+
+    await runAutoLayout();
+    const randomTree = tree();
+    const randomCanvas = canvas();
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    const directNodeIds = (frame) => new Set(frame.nodeIds || []);
+    const verticalFrames = randomCanvas.frames
+      .filter((frame) => frame.kind === "container" && frame.nodeIds.length >= 3)
+      .filter((frame) => {
+        const centers = [...directNodeIds(frame)].map((nodeId) => {
+          const box = layoutNode(nodeId);
+          return box.x + box.width / 2;
+        });
+        return Math.max(...centers) - Math.min(...centers) < 24;
+      });
+    const finiteFrameBoxes = randomCanvas.frames
+      .filter((frame) => frame.id !== randomCanvas.rootFrameId)
+      .map((frame) => layoutFrame(frame.id))
+      .filter(Boolean);
+    const maximumAspectRatio = Math.max(
+      ...finiteFrameBoxes.map((box) => Math.max(box.width / box.height, box.height / box.width)),
+      1
+    );
+    const issueCounts = issues.reduce((counts, issue) => {
+      counts[issue.code] = (counts[issue.code] || 0) + 1;
+      return counts;
+    }, {});
+    const issueSummary = Object.entries(issueCounts)
+      .map(([code, count]) => `${code}:${count}`)
+      .join(", ") || "none";
+    const quality = randomTree.layout.quality || {};
+    render();
+    fitView();
+    return result(
+      `Random ${scenarioId} layout after ELK (seed ${seed})`,
+      document.querySelectorAll(".tree-node").length === randomTree.nodes.length,
+      `crossings=${quality.crossings}, bends=${quality.bends}, straight=${quality.straightRoutes}, route length=${quality.length}, vertical frames=${verticalFrames.length}, maximum frame ratio=${maximumAspectRatio.toFixed(2)}, geometry issues=${issues.length} (${issueSummary}).`,
+      issues.length || verticalFrames.length || maximumAspectRatio > 2.5 ? "needs work" : "clean"
+    );
+  }
 
   if (step === "baseline") {
     multiSelectionMode = false;

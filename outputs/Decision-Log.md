@@ -436,3 +436,9 @@ Razon: cero cruces no basta si un CSF aparece mezclado con NC o varias puntas te
 Decision: Layout evalua `CURRENT` y todas las variantes ELK mediante una puntuacion ponderada. El candidato ELK ganador se aplica solo si su coste es al menos un 15% menor que el actual. En otro caso se conservan las posiciones relativas existentes.
 
 Razon: recalcular no equivale a mejorar. Un umbral explicito protege el mapa mental del usuario frente a diferencias pequenas o ruido heuristico, mientras permite reemplazar composiciones claramente deficientes.
+
+### D-071: Las pruebas visuales aleatorias son deterministas y diagnosticas
+
+Decision: los escenarios visuales pseudoaleatorios declaran una semilla, una densidad de links y una estructura de frames. La prueba exige generacion y colocacion repetibles, pero registra los defectos de calidad como `needs work` mientras sirven de linea base y aun no forman parte del contrato de aceptacion.
+
+Razon: una captura aleatoria irrepetible no permite depurar ni comparar versiones. Al mismo tiempo, hacer fallar toda la suite por un defecto que la propia prueba acaba de descubrir impediria usarla como instrumento intermedio. Separar ejecucion correcta de evaluacion visual conserva ambos significados.

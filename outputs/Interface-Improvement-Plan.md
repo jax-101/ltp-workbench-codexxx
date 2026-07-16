@@ -297,6 +297,27 @@ Incluye:
 - Estado visible que informa cuando Layout conserva el mapa actual.
 - Regresiones para una disposicion estable que debe conservarse y otra dispersa que ELK debe sustituir.
 
+### Build 3B.5: frames como unidades de layout
+
+Estado: linea base visual y generador determinista implementados; correccion del motor pendiente.
+
+Incluye:
+
+- Cuatro escenarios reproducibles: sparse `4101`, cross-frame `4102`, nested `4103` y fan-in `4104`.
+- Capturas antes/despues con conexiones aleatorias, frames hermanos y frames anidados.
+- Metricas de cruces, codos, rectas, longitud, columnas internas, proporcion de frames y problemas geometricos.
+- Layout interno de abajo arriba para cada frame.
+- Proyeccion del frame calculado como una caja indivisible en el nivel padre.
+- Puertos de frontera para recomponer enlaces entre niveles.
+- Puntuacion ponderada y umbral de mejora aplicados por contenedor.
+
+Linea base observada en `3B.4`:
+
+- `4101`: 3 cruces, 30 codos y un frame convertido en columna, sin violaciones geometricas.
+- `4102`: 22 cruces, 68 codos y dos frames convertidos en columnas, sin violaciones geometricas.
+- `4103`: 75 cruces, 72 codos y 22 problemas geometricos con anidacion.
+- `4104`: 76 cruces, 82 codos y 21 problemas geometricos con fan-in y anidacion.
+
 Seguimiento de la iteracion:
 
 - F-036: contencion y exclusion geometrica estrictas implementadas en 3B.0.
@@ -304,6 +325,7 @@ Seguimiento de la iteracion:
 - F-043: rutas simples en 3B.1, optimizacion multiarranque en 3B.2 y caso complejo permanente en 3B.3.
 - F-059: fixture complejo, capas semanticas y puntas separadas implementados en 3B.3.
 - F-060: puntuacion ponderada, candidato actual y umbral del 15% implementados en 3B.4.
+- F-061: linea base aleatoria implementada; composicion jerarquica robusta pendiente en 3B.5.
 - F-047: indicacion de direccion pendiente de aplicar.
 - F-052: transiciones animadas de Layout, Undo y Redo implementadas en 3B.0.
 - F-057: recolocacion espacial dentro del frame destino implementada en 3B.0.

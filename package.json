@@ -20,6 +20,7 @@
     "test:prototype": "node scripts/test-prototype.js",
     "test:core": "node scripts/test-core.js",
     "test:layout": "node scripts/test-layout.js",
+    "test:layout-random": "node scripts/test-random-layouts.js",
     "fixture:complex": "node scripts/build-complex-fixture.js",
     "ltp": "node scripts/ltp-cli.js",
     "validate:model": "node scripts/validate-model.js",

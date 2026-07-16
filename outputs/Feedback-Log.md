@@ -694,3 +694,19 @@ Criterios de aceptacion:
 - Cruces, obstaculos y excepciones direccionales permanecen en la funcion de coste, pero ningun cruce minimo decide por si solo.
 - ELK sustituye `CURRENT` solamente cuando reduce la puntuacion al menos un 15%.
 - Conservar `CURRENT` mantiene todas las posiciones relativas y permite reajustar el frame para preservar contencion.
+
+### F-061: Cada frame debe optimizarse como una unidad jerarquica
+
+Feedback: Layout debe organizar el contenido de cada frame de forma practica. Un frame anidado debe participar en el layout de su padre como una entidad completa, con sus conexiones externas proyectadas sobre el borde, y no como un conjunto plano de nodos internos.
+
+Estado: linea base diagnostica implementada tras `3B.4`; correccion prevista para `3B.5`. Cuatro escenarios deterministas generan conexiones aleatorias y capturan estados antes/despues. Las semillas `4103` y `4104` reproducen solapamientos y perdida de contencion con frames anidados.
+
+Criterios de aceptacion:
+
+- Cada frame calcula primero un layout interno compacto y conserva una proporcion util.
+- El frame resultante se trata como una caja indivisible al organizar su padre.
+- Trasladar el frame desde el nivel padre mueve rigidamente todo su contenido.
+- Los links externos usan puertos de frontera y conservan sus entidades reales como extremos semanticos.
+- La puntuacion y el umbral del 15% se aplican en cada nivel de la jerarquia.
+- Aplicar Layout no convierte una cuadricula interna legible en una columna salvo que la topologia lo exija y la puntuacion demuestre una mejora clara.
+- Frames hermanos y anidados no se solapan, y ningun nodo queda dentro de un frame al que no pertenece.

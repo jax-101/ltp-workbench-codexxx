@@ -6,6 +6,7 @@ const { TransactionEngine, workspaceRevision } = require("./core/transaction-eng
 const { WorkspaceRepository } = require("./core/workspace-repository");
 const { runComposedLayout, validateComposedGeometry } = require("./core/composed-layout");
 const { migrateWorkspace } = require("./core/workspace-migrations");
+const { generateRandomLayoutFixture } = require("./core/random-layout-fixture");
 const packageMetadata = require("../package.json");
 
 let workspaceEngine = null;
@@ -315,7 +316,15 @@ const runVisualTest = async (mainWindow) => {
     "group-undo",
     "group-redo",
     "multi-connect",
-    "readable-routing"
+    "readable-routing",
+    "random-sparse-4101-before",
+    "random-sparse-4101-after",
+    "random-cross-frame-4102-before",
+    "random-cross-frame-4102-after",
+    "random-nested-4103-before",
+    "random-nested-4103-after",
+    "random-fan-in-4104-before",
+    "random-fan-in-4104-after"
   ];
   const evidenceDirectory = path.join(app.getAppPath(), "outputs", "test-evidence", buildInfo.id);
   await fs.mkdir(evidenceDirectory, { recursive: true });
@@ -348,6 +357,7 @@ const runVisualTest = async (mainWindow) => {
       `## ${index + 1}. ${result.title}`,
       "",
       `- Result: ${result.ok ? "PASS" : "FAIL"}`,
+      ...(result.assessment ? [`- Visual assessment: ${result.assessment}`] : []),
       `- Check: ${result.detail}`,
       `- Screenshot: ${result.screenshot}`,
       ""
@@ -408,6 +418,9 @@ const createWindow = () => {
 
 ipcMain.handle("workspace:load", async () => (await getWorkspaceEngine()).getSnapshot());
 ipcMain.handle("fixture:complex-goal-tree", async () => migrateWorkspace(await readJson(complexFixturePath())).workspace);
+ipcMain.handle("fixture:random-layout", async (_event, options) =>
+  generateRandomLayoutFixture(migrateWorkspace(await readJson(complexFixturePath())).workspace, options)
+);
 ipcMain.handle("app:build-info", async () => buildInfo);
 ipcMain.handle("workspace:save", async (_event, workspace, options) => saveWorkspaceTransaction(workspace, options));
 ipcMain.handle("workspace:save-view", async (_event, canvasId, viewState) => saveViewStateTransaction(canvasId, viewState));
