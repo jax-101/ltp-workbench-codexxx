@@ -528,3 +528,17 @@ Razon: una abstraccion probada solo con Goal Tree puede parecer generica y aun
 ocultar supuestos binarios, jerarquicos o visuales. Publicarla o construir un
 editor sobre ella demasiado pronto convierte cada descubrimiento metodologico
 posterior en una ruptura de compatibilidad.
+
+### D-085: La combinacion implicita depende del modo logico
+
+Decision: las relaciones separaran `type`, `combination` y `renderMode`. Las
+entradas directas se combinan como `OR` en diagramas de suficiencia y como `AND`
+en diagramas de necesidad. Los junctors explicitos disponibles son `AND`, `OR`,
+`MAG` y `XOR`, pero solo se muestran cuando agrupan entradas o sobrescriben la
+combinacion implicita. Por tanto, las causas independientes de CRT/FRT no
+muestran un junctor `OR` redundante.
+
+Razon: la misma geometria de flechas entrantes tiene una lectura distinta segun
+el modo logico. Confundir operador semantico con simbolo visible produce
+diagramas metodologicamente incorrectos y obliga a dibujar elementos que no
+aportan informacion.

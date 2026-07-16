@@ -87,10 +87,11 @@ y recuperacion fiel de un workspace en otra instalacion.
 
 ### Gaps
 
-1. `AND`, `OR`, `NECESSITY` y `CONFLICT` necesitan semantica formal, no solo un
-   enum. En CRT, varias causas independientes son alternativas suficientes sin
-   junction; una junction AND expresa que el conjunto es necesario para producir
-   el efecto. Esa diferencia debe sobrevivir a render, verbalizacion y CLI.
+1. `AND`, `OR`, `MAG` y `XOR` necesitan semantica formal, no solo un enum. En
+   CRT/FRT, varias causas independientes son `OR` implicito sin junction; en
+   diagramas de necesidad las entradas directas son `AND` implicito. Un junctor
+   agrupa o sobrescribe esa regla. La diferencia debe sobrevivir a render,
+   verbalizacion y CLI.
 2. Una assumption puede pertenecer a la relacion completa, a una premisa, a un
    tramo de la relacion o al conflicto. `assumptionIds[]` en la relacion no basta
    hasta decidir estas cardinalidades.
@@ -108,8 +109,8 @@ y recuperacion fiel de un workspace en otra instalacion.
 
 Congelar cuatro fixtures pequenos revisados por significado, no por apariencia:
 Goal Tree, CRT con AND/OR y loop, EC canonica con assumptions e injection, y FRT
-con negative branch. Cada uno debe incluir verbalizaciones esperadas, errores
-duros y advertencias CLR.
+con negative branch. Se anaden microfixtures de `MAG` y `XOR`. Cada caso debe
+incluir verbalizaciones esperadas, errores duros y advertencias CLR.
 
 ## Hat 3: UX y teclado
 

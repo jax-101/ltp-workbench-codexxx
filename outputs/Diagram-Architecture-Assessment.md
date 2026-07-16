@@ -51,14 +51,29 @@ diagram
 ```text
 relation
   id
-  type
-  operator: AND | OR | NECESSITY | CONFLICT
+  type: CAUSALITY | NECESSITY | CONFLICT | DERIVATION
+  combination: SIMPLE | AND | OR | MAG | XOR
+  renderMode: IMPLICIT | JUNCTION
   inputs: [{ elementId, role }]
   outputs: [{ elementId, role }]
   assumptionIds[]
 ```
 
-Una junction no se guarda como una afirmacion ficticia. Es la representacion visual de una relacion n-aria. Su identificador de layout se deriva de la relacion, por ejemplo `junction:<relationId>`, para que seleccion, rutas y Undo sean estables.
+`logicMode` establece la combinacion implicita de las flechas que llegan
+directamente a una entidad. En suficiencia, como CRT y FRT, son causas
+independientes `OR`. En necesidad, como Goal Tree, EC y PrT, son condiciones
+`AND`. Una relacion explicita puede sobrescribir esa regla.
+
+Una junction no se guarda como una afirmacion ficticia. Es la representacion
+visual de una relacion n-aria cuando hay que agrupar entradas o mostrar una
+combinacion distinta de la implicita. `AND` representa dependencia conjunta,
+`OR` alternativas, `MAG` contribuciones aditivas y `XOR` alternativas
+mutuamente excluyentes. Su identificador de layout se deriva de la relacion, por
+ejemplo `junction:<relationId>`, para que seleccion, rutas y Undo sean estables.
+
+En un CRT/FRT, varias flechas directas conservan `combination: OR` con
+`renderMode: IMPLICIT`; no se dibuja un junctor `OR` redundante. En un diagrama
+de necesidad puede aparecer un `OR` visible para expresar alternativas.
 
 ### Registro por diagrama
 
@@ -67,6 +82,7 @@ Cada definicion declara:
 - `logicMode` y direccion de lectura;
 - Types de elemento, atributos, cardinalidad y unicidad;
 - tipos de relacion, roles, operadores y aridad permitida;
+- combinacion implicita de entradas y junctors visibles admitidos;
 - plantilla topologica opcional, necesaria para EC;
 - reglas duras y advertencias progresivas;
 - acciones de dominio disponibles y valores iniciales;
@@ -138,7 +154,9 @@ Las relaciones entre artefactos se guardan como `derivations`, separadas de las 
 
 ## Secuencia recomendada
 
-1. Congelar tres fixtures de contrato: CRT con `AND/OR` y loop, EC canonica con assumptions y FRT con injection y negative branch.
+1. Congelar fixtures de contrato: CRT con `AND/OR` y loop, EC canonica con
+   assumptions, FRT con injection y negative branch, y microfixtures de `MAG` y
+   `XOR` que verifiquen semantica, verbalizacion y notacion.
 2. Definir schema `0.3`, migracion desde Goal Tree `0.2` y serializacion estable.
 3. Extraer un kernel generico de elementos, relaciones n-arias, derivaciones y validadores.
 4. Extraer Goal Tree a un paquete declarativo y demostrar que conserva exactamente su comportamiento.

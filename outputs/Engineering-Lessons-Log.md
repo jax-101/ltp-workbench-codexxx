@@ -711,9 +711,27 @@ implementar verticales completas; definir criterios que invaliden la hipotesis;
 y publicar el formato solo cuando varias extensiones reales funcionen sin ramas
 privilegiadas ni cambios en las primitivas base.
 
+### L-074: Un operador semantico no siempre necesita un simbolo visible
+
+Fecha: 2026-07-16
+
+Evidencia: en CRT y FRT, varias flechas directas representan causas `OR`
+independientes sin junctor. En diagramas de necesidad, las mismas flechas se
+leen como `AND`. Describir `OR` simplemente como un junctor rotulado introducia
+una contradiccion entre semantica y notacion.
+
+Aprendizaje: el valor por defecto de un contexto puede ser semantico sin tener
+representacion propia. Un elemento visual explicito solo es necesario para
+agrupar o sobrescribir ese valor.
+
+Aplicacion futura: separar modo, operador y render; declarar defaults por
+dominio; evitar simbolos redundantes; y probar la verbalizacion junto a la
+captura visual para comprobar que una geometria no adquiere dos significados
+accidentalmente.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-074`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-075`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

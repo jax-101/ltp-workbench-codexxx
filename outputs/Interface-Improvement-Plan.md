@@ -627,10 +627,14 @@ Estado: revision completada; gates pendientes de ejecucion.
 
 Antes de estabilizar el schema publico se cierran estos contratos:
 
-- Glosario semantico ejecutable para necesidad, suficiencia, causas `OR`,
-  junction `AND`, conflicto, assumptions y ruptura temporal de ciclos.
+- Glosario semantico ejecutable para necesidad, suficiencia, `AND` conceptual,
+  causas adicionales `OR`, `MAG`, `XOR`, conflicto, assumptions y ruptura
+  temporal de ciclos.
+- Regla implicita por `logicMode`: entradas directas `OR` en suficiencia y `AND`
+  en necesidad; un junctor solo agrupa o sobrescribe esa combinacion.
 - Fixtures-oraculo de Goal Tree, CRT, EC y FRT con verbalizaciones, errores duros
   y advertencias metodologicas esperadas.
+- Microfixtures de conformidad para `MAG` y `XOR`, incluida su notacion visual.
 - Separacion explicita entre definicion, instancia semantica, layout, view state
   y estado efimero.
 - Migracion aditiva y reversible desde `0.2`, con corpus de workspaces reales.
