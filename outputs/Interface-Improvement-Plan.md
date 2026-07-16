@@ -660,11 +660,15 @@ Evidencia Gate B:
 - Hoja de revision metodologica en `outputs/Semantic-Oracle-Review.md`.
 - Core, modelo, layout, Electron smoke y regresion visual 37/37 en PASS.
 - Log completo en `outputs/Semantic-Contract-Test-Log.md`.
-- Runtime y schema `0.2` sin cambios; `3C.14a` no iniciado.
+- Al cerrar Gate B, runtime y schema `0.2` permanecian sin cambios. El avance
+  posterior de `3C.14a` se documenta en la seccion siguiente.
 
 ### 3C.14: kernel semantico y prueba vertical CRT
 
-Estado: planificado despues de 3C.13 y antes de copiar/pegar subgrafos.
+Estado: en curso. Gate B, migracion reversible, validador compartido, preview
+CLI, refresco transaccional y primera vertical de comandos genericos de
+`3C.14a` estan implementados. La creacion/borrado n-ario y la paridad UI siguen
+pendientes.
 
 Incluye:
 
@@ -679,7 +683,13 @@ Gate: no se inicia la implementacion completa de EC/FRT hasta que Goal Tree y CR
 
 Subgates:
 
-- `3C.14a`: kernel interno y migracion aditiva con paridad de Goal Tree.
+- `3C.14a`: kernel interno y migracion aditiva con paridad de Goal Tree. En
+  PASS: proyeccion determinista, huella de frescura, idempotencia, downgrade
+  exacto, validador compartido, preview CLI, refresco dentro del mismo commit,
+  Undo/Redo y comandos de update para elements, relaciones `SIMPLE` y
+  assumptions. Pendientes crear/borrar relaciones y junctions, operaciones
+  colectivas, activacion controlada y paridad del renderer. Evidencia en
+  `outputs/Semantic-Migration-3C.14a.md`.
 - `3C.14b`: CRT vertical en core, CLI, renderer, teclado y layout.
 - `3C.14c`: spike de EC para validar topologia, roles y assumptions antes de
   publicar el formato. Si exige cambiar el kernel, se repiten las pruebas de

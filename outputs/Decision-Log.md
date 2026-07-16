@@ -565,3 +565,16 @@ por el mero hecho de existir un conflicto.
 Razon: una EC puede describir condiciones opuestas, pero tambien alternativas
 que podrian coexistir si hubiera suficientes recursos. Codificar todo conflicto
 como XOR convertiria una restriccion contextual en una imposibilidad logica.
+
+### D-088: La doble representacion solo existe dentro de una migracion controlada
+
+Decision: la primera migracion al kernel sera aditiva y conservara intacto el
+modelo `0.2`. La proyeccion semantica incluira una huella de los campos de
+origen y sera inicialmente de lectura. No se habilitaran escrituras
+independientes sobre kernel y links legacy; un unico commit transaccional debera
+actualizar la fuente canonica y su proyeccion de compatibilidad.
+
+Razon: mantener dos grafos editables permite divergencias silenciosas que una
+migracion aparentemente reversible no puede resolver. Una envoltura temporal
+con deteccion de obsolescencia permite probar el nuevo contrato y volver atras
+sin datos perdidos, mientras se construye el punto de escritura definitivo.

@@ -60,6 +60,7 @@ Si cualquier paso falla, el estado en memoria y el archivo permanecen sin cambio
 ```bash
 npm run ltp -- validate --workspace ./workspace.json --json
 npm run ltp -- tree list --workspace ./workspace.json --json
+npm run ltp -- semantic preview --workspace ./workspace.json --json
 npm run ltp -- node update \
   --workspace ./workspace.json \
   --tree tree-goal \
@@ -84,6 +85,11 @@ Las operaciones de escritura exigen una revision esperada. `--dry-run` devuelve 
 - Bloqueo entre procesos y escritura atomica.
 - CLI con validacion, consulta, actualizacion de nodos y aplicacion de comandos JSON.
 - Salida y errores estructurados para automatizacion.
+- Preview read-only de la migracion al kernel semantico con fingerprint y
+  cardinalidades, sin modificar el workspace.
+- Comandos `semantic.element.update`, `semantic.relation.update-endpoints` y
+  `semantic.assumption.update` disponibles mediante `apply`, con compatibilidad
+  Goal Tree y Undo/Redo atomicos.
 
 ## Evolucion pendiente
 

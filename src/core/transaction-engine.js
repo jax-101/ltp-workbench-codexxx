@@ -2,6 +2,7 @@ const { applyPatches, enablePatches, produce, produceWithPatches } = require("im
 const { createCommandRegistry } = require("./command-registry");
 const { assertWorkspace } = require("./workspace-validator");
 const { LtpError } = require("./errors");
+const { refreshSemanticProjections } = require("./semantic-migration");
 
 enablePatches();
 
@@ -100,9 +101,14 @@ class TransactionEngine {
     }
 
     const now = this.clock();
-    const [candidate, patches, inversePatches] = produceWithPatches(this.workspace, (draft) =>
+    const [commandCandidate, commandPatches, commandInversePatches] = produceWithPatches(this.workspace, (draft) =>
       this.registry.apply(draft, command, { now })
     );
+    const [candidate, semanticPatches, semanticInversePatches] = produceWithPatches(commandCandidate, (draft) => {
+      refreshSemanticProjections(draft);
+    });
+    const patches = [...commandPatches, ...semanticPatches];
+    const inversePatches = [...semanticInversePatches, ...commandInversePatches];
     const changed = patches.length > 0;
     const category = command.category || "content";
     if (!changed) return this.#result(false, command.label || command.type, [], options.dryRun, category);

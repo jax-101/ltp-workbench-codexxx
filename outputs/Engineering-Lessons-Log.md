@@ -763,9 +763,44 @@ Aplicacion futura: exigir ejemplos y contraejemplos antes de asignar operadores;
 permitir que las restricciones cambien sin reescribir la semantica base; y
 probar la verbalizacion de cada proyeccion, no solo su estructura.
 
+### L-077: Una migracion dual necesita una sola autoridad de escritura
+
+Fecha: 2026-07-16
+
+Evidencia: el kernel nuevo puede convivir aditivamente con nodos y links `0.2`,
+pero ambos contienen afirmaciones, extremos y assumptions capaces de cambiar.
+Sin una huella, una edicion legacy haria obsoleta la proyeccion; con dos rutas de
+escritura, ni siquiera seria posible decidir automaticamente cual prevalece.
+
+Aprendizaje: duplicar una representacion durante una migracion es seguro solo
+si una copia es derivada, se puede demostrar su frescura y todas las escrituras
+atraviesan una autoridad transaccional unica.
+
+Aplicacion futura: comenzar con preview de lectura; conservar downgrade exacto;
+calcular fingerprints sobre semantica y no sobre geometria; rechazar estados
+obsoletos; y activar edicion unicamente cuando fuente y proyeccion se actualicen
+atomica y reversiblemente.
+
+### L-078: Los textos derivados forman parte de la atomicidad semantica
+
+Fecha: 2026-07-16
+
+Evidencia: el primer comando generico podia cambiar el statement de un elemento
+o los extremos de una relacion y mantener IDs, kernel y link sincronizados,
+pero `meaning` y `verbalization` seguian describiendo la relacion anterior.
+
+Aprendizaje: la consistencia referencial no basta cuando un modelo persiste
+explicaciones derivadas. Una mutacion semantica debe actualizar o invalidar en
+la misma transaccion todas las verbalizaciones, indices y proyecciones que
+dependen de ella.
+
+Aplicacion futura: declarar dependencias derivadas; centralizar su generacion;
+incluirlas en fingerprints y Undo/Redo; y probar el significado resultante, no
+solo que los IDs apunten a objetos existentes.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-077`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-079`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

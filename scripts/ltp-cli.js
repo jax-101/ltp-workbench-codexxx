@@ -6,6 +6,7 @@ const { TransactionEngine, workspaceRevision } = require("../src/core/transactio
 const { WorkspaceRepository } = require("../src/core/workspace-repository");
 const { validateWorkspace } = require("../src/core/workspace-validator");
 const { migrateWorkspace } = require("../src/core/workspace-migrations");
+const { addSemanticKernel } = require("../src/core/semantic-migration");
 
 const args = process.argv.slice(2);
 const positional = [];
@@ -90,6 +91,28 @@ const run = async () => {
     return;
   }
 
+  if (resource === "semantic" && action === "preview") {
+    const workspace = await readWorkspace();
+    const migration = addSemanticKernel(workspace);
+    const trees = migration.workspace.trees
+      .filter((tree) => tree.semanticKernel)
+      .map((tree) => ({
+        id: tree.id,
+        profile: tree.semanticKernel.profile,
+        kernelVersion: tree.semanticKernel.kernelVersion,
+        sourceFingerprint: tree.semanticKernel.sourceFingerprint,
+        elements: tree.semanticKernel.elements.length,
+        relations: tree.semanticKernel.relations.length,
+        assumptions: tree.semanticKernel.assumptions.length,
+        annotations: tree.semanticKernel.annotations.length
+      }));
+    output(
+      { ok: true, changed: migration.changed, persisted: false, migratedTreeIds: migration.migratedTreeIds, trees },
+      `Previewed semantic migration for ${trees.length} tree(s); no files changed`
+    );
+    return;
+  }
+
   if (resource === "node" && action === "update") {
     const engine = await createEngine();
     const command = {
@@ -117,7 +140,7 @@ const run = async () => {
     return;
   }
 
-  const error = new Error("Unknown command. Use validate, tree list, node update, or apply.");
+  const error = new Error("Unknown command. Use validate, tree list, semantic preview, node update, or apply.");
   error.code = "COMMAND_UNKNOWN";
   throw error;
 };

@@ -1,4 +1,6 @@
 const { LtpError } = require("./errors");
+const { semanticFingerprint } = require("./semantic-migration");
+const { validateSemanticGraph } = require("./semantic-validator");
 
 const validateWorkspace = (workspace) => {
   const issues = [];
@@ -111,6 +113,24 @@ const validateWorkspace = (workspace) => {
     const frames = canvas?.frames || [];
     const frameIds = new Set(frames.map((frame) => frame.id));
     const hostFrame = frames.find((frame) => frame.id === tree.hostFrameId);
+
+    if (tree.semanticKernel) {
+      for (const semanticIssue of validateSemanticGraph(tree.semanticKernel)) {
+        add(
+          `SEMANTIC_${semanticIssue.code}`,
+          `${treePath}.semanticKernel.${semanticIssue.path}`,
+          semanticIssue.message
+        );
+      }
+      const currentFingerprint = semanticFingerprint(tree);
+      if (tree.semanticKernel.sourceFingerprint !== currentFingerprint) {
+        add(
+          "SEMANTIC_MIGRATION_STALE",
+          `${treePath}.semanticKernel.sourceFingerprint`,
+          "Semantic projection is older than its legacy source"
+        );
+      }
+    }
 
     requireUniqueIds(nodes, `${treePath}.nodes`);
     requireUniqueIds(links, `${treePath}.links`);

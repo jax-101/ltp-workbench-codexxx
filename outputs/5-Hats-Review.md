@@ -34,8 +34,8 @@ comunes.
 
 | Prioridad | Hat | Gap | Riesgo | Cierre requerido |
 | --- | --- | --- | --- | --- |
-| P0 | Metodo | No existe aun un contrato ejecutable que distinga `OR` independiente, junction `AND`, necesidad, conflicto, assumptions por tramo y ruptura de ciclos | Un modelo n-ario aparentemente generico puede expresar diagramas incorrectos | Glosario semantico y fixtures-oraculo de Goal Tree, CRT, EC y FRT antes de congelar el schema |
-| P0 | Arquitectura | `schema 0.3` mezcla en una misma iniciativa migracion, kernel, definiciones, renderer y layout | Cambio de gran alcance sin punto de retorno verificable | Migracion aditiva, capas separadas y compatibilidad reversible por gate |
+| P0 | Metodo | El contrato ejecutable y los oraculos existen; falta cerrar su validacion metodologica humana | Un modelo tecnicamente consistente todavia puede verbalizar mal un diagrama oficial | Aprobar la hoja de oraculos antes de congelar el schema |
+| P0 | Arquitectura | La migracion aditiva y reversible esta probada para Goal Tree; faltan relaciones n-arias y paridad del renderer | Activar el kernel antes de completar la compatibilidad puede dejar dos rutas de escritura | Completar `3C.14a` por gates y mantener el formato interno |
 | P0 | MVP | La secuencia del plan era contradictoria: `3C.14` contenia CRT, pero las dependencias colocaban CRT despues de formato y operaciones | Trabajo en el orden equivocado y criterios de salida ambiguos | Corregido en esta revision mediante una unica secuencia con gates `A-H` y criterios de parada |
 | P0 | Arquitectura/UX | Borrar, copiar, pegar y seleccionar no tienen todavia semantica cerrada para relaciones n-arias y junctions derivadas | Datos huerfanos, selecciones engañosas y Undo parcial | Semantica atomica de cierre de seleccion y comandos genericos antes de congelar el formato |
 | P1 | Producto | Workbench y Diagram Studio no tienen una frontera de producto explicita | El editor de metamodelos puede desplazar el valor para el analista LTP | Studio como modo avanzado y milestone separado, con una experiencia principal medible |
@@ -44,10 +44,11 @@ comunes.
 | P1 | UX | No esta definido como crear, editar, seleccionar o verbalizar junctions y relaciones n-arias solo con teclado | El nuevo modelo puede romper la promesa principal del producto | Gramatica de teclado y pruebas por consecuencia para cada primitiva semantica |
 | P1 | Calidad | No hay presupuestos de rendimiento ni corpus de compatibilidad | El preview, layout o validacion pueden degradarse sin un limite observable | Fixtures de escala, tiempos objetivo y prueba de apertura de workspaces antiguos |
 
-Estado actualizado el 2026-07-16: la contradiccion de secuencia esta corregida y
-el gap semantico dispone ya de contrato ejecutable, fixtures y runner en PASS;
-queda su validacion metodologica. Los P0 de migracion por capas y operaciones
-n-arias permanecen abiertos antes de publicar el formato.
+Estado actualizado el 2026-07-16: la contradiccion de secuencia esta corregida;
+el contrato, fixtures y runner estan en PASS; y `3C.14a` dispone de migracion
+reversible, validador compartido, preview CLI, refresco transaccional y comandos
+genericos de update. Quedan la validacion metodologica, creacion/borrado n-ario,
+junctions y paridad del renderer antes de publicar el formato.
 
 ## Hat 1: Producto
 

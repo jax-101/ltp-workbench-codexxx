@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { validateSemanticGraph } = require("../src/core/semantic-validator");
 
 const root = path.join(__dirname, "..", "semantic-contract", "v0.1");
 const contract = JSON.parse(fs.readFileSync(path.join(root, "contract.json"), "utf8"));
@@ -41,7 +42,7 @@ const graphHasCycle = (fixture) => {
   return [...adjacency.keys()].some(visit);
 };
 
-const validateFixture = (fixture) => {
+const validateFixtureReference = (fixture) => {
   const issues = [];
   const profile = contract.profiles[fixture.diagramType];
   if (!profile) {
@@ -198,6 +199,8 @@ const validateFixture = (fixture) => {
   return issues;
 };
 
+const validateFixture = (fixture) => validateSemanticGraph(fixture, contract);
+
 const elementLabel = (elementById, endpoint) => elementById.get(endpoint.elementId)?.statement || endpoint.elementId;
 const relationInputLabels = (fixture, relation) => {
   const elementById = new Map(fixture.elements.map((element) => [element.id, element]));
@@ -262,6 +265,7 @@ for (const [name, profile] of Object.entries(contract.profiles)) {
 }
 for (const fixture of fixtures) {
   const issues = validateFixture(fixture);
+  assert.deepEqual(issues, validateFixtureReference(fixture), `${fixture.id}: shared validator parity`);
   assert.deepEqual(normalizeCodes(issues, "ERROR"), [...(fixture.expected.errorCodes || [])].sort(), `${fixture.id}: error codes`);
   assert.deepEqual(normalizeCodes(issues, "WARNING"), [...(fixture.expected.warningCodes || [])].sort(), `${fixture.id}: warning codes`);
   for (const [relationId, expected] of Object.entries(fixture.expected.verbalizations || {})) {

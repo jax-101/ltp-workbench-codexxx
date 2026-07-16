@@ -17,6 +17,11 @@ const steps = [
     args: ["run", "test:semantic"]
   },
   {
+    name: "Test additive semantic migration",
+    command: "npm",
+    args: ["run", "test:semantic-migration"]
+  },
+  {
     name: "Test transactional core",
     command: "npm",
     args: ["run", "test:core"]

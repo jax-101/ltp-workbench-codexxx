@@ -21,6 +21,7 @@
     "test:prototype": "node scripts/test-prototype.js",
     "test:core": "node scripts/test-core.js",
     "test:semantic": "node scripts/test-semantic-contract.js",
+    "test:semantic-migration": "node scripts/test-semantic-migration.js",
     "test:layout": "node scripts/test-layout.js",
     "test:layout-random": "node scripts/test-random-layouts.js",
     "fixture:complex": "node scripts/build-complex-fixture.js",
@@ -49,6 +50,7 @@
     "files": [
       "src/**/*",
       "scripts/ltp-cli.js",
+      "semantic-contract/**/*",
       "outputs/sample-workspace-v0.1.json",
       "outputs/complex-goal-tree-workspace-v0.1.json",
       "package.json"
