@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.1`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.2`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -302,15 +302,16 @@ Resultado esperado: el arbol ocupa tres capas, los 11 links son rectos, no hay c
 ## Prueba 23: minimizar y expandir un frame
 
 1. Selecciona un frame hijo que contenga varias entidades y links internos y externos.
-2. Pulsa `-` o el boton `Minimize frame` del inspector.
+2. Pulsa `Cmd+X`, `-` o el boton `Minimize frame` del inspector.
 3. Comprueba que el frame se convierte en una caja compacta y desaparecen sus entidades, subframes y links internos.
 4. Comprueba que los links externos siguen visibles y terminan en el borde del frame compacto.
 5. Observa que minimapa y hints tampoco muestran el detalle oculto.
 6. Pulsa `Cmd+Z` y `Cmd+Shift+Z`; observa las dos transiciones.
-7. Pulsa `-` de nuevo para expandir.
+7. Pulsa `Cmd+X` de nuevo para expandir.
 8. Comprueba que reaparecen las posiciones relativas anteriores, que el frame contiene todo y que ninguna ruta atraviesa una entidad.
 9. Selecciona el frame minimizado y prueba `Enter frame`; debe pedir que se expanda antes de usarlo como contexto de creacion.
 10. Comprueba que `Cmd+-` sigue controlando el zoom y no minimiza frames.
+11. Edita texto, selecciona una parte y pulsa `Cmd+X`; debe cortar texto sin minimizar el frame.
 
 Resultado esperado: minimizar cambia solo la proyeccion visual, no el contenido del documento; expandir recupera el mapa mental y normaliza limites y rutas. Todo el ciclo se deshace y rehace como una operacion espacial.
 

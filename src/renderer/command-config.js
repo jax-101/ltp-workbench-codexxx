@@ -14,7 +14,7 @@ window.LTP_COMMAND_BINDINGS = Object.freeze({
   enterSelectedFrame: [{ key: "]" }],
   focusSearch: [{ key: "/" }],
   togglePin: [{ key: "p" }],
-  toggleFrameCollapsed: [{ key: "-" }],
+  toggleFrameCollapsed: [{ key: "x", primary: true }, { key: "-" }],
   previewNode: [{ key: " " }],
   cancelContext: [{ key: "g", control: true }],
   undo: [{ key: "z", primary: true, shift: false }],

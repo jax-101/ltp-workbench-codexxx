@@ -397,6 +397,17 @@ Evidencia:
 - Bateria visual `3C.1` con 35 escenarios en estado `PASS`.
 - Captura `27-internal-frame-layout.png`: dos columnas, dos filas y contencion completa.
 
+### Build 3C.2: alternar frame con Cmd+X
+
+Estado: implementado.
+
+Incluye:
+
+- `Cmd+X` en macOS y `Ctrl+X` en otros sistemas para minimizar o expandir el frame seleccionado.
+- `-` se conserva como atajo alternativo.
+- Los campos de texto mantienen el comportamiento nativo de cortar.
+- La regresion visual de minimizar y expandir usa el nuevo atajo principal.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:

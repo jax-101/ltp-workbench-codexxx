@@ -2890,9 +2890,21 @@ window.__ltpSmokeTest = async () => {
     commandForEvent(new KeyboardEvent("keydown", { key: "f", metaKey: true })) === "chooseSelectionFrame" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "p", ctrlKey: true })) === "panUp" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "f", ctrlKey: true })) === "panRight" &&
+    commandForEvent(new KeyboardEvent("keydown", { key: "x", metaKey: true })) === "toggleFrameCollapsed" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "d", ctrlKey: true })) === "deleteSelection" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "Delete" })) === "deleteSelection" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "Backspace" })) === "deleteSelection";
+  const nativeCutField = document.createElement("input");
+  app.appendChild(nativeCutField);
+  const nativeCutEvent = new KeyboardEvent("keydown", {
+    key: "x",
+    metaKey: true,
+    bubbles: true,
+    cancelable: true
+  });
+  nativeCutField.dispatchEvent(nativeCutEvent);
+  const cmdXPreservesNativeCut = !nativeCutEvent.defaultPrevented;
+  nativeCutField.remove();
 
   const initialShell = document.querySelector(".canvas-shell");
   initialShell.scrollLeft = Math.min(120, initialShell.scrollWidth - initialShell.clientWidth);
@@ -3240,6 +3252,7 @@ window.__ltpSmokeTest = async () => {
       multiSelectToggles &&
       allShortcutsListed &&
       commandAndControlBindingsStayDistinct &&
+      cmdXPreservesNativeCut &&
       viewportPreserved &&
       arrowEndsAtEdge &&
       fullTextPreviewWorks &&
@@ -3307,6 +3320,7 @@ window.__ltpSmokeTest = async () => {
     multiSelectToggles,
     allShortcutsListed,
     commandAndControlBindingsStayDistinct,
+    cmdXPreservesNativeCut,
     viewportPreserved,
     arrowEndsAtEdge,
     fullTextPreviewWorks,
@@ -3463,7 +3477,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.1" && hostVisible && rootHidden, "Build 3C.1 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.2" && hostVisible && rootHidden, "Build 3C.2 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3501,7 +3515,7 @@ window.__ltpVisualTestStep = async (step) => {
       .filter((link) => memberIds.has(link.sourceNodeId) !== memberIds.has(link.targetNodeId))
       .map((link) => link.id);
     replaceSelection(frame?.id);
-    await pressKey("-");
+    await pressKey("x", { metaKey: true });
     const completed = await waitFor(() => frameById()[frame?.id]?.collapsed && !layoutAnimating, 3500);
     const box = layoutFrame(frame?.id);
     const descendantsHidden = visualTestState.minimizedNodeIds.every(
@@ -3562,7 +3576,7 @@ window.__ltpVisualTestStep = async (step) => {
 
   if (step === "frame-expanded") {
     replaceSelection(visualTestState.minimizedFrameId);
-    await pressKey("-");
+    await pressKey("x", { metaKey: true });
     const completed = await waitFor(
       () => !frameById()[visualTestState.minimizedFrameId]?.collapsed && !layoutAnimating,
       3500

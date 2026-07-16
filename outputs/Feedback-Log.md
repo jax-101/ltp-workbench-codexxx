@@ -758,3 +758,18 @@ Criterios de aceptacion:
 - Si cambia el tamano del frame hijo, el padre no puede conservar posiciones que produzcan solapamientos.
 - Nodos y frames permanecen contenidos y las rutas no atraviesan entidades.
 - El resultado es determinista y se verifica con fixture algoritmico y captura de Electron.
+
+### F-065: Cmd+X alterna la minimizacion de un frame
+
+Feedback: `Cmd+X` debe minimizar el frame seleccionado y, al pulsarlo de nuevo, expandirlo.
+
+Estado: implementado en `3C.2`.
+
+Criterios de aceptacion:
+
+- `Cmd+X` alterna el estado del frame seleccionado en macOS.
+- `Ctrl+X` ofrece el equivalente multiplataforma.
+- El segundo uso recupera el frame mediante la misma transicion reversible.
+- Dentro de inputs y textareas, el atajo conserva la accion nativa de cortar texto.
+- `Cmd+-` continua reservado al zoom y `-` permanece como alternativa sin modificador.
+- La ayuda de teclado muestra ambos bindings.
