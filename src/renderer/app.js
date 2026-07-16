@@ -26,7 +26,7 @@ let layoutAnimating = false;
 let layoutAnimationFrameCount = 0;
 let layoutAnimationMovedElements = 0;
 let layoutAnimationConnectionsTracked = false;
-let historyState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel: null, revision: 0 };
+let historyState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel: null, undoCategory: null, redoCategory: null, revision: 0 };
 let workspaceOperationQueue = Promise.resolve();
 let visualTestState = {};
 
@@ -285,7 +285,7 @@ const focusPrimaryEditor = () => {
   }
 };
 
-const persist = async (label = "Update workspace") => {
+const persist = async (label = "Update workspace", category = "content") => {
   window.clearTimeout(viewPersistTimer);
   const pendingWorkspace = structuredClone(workspaceData);
   return enqueueWorkspaceOperation(async () => {
@@ -297,7 +297,8 @@ const persist = async (label = "Update workspace") => {
       workspaceData = await window.ltpPrototype.saveWorkspace(pendingWorkspace, {
         recordHistory: true,
         includeViewState: false,
-        label
+        label,
+        category
       });
       historyState = await window.ltpPrototype.getHistoryState();
       setStatus("Saved locally");
@@ -346,7 +347,17 @@ const moveHistory = async (direction) => {
       setStatus(direction === "undo" ? "Nothing to undo" : "Nothing to redo");
       return;
     }
-    workspaceData = result.workspace;
+    if (result.category === "spatial.layout") {
+      layoutAnimating = true;
+      setStatus(`${direction === "undo" ? "Undoing" : "Redoing"} layout...`);
+      try {
+        await animateToLayout(result.workspace);
+      } finally {
+        layoutAnimating = false;
+      }
+    } else {
+      workspaceData = result.workspace;
+    }
     historyState = result.history;
     reconcileUiAfterHistory();
     setStatus(`${direction === "undo" ? "Undid" : "Redid"}: ${result.label}`);
@@ -945,12 +956,154 @@ const frameAtPoint = (point) => {
   return candidates[0] || frameById()[rootFrameId()];
 };
 
+const boundsForBoxes = (boxes) => {
+  const left = Math.min(...boxes.map((box) => box.x));
+  const top = Math.min(...boxes.map((box) => box.y));
+  const right = Math.max(...boxes.map((box) => box.x + box.width));
+  const bottom = Math.max(...boxes.map((box) => box.y + box.height));
+  return { x: left, y: top, width: right - left, height: bottom - top };
+};
+
+const boxesOverlapWithGap = (left, right, gap = 0) =>
+  left.x < right.x + right.width + gap &&
+  left.x + left.width + gap > right.x &&
+  left.y < right.y + right.height + gap &&
+  left.y + left.height + gap > right.y;
+
+const shiftFrameSubtree = (frameId, dx, dy) => {
+  const frame = frameById()[frameId];
+  if (!frame || frameId === rootFrameId()) return;
+  const box = layoutFrame(frameId);
+  box.x += dx;
+  box.y += dy;
+  for (const nodeId of frame.nodeIds || []) {
+    const nodeBox = layoutNode(nodeId);
+    nodeBox.x += dx;
+    nodeBox.y += dy;
+  }
+  for (const childFrameId of frame.childFrameIds || []) shiftFrameSubtree(childFrameId, dx, dy);
+};
+
+const resolveExpandedFrameConflicts = (frameId) => {
+  let currentFrame = frameById()[frameId];
+  while (currentFrame?.parentFrameId) {
+    const parentFrame = frameById()[currentFrame.parentFrameId];
+    const currentBox = layoutFrame(currentFrame.id);
+    const siblingItems = [
+      ...(parentFrame.nodeIds || []).map((id) => ({ id, type: "node", box: layoutNode(id) })),
+      ...(parentFrame.childFrameIds || [])
+        .filter((id) => id !== currentFrame.id)
+        .map((id) => ({ id, type: "frame", box: layoutFrame(id) }))
+    ];
+
+    const collidingSiblings = siblingItems.filter((sibling) => boxesOverlapWithGap(currentBox, sibling.box, 24));
+    if (collidingSiblings.length) {
+      const vertical = tree().layout.direction === "TB" || tree().layout.direction === "BT";
+      const dx = vertical
+        ? 0
+        : currentBox.x + currentBox.width + 32 - Math.min(...collidingSiblings.map((sibling) => sibling.box.x));
+      const dy = vertical
+        ? currentBox.y + currentBox.height + 32 - Math.min(...collidingSiblings.map((sibling) => sibling.box.y))
+        : 0;
+      for (const sibling of collidingSiblings) {
+        if (sibling.type === "frame") shiftFrameSubtree(sibling.id, dx, dy);
+        else {
+          sibling.box.x += dx;
+          sibling.box.y += dy;
+        }
+      }
+    }
+
+    if (parentFrame.id === rootFrameId()) break;
+    const parentBox = layoutFrame(parentFrame.id);
+    const childBoxes = [
+      ...(parentFrame.nodeIds || []).map((id) => layoutNode(id)),
+      ...(parentFrame.childFrameIds || []).map((id) => layoutFrame(id))
+    ];
+    if (childBoxes.length) {
+      parentBox.width = Math.max(parentBox.width, Math.max(...childBoxes.map((box) => box.x + box.width)) + 28 - parentBox.x);
+      parentBox.height = Math.max(parentBox.height, Math.max(...childBoxes.map((box) => box.y + box.height)) + 28 - parentBox.y);
+    }
+    currentFrame = parentFrame;
+  }
+};
+
+const placeNodeGroupInFrame = (nodeIds, targetFrameId, desiredPositions) => {
+  const movedIds = new Set(nodeIds);
+  const targetFrame = frameById()[targetFrameId];
+  const desiredBoxes = nodeIds.map((id) => ({ ...layoutNode(id), ...desiredPositions[id] }));
+  const desiredBounds = boundsForBoxes(desiredBoxes);
+  const obstacles = [
+    ...(targetFrame.nodeIds || [])
+      .filter((id) => !movedIds.has(id) && nodeById()[id])
+      .map((id) => layoutNode(id)),
+    ...(targetFrame.childFrameIds || []).map((id) => layoutFrame(id))
+  ];
+  const targetBox = targetFrameId === rootFrameId() ? null : layoutFrame(targetFrameId);
+  const left = targetBox ? targetBox.x + 28 : 48;
+  const top = targetBox ? targetBox.y + 58 : 48;
+  const right = targetBox ? targetBox.x + targetBox.width - 28 : Number.POSITIVE_INFINITY;
+  const bottom = targetBox ? targetBox.y + targetBox.height - 28 : Number.POSITIVE_INFINITY;
+  const candidateBoxes = (x, y) => {
+    const dx = x - desiredBounds.x;
+    const dy = y - desiredBounds.y;
+    return desiredBoxes.map((box) => ({ ...box, x: box.x + dx, y: box.y + dy }));
+  };
+  const candidateFits = (boxes) => {
+    const bounds = boundsForBoxes(boxes);
+    const contained = bounds.x >= left && bounds.y >= top && bounds.x + bounds.width <= right && bounds.y + bounds.height <= bottom;
+    return contained && boxes.every((box) => obstacles.every((obstacle) => !boxesOverlapWithGap(box, obstacle, 18)));
+  };
+
+  let placed = candidateBoxes(desiredBounds.x, desiredBounds.y);
+  if (!candidateFits(placed) && targetBox) {
+    const maxX = Math.max(left, right - desiredBounds.width);
+    const maxY = Math.max(top, bottom - desiredBounds.height);
+    outer: for (let y = top; y <= maxY; y += 28) {
+      for (let x = left; x <= maxX; x += 28) {
+        const candidate = candidateBoxes(x, y);
+        if (!candidateFits(candidate)) continue;
+        placed = candidate;
+        break outer;
+      }
+    }
+  }
+
+  if (!candidateFits(placed)) {
+    const vertical = tree().layout.direction === "TB" || tree().layout.direction === "BT";
+    const obstacleBounds = obstacles.length ? boundsForBoxes(obstacles) : { x: left, y: top, width: 0, height: 0 };
+    const appendX = vertical ? left : Math.max(left, obstacleBounds.x + obstacleBounds.width + 32);
+    const appendY = vertical ? Math.max(top, obstacleBounds.y + obstacleBounds.height + 32) : top;
+    placed = candidateBoxes(appendX, appendY);
+    if (targetBox) {
+      const placedBounds = boundsForBoxes(placed);
+      targetBox.width = Math.max(targetBox.width, placedBounds.x + placedBounds.width + 28 - targetBox.x);
+      targetBox.height = Math.max(targetBox.height, placedBounds.y + placedBounds.height + 28 - targetBox.y);
+      let childFrame = targetFrame;
+      while (childFrame.parentFrameId && childFrame.parentFrameId !== rootFrameId()) {
+        const parentFrame = frameById()[childFrame.parentFrameId];
+        const childBox = layoutFrame(childFrame.id);
+        const parentBox = layoutFrame(parentFrame.id);
+        parentBox.width = Math.max(parentBox.width, childBox.x + childBox.width + 28 - parentBox.x);
+        parentBox.height = Math.max(parentBox.height, childBox.y + childBox.height + 28 - parentBox.y);
+        childFrame = parentFrame;
+      }
+    }
+  }
+
+  return Object.fromEntries(nodeIds.map((id, index) => [id, { x: Math.round(placed[index].x), y: Math.round(placed[index].y) }]));
+};
+
 const moveNodesToFrame = async (nodeIds, targetFrameId, positions = {}) => {
   const nodes = nodeIds.map((nodeId) => nodeById()[nodeId]).filter(Boolean);
   const targetFrame = frameById()[targetFrameId];
   if (!nodes.length || !targetFrame) return;
   const movedNodeIds = new Set(nodes.map((node) => node.id));
   const previousFrameIds = new Set(nodes.map((node) => node.frameId));
+  const desiredPositions = Object.fromEntries(
+    nodes.map((node) => [node.id, positions[node.id] || { x: layoutNode(node.id).x, y: layoutNode(node.id).y }])
+  );
+  const placedPositions = placeNodeGroupInFrame(nodes.map((node) => node.id), targetFrameId, desiredPositions);
 
   for (const frame of canvas().frames) {
     frame.nodeIds = frame.nodeIds.filter((id) => !movedNodeIds.has(id));
@@ -961,31 +1114,20 @@ const moveNodesToFrame = async (nodeIds, targetFrameId, positions = {}) => {
     node.updatedAt = now();
 
     const box = tree().layout.nodes[node.id];
-    const position = positions[node.id];
-    if (position) {
-      box.x = Math.round(position.x);
-      box.y = Math.round(position.y);
-    } else {
-      const targetBox = layoutFrame(targetFrame.id);
-      const fitsTarget =
-        box.x >= targetBox.x + 18 &&
-        box.y >= targetBox.y + 48 &&
-        box.x + box.width <= targetBox.x + targetBox.width - 18 &&
-        box.y + box.height <= targetBox.y + targetBox.height - 18;
-      if (!fitsTarget) {
-        const index = nodes.indexOf(node);
-        box.x = Math.round(targetBox.x + 36 + index * 18);
-        box.y = Math.round(targetBox.y + 62 + index * 18);
-      }
-    }
+    box.x = placedPositions[node.id].x;
+    box.y = placedPositions[node.id].y;
     box.layoutSource = "manual";
   }
 
-  for (const link of tree().links.filter((item) => movedNodeIds.has(item.sourceNodeId) || movedNodeIds.has(item.targetNodeId))) {
+  if (targetFrame.id !== rootFrameId()) resolveExpandedFrameConflicts(targetFrame.id);
+
+  for (const link of tree().links) {
     const source = centerOf(layoutNode(link.sourceNodeId));
     const target = centerOf(layoutNode(link.targetNodeId));
     tree().layout.links[link.id] = {
       ...layoutLink(link.id),
+      route: [],
+      routeSource: "manual",
       labelPosition: {
         x: Math.round((source.x + target.x) / 2),
         y: Math.round((source.y + target.y) / 2)
@@ -1270,11 +1412,12 @@ const runAutoLayout = async () => {
     const nextWorkspace = await window.ltpPrototype.runLayout(workspaceData);
     setStatus("Repositioning diagram...");
     await animateToLayout(nextWorkspace);
-    await persist("Apply layout");
-    setStatus("Layout updated with ELK.js");
+    await persist("Apply layout", "spatial.layout");
+    setStatus("Composed layout updated");
     render();
   } finally {
     layoutAnimating = false;
+    render();
   }
 };
 
@@ -1608,9 +1751,12 @@ const renderLinks = () => {
       const selected = link.id === selectedElementId ? "selected" : "";
       const included = selectionIds.has(link.id) && link.id !== selectedElementId ? "selection-included" : "";
       const marker = selected ? "arrow-selected" : included ? "arrow-included" : "arrow";
-      return `
-        <line class="tree-link-line ${selected} ${included}" data-link-id="${link.id}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" marker-end="url(#${marker})" />
-      `;
+      const route = layoutLink(link.id).route || [];
+      if (!layoutAnimating && route.length >= 2) {
+        const path = route.map((point, index) => `${index ? "L" : "M"}${point.x},${point.y}`).join(" ");
+        return `<path class="tree-link-line ${selected} ${included}" data-link-id="${link.id}" d="${path}" marker-end="url(#${marker})" />`;
+      }
+      return `<line class="tree-link-line ${selected} ${included}" data-link-id="${link.id}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" marker-end="url(#${marker})" />`;
     })
     .join("");
 
@@ -2218,10 +2364,14 @@ const updateDraggedNodeVisual = (nodeId, nextBox, boxOverrides = {}) => {
     const targetBox = boxOverrides[link.targetNodeId] || layoutNode(link.targetNodeId);
     const endpoints = linkEndpoints(sourceBox, targetBox);
     const line = app.querySelector(`[data-link-id="${link.id}"]`);
-    line?.setAttribute("x1", endpoints.source.x);
-    line?.setAttribute("y1", endpoints.source.y);
-    line?.setAttribute("x2", endpoints.target.x);
-    line?.setAttribute("y2", endpoints.target.y);
+    if (line?.tagName.toLowerCase() === "path") {
+      line.setAttribute("d", `M${endpoints.source.x},${endpoints.source.y} L${endpoints.target.x},${endpoints.target.y}`);
+    } else {
+      line?.setAttribute("x1", endpoints.source.x);
+      line?.setAttribute("y1", endpoints.source.y);
+      line?.setAttribute("x2", endpoints.target.x);
+      line?.setAttribute("y2", endpoints.target.y);
+    }
     const linkTarget = app.querySelector(`.link-target[data-element-id="${link.id}"]`);
     if (linkTarget) {
       linkTarget.style.left = `${(endpoints.source.x + endpoints.target.x) / 2 - 12}px`;
@@ -3225,7 +3375,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3A.6" && hostVisible && rootHidden, "Build 3A.6 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3B.0" && hostVisible && rootHidden, "Build 3B.0 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3311,6 +3461,96 @@ window.__ltpVisualTestStep = async (step) => {
     return result("Redo keyboard frame movement", redone, "One Cmd+Shift+Z reapplies the complete frame movement.");
   }
 
+  if (step === "composed-layout-setup") {
+    const hostFrameId = activeTree.hostFrameId;
+    const rootNodeId = visualTestState.keyboardNodeId;
+    const nestedFrame = activeCanvas.frames.find(
+      (frame) => frame.parentFrameId === hostFrameId && frame.id !== visualTestState.keyboardFrameId
+    );
+    const targetFrame = activeCanvas.frames.find(
+      (frame) => frame.parentFrameId === hostFrameId && frame.id !== visualTestState.keyboardFrameId && frame.id !== nestedFrame?.id
+    );
+    visualTestState.composedRootNodeId = rootNodeId;
+    visualTestState.composedNestedFrameId = nestedFrame?.id;
+    visualTestState.composedTargetFrameId = targetFrame?.id;
+
+    replaceSelection(hostFrameId);
+    if (!layoutFrame(hostFrameId).pinned) await pressKey("p");
+    visualTestState.composedPinnedFramePosition = { x: layoutFrame(hostFrameId).x, y: layoutFrame(hostFrameId).y };
+
+    replaceSelection(rootNodeId);
+    await pressKey("f", { metaKey: true });
+    await chooseHintTarget(rootFrameId());
+    await waitFor(() => nodeById()[rootNodeId]?.frameId === rootFrameId());
+
+    replaceSelection(nestedFrame?.id);
+    await pressKey("f", { metaKey: true });
+    await chooseHintTarget(targetFrame?.id);
+    await waitFor(() => frameById()[nestedFrame?.id]?.parentFrameId === targetFrame?.id);
+
+    visualTestState.composedPreLayout = {
+      nodes: structuredClone(activeTree.layout.nodes),
+      frames: structuredClone(activeCanvas.layout.frames)
+    };
+    const logicalSetup =
+      nodeById()[rootNodeId]?.frameId === rootFrameId() &&
+      frameById()[nestedFrame?.id]?.parentFrameId === targetFrame?.id &&
+      layoutFrame(hostFrameId).pinned;
+    setStatus("Composed layout setup: hierarchy changed, geometry pending");
+    render();
+    return result("Prepare a composed hierarchy", logicalSetup, "A node is moved to ROOT, one frame is nested in a sibling, and the host frame is pinned.");
+  }
+
+  if (step === "composed-layout-applied") {
+    await runAutoLayout();
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    const hostBox = layoutFrame(activeTree.hostFrameId);
+    const nestedBox = layoutFrame(visualTestState.composedNestedFrameId);
+    const targetBox = layoutFrame(visualTestState.composedTargetFrameId);
+    const rootNodeBox = layoutNode(visualTestState.composedRootNodeId);
+    const pinned = visualTestState.composedPinnedFramePosition;
+    const nestedContained =
+      nestedBox.x >= targetBox.x &&
+      nestedBox.y >= targetBox.y &&
+      nestedBox.x + nestedBox.width <= targetBox.x + targetBox.width &&
+      nestedBox.y + nestedBox.height <= targetBox.y + targetBox.height;
+    const rootNodeOutsideHost =
+      rootNodeBox.x + rootNodeBox.width <= hostBox.x ||
+      rootNodeBox.x >= hostBox.x + hostBox.width ||
+      rootNodeBox.y + rootNodeBox.height <= hostBox.y ||
+      rootNodeBox.y >= hostBox.y + hostBox.height;
+    const routedPaths = document.querySelectorAll("path.tree-link-line").length === activeTree.links.length;
+    const ok =
+      issues.length === 0 &&
+      nestedContained &&
+      rootNodeOutsideHost &&
+      hostBox.x === pinned.x &&
+      hostBox.y === pinned.y &&
+      layoutAnimationFrameCount > 2 &&
+      routedPaths;
+    fitView();
+    return result("Apply composed auto-layout", ok, `Geometry issues: ${issues.length}; nested=${nestedContained}; rootOutside=${rootNodeOutsideHost}; animated=${layoutAnimationFrameCount > 2}; routed=${routedPaths}.`);
+  }
+
+  if (step === "composed-layout-undo") {
+    await pressKey("z", { metaKey: true });
+    const completed = await waitFor(() => statusText.startsWith("Undid: Apply layout") && !layoutAnimating, 2500);
+    const previous = visualTestState.composedPreLayout;
+    const restored =
+      JSON.stringify(activeTree.layout.nodes) === JSON.stringify(previous.nodes) &&
+      JSON.stringify(activeCanvas.layout.frames) === JSON.stringify(previous.frames);
+    fitView();
+    return result("Undo composed layout with transition", completed && restored && layoutAnimationFrameCount > 2, "Undo restores the complete pre-layout geometry and animates the return.");
+  }
+
+  if (step === "composed-layout-redo") {
+    await pressKey("z", { metaKey: true, shiftKey: true });
+    const completed = await waitFor(() => statusText.startsWith("Redid: Apply layout") && !layoutAnimating, 2500);
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    fitView();
+    return result("Redo composed layout with transition", completed && issues.length === 0 && layoutAnimationFrameCount > 2, "Redo reapplies valid composed geometry and animates the movement.");
+  }
+
   if (step === "multi-open") {
     const sourceFrame = activeCanvas.frames.find((frame) => frame.treeId === activeTree.id && frame.nodeIds.length >= 3);
     const targetFrame = activeCanvas.frames.find(
@@ -3392,13 +3632,15 @@ window.__ltpVisualTestStep = async (step) => {
         box.y + box.height <= targetFrameBox.y + targetFrameBox.height
     );
     const collisionFree = movedBoxes.every((box) => stationaryBoxes.every((stationary) => !overlaps(box, stationary)));
-    const ok = moved && relativePositionPreserved && contained && collisionFree;
+    const geometryIssues = await window.ltpPrototype.validateLayout(workspaceData);
+    const structuralIssues = geometryIssues.filter((issue) => !issue.code.startsWith("LINK_"));
+    const ok = moved && relativePositionPreserved && contained && collisionFree && structuralIssues.length === 0;
     return result(
       "Drag the selected group",
       ok,
       ok
         ? "The group moves in one transaction, preserves relative positions and fits without collisions."
-        : `Functional move passed, but geometry failed: contained=${contained}, collisionFree=${collisionFree}.`
+        : `Functional move passed, but geometry failed: contained=${contained}, collisionFree=${collisionFree}, issues=${structuralIssues.length}.`
     );
   }
 

@@ -392,9 +392,29 @@ Aprendizaje: anadir jerarquia al dominio sin incorporarla al motor geometrico de
 
 Aplicacion futura: hacer que el grafo de layout refleje la misma jerarquia que el modelo, probar movimientos entre ramas antes de cerrar la migracion y validar simultaneamente pertenencia, contencion, exclusion y estabilidad de grupos fijados.
 
+### L-043: Geometria valida no implica composicion legible
+
+Fecha: 2026-07-16
+
+Evidencia: la primera version del layout compuesto superaba todas las invariantes, pero las capturas mostraban frames de casi 900 px y un diagrama de 2800 px porque entidades hermanas ocupaban la misma capa horizontal.
+
+Aprendizaje: ausencia de solapamientos y contencion correcta son condiciones necesarias, no una medida suficiente de calidad. Densidad, proporcion y escala de trabajo deben formar parte de la revision visual.
+
+Aplicacion futura: medir dimensiones y zoom resultante, capturar casos de fan-in y fan-out, y combinar el motor de grafos con estrategias de compactacion propias del contenedor o dominio.
+
+### L-044: El crecimiento local debe propagarse por la jerarquia
+
+Fecha: 2026-07-16
+
+Evidencia: colocar un grupo sin colisiones dentro de su destino podia ampliar ese frame hasta invadir una entidad de su padre. Una prueba limitada a los miembros directos daba un falso positivo.
+
+Aprendizaje: en geometria anidada, una mutacion local cambia la caja que observa cada ancestro. Restaurar invariantes exige revisar hermanos y propagar limites hasta la raiz conceptual.
+
+Aplicacion futura: modelar cada frame como unidad rigida al desplazarlo, validar relaciones no ancestrales en todo el canvas y hacer que las pruebas informen tanto conflictos locales como globales.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-043`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-045`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

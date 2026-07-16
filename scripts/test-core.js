@@ -17,6 +17,7 @@ const command = (overrides = {}) => ({
   commandId: "command-update-node",
   type: "node.update",
   label: "Edit goal",
+  category: "content.edit",
   expectedRevision: 0,
   payload: {
     treeId: fixture.trees[0].id,
@@ -109,6 +110,8 @@ const run = async () => {
   assert.equal(undone.revision, 2);
   assert.equal(undone.workspace.trees[0].nodes[0].statement, originalNode.statement);
   assert.equal(undone.history.canRedo, true);
+  assert.equal(undone.category, "content.edit");
+  assert.equal(undone.history.redoCategory, "content.edit");
 
   const redone = await engine.redo();
   assert.equal(redone.revision, 3);

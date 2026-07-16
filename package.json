@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3A.6",
-    "name": "Keyboard Reparenting",
+    "id": "3B.0",
+    "name": "Composed Layout",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -18,6 +18,7 @@
     "test:visual": "LTP_VISUAL_TEST=1 LTP_USE_SAMPLE=1 electron .",
     "test:prototype": "node scripts/test-prototype.js",
     "test:core": "node scripts/test-core.js",
+    "test:layout": "node scripts/test-layout.js",
     "ltp": "node scripts/ltp-cli.js",
     "validate:model": "node scripts/validate-model.js",
     "package": "electron-builder --dir",

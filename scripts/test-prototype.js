@@ -17,6 +17,11 @@ const steps = [
     args: ["run", "test:core"]
   },
   {
+    name: "Test composed layout",
+    command: "npm",
+    args: ["run", "test:layout"]
+  },
+  {
     name: "Check main process syntax",
     command: process.execPath,
     args: ["--check", "src/main.js"]

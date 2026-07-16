@@ -447,6 +447,7 @@ kbd {
 }
 
 .tree-link-line {
+  fill: none;
   stroke: #3f4945;
   stroke-width: 2.4;
 }

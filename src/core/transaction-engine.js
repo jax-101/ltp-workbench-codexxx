@@ -50,6 +50,8 @@ class TransactionEngine {
       canRedo: this.redoStack.length > 0,
       undoLabel: this.undoStack.at(-1)?.label || null,
       redoLabel: this.redoStack.at(-1)?.label || null,
+      undoCategory: this.undoStack.at(-1)?.category || null,
+      redoCategory: this.redoStack.at(-1)?.category || null,
       revision: workspaceRevision(this.workspace)
     };
   }
@@ -102,7 +104,8 @@ class TransactionEngine {
       this.registry.apply(draft, command, { now })
     );
     const changed = patches.length > 0;
-    if (!changed) return this.#result(false, command.label || command.type, [], options.dryRun);
+    const category = command.category || "content";
+    if (!changed) return this.#result(false, command.label || command.type, [], options.dryRun, category);
 
     const nextRevision = currentRevision + 1;
     const nextWorkspace = stampWorkspace(candidate, nextRevision, now);
@@ -110,7 +113,7 @@ class TransactionEngine {
 
     if (options.dryRun) {
       return {
-        ...this.#result(true, command.label || command.type, patches, true),
+        ...this.#result(true, command.label || command.type, patches, true, category),
         workspace: clone(nextWorkspace)
       };
     }
@@ -119,7 +122,8 @@ class TransactionEngine {
       expectedRevision: currentRevision,
       commandId: command.commandId,
       commandType: command.type,
-      label: command.label || command.type
+      label: command.label || command.type,
+      category
     });
     this.workspace = nextWorkspace;
 
@@ -127,6 +131,7 @@ class TransactionEngine {
       this.undoStack.push({
         commandId: command.commandId,
         label: command.label || command.type,
+        category,
         patches: clone(patches),
         inversePatches: clone(inversePatches)
       });
@@ -134,7 +139,7 @@ class TransactionEngine {
       this.redoStack = [];
     }
 
-    const result = this.#result(true, command.label || command.type, patches, false);
+    const result = this.#result(true, command.label || command.type, patches, false, category);
     this.completedCommands.set(command.commandId, result);
     if (this.completedCommands.size > this.maxHistory * 2) this.completedCommands.delete(this.completedCommands.keys().next().value);
     return clone(result);
@@ -144,7 +149,7 @@ class TransactionEngine {
     const source = direction === "undo" ? this.undoStack : this.redoStack;
     const target = direction === "undo" ? this.redoStack : this.undoStack;
     const entry = source.at(-1);
-    if (!entry) return this.#result(false, null, [], false);
+    if (!entry) return this.#result(false, null, [], false, null);
 
     const currentRevision = workspaceRevision(this.workspace);
     const patches = direction === "undo" ? entry.inversePatches : entry.patches;
@@ -155,20 +160,22 @@ class TransactionEngine {
       expectedRevision: currentRevision,
       commandId: `${direction}:${entry.commandId}:${currentRevision + 1}`,
       commandType: `history.${direction}`,
-      label: entry.label
+      label: entry.label,
+      category: entry.category
     });
 
     this.workspace = nextWorkspace;
     source.pop();
     target.push(entry);
-    return this.#result(true, entry.label, patches, false);
+    return this.#result(true, entry.label, patches, false, entry.category);
   }
 
-  #result(changed, label, patches, dryRun) {
+  #result(changed, label, patches, dryRun, category = "content") {
     return {
       changed,
       dryRun: Boolean(dryRun),
       label,
+      category,
       revision: workspaceRevision(this.workspace) + (changed && dryRun ? 1 : 0),
       patches: clone(patches),
       workspace: this.getSnapshot(),

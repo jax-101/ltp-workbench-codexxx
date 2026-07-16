@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld("ltpPrototype", {
   redo: () => ipcRenderer.invoke("history:redo"),
   getHistoryState: () => ipcRenderer.invoke("history:state"),
   runLayout: (workspace) => ipcRenderer.invoke("layout:run", workspace),
+  validateLayout: (workspace) => ipcRenderer.invoke("layout:validate", workspace),
   exportMarkdown: (workspace) => ipcRenderer.invoke("export:markdown", workspace)
 });

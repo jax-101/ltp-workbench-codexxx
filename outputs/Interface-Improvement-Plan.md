@@ -230,17 +230,30 @@ Criterios de aceptacion:
 
 Prioridad inicial: sustituir el layout plano por un layout compuesto que trate `ROOT`, frames hermanos, frames anidados y entidades directas como una sola jerarquia espacial.
 
+### Build 3B.0: layout compuesto
+
+Estado: implementado; pruebas de nucleo, smoke y regresion visual superadas. Pendiente de validacion manual.
+
 Incluye:
 
-- F-036: contencion y exclusion geometrica estrictas.
+- Layout recursivo por contenedor con ELK para relacionar bloques y compactacion direccional dentro de frames operativos.
+- Contencion y exclusion verificadas para `ROOT`, frames hermanos, frames anidados y entidades directas.
+- Pins de frames conservados como anclas; el contenido puede hacer crecer el contenedor.
+- Arrastre colectivo sin colisiones locales y propagacion del crecimiento a los ancestros.
+- Rutas ortogonales que evitan entidades y penalizan cruces.
+- Transiciones de ida, Undo y Redo para Layout mediante categoria transaccional explicita.
+
+Seguimiento de la iteracion:
+
+- F-036: contencion y exclusion geometrica estrictas implementadas en 3B.0.
 - F-038: insercion direccional sin alterar la forma existente.
-- F-043: rutas de links con minimizacion de cruces y evitacion de obstaculos.
+- F-043: primera version de rutas con evitacion de entidades y penalizacion de cruces implementada en 3B.0.
 - F-047: indicacion de direccion pendiente de aplicar.
-- F-052: transiciones animadas al deshacer y rehacer operaciones espaciales.
-- Completar F-057 con recolocacion espacial dentro del frame destino.
-- Completar F-058 con contencion geometrica del arrastre colectivo.
-- Completar F-035 con garantias espaciales al mover entidades entre frames.
-- Layout compuesto por frames y soporte de frames anidados.
+- F-052: transiciones animadas de Layout, Undo y Redo implementadas en 3B.0.
+- F-057: recolocacion espacial dentro del frame destino implementada en 3B.0.
+- F-058: contencion geometrica del arrastre colectivo implementada en 3B.0.
+- F-035: garantias espaciales al mover entidades entre frames implementadas en 3B.0.
+- Layout compuesto por frames y soporte de frames anidados implementado en 3B.0.
 
 Criterios de aceptacion:
 

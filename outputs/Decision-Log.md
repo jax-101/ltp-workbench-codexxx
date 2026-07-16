@@ -388,3 +388,15 @@ Razon: esta separacion permite sacar temporalmente elementos de un frame, compon
 Decision: `M` alterna un modo de seleccion multiple sobre los elementos generales. Al pulsar `L`, los nodos de esa seleccion se copian al estado separado de fuentes de conexion.
 
 Razon: la apariencia de seleccion hacia esperar que copiar, borrar o arrastrar afectara al grupo. Reservar internamente `M` solo para fuentes de links creaba un estado visualmente amplio pero funcionalmente estrecho.
+
+### D-063: Layout se resuelve recursivamente por contenedor
+
+Decision: cada frame organiza primero sus entidades directas y subframes; los links se colapsan al hijo directo que los representa en ese nivel. ELK relaciona los bloques y los frames operativos compactan su contenido segun la direccion. El resultado se expande despues a coordenadas absolutas.
+
+Razon: un unico grafo plano no puede garantizar contencion ni exclusion. La recursion usa la misma jerarquia que el dominio, limita el alcance de cada calculo y prepara el canvas para varios arboles.
+
+### D-064: Las transacciones espaciales declaran categoria
+
+Decision: cada entrada de historial conserva una categoria independiente de su etiqueta visible. Layout usa `spatial.layout`, y el renderer decide animar Undo/Redo a partir de esa categoria.
+
+Razon: deducir comportamiento desde textos como `Apply layout` es fragil ante traduccion o renombrado. La categoria convierte la animacion en parte estable del contrato de la operacion.

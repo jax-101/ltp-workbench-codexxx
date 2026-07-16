@@ -319,7 +319,7 @@ Criterios de aceptacion:
 
 Feedback: un frame debe contener completamente todas las entidades que le pertenecen. Una entidad que no pertenece al frame ni a uno de sus descendientes no puede quedar visualmente dentro de sus limites.
 
-Estado: pendiente. La pertenencia logica ya puede modificarse, pero la geometria actual no impone contencion ni exclusion.
+Estado: implementado en el build `3B.0` y pendiente de validacion manual. Layout usa la jerarquia completa del canvas; el validador comprueba contencion, exclusion y colisiones. El arrastre colectivo busca espacio libre, amplia el destino y propaga el crecimiento por sus ancestros.
 
 Validacion 3A.1: confirmado visualmente que una entidad puede quedar encima de un frame al que no pertenece. Se mantiene como objetivo principal de 3B.
 
@@ -430,7 +430,7 @@ Criterios de aceptacion:
 
 Feedback: despues de aplicar Layout, las flechas no deberian cruzarse si es posible ni pasar por debajo de las entidades.
 
-Estado: pendiente para la iteracion 3B. ELK minimiza cruces al colocar nodos, pero el renderer actual sustituye sus rutas por lineas rectas y no evita obstaculos.
+Estado: implementacion inicial en el build `3B.0` y pendiente de validacion manual. Layout genera rutas ortogonales, trata las entidades como obstaculos y penaliza cruces con rutas ya calculadas. Queda por valorar visualmente si los corredores respecto a frames necesitan reglas adicionales.
 
 Criterios de aceptacion:
 
@@ -562,7 +562,7 @@ Criterios de aceptacion:
 
 Feedback: al deshacer o rehacer un Layout se debe poder ver tambien la transicion de vuelta o hacia delante, en lugar de saltar instantaneamente entre geometrias.
 
-Estado: pendiente para la iteracion 3B, donde se consolidaran las operaciones espaciales y la geometria compuesta.
+Estado: implementado para Layout en el build `3B.0` y pendiente de validacion manual. La categoria `spatial.layout` viaja en la transaccion y Undo/Redo reutiliza la misma interpolacion de nodos, frames y links sin crear historial adicional.
 
 Criterios de aceptacion:
 
@@ -633,7 +633,7 @@ Criterios de aceptacion:
 
 Feedback: `Cmd+P` debe sacar la seleccion un nivel hacia su frame padre. `Cmd+F` debe mostrar exclusivamente frames, incluido el root, con hints para elegir el nuevo destino.
 
-Estado: implementado en el build `3A.6` y validado manualmente el 2026-07-16 para `Cmd+P`, `Cmd+F` y la navegacion independiente con `Ctrl+P/F`. El ajuste geometrico y la recomposicion mediante Layout permanecen dentro de F-036 para 3B.
+Estado: implementado en el build `3A.6` y validado manualmente el 2026-07-16 para `Cmd+P`, `Cmd+F` y la navegacion independiente con `Ctrl+P/F`. El build `3B.0` anade la recomposicion espacial posterior mediante Layout y queda pendiente de validacion manual.
 
 Criterios de aceptacion:
 
@@ -650,7 +650,7 @@ Criterios de aceptacion:
 
 Feedback: `M` debe activar y desactivar una seleccion multiple general. Si se arrastra una entidad que pertenece a esa seleccion, deben desplazarse juntas todas las entidades seleccionadas.
 
-Estado: implementado en el build `3A.5` y pendiente de validacion manual. `M` ya no representa un conjunto especial de fuentes de links; `L` transforma despues los nodos seleccionados en fuentes. El arrastre colectivo se guarda como una sola operacion reversible.
+Estado: interaccion implementada en `3A.5`; contencion y exclusion geometricas completadas en el build `3B.0`, pendientes de validacion manual. El arrastre colectivo conserva distancias, busca una posicion libre, crece el frame cuando es necesario y se guarda como una sola operacion reversible.
 
 Criterios de aceptacion:
 

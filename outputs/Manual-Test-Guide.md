@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3A.6`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3B.0`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -24,7 +24,7 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, arrastre, Undo/Redo y conexion, y guarda capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional o geometrica. En el build 3A.6 se espera un unico fallo conocido de F-036: el grupo movido puede colisionar con entidades existentes en el frame destino.
+El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, Layout compuesto, arrastre, Undo/Redo y conexion, y guarda capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si detecta una violacion funcional o geometrica. En el build 3B.0 todas las comprobaciones deben terminar en `PASS`.
 
 ## Prueba 1: hint de dos letras
 
@@ -159,7 +159,11 @@ Resultado esperado: siempre aparece confirmacion, cancelar no cambia datos y con
 3. Observa los nodos, los frames y las flechas durante la recolocacion.
 4. Repite con `Left to right`.
 
-Resultado esperado: los elementos recorren visualmente el camino hacia su nueva posicion, las flechas los acompanan durante toda la transicion y la organizacion final respeta la direccion elegida.
+5. Mueve una entidad a `Root` con `Cmd+F` y anida un frame dentro de otro.
+6. Ejecuta Layout y comprueba que el elemento de `Root` queda fuera de frames no relacionados y que el frame anidado queda completamente dentro de su padre.
+7. Deshaz y rehaz Layout observando las dos transiciones.
+
+Resultado esperado: los elementos recorren visualmente el camino hacia su nueva posicion, las flechas los acompanan, la organizacion final respeta la direccion y Undo/Redo anima la geometria completa.
 
 ## Prueba 14: mover entidades entre frames
 
@@ -243,6 +247,8 @@ Resultado esperado: `Root` es el espacio global ilimitado, `Goal Tree` es un fra
 
 Resultado esperado: `M` representa una seleccion general reutilizable; el arrastre afecta al grupo completo y `L` usa sus nodos como fuentes sin mezclar ambos estados.
 
+El grupo no debe superponerse con contenido existente. Si no cabe, el frame crece y los elementos afectados de niveles superiores se desplazan sin deformar los subarboles que contienen.
+
 ## Prueba 21: mover seleccion entre frames solo con teclado
 
 1. Selecciona una entidad dentro de un frame hijo y pulsa `Cmd+P`.
@@ -256,6 +262,15 @@ Resultado esperado: `M` representa una seleccion general reutilizable; el arrast
 9. Comprueba que `Ctrl+P` y `Ctrl+F` siguen desplazando la vista, mientras `Cmd+P` y `Cmd+F` modifican la estructura.
 
 Resultado esperado: entidades, selecciones y frames completos cambian de contenedor sin raton, sin ciclos ni perdida de links; cada operacion se deshace completa y los atajos de navegacion permanecen independientes.
+
+## Prueba 22: rutas despues de Layout
+
+1. Prepara varios links que crucen frames o conecten entidades alejadas.
+2. Pulsa `Layout`.
+3. Recorre visualmente cada flecha desde origen hasta destino.
+4. Comprueba las puntas y observa si existen cruces evitables.
+
+Resultado esperado: las rutas son ortogonales, no atraviesan ninguna entidad y terminan en el borde del destino. Los cruces se reducen cuando existe un corredor alternativo razonable.
 
 ## Registro de resultados
 

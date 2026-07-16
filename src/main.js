@@ -2,10 +2,9 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs/promises");
 const { randomUUID } = require("node:crypto");
-const ELK = require("elkjs/lib/elk.bundled.js");
 const { TransactionEngine, workspaceRevision } = require("./core/transaction-engine");
 const { WorkspaceRepository } = require("./core/workspace-repository");
-const { getDiagramDefinition } = require("./core/diagram-registry");
+const { runComposedLayout, validateComposedGeometry } = require("./core/composed-layout");
 const { migrateWorkspace } = require("./core/workspace-migrations");
 const packageMetadata = require("../package.json");
 
@@ -187,6 +186,7 @@ const saveWorkspaceTransaction = async (workspace, options = {}) => {
       commandId: options.commandId || randomUUID(),
       type: "workspace.replace",
       label: options.label || "Update workspace",
+      category: options.category || "content",
       expectedRevision: workspaceRevision(workspace),
       payload: {
         workspace,
@@ -210,148 +210,6 @@ const saveViewStateTransaction = async (canvasId, viewState) => {
     },
     { recordHistory: false }
   );
-};
-
-const getActiveTree = (workspace) => workspace.trees[0];
-const getCanvasForTree = (workspace, tree) => workspace.canvases.find((canvas) => canvas.id === tree.canvasId);
-
-const defaultLayoutDirection = (treeType) => getDiagramDefinition(treeType)?.defaultDirection || "TB";
-
-const elkDirection = (direction) =>
-  ({
-    TB: "DOWN",
-    BT: "UP",
-    LR: "RIGHT",
-    RL: "LEFT"
-  })[direction] || "DOWN";
-
-const nodeSize = (tree, nodeId) => {
-  const existing = tree.layout?.nodes?.[nodeId];
-  return {
-    width: existing?.width || 250,
-    height: existing?.height || 72
-  };
-};
-
-const frameBounds = (canvas, frame, nodePositions, framePositions) => {
-  const padding = 28;
-  const childBoxes = [
-    ...frame.nodeIds.map((id) => nodePositions[id]).filter(Boolean),
-    ...frame.childFrameIds.map((id) => framePositions[id]).filter(Boolean)
-  ];
-
-  if (!childBoxes.length) {
-    return canvas.layout?.frames?.[frame.id] || { x: 80, y: 80, width: 320, height: 180, pinned: false, layoutSource: "auto" };
-  }
-
-  const minX = Math.min(...childBoxes.map((box) => box.x)) - padding;
-  const minY = Math.min(...childBoxes.map((box) => box.y)) - padding - 26;
-  const maxX = Math.max(...childBoxes.map((box) => box.x + box.width)) + padding;
-  const maxY = Math.max(...childBoxes.map((box) => box.y + box.height)) + padding;
-
-  return {
-    x: minX,
-    y: minY,
-    width: Math.max(260, maxX - minX),
-    height: Math.max(160, maxY - minY),
-    pinned: canvas.layout?.frames?.[frame.id]?.pinned || false,
-    layoutSource: "auto"
-  };
-};
-
-const runLayout = async (workspace) => {
-  const nextWorkspace = structuredClone(workspace);
-  const tree = getActiveTree(nextWorkspace);
-  const canvas = getCanvasForTree(nextWorkspace, tree);
-  const elk = new ELK();
-  const direction = tree.layout?.direction || defaultLayoutDirection(tree.type);
-
-  const graph = {
-    id: "root",
-    layoutOptions: {
-      "elk.algorithm": "layered",
-      "elk.direction": elkDirection(direction),
-      "elk.spacing.nodeNode": String(tree.layout?.settings?.spacingNodeNode || 48),
-      "elk.layered.spacing.nodeNodeBetweenLayers": String(tree.layout?.settings?.spacingLayer || 96),
-      "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP"
-    },
-    children: tree.nodes.map((node) => ({
-      id: node.id,
-      ...nodeSize(tree, node.id)
-    })),
-    edges: tree.links.map((link) => ({
-      id: link.id,
-      sources: [link.sourceNodeId],
-      targets: [link.targetNodeId]
-    }))
-  };
-
-  const laidOut = await elk.layout(graph);
-  const nextNodeLayout = {};
-
-  for (const child of laidOut.children || []) {
-    const previous = tree.layout?.nodes?.[child.id] || {};
-    nextNodeLayout[child.id] = previous.pinned
-      ? previous
-      : {
-          x: Math.round((child.x || 0) + 90),
-          y: Math.round((child.y || 0) + 90),
-          width: Math.round(child.width || previous.width || 250),
-          height: Math.round(child.height || previous.height || 72),
-          pinned: false,
-          layoutSource: "auto"
-        };
-  }
-
-  const frameById = Object.fromEntries(canvas.frames.map((frame) => [frame.id, frame]));
-  const nextFrameLayout = {};
-  const computeFrame = (frameId) => {
-    if (nextFrameLayout[frameId]) {
-      return nextFrameLayout[frameId];
-    }
-    const frame = frameById[frameId];
-    for (const childFrameId of frame.childFrameIds) {
-      computeFrame(childFrameId);
-    }
-    const previous = canvas.layout?.frames?.[frameId] || {};
-    nextFrameLayout[frameId] = previous.pinned ? previous : frameBounds(canvas, frame, nextNodeLayout, nextFrameLayout);
-    return nextFrameLayout[frameId];
-  };
-  computeFrame(tree.hostFrameId);
-
-  const nextLinkLayout = {};
-  for (const link of tree.links) {
-    const source = nextNodeLayout[link.sourceNodeId];
-    const target = nextNodeLayout[link.targetNodeId];
-    const previous = tree.layout?.links?.[link.id] || {};
-    nextLinkLayout[link.id] = {
-      route: previous.route || [],
-      routeSource: previous.routeSource || "auto",
-      labelPosition:
-        source && target
-          ? {
-              x: Math.round((source.x + source.width / 2 + target.x + target.width / 2) / 2),
-              y: Math.round((source.y + source.height / 2 + target.y + target.height / 2) / 2)
-            }
-          : previous.labelPosition || { x: 0, y: 0 }
-    };
-  }
-
-  tree.layout = {
-    ...tree.layout,
-    engine: "elk",
-    direction,
-    lastRunAt: new Date().toISOString(),
-    nodes: nextNodeLayout,
-    links: nextLinkLayout
-  };
-  canvas.layout = {
-    ...(canvas.layout || {}),
-    frames: { ...(canvas.layout?.frames || {}), ...nextFrameLayout }
-  };
-  tree.updatedAt = new Date().toISOString();
-  nextWorkspace.updatedAt = new Date().toISOString();
-  return nextWorkspace;
 };
 
 const exportMarkdown = async (workspace) => {
@@ -435,6 +293,10 @@ const runVisualTest = async (mainWindow) => {
     "frame-moved-to-parent",
     "frame-parent-undo",
     "frame-parent-redo",
+    "composed-layout-setup",
+    "composed-layout-applied",
+    "composed-layout-undo",
+    "composed-layout-redo",
     "multi-open",
     "multi-selected",
     "multi-closed",
@@ -540,7 +402,8 @@ ipcMain.handle("workspace:execute", async (_event, command, options) => (await g
 ipcMain.handle("history:undo", async () => (await getWorkspaceEngine()).undo());
 ipcMain.handle("history:redo", async () => (await getWorkspaceEngine()).redo());
 ipcMain.handle("history:state", async () => (await getWorkspaceEngine()).getHistoryState());
-ipcMain.handle("layout:run", async (_event, workspace) => runLayout(workspace));
+ipcMain.handle("layout:run", async (_event, workspace) => runComposedLayout(workspace));
+ipcMain.handle("layout:validate", async (_event, workspace) => validateComposedGeometry(workspace));
 ipcMain.handle("export:markdown", async (_event, workspace) => exportMarkdown(workspace));
 
 app.whenReady().then(() => {
