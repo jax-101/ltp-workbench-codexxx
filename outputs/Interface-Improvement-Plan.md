@@ -378,6 +378,25 @@ Evidencia:
 - Bateria visual `3C.0` con 34 escenarios en estado `PASS`.
 - Capturas especificas de minimizar, Undo, Redo y expandir en `outputs/test-evidence/3C.0`.
 
+### Build 3C.1: layout interno de cada frame
+
+Estado: implementado y validado automaticamente y visualmente.
+
+Incluye:
+
+- Eliminacion del postprocesado que forzaba los contenedores a una sola columna.
+- Variantes ELK y umbral de estabilidad aplicados tambien a frames internos conectados.
+- Cuadricula compacta determinista para entidades sin conexiones internas.
+- Recalculo ascendente cuando cambia el tamano de un frame hijo.
+- Rechazo del candidato `CURRENT` si las nuevas cajas ya se solapan.
+
+Evidencia:
+
+- Regresiones con tres entidades desconectadas y con fan-in interno.
+- Los escenarios aleatorios `4101` a `4104` terminan con cero problemas geometricos.
+- Bateria visual `3C.1` con 35 escenarios en estado `PASS`.
+- Captura `27-internal-frame-layout.png`: dos columnas, dos filas y contencion completa.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:

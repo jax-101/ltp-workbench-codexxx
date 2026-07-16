@@ -29,6 +29,34 @@ const moveFrame = (workspace, frameId, targetFrameId) => {
   frame.parentFrameId = targetFrameId;
 };
 
+const addContainerFrame = (workspace, frameId, parentFrameId, nodeIds) => {
+  const canvas = canvasFor(workspace);
+  const tree = treeFor(workspace);
+  canvas.frames.push({
+    id: frameId,
+    canvasId: canvas.id,
+    treeId: tree.id,
+    kind: "container",
+    parentFrameId,
+    name: "Three entity frame",
+    semanticType: "visualGroup",
+    collapsed: false,
+    childFrameIds: [],
+    nodeIds: [],
+    notes: ""
+  });
+  frameFor(workspace, parentFrameId).childFrameIds.push(frameId);
+  canvas.layout.frames[frameId] = {
+    x: 100,
+    y: 100,
+    width: 320,
+    height: 400,
+    pinned: false,
+    layoutSource: "manual"
+  };
+  nodeIds.forEach((nodeId) => moveNode(workspace, nodeId, frameId));
+};
+
 const run = async () => {
   const fixtureSnapshot = JSON.stringify(fixture);
   for (const direction of ["TB", "BT", "LR", "RL"]) {
@@ -208,6 +236,48 @@ const run = async () => {
   }
   assert.deepEqual(validateComposedGeometry(restoredResult), [], "expanded frames must restore valid composed geometry");
 
+  const threeNodeIds = ["node-nc-keyboard-hints", "node-nc-command-palette", "node-nc-frame-navigation"];
+  const disconnectedContainer = structuredClone(fixture);
+  addContainerFrame(disconnectedContainer, "frame-three-disconnected", treeFor(disconnectedContainer).hostFrameId, threeNodeIds);
+  const disconnectedResult = await runComposedLayout(disconnectedContainer);
+  const disconnectedBoxes = threeNodeIds.map((nodeId) => treeFor(disconnectedResult).layout.nodes[nodeId]);
+  const disconnectedFrameBox = canvasFor(disconnectedResult).layout.frames["frame-three-disconnected"];
+  assert(
+    new Set(disconnectedBoxes.map((box) => box.x)).size > 1,
+    "three disconnected entities in a container must not be forced into one vertical column"
+  );
+  assert(
+    new Set(disconnectedBoxes.map((box) => box.y)).size <= 2,
+    "three disconnected entities should use a compact grid"
+  );
+  assert(
+    disconnectedBoxes.every((box) => boxContains(disconnectedFrameBox, box)),
+    "the compact internal grid must remain fully contained"
+  );
+  assert.deepEqual(validateComposedGeometry(disconnectedResult), [], "a compact disconnected container must remain valid");
+
+  const connectedContainer = structuredClone(fixture);
+  addContainerFrame(connectedContainer, "frame-three-connected", treeFor(connectedContainer).hostFrameId, threeNodeIds);
+  treeFor(connectedContainer).layout.direction = "TB";
+  treeFor(connectedContainer).links.push(
+    { id: "link-three-a", sourceNodeId: threeNodeIds[0], targetNodeId: threeNodeIds[2] },
+    { id: "link-three-b", sourceNodeId: threeNodeIds[1], targetNodeId: threeNodeIds[2] }
+  );
+  const connectedResult = await runComposedLayout(connectedContainer);
+  const connectedTree = treeFor(connectedResult);
+  const [firstSourceBox, secondSourceBox, connectedTargetBox] = threeNodeIds.map(
+    (nodeId) => connectedTree.layout.nodes[nodeId]
+  );
+  assert.equal(firstSourceBox.y, secondSourceBox.y, "connected siblings must share their ELK layer inside the frame");
+  assert.notEqual(firstSourceBox.x, secondSourceBox.x, "connected siblings must spread across their ELK layer");
+  assert(connectedTargetBox.y > firstSourceBox.y, "the target must occupy the next preferred-direction layer");
+  assert.equal(
+    connectedTree.layout.optimization["frame-three-connected"].candidates,
+    5,
+    "an internal connected frame must evaluate the layered layout variants"
+  );
+  assert.deepEqual(validateComposedGeometry(connectedResult), [], "an internally layered container must remain valid");
+
   const direct = structuredClone(fixture);
   const directTree = treeFor(direct);
   const directCanvas = canvasFor(direct);
@@ -316,7 +386,7 @@ const run = async () => {
   assert(scatteredOptimization.improvement >= 0.15, "ELK must clear the 15% threshold before replacing current positions");
   assert.deepEqual(validateComposedGeometry(scatteredResult), [], "the improved scattered layout must remain geometrically valid");
 
-  console.log("Composed layout tests passed: weighted quality, stability gate, routing, reversible minimized frames, nesting and determinism.");
+  console.log("Composed layout tests passed: weighted quality, internal frame optimization, minimized frames, nesting and determinism.");
 };
 
 run().catch((error) => {

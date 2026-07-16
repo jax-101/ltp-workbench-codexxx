@@ -34,6 +34,15 @@ const boxesOverlap = (left, right, gap = 0) =>
   left.y < right.y + right.height + gap &&
   left.y + left.height + gap > right.y;
 
+const collectionHasOverlaps = (boxes, gap = 0) => {
+  for (let index = 0; index < boxes.length; index += 1) {
+    for (let otherIndex = index + 1; otherIndex < boxes.length; otherIndex += 1) {
+      if (boxesOverlap(boxes[index], boxes[otherIndex], gap)) return true;
+    }
+  }
+  return false;
+};
+
 const boxContains = (outer, inner, tolerance = 0.5) =>
   inner.x >= outer.x - tolerance &&
   inner.y >= outer.y - tolerance &&
@@ -115,27 +124,33 @@ const resolveItemCollisions = (items, direction) => {
   }
 };
 
-const compactContainerItems = (items, direction, sidePadding, topPadding, spacing) => {
-  const vertical = direction === "TB" || direction === "BT";
+const compactDisconnectedItems = (items, sidePadding, topPadding, spacing) => {
   const ordered = [...items].sort((left, right) => {
-    const primary = vertical ? left.y - right.y : left.x - right.x;
-    if (Math.abs(primary) > 1) return primary;
-    const secondary = vertical ? left.x - right.x : left.y - right.y;
-    if (Math.abs(secondary) > 1) return secondary;
+    const verticalDifference = left.y - right.y;
+    if (Math.abs(verticalDifference) > 1) return verticalDifference;
+    const horizontalDifference = left.x - right.x;
+    if (Math.abs(horizontalDifference) > 1) return horizontalDifference;
     return left.id.localeCompare(right.id);
   });
-  let cursor = vertical ? topPadding : sidePadding;
-  for (const item of ordered) {
-    if (vertical) {
-      item.x = sidePadding;
-      item.y = cursor;
-      cursor += item.height + spacing;
-    } else {
-      item.x = cursor;
-      item.y = topPadding;
-      cursor += item.width + spacing;
-    }
-  }
+  const columnCount = Math.max(1, Math.ceil(Math.sqrt(ordered.length)));
+  const columnWidths = Array.from({ length: columnCount }, () => 0);
+  const rowHeights = [];
+  ordered.forEach((item, index) => {
+    const column = index % columnCount;
+    const row = Math.floor(index / columnCount);
+    columnWidths[column] = Math.max(columnWidths[column], item.width);
+    rowHeights[row] = Math.max(rowHeights[row] || 0, item.height);
+  });
+  const columnOffsets = columnWidths.map((_, index) =>
+    sidePadding + columnWidths.slice(0, index).reduce((sum, width) => sum + width + spacing, 0)
+  );
+  const rowOffsets = rowHeights.map((_, index) =>
+    topPadding + rowHeights.slice(0, index).reduce((sum, height) => sum + height + spacing, 0)
+  );
+  ordered.forEach((item, index) => {
+    item.x = columnOffsets[index % columnCount];
+    item.y = rowOffsets[Math.floor(index / columnCount)];
+  });
 };
 
 const centerOf = (box) => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
@@ -822,9 +837,10 @@ const runComposedLayout = async (workspace, options = {}) => {
       })
       .filter(Boolean);
     let elkChildren = [];
+    let graphEdges = [];
     let preserveCurrentLayout = false;
     if (items.length) {
-      const graphEdges = collapsedEdges(frameId, links, nodeOwners, frameById);
+      graphEdges = collapsedEdges(frameId, links, nodeOwners, frameById);
       const goalTreeRanks = frame.kind === "diagram" && diagramDefinition?.layering === "distanceToSink"
         ? shortestSinkRanks(items.map((item) => item.id), graphEdges)
         : new Map();
@@ -837,12 +853,12 @@ const runComposedLayout = async (workspace, options = {}) => {
             ])
           )
         : new Map();
-      const optimize = !isRoot && frame.kind === "diagram" && items.length >= 4 && graphEdges.length >= 3 && !items.some((item) => item.pinned);
+      const optimize = !isRoot && items.length >= 3 && graphEdges.length >= 2 && !items.some((item) => item.pinned);
       const canCompareCurrent =
         !isRoot &&
-        frame.kind === "diagram" &&
         graphEdges.length > 0 &&
         currentChildren.length === items.length &&
+        !collectionHasOverlaps(currentChildren) &&
         !items.some((item) => item.pinned);
       const relaxed = relaxDirectionEdges(items.map((item) => item.id), graphEdges);
       const selectedLayout = await selectLayoutCandidate(
@@ -890,8 +906,8 @@ const runComposedLayout = async (workspace, options = {}) => {
         item.y += offsetY;
       }
     }
-    if (!isRoot && frame.kind === "container") {
-      compactContainerItems(items, direction, sidePadding, topPadding, spacingNodeNode);
+    if (!isRoot && frame.kind === "container" && graphEdges.length === 0) {
+      compactDisconnectedItems(items, sidePadding, topPadding, spacingNodeNode);
     }
     for (const item of items) {
       if (!item.pinned) continue;
@@ -1077,6 +1093,7 @@ const validateComposedGeometry = (workspace, canvasId = null) => {
       }
     }
     for (const frame of finiteFrames) {
+      if (collapsedAncestorFrameId(frame.parentFrameId, frameById)) continue;
       if (isFrameAncestor(frame.id, node.frameId)) continue;
       const frameBox = canvas.layout?.frames?.[frame.id];
       if (frameBox && boxesOverlap(box, frameBox)) {

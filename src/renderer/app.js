@@ -3463,7 +3463,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.0" && hostVisible && rootHidden, "Build 3C.0 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.1" && hostVisible && rootHidden, "Build 3C.1 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3929,6 +3929,40 @@ window.__ltpVisualTestStep = async (step) => {
         stableLayoutKept &&
         frameContainsDiagram,
       `18 entities, 21 links, current layout kept=${stableLayoutKept}, CSF to Goal=${csfGoalLinks.length}, CSF layers=${csfRows.size}, distinct arrow arrivals=${distinctArrivals}, arrow width=${arrowMarkerScreenWidth.toFixed(1)}px, crossings=${quality.crossings}, straight=${quality.straightRoutes}, bends=${quality.bends}, geometry issues=${issues.length}.`
+    );
+  }
+
+  if (step === "internal-frame-layout") {
+    const hostFrameId = tree().hostFrameId;
+    activeFrameId = hostFrameId;
+    replaceSelection(hostFrameId);
+    await createFrame();
+    const internalFrameId = selectedElementId;
+    frameById()[internalFrameId].name = "Three entity frame";
+    const nodeIds = [];
+    for (const label of ["First independent entity", "Second independent entity", "Third independent entity"]) {
+      nodeIds.push(await createNode(internalFrameId, diagramDefinition()?.defaultNodeType || "necessaryCondition", label));
+    }
+    await runAutoLayout();
+    const boxes = nodeIds.map((nodeId) => layoutNode(nodeId));
+    const frameBox = layoutFrame(internalFrameId);
+    const distinctColumns = new Set(boxes.map((box) => box.x)).size;
+    const distinctRows = new Set(boxes.map((box) => box.y)).size;
+    const contained = boxes.every(
+      (box) =>
+        box.x >= frameBox.x &&
+        box.y >= frameBox.y &&
+        box.x + box.width <= frameBox.x + frameBox.width &&
+        box.y + box.height <= frameBox.y + frameBox.height
+    );
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    replaceSelection(internalFrameId);
+    render();
+    fitView();
+    return result(
+      "Optimize three independent entities inside a frame",
+      distinctColumns > 1 && distinctRows <= 2 && contained && issues.length === 0,
+      `Columns=${distinctColumns}; rows=${distinctRows}; frame=${frameBox.width}x${frameBox.height}; contained=${contained}; geometry issues=${issues.length}.`
     );
   }
 

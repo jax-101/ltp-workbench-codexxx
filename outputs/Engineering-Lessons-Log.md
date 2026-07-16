@@ -532,9 +532,29 @@ Aprendizaje: una operacion reversible debe distinguir el estado significativo pa
 
 Aplicacion futura: declarar que campos son identidad, cuales expresan intencion y cuales son proyecciones regenerables; probar la ida y vuelta desde estados imperfectos, no solo desde estados ya normalizados.
 
+### L-057: El postprocesado puede anular al optimizador
+
+Fecha: 2026-07-16
+
+Evidencia: ELK calculaba el contenido de cada frame, pero una funcion ejecutada despues sustituia sus posiciones y colocaba todos los elementos de un contenedor en una sola columna. Cambiar opciones de ELK no podia corregir el resultado visible.
+
+Aprendizaje: la calidad final pertenece a toda la tuberia, no solo al algoritmo principal. Cualquier fase posterior que modifica geometria debe respetar la topologia o volver a evaluarse con las mismas metricas e invariantes.
+
+Aplicacion futura: capturar salidas entre fases, probar el resultado final y limitar los postprocesados a casos explicitamente definidos, como el empaquetado de elementos desconectados.
+
+### L-058: Un candidato estable debe seguir siendo factible
+
+Fecha: 2026-07-16
+
+Evidencia: al compactar un frame hijo aumento su anchura. El padre intento conservar sus coordenadas anteriores por estabilidad, pero esas coordenadas aplicadas a las cajas nuevas hacian que varios frames se solaparan.
+
+Aprendizaje: en optimizacion jerarquica, una posicion anterior no es automaticamente un candidato valido cuando cambian las dimensiones de sus componentes. Las restricciones duras deben comprobarse antes de comparar puntuaciones o aplicar umbrales de mejora.
+
+Aplicacion futura: recalcular cajas de abajo arriba, descartar candidatos infactibles y aplicar estabilidad solo entre soluciones que cumplen contencion, exclusion y ausencia de solapamientos.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-057`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-059`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

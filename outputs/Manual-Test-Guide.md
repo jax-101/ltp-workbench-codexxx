@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.0`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.1`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -24,11 +24,11 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta minimizacion de frames, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo y conexion, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 34 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
+El comando abre un workspace aislado, ejecuta minimizacion de frames, layout interno, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo y conexion, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 35 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
 
 Las capturas `03` a `06` muestran minimizar, Undo, Redo y expandir. La captura `26-readable-routing.png` debe mostrar 18 entidades, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
 
-Las capturas `27` a `34` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
+La captura `27-internal-frame-layout.png` comprueba que tres entidades independientes forman una cuadricula compacta. Las capturas `28` a `35` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
 
 ```bash
 npm run test:layout-random
@@ -313,6 +313,19 @@ Resultado esperado: el arbol ocupa tres capas, los 11 links son rectos, no hay c
 10. Comprueba que `Cmd+-` sigue controlando el zoom y no minimiza frames.
 
 Resultado esperado: minimizar cambia solo la proyeccion visual, no el contenido del documento; expandir recupera el mapa mental y normaliza limites y rutas. Todo el ciclo se deshace y rehace como una operacion espacial.
+
+## Prueba 24: layout dentro de un frame interno
+
+1. Crea un frame dentro de `Goal Tree`.
+2. Mete tres entidades sin links dentro de ese frame.
+3. Pulsa `Layout`.
+4. Comprueba que forman una cuadricula de dos columnas y dos filas, no una columna vertical.
+5. Comprueba que el frame contiene completamente las tres entidades.
+6. Conecta dos de las entidades con la tercera y vuelve a pulsar `Layout`.
+7. Comprueba que las dos fuentes comparten una capa y el destino ocupa la siguiente segun la direccion preferente.
+8. Repite Layout y comprueba que el resultado es estable.
+
+Resultado esperado: cada frame optimiza primero su contenido. Sin relaciones usa una cuadricula compacta; con relaciones usa las capas de ELK y despues participa como una caja completa en el layout del padre.
 
 ## Registro de resultados
 

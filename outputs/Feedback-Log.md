@@ -743,3 +743,18 @@ Criterios de aceptacion:
 - Undo y Redo animan ambas transiciones como una unica operacion espacial.
 - Expandir conserva posiciones relativas, ajusta el frame para contener todo y recalcula rutas que no atraviesen entidades.
 - La prueba visual completa termina en `PASS` y conserva el resto de flujos del prototipo.
+
+### F-064: Layout practico dentro de cada frame
+
+Feedback: al crear un frame dentro de Goal Tree y meter tres entidades, Layout las colocaba siempre en vertical en vez de optimizar el espacio interior.
+
+Estado: corregido en `3C.1`. La causa era un postprocesado posterior a ELK que convertia cualquier `container` en una sola columna para diagramas verticales.
+
+Criterios de aceptacion:
+
+- Un frame conectado conserva las capas calculadas por ELK y evalua sus variantes como el frame principal.
+- Tres entidades desconectadas forman una cuadricula compacta de dos columnas y dos filas.
+- El frame se reajusta a su contenido y participa como una caja completa en el layout de su padre.
+- Si cambia el tamano del frame hijo, el padre no puede conservar posiciones que produzcan solapamientos.
+- Nodos y frames permanecen contenidos y las rutas no atraviesan entidades.
+- El resultado es determinista y se verifica con fixture algoritmico y captura de Electron.
