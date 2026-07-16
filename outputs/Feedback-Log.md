@@ -726,3 +726,20 @@ Criterios de aceptacion:
 - Undo restaura la operacion completa.
 - El root conceptual y el frame principal del arbol siguen protegidos.
 - Los atajos de borrado no se ejecutan mientras se edita un campo de texto.
+
+### F-063: Frame minimizado como entidad compuesta reversible
+
+Feedback: un frame debe poder minimizarse ocultando sus entidades y links internos, pero manteniendo visibles las flechas que entran y salen. Al expandir debe recuperarse el mapa mental anterior. La minimizacion debe tener prioridad frente a seguir optimizando todos los detalles expandidos.
+
+Estado: implementado en `3C.0` sobre el adaptador neutral de motores. ELK sigue siendo el motor de produccion y el experimento Cola permanece aislado en su rama.
+
+Criterios de aceptacion:
+
+- El frame minimizado se representa como una caja compacta y participa como una entidad unica en el layout de su padre.
+- Nodos, frames y links internos dejan de renderizarse, pero permanecen intactos en el documento.
+- Cada link externo conserva sus extremos semanticos y proyecta visualmente el extremo oculto al borde del frame.
+- Minimap, hints y centrado utilizan la misma nocion de visibilidad que el canvas.
+- `-` y el inspector alternan minimizar y expandir sin conflicto con `Cmd/Ctrl+-` para zoom.
+- Undo y Redo animan ambas transiciones como una unica operacion espacial.
+- Expandir conserva posiciones relativas, ajusta el frame para contener todo y recalcula rutas que no atraviesen entidades.
+- La prueba visual completa termina en `PASS` y conserva el resto de flujos del prototipo.

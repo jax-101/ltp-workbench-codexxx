@@ -1,4 +1,4 @@
-# Manual Test Guide: Interface Iterations 1 through 3B
+# Manual Test Guide: Interface Iterations 1 through 3C
 
 Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en un archivo de prueba separado. No modifica el workspace normal.
 
@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3B.4.1`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.0`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -24,11 +24,11 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta seleccion, reasignacion de frames, Layout compuesto, arrastre, Undo/Redo y conexion, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 30 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`. La prueba falla si no puede ejecutar o representar un escenario; los defectos visuales de la linea base se etiquetan como `needs work` hasta completar 3B.5.
+El comando abre un workspace aislado, ejecuta minimizacion de frames, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo y conexion, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 34 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
 
-La captura `22-readable-routing.png` debe mostrar 18 entidades, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
+Las capturas `03` a `06` muestran minimizar, Undo, Redo y expandir. La captura `26-readable-routing.png` debe mostrar 18 entidades, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
 
-Las capturas `23` a `30` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
+Las capturas `27` a `34` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
 
 ```bash
 npm run test:layout-random
@@ -298,6 +298,21 @@ Resultado esperado: entidades, selecciones y frames completos cambian de contene
 10. Mueve una entidad y comprueba que las rectas provisionales mantienen lados de conexion coherentes.
 
 Resultado esperado: el arbol ocupa tres capas, los 11 links son rectos, no hay cruces ni entidades atravesadas, existe una sola excepcion direccional explicable y el frame queda cenido sin perder su posicion fijada.
+
+## Prueba 23: minimizar y expandir un frame
+
+1. Selecciona un frame hijo que contenga varias entidades y links internos y externos.
+2. Pulsa `-` o el boton `Minimize frame` del inspector.
+3. Comprueba que el frame se convierte en una caja compacta y desaparecen sus entidades, subframes y links internos.
+4. Comprueba que los links externos siguen visibles y terminan en el borde del frame compacto.
+5. Observa que minimapa y hints tampoco muestran el detalle oculto.
+6. Pulsa `Cmd+Z` y `Cmd+Shift+Z`; observa las dos transiciones.
+7. Pulsa `-` de nuevo para expandir.
+8. Comprueba que reaparecen las posiciones relativas anteriores, que el frame contiene todo y que ninguna ruta atraviesa una entidad.
+9. Selecciona el frame minimizado y prueba `Enter frame`; debe pedir que se expanda antes de usarlo como contexto de creacion.
+10. Comprueba que `Cmd+-` sigue controlando el zoom y no minimiza frames.
+
+Resultado esperado: minimizar cambia solo la proyeccion visual, no el contenido del documento; expandir recupera el mapa mental y normaliza limites y rutas. Todo el ciclo se deshace y rehace como una operacion espacial.
 
 ## Registro de resultados
 

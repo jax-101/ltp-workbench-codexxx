@@ -113,15 +113,38 @@ const layoutFrame = (frameId) =>
     layoutSource: "manual"
   };
 
+const collapsedAncestorFrame = (frameId, includeSelf = true) => {
+  const frames = frameById();
+  let frame = frames[frameId];
+  let collapsedFrame = null;
+  if (!includeSelf) frame = frames[frame?.parentFrameId];
+  while (frame) {
+    if (frame.collapsed) collapsedFrame = frame;
+    frame = frames[frame.parentFrameId];
+  }
+  return collapsedFrame;
+};
+
+const frameIsVisible = (frame) =>
+  Boolean(frame && frame.id !== rootFrameId() && !collapsedAncestorFrame(frame.parentFrameId));
+const nodeIsVisible = (node) => Boolean(node && !collapsedAncestorFrame(node.frameId));
+const visibleEndpointId = (nodeId) => collapsedAncestorFrame(nodeById()[nodeId]?.frameId)?.id || nodeId;
+const visibleEndpointBox = (nodeId) => {
+  const endpointId = visibleEndpointId(nodeId);
+  return frameById()[endpointId] ? layoutFrame(endpointId) : layoutNode(endpointId);
+};
+const linkIsVisible = (link) =>
+  Boolean(link && visibleEndpointId(link.sourceNodeId) !== visibleEndpointId(link.targetNodeId));
+
 const layoutLink = (linkId) => tree()?.layout?.links?.[linkId] || { labelPosition: { x: 0, y: 0 }, route: [], routeSource: "auto" };
 
 const canvasSize = () => {
   const activeTree = tree();
   const activeCanvas = canvas();
   if (!activeTree || !activeCanvas) return { width: 1200, height: 800 };
-  const nodeBoxes = Object.values(activeTree.layout?.nodes || {});
+  const nodeBoxes = activeTree.nodes.filter(nodeIsVisible).map((node) => layoutNode(node.id));
   const frameBoxes = Object.entries(activeCanvas.layout?.frames || {})
-    .filter(([frameId]) => frameId !== activeCanvas.rootFrameId)
+    .filter(([frameId]) => frameIsVisible(frameById()[frameId]))
     .map(([, box]) => box);
   const boxes = [...nodeBoxes, ...frameBoxes];
   const width = Math.max(1200, ...boxes.map((box) => (box.x || 0) + (box.width || 0) + 140));
@@ -494,7 +517,7 @@ const visibleHintEntries = () => {
         label: "ROOT"
       });
     }
-    for (const frame of canvas().frames.filter((candidate) => candidate.id !== rootFrameId() && validTargets.has(candidate.id))) {
+    for (const frame of canvas().frames.filter((candidate) => frameIsVisible(candidate) && validTargets.has(candidate.id))) {
       const box = layoutFrame(frame.id);
       if (!boxIntersectsViewport(box, viewport)) continue;
       entries.push({
@@ -509,7 +532,7 @@ const visibleHintEntries = () => {
     return entries.map((entry, index) => ({ ...entry, hint: labels[index] }));
   }
 
-  for (const frame of canvas().frames.filter((candidate) => candidate.id !== rootFrameId())) {
+  for (const frame of canvas().frames.filter(frameIsVisible)) {
     const box = layoutFrame(frame.id);
     if (boxIntersectsViewport(box, viewport) && (!query || frame.name.toLowerCase().includes(query))) {
       entries.push({
@@ -522,7 +545,7 @@ const visibleHintEntries = () => {
     }
   }
 
-  for (const node of activeTree.nodes) {
+  for (const node of activeTree.nodes.filter(nodeIsVisible)) {
     const box = layoutNode(node.id);
     const text = `${node.shortLabel || ""} ${node.statement || ""}`.toLowerCase();
     if (boxIntersectsViewport(box, viewport) && (!query || text.includes(query))) {
@@ -536,7 +559,7 @@ const visibleHintEntries = () => {
     }
   }
 
-  for (const link of activeTree.links) {
+  for (const link of activeTree.links.filter(linkIsVisible)) {
     const box = layoutLink(link.id).labelPosition || { x: 0, y: 0 };
     const text = `${link.meaning || ""} ${link.verbalization || ""}`.toLowerCase();
     const labelIsVisible =
@@ -934,13 +957,14 @@ const moveSelectionToFrame = async (targetFrameId) => {
     roots.map((root) => ({ ...root, targetFrameId })),
     "Move selection to frame"
   );
-  activeFrameId = targetFrameId;
+  const targetFrame = frameById()[targetFrameId];
+  activeFrameId = targetFrame?.collapsed ? targetFrame.parentFrameId || rootFrameId() : targetFrameId;
   updateViewState();
 };
 
 const frameAtPoint = (point) => {
   const candidates = canvas().frames.filter((frame) => {
-    if (frame.id === rootFrameId()) return false;
+    if (!frameIsVisible(frame)) return false;
     const box = layoutFrame(frame.id);
     return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
   });
@@ -1302,6 +1326,26 @@ const togglePin = async () => {
   render();
 };
 
+const toggleFrameCollapsed = async () => {
+  const frame = selectedFrame();
+  if (!frame || frame.id === rootFrameId()) {
+    setStatus("Select a non-root frame to minimize or expand it");
+    return;
+  }
+  const box = layoutFrame(frame.id);
+  frame.collapsed = !frame.collapsed;
+  if (frame.collapsed) {
+    box.expandedWidth = box.expandedWidth || box.width;
+    box.expandedHeight = box.expandedHeight || box.height;
+    if (collapsedAncestorFrame(activeFrameId)) activeFrameId = frame.parentFrameId || rootFrameId();
+  } else {
+    box.width = box.expandedWidth || box.width;
+    box.height = box.expandedHeight || box.height;
+    box.restoreExpandedLayout = true;
+  }
+  await runAutoLayout({ persistLabel: frame.collapsed ? "Minimize frame" : "Expand frame" });
+};
+
 const interpolatedBoxMap = (startMap = {}, targetMap = {}, progress) =>
   Object.fromEntries(
     Object.entries(targetMap).map(([id, target]) => {
@@ -1381,9 +1425,13 @@ const animateToLayout = async (nextWorkspace) => {
       const firstLink = activeTree.links[0];
       if (firstLink) {
         const line = app.querySelector(`[data-link-id="${firstLink.id}"]`);
-        const endpoints = linkEndpoints(layoutNode(firstLink.sourceNodeId), layoutNode(firstLink.targetNodeId));
+        const endpoints = linkEndpoints(
+          visibleEndpointBox(firstLink.sourceNodeId),
+          visibleEndpointBox(firstLink.targetNodeId)
+        );
         layoutAnimationConnectionsTracked =
           layoutAnimationConnectionsTracked &&
+          Boolean(line) &&
           Math.abs(Number(line?.getAttribute("x1")) - endpoints.source.x) < 0.01 &&
           Math.abs(Number(line?.getAttribute("y2")) - endpoints.target.y) < 0.01;
       }
@@ -1400,7 +1448,7 @@ const animateToLayout = async (nextWorkspace) => {
   render();
 };
 
-const runAutoLayout = async () => {
+const runAutoLayout = async (options = {}) => {
   if (layoutAnimating) return;
   window.clearTimeout(viewPersistTimer);
   await workspaceOperationQueue;
@@ -1410,7 +1458,7 @@ const runAutoLayout = async () => {
     const nextWorkspace = await window.ltpPrototype.runLayout(workspaceData);
     setStatus("Repositioning diagram...");
     await animateToLayout(nextWorkspace);
-    await persist("Apply layout", "spatial.layout");
+    await persist(options.persistLabel || "Apply layout", "spatial.layout");
     const quality = tree()?.layout?.quality;
     const optimization = tree()?.layout?.optimization?.[tree()?.hostFrameId];
     if (optimization?.preserved) {
@@ -1447,6 +1495,12 @@ const selectParentFrame = () => {
 const setActiveFrame = (frameId) => {
   const frame = frameById()[frameId];
   if (!frame) return;
+  if (frame.collapsed || collapsedAncestorFrame(frame.parentFrameId)) {
+    replaceSelection(collapsedAncestorFrame(frame.id)?.id || frame.id);
+    setStatus("Expand the frame before using it as the creation frame");
+    render();
+    return;
+  }
   activeFrameId = frame.id;
   setStatus(`Creation frame: ${frame.name}`);
   render();
@@ -1457,6 +1511,10 @@ const setActiveFrame = (frameId) => {
 const enterSelectedFrame = () => {
   const frame = selectedFrame();
   if (frame) {
+    if (frame.collapsed) {
+      setStatus("Expand the frame before entering it");
+      return;
+    }
     activeFrameId = frame.id;
     render();
   }
@@ -1630,17 +1688,20 @@ const renderSidebar = () => {
 
 const renderFrames = () => {
   return canvas().frames
-    .filter((frame) => frame.id !== rootFrameId())
+    .filter(frameIsVisible)
     .map((frame) => {
       const box = layoutFrame(frame.id);
       const active = frame.id === activeFrameId ? "active" : "";
       const selected = frame.id === selectedElementId ? "selected" : "";
       const included = selectionIds.has(frame.id) && frame.id !== selectedElementId ? "selection-included" : "";
+      const collapsed = frame.collapsed ? "collapsed" : "";
+      const inventory = frame.collapsed ? frameInventory(frame.id) : null;
+      const entityCount = inventory ? inventory.types.reduce((total, [, count]) => total + count, 0) : 0;
       return `
-        <button class="tree-frame ${active} ${selected} ${included}" data-element-id="${frame.id}" data-element-type="frame"
+        <button class="tree-frame ${active} ${selected} ${included} ${collapsed}" data-element-id="${frame.id}" data-element-type="frame"
           style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;">
           <span>${escapeHtml(frame.name)}</span>
-          <small>${escapeHtml(frame.semanticType || "visual frame")}</small>
+          <small>${frame.collapsed ? `Minimized - ${entityCount} entities` : escapeHtml(frame.semanticType || "visual frame")}</small>
         </button>
       `;
     })
@@ -1690,7 +1751,8 @@ const updateLayoutDirection = async (direction) => {
 
 const renderNodes = () =>
   tree()
-    .nodes.map((node) => {
+    .nodes.filter(nodeIsVisible)
+    .map((node) => {
       const box = layoutNode(node.id);
       const selected = node.id === selectedElementId ? "selected" : "";
       const included = selectionIds.has(node.id) && node.id !== selectedElementId ? "selection-included" : "";
@@ -1713,9 +1775,9 @@ const selectionCenter = () => {
   const boxes = [];
   for (const id of selectionIds) {
     const type = elementType(id);
-    if (type === "node") boxes.push(layoutNode(id));
-    if (type === "frame" && id !== rootFrameId()) boxes.push(layoutFrame(id));
-    if (type === "link") {
+    if (type === "node" && nodeIsVisible(nodeById()[id])) boxes.push(layoutNode(id));
+    if (type === "frame" && frameIsVisible(frameById()[id])) boxes.push(layoutFrame(id));
+    if (type === "link" && linkIsVisible(linkById()[id])) {
       const point = layoutLink(id).labelPosition;
       if (point) boxes.push({ x: point.x, y: point.y, width: 0, height: 0 });
     }
@@ -1761,18 +1823,23 @@ const linkEndpoints = (sourceBox, targetBox) => {
 
 const renderLinks = () => {
   const activeTree = tree();
+  const visibleLinks = activeTree.links.filter(linkIsVisible);
   const size = canvasSize();
   const markerScale = 1 / clamp(zoomLevel, 0.35, 2.5);
   const markerNumber = (value) => Math.round(value * markerScale * 100) / 100;
-  const lines = activeTree.links
+  const lines = visibleLinks
     .map((link) => {
-      const sourceBox = layoutNode(link.sourceNodeId);
-      const targetBox = layoutNode(link.targetNodeId);
+      const sourceBox = visibleEndpointBox(link.sourceNodeId);
+      const targetBox = visibleEndpointBox(link.targetNodeId);
       const { source, target } = linkEndpoints(sourceBox, targetBox);
       const selected = link.id === selectedElementId ? "selected" : "";
       const included = selectionIds.has(link.id) && link.id !== selectedElementId ? "selection-included" : "";
       const marker = selected ? "arrow-selected" : included ? "arrow-included" : "arrow";
-      const route = layoutLink(link.id).route || [];
+      const linkLayout = layoutLink(link.id);
+      const routeMatchesProjection =
+        linkLayout.projectedSourceId === visibleEndpointId(link.sourceNodeId) &&
+        linkLayout.projectedTargetId === visibleEndpointId(link.targetNodeId);
+      const route = routeMatchesProjection ? linkLayout.route || [] : [];
       if (!layoutAnimating && route.length >= 2) {
         const path = route.map((point, index) => `${index ? "L" : "M"}${point.x},${point.y}`).join(" ");
         return `<path class="tree-link-line ${selected} ${included}" data-link-id="${link.id}" d="${path}" marker-end="url(#${marker})" />`;
@@ -1781,7 +1848,7 @@ const renderLinks = () => {
     })
     .join("");
 
-  const hitTargets = activeTree.links
+  const hitTargets = visibleLinks
     .map((link) => {
       const label = layoutLink(link.id).labelPosition || { x: 0, y: 0 };
       const selected = link.id === selectedElementId ? "selected" : "";
@@ -1887,21 +1954,23 @@ const renderMinimapContents = (metrics) => {
   const mapX = (value) => (value - metrics.domain.x) * metrics.scale;
   const mapY = (value) => (value - metrics.domain.y) * metrics.scale;
   const linkLines = tree()
-    .links.map((link) => {
-      const source = centerOf(layoutNode(link.sourceNodeId));
-      const target = centerOf(layoutNode(link.targetNodeId));
+    .links.filter(linkIsVisible)
+    .map((link) => {
+      const source = centerOf(visibleEndpointBox(link.sourceNodeId));
+      const target = centerOf(visibleEndpointBox(link.targetNodeId));
       return `<line x1="${mapX(source.x)}" y1="${mapY(source.y)}" x2="${mapX(target.x)}" y2="${mapY(target.y)}" />`;
     })
     .join("");
   const frames = canvas()
-    .frames.filter((frame) => frame.id !== rootFrameId())
+    .frames.filter(frameIsVisible)
     .map((frame) => {
       const box = layoutFrame(frame.id);
       return `<div class="minimap-frame" style="left:${mapX(box.x)}px;top:${mapY(box.y)}px;width:${box.width * metrics.scale}px;height:${box.height * metrics.scale}px;"></div>`;
     })
     .join("");
   const nodes = tree()
-    .nodes.map((node) => {
+    .nodes.filter(nodeIsVisible)
+    .map((node) => {
       const box = layoutNode(node.id);
       return `<div class="minimap-node minimap-node-${node.type}" style="left:${mapX(box.x)}px;top:${mapY(box.y)}px;width:${Math.max(3, box.width * metrics.scale)}px;height:${Math.max(2, box.height * metrics.scale)}px;"></div>`;
     })
@@ -2224,6 +2293,7 @@ const renderInspector = () => {
         <label>Contents</label>
         <div class="frame-inventory">${renderFrameInventoryItems(inventory)}</div>
         <button data-action="enter-frame">Enter frame</button>
+        <button data-action="toggle-frame-collapsed">${frame.collapsed ? "Expand frame" : "Minimize frame"}</button>
         <button data-action="pin">Toggle pin</button>
         ${frame.id === rootFrameId() || frame.id === tree().hostFrameId ? "" : '<button class="danger-action" data-action="delete-selection">Delete frame</button>'}
       </aside>
@@ -2445,6 +2515,7 @@ const bindEvents = () => {
       if (action === "export") exportMarkdown();
       if (action === "hints") toggleHints();
       if (action === "pin") togglePin();
+      if (action === "toggle-frame-collapsed") toggleFrameCollapsed();
       if (action === "add-assumption") addAssumptionToSelectedLink();
       if (action === "enter-frame") enterSelectedFrame();
       if (action === "open-node-preview") openNodePreview();
@@ -2541,6 +2612,7 @@ const executeCommand = (command) => {
     enterSelectedFrame,
     focusSearch: () => document.querySelector("[data-search]")?.focus(),
     togglePin,
+    toggleFrameCollapsed,
     previewNode: toggleNodePreview,
     cancelContext: () => cancelContext({ clearSelection: true }),
     undo: () => moveHistory("undo"),
@@ -3391,7 +3463,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3B.4.1" && hostVisible && rootHidden, "Build 3B.4.1 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.0" && hostVisible && rootHidden, "Build 3C.0 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {
@@ -3400,6 +3472,122 @@ window.__ltpVisualTestStep = async (step) => {
     const summary = document.querySelector(".frame-inventory")?.textContent || "";
     const ok = ["Goal:", "CSF:", "NC:", "Frames:", "Links:"].every((label) => summary.includes(label));
     return result("Semantic Goal Tree summary", ok, "Selecting Goal Tree exposes type, frame and internal-link counts.");
+  }
+
+  if (step === "frame-minimized") {
+    const frame = activeCanvas.frames.find(
+      (candidate) =>
+        candidate.parentFrameId === activeTree.hostFrameId &&
+        candidate.nodeIds.length >= 2 &&
+        activeTree.links.some(
+          (link) => candidate.nodeIds.includes(link.sourceNodeId) !== candidate.nodeIds.includes(link.targetNodeId)
+        )
+    );
+    const frameBox = layoutFrame(frame?.id);
+    visualTestState.minimizedFrameId = frame?.id;
+    visualTestState.minimizedNodeIds = [...(frame?.nodeIds || [])];
+    visualTestState.minimizedExpandedSize = { width: frameBox.width, height: frameBox.height };
+    visualTestState.minimizedRelativeNodes = Object.fromEntries(
+      visualTestState.minimizedNodeIds.map((nodeId) => {
+        const box = layoutNode(nodeId);
+        return [nodeId, { x: box.x - frameBox.x, y: box.y - frameBox.y }];
+      })
+    );
+    const memberIds = new Set(visualTestState.minimizedNodeIds);
+    visualTestState.minimizedInternalLinkIds = activeTree.links
+      .filter((link) => memberIds.has(link.sourceNodeId) && memberIds.has(link.targetNodeId))
+      .map((link) => link.id);
+    visualTestState.minimizedExternalLinkIds = activeTree.links
+      .filter((link) => memberIds.has(link.sourceNodeId) !== memberIds.has(link.targetNodeId))
+      .map((link) => link.id);
+    replaceSelection(frame?.id);
+    await pressKey("-");
+    const completed = await waitFor(() => frameById()[frame?.id]?.collapsed && !layoutAnimating, 3500);
+    const box = layoutFrame(frame?.id);
+    const descendantsHidden = visualTestState.minimizedNodeIds.every(
+      (nodeId) => !document.querySelector(`[data-element-id="${nodeId}"]`)
+    );
+    const internalLinksHidden = visualTestState.minimizedInternalLinkIds.every(
+      (linkId) => !document.querySelector(`[data-link-id="${linkId}"]`)
+    );
+    const externalLinksProjected = visualTestState.minimizedExternalLinkIds.every((linkId) => {
+      const linkLayout = layoutLink(linkId);
+      return (
+        (linkLayout.projectedSourceId === frame.id || linkLayout.projectedTargetId === frame.id) &&
+        Boolean(document.querySelector(`[data-link-id="${linkId}"]`))
+      );
+    });
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    fitView();
+    return result(
+      "Minimize a frame as one visual entity",
+      completed && box.width === 190 && box.height === 76 && descendantsHidden && internalLinksHidden && externalLinksProjected && issues.length === 0,
+      `Compact=${box.width}x${box.height}; descendants hidden=${descendantsHidden}; internal links hidden=${internalLinksHidden}; external links projected=${externalLinksProjected}; geometry issues=${issues.length}.`
+    );
+  }
+
+  if (step === "frame-minimize-undo") {
+    await pressKey("z", { metaKey: true });
+    const completed = await waitFor(
+      () => !frameById()[visualTestState.minimizedFrameId]?.collapsed && !layoutAnimating,
+      3500
+    );
+    const descendantsVisible = visualTestState.minimizedNodeIds.every((nodeId) =>
+      Boolean(document.querySelector(`[data-element-id="${nodeId}"]`))
+    );
+    fitView();
+    return result(
+      "Undo frame minimization with transition",
+      completed && descendantsVisible && layoutAnimationFrameCount > 2,
+      `Expanded=${completed}; descendants visible=${descendantsVisible}; animated=${layoutAnimationFrameCount > 2}.`
+    );
+  }
+
+  if (step === "frame-minimize-redo") {
+    await pressKey("z", { metaKey: true, shiftKey: true });
+    const completed = await waitFor(
+      () => frameById()[visualTestState.minimizedFrameId]?.collapsed && !layoutAnimating,
+      3500
+    );
+    const descendantsHidden = visualTestState.minimizedNodeIds.every(
+      (nodeId) => !document.querySelector(`[data-element-id="${nodeId}"]`)
+    );
+    fitView();
+    return result(
+      "Redo frame minimization with transition",
+      completed && descendantsHidden && layoutAnimationFrameCount > 2,
+      `Minimized=${completed}; descendants hidden=${descendantsHidden}; animated=${layoutAnimationFrameCount > 2}.`
+    );
+  }
+
+  if (step === "frame-expanded") {
+    replaceSelection(visualTestState.minimizedFrameId);
+    await pressKey("-");
+    const completed = await waitFor(
+      () => !frameById()[visualTestState.minimizedFrameId]?.collapsed && !layoutAnimating,
+      3500
+    );
+    const box = layoutFrame(visualTestState.minimizedFrameId);
+    const relativePositionsRestored = visualTestState.minimizedNodeIds.every((nodeId) => {
+      const nodeBox = layoutNode(nodeId);
+      const previous = visualTestState.minimizedRelativeNodes[nodeId];
+      return nodeBox.x - box.x === previous.x && nodeBox.y - box.y === previous.y;
+    });
+    const descendantsVisible = visualTestState.minimizedNodeIds.every((nodeId) =>
+      Boolean(document.querySelector(`[data-element-id="${nodeId}"]`))
+    );
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    fitView();
+    return result(
+      "Expand a frame without losing its mental map",
+      completed &&
+        box.width >= visualTestState.minimizedExpandedSize.width &&
+        box.height >= visualTestState.minimizedExpandedSize.height &&
+        relativePositionsRestored &&
+        descendantsVisible &&
+        issues.length === 0,
+      `Restored=${box.width}x${box.height}; relative positions=${relativePositionsRestored}; descendants visible=${descendantsVisible}; geometry issues=${issues.length}.`
+    );
   }
 
   if (step === "entity-frame-target-open") {

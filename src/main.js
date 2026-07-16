@@ -297,6 +297,10 @@ const runVisualTest = async (mainWindow) => {
   const steps = [
     "baseline",
     "frame-summary",
+    "frame-minimized",
+    "frame-minimize-undo",
+    "frame-minimize-redo",
+    "frame-expanded",
     "entity-frame-target-open",
     "entity-moved-to-root",
     "entity-moved-to-parent",

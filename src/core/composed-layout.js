@@ -9,6 +9,8 @@ const ITEM_SPACING = 48;
 const LAYER_SPACING = 96;
 const MIN_FRAME_WIDTH = 300;
 const MIN_FRAME_HEIGHT = 180;
+const COLLAPSED_FRAME_WIDTH = 190;
+const COLLAPSED_FRAME_HEIGHT = 76;
 const ROUTE_CLEARANCE = 14;
 const STABILITY_DISTANCE = 120;
 const LONG_LINK_DISTANCE = 480;
@@ -42,6 +44,17 @@ const translateBoxMap = (boxes, offsetX, offsetY) =>
   Object.fromEntries(
     Object.entries(boxes).map(([id, box]) => [id, { ...box, x: box.x + offsetX, y: box.y + offsetY }])
   );
+
+const collapsedAncestorFrameId = (frameId, frameById, includeSelf = true) => {
+  let frame = frameById.get(frameId);
+  let collapsedFrameId = null;
+  if (!includeSelf) frame = frameById.get(frame?.parentFrameId);
+  while (frame) {
+    if (frame.collapsed) collapsedFrameId = frame.id;
+    frame = frameById.get(frame.parentFrameId);
+  }
+  return collapsedFrameId;
+};
 
 const previousNodeBox = (nodeOwners, nodeId) => {
   const owner = nodeOwners.get(nodeId);
@@ -497,6 +510,22 @@ const orthogonalRoute = (source, target, obstacles, existingRoutes, direction, l
     width: box.width + ROUTE_CLEARANCE * 2,
     height: box.height + ROUTE_CLEARANCE * 2
   }));
+  const fitPerpendicularStub = (endpoint, proposed) => {
+    const vector = {
+      x: Math.sign(proposed.x - endpoint.x),
+      y: Math.sign(proposed.y - endpoint.y)
+    };
+    for (let distance = ROUTE_CLEARANCE; distance >= 0; distance -= 2) {
+      const candidate = {
+        x: endpoint.x + vector.x * distance,
+        y: endpoint.y + vector.y * distance
+      };
+      if (expandedObstacles.every((box) => !segmentIntersectsBox(endpoint, candidate, box))) return candidate;
+    }
+    return endpoint;
+  };
+  ports.start = fitPerpendicularStub(ports.source, ports.start);
+  ports.end = fitPerpendicularStub(ports.target, ports.end);
   const directRoute = [ports.source, ports.target];
   const directIsClear = expandedObstacles.every((box) => !segmentIntersectsBox(ports.source, ports.target, box));
   const directCrossesRoute = existingRoutes.some((existing) => {
@@ -687,6 +716,65 @@ const runComposedLayout = async (workspace, options = {}) => {
 
   const layoutContainer = async (frameId, isRoot = false) => {
     const frame = frameById.get(frameId);
+    const previousFrame = canvas.layout?.frames?.[frameId] || {};
+    const restoreExpandedLayout = !frame.collapsed && Boolean(previousFrame.restoreExpandedLayout);
+    if (!isRoot && (frame.collapsed || restoreExpandedLayout)) {
+      const originX = previousFrame.x || 0;
+      const originY = previousFrame.y || 0;
+      const nodeLayouts = {};
+      const frameLayouts = {};
+      const collectPreservedSubtree = (subtreeFrameId) => {
+        const subtreeFrame = frameById.get(subtreeFrameId);
+        for (const nodeId of subtreeFrame?.nodeIds || []) {
+          const previous = previousNodeBox(nodeOwners, nodeId);
+          if (previous) nodeLayouts[nodeId] = { ...previous, x: previous.x - originX, y: previous.y - originY };
+        }
+        for (const childFrameId of subtreeFrame?.childFrameIds || []) {
+          const previous = canvas.layout?.frames?.[childFrameId];
+          if (previous) frameLayouts[childFrameId] = { ...previous, x: previous.x - originX, y: previous.y - originY };
+          collectPreservedSubtree(childFrameId);
+        }
+      };
+      collectPreservedSubtree(frameId);
+      const preservedContentBoxes = [
+        ...Object.values(nodeLayouts),
+        ...Object.entries(frameLayouts)
+          .filter(([preservedFrameId]) => preservedFrameId !== frameId)
+          .map(([, box]) => box)
+      ];
+      const fittedExpandedWidth = Math.max(
+        previousFrame.expandedWidth || previousFrame.width || MIN_FRAME_WIDTH,
+        ...preservedContentBoxes.map((box) => box.x + box.width + FRAME_SIDE_PADDING)
+      );
+      const fittedExpandedHeight = Math.max(
+        previousFrame.expandedHeight || previousFrame.height || MIN_FRAME_HEIGHT,
+        ...preservedContentBoxes.map((box) => box.y + box.height + FRAME_BOTTOM_PADDING)
+      );
+      const width = frame.collapsed
+        ? COLLAPSED_FRAME_WIDTH
+        : fittedExpandedWidth;
+      const height = frame.collapsed
+        ? COLLAPSED_FRAME_HEIGHT
+        : fittedExpandedHeight;
+      const { restoreExpandedLayout: _restoreExpandedLayout, ...stablePreviousFrame } = previousFrame;
+      frameLayouts[frameId] = {
+        ...stablePreviousFrame,
+        x: 0,
+        y: 0,
+        width,
+        height,
+        expandedWidth: fittedExpandedWidth,
+        expandedHeight: fittedExpandedHeight,
+        layoutSource: previousFrame.pinned ? "manual" : "auto"
+      };
+      return {
+        width,
+        height,
+        nodeLayouts,
+        frameLayouts,
+        optimization: {}
+      };
+    }
     const childResults = new Map();
     const optimization = {};
     for (const childFrameId of frame.childFrameIds || []) {
@@ -839,7 +927,6 @@ const runComposedLayout = async (workspace, options = {}) => {
 
     const contentRight = items.length ? Math.max(...items.map((item) => item.x + item.width)) : sidePadding;
     const contentBottom = items.length ? Math.max(...items.map((item) => item.y + item.height)) : topPadding;
-    const previousFrame = canvas.layout?.frames?.[frameId] || {};
     const width = isRoot
       ? contentRight + sidePadding
       : Math.max(MIN_FRAME_WIDTH, contentRight + FRAME_SIDE_PADDING);
@@ -866,31 +953,67 @@ const runComposedLayout = async (workspace, options = {}) => {
   canvas.layout = { ...(canvas.layout || {}), frames: result.frameLayouts };
   canvas.updatedAt = new Date().toISOString();
 
+  const visibleEndpointId = (nodeId) => {
+    const owner = nodeOwners.get(nodeId);
+    return collapsedAncestorFrameId(owner?.node.frameId, frameById) || nodeId;
+  };
+  const endpointLayouts = {
+    ...Object.fromEntries(
+      [...nodeOwners.entries()]
+        .filter(([, owner]) => !collapsedAncestorFrameId(owner.node.frameId, frameById))
+        .map(([nodeId]) => [nodeId, result.nodeLayouts[nodeId]])
+        .filter(([, box]) => Boolean(box))
+    ),
+    ...Object.fromEntries(
+      canvas.frames
+        .filter(
+          (frame) =>
+            frame.collapsed &&
+            frame.id !== canvas.rootFrameId &&
+            !collapsedAncestorFrameId(frame.parentFrameId, frameById)
+        )
+        .map((frame) => [frame.id, result.frameLayouts[frame.id]])
+        .filter(([, box]) => Boolean(box))
+    )
+  };
   const routedRoutes = [];
-  const allNodeBoxes = Object.entries(result.nodeLayouts);
+  const allEndpointBoxes = Object.entries(endpointLayouts);
   for (const tree of trees) {
     const nextNodeLayout = {};
     for (const node of tree.nodes || []) {
       if (result.nodeLayouts[node.id]) nextNodeLayout[node.id] = result.nodeLayouts[node.id];
     }
     const nextLinkLayout = {};
-    const portAssignments = distributedPortAssignments(tree.links || [], nextNodeLayout, direction);
+    const projectedLinks = (tree.links || []).map((link) => ({
+      ...link,
+      sourceNodeId: visibleEndpointId(link.sourceNodeId),
+      targetNodeId: visibleEndpointId(link.targetNodeId)
+    }));
+    const visibleProjectedLinks = projectedLinks.filter((link) => link.sourceNodeId !== link.targetNodeId);
+    const portAssignments = distributedPortAssignments(visibleProjectedLinks, endpointLayouts, direction);
     for (const link of tree.links || []) {
-      const source = nextNodeLayout[link.sourceNodeId];
-      const target = nextNodeLayout[link.targetNodeId];
+      const sourceEndpointId = visibleEndpointId(link.sourceNodeId);
+      const targetEndpointId = visibleEndpointId(link.targetNodeId);
+      const projectedLink = { ...link, sourceNodeId: sourceEndpointId, targetNodeId: targetEndpointId };
+      const hidden = sourceEndpointId === targetEndpointId;
+      const source = endpointLayouts[sourceEndpointId];
+      const target = endpointLayouts[targetEndpointId];
       const previous = tree.layout?.links?.[link.id] || {};
-      const obstacles = allNodeBoxes
-        .filter(([nodeId]) => nodeId !== link.sourceNodeId && nodeId !== link.targetNodeId)
+      const obstacles = allEndpointBoxes
+        .filter(([itemId]) => itemId !== sourceEndpointId && itemId !== targetEndpointId)
         .map(([, box]) => box);
-      const route = source && target
-        ? orthogonalRoute(source, target, obstacles, routedRoutes, direction, link, portAssignments.get(link.id))
-        : previous.route || [];
+      const route = !hidden && source && target
+        ? orthogonalRoute(source, target, obstacles, routedRoutes, direction, projectedLink, portAssignments.get(link.id))
+        : [];
       if (route.length) {
-        routedRoutes.push({ points: route, nodeIds: [link.sourceNodeId, link.targetNodeId] });
+        routedRoutes.push({ points: route, nodeIds: [sourceEndpointId, targetEndpointId] });
       }
       nextLinkLayout[link.id] = {
         ...previous,
         route,
+        hidden,
+        projectedSourceId: sourceEndpointId,
+        projectedTargetId: targetEndpointId,
         routeSource: "auto",
         labelPosition:
           route.length
@@ -904,7 +1027,7 @@ const runComposedLayout = async (workspace, options = {}) => {
       direction,
       lastRunAt: new Date().toISOString(),
       optimization: result.optimization,
-      quality: routedLayoutQuality(tree.links || [], nextNodeLayout, nextLinkLayout, direction),
+      quality: routedLayoutQuality(visibleProjectedLinks, endpointLayouts, nextLinkLayout, direction),
       nodes: nextNodeLayout,
       links: nextLinkLayout
     };
@@ -921,8 +1044,14 @@ const validateComposedGeometry = (workspace, canvasId = null) => {
   if (!canvas) return [{ code: "CANVAS_MISSING", message: "Canvas is missing" }];
 
   const trees = (workspace.trees || []).filter((tree) => tree.canvasId === canvas.id);
-  const nodes = trees.flatMap((tree) => tree.nodes.map((node) => ({ node, box: tree.layout?.nodes?.[node.id] })));
   const frameById = new Map(canvas.frames.map((frame) => [frame.id, frame]));
+  const nodes = trees.flatMap((tree) =>
+    tree.nodes.map((node) => ({
+      node,
+      box: tree.layout?.nodes?.[node.id],
+      hidden: Boolean(collapsedAncestorFrameId(node.frameId, frameById))
+    }))
+  );
   const finiteFrames = canvas.frames.filter((frame) => frame.id !== canvas.rootFrameId);
   const issues = [];
   const isFrameAncestor = (ancestorId, descendantId) => {
@@ -934,11 +1063,12 @@ const validateComposedGeometry = (workspace, canvasId = null) => {
     return false;
   };
 
-  for (const { node, box } of nodes) {
+  for (const { node, box, hidden } of nodes) {
     if (!box) {
       issues.push({ code: "NODE_LAYOUT_MISSING", nodeId: node.id });
       continue;
     }
+    if (hidden) continue;
     const ownerFrame = frameById.get(node.frameId);
     if (ownerFrame && ownerFrame.id !== canvas.rootFrameId) {
       const frameBox = canvas.layout?.frames?.[ownerFrame.id];
@@ -955,34 +1085,45 @@ const validateComposedGeometry = (workspace, canvasId = null) => {
     }
   }
 
-  const nodeBoxById = new Map(nodes.map(({ node, box }) => [node.id, box]));
+  const visibleBoxesById = new Map(
+    nodes.filter(({ hidden }) => !hidden).map(({ node, box }) => [node.id, box])
+  );
+  for (const frame of finiteFrames) {
+    if (frame.collapsed && !collapsedAncestorFrameId(frame.parentFrameId, frameById)) {
+      visibleBoxesById.set(frame.id, canvas.layout?.frames?.[frame.id]);
+    }
+  }
   for (const tree of trees) {
     for (const link of tree.links || []) {
-      const route = tree.layout?.links?.[link.id]?.route || [];
+      const linkLayout = tree.layout?.links?.[link.id] || {};
+      if (linkLayout.hidden) continue;
+      const route = linkLayout.route || [];
       if (route.length < 2) {
         issues.push({ code: "LINK_ROUTE_MISSING", linkId: link.id });
         continue;
       }
-      for (const [nodeId, box] of nodeBoxById) {
-        if (!box || nodeId === link.sourceNodeId || nodeId === link.targetNodeId) continue;
+      for (const [itemId, box] of visibleBoxesById) {
+        if (!box || itemId === linkLayout.projectedSourceId || itemId === linkLayout.projectedTargetId) continue;
         for (let index = 1; index < route.length; index += 1) {
           if (!segmentIntersectsBox(route[index - 1], route[index], box)) continue;
-          issues.push({ code: "LINK_CROSSES_NODE", linkId: link.id, nodeId });
+          issues.push({ code: "LINK_CROSSES_NODE", linkId: link.id, nodeId: itemId });
           break;
         }
       }
     }
   }
 
-  for (let index = 0; index < nodes.length; index += 1) {
-    for (let otherIndex = index + 1; otherIndex < nodes.length; otherIndex += 1) {
-      if (nodes[index].box && nodes[otherIndex].box && boxesOverlap(nodes[index].box, nodes[otherIndex].box)) {
-        issues.push({ code: "NODE_OVERLAP", nodeIds: [nodes[index].node.id, nodes[otherIndex].node.id] });
+  const visibleNodes = nodes.filter(({ hidden }) => !hidden);
+  for (let index = 0; index < visibleNodes.length; index += 1) {
+    for (let otherIndex = index + 1; otherIndex < visibleNodes.length; otherIndex += 1) {
+      if (visibleNodes[index].box && visibleNodes[otherIndex].box && boxesOverlap(visibleNodes[index].box, visibleNodes[otherIndex].box)) {
+        issues.push({ code: "NODE_OVERLAP", nodeIds: [visibleNodes[index].node.id, visibleNodes[otherIndex].node.id] });
       }
     }
   }
 
   for (const frame of finiteFrames) {
+    if (collapsedAncestorFrameId(frame.parentFrameId, frameById)) continue;
     const box = canvas.layout?.frames?.[frame.id];
     if (!box) {
       issues.push({ code: "FRAME_LAYOUT_MISSING", frameId: frame.id });
@@ -996,10 +1137,11 @@ const validateComposedGeometry = (workspace, canvasId = null) => {
     }
   }
 
-  for (let index = 0; index < finiteFrames.length; index += 1) {
-    for (let otherIndex = index + 1; otherIndex < finiteFrames.length; otherIndex += 1) {
-      const left = finiteFrames[index];
-      const right = finiteFrames[otherIndex];
+  const visibleFrames = finiteFrames.filter((frame) => !collapsedAncestorFrameId(frame.parentFrameId, frameById));
+  for (let index = 0; index < visibleFrames.length; index += 1) {
+    for (let otherIndex = index + 1; otherIndex < visibleFrames.length; otherIndex += 1) {
+      const left = visibleFrames[index];
+      const right = visibleFrames[otherIndex];
       if (isFrameAncestor(left.id, right.id) || isFrameAncestor(right.id, left.id)) continue;
       const leftBox = canvas.layout?.frames?.[left.id];
       const rightBox = canvas.layout?.frames?.[right.id];

@@ -482,9 +482,59 @@ Aprendizaje: las confirmaciones son adecuadas para acciones irreversibles, excep
 
 Aplicacion futura: clasificar acciones destructivas por reversibilidad y alcance; proteger invariantes de dominio; mostrar el resultado inmediatamente; y reservar modales para perdidas que Undo no pueda restaurar con garantias.
 
+### L-052: Comparar motores exige conservar el resto del sistema
+
+Fecha: 2026-07-16
+
+Evidencia: ELK clasico, ELK interactivo y WebCola produjeron posiciones distintas, pero todos heredaron fortalezas y defectos del mismo coordinador recursivo y enrutador. Cambiar el motor no elimino por si solo los problemas geometricos del escenario `fan-in`.
+
+Aprendizaje: una comparacion de componentes solo es valida si entrada, puntuacion, invariantes y postprocesado permanecen constantes. Tambien permite reconocer cuando el cuello de botella esta fuera del componente sustituido.
+
+Aplicacion futura: definir contratos estrechos, inyectar implementaciones, ejecutar fixtures identicos y atribuir cada metrica a la fase que realmente la produce.
+
+### L-053: Las capacidades nativas no garantizan su composicion
+
+Fecha: 2026-07-16
+
+Evidencia: WebCola soporta grupos, restricciones direccionales y eliminacion de solapamientos. Cada capacidad funciono por separado, pero al alinear rangos globales dentro de grupos anidados aparecieron colisiones entre grupos hermanos.
+
+Aprendizaje: una lista de funcionalidades de una biblioteca no demuestra que todas puedan satisfacerse simultaneamente sobre el modelo concreto del producto. Las interacciones entre restricciones son parte esencial de la evaluacion.
+
+Aplicacion futura: construir primero el caso combinado mas exigente, definir invariantes duros y conservar candidatos alternativos para que una preferencia no invalide la geometria.
+
+### L-054: Una abstraccion reversible conserva valor aunque el experimento pierda
+
+Fecha: 2026-07-16
+
+Evidencia: aislar ELK detras de un generador de candidatos permitio introducir Cola sin modificar seleccion, routing, Undo o interfaz. La conclusion fue no sustituir ELK, pero el contrato sigue facilitando pruebas headless y motores futuros.
+
+Aprendizaje: un experimento arquitectonicamente aislado puede producir una mejora permanente sin obligar a adoptar la tecnologia evaluada. La reversibilidad reduce tanto el riesgo como el coste de aprender.
+
+Aplicacion futura: separar primero el limite estable, confirmar paridad con la implementacion original y hacer que la tecnologia experimental viva detras de ese limite.
+
+### L-055: Colapsar complejidad puede valer mas que optimizarla
+
+Fecha: 2026-07-16
+
+Evidencia: en el experimento, representar un frame minimizado como una sola entidad redujo muchos mas cruces que sustituir ELK por otro motor manteniendo todos los detalles expandidos.
+
+Aprendizaje: cuando la complejidad visual procede de demasiadas relaciones simultaneas, una representacion jerarquica adecuada puede superar a una optimizacion geometrica mas sofisticada.
+
+Aplicacion futura: permitir niveles de detalle, proyectar relaciones a limites de grupos y medir la legibilidad tanto con estructuras expandidas como resumidas.
+
+### L-056: Restaurar la intencion no obliga a restaurar un defecto
+
+Fecha: 2026-07-16
+
+Evidencia: minimizar y volver a expandir conservaba exactamente las posiciones relativas, pero la fixture inicial tenia un frame demasiado pequeno y rutas que atravesaban nodos. La primera restauracion fiel devolvio tambien esas violaciones.
+
+Aprendizaje: una operacion reversible debe distinguir el estado significativo para el usuario de la geometria derivada. Se puede preservar el mapa mental y, a la vez, recalcular limites y rutas para restablecer invariantes.
+
+Aplicacion futura: declarar que campos son identidad, cuales expresan intencion y cuales son proyecciones regenerables; probar la ida y vuelta desde estados imperfectos, no solo desde estados ya normalizados.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-052`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-057`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

@@ -357,6 +357,27 @@ Criterios de aceptacion:
 - Undo/Redo de Layout y otras operaciones espaciales reutiliza la animacion sin crear nuevas entradas de historial.
 - El selector de destino muestra solo frames validos, incluido el root, y nunca permite ciclos.
 
+### Build 3C.0: frames minimizados como entidades compuestas
+
+Estado: implementado y validado automaticamente y visualmente.
+
+Incluye:
+
+- Estado persistente `collapsed` independiente del motor de layout.
+- Caja compacta estable que participa en el layout del frame padre como una entidad.
+- Ocultacion de nodos, frames y links internos sin eliminarlos del modelo.
+- Proyeccion de links externos sobre el borde del frame compacto.
+- Restauracion de posiciones relativas, ajuste de limites y recalculo de rutas al expandir.
+- Minimizacion y expansion desde el inspector o con `-`.
+- Undo y Redo animados como una unica operacion espacial.
+- Canvas, minimapa, hints, seleccion y centrado basados en la misma proyeccion visible.
+
+Evidencia:
+
+- Regresion algoritmica de ida y vuelta sobre la fixture estable.
+- Bateria visual `3C.0` con 34 escenarios en estado `PASS`.
+- Capturas especificas de minimizar, Undo, Redo y expandir en `outputs/test-evidence/3C.0`.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:
@@ -397,14 +418,14 @@ Criterios de aceptacion:
 
 Incluye:
 
-- F-015: frame minimizado como resumen persistente.
-- Portales de borde compartidos por frames minimizados y vistas de foco.
+- F-015: frame minimizado como resumen persistente, implementado en `3C.0`.
+- Portales de borde compartidos por frames minimizados y vistas de foco; la proyeccion basica esta implementada y queda pendiente agrupar e inspeccionar multiples conexiones.
 
 Criterios de aceptacion:
 
 - Minimizar oculta detalle interno y conserva conexiones externas visibles.
 - Las conexiones agrupadas muestran su cantidad y pueden inspeccionarse.
-- Expandir restaura exactamente la geometria anterior.
+- Expandir restaura las posiciones relativas, reajusta el limite para contenerlas y recalcula las rutas.
 - Los portales distinguen claramente el destino externo de una entidad visible.
 
 ### 3D.3: trabajo con entidades externas

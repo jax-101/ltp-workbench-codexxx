@@ -128,6 +128,86 @@ const run = async () => {
     "composed layout must be deterministic"
   );
 
+  const expandedBaseline = await runComposedLayout(fixture);
+  const collapsedInput = structuredClone(expandedBaseline);
+  const collapsedFrameId = "frame-csf-thinking";
+  const collapsedFrame = frameFor(collapsedInput, collapsedFrameId);
+  const expandedFrameBox = { ...canvasFor(collapsedInput).layout.frames[collapsedFrameId] };
+  const preservedRelativeNodes = Object.fromEntries(
+    collapsedFrame.nodeIds.map((nodeId) => {
+      const box = treeFor(collapsedInput).layout.nodes[nodeId];
+      return [nodeId, { x: box.x - expandedFrameBox.x, y: box.y - expandedFrameBox.y }];
+    })
+  );
+  collapsedFrame.collapsed = true;
+  const collapsedResult = await runComposedLayout(collapsedInput);
+  const collapsedCanvas = canvasFor(collapsedResult);
+  const collapsedTree = treeFor(collapsedResult);
+  const collapsedBox = collapsedCanvas.layout.frames[collapsedFrameId];
+  const collapsedNodeIds = new Set(collapsedFrame.nodeIds);
+  const internalLinks = collapsedTree.links.filter(
+    (link) => collapsedNodeIds.has(link.sourceNodeId) && collapsedNodeIds.has(link.targetNodeId)
+  );
+  const externalLinks = collapsedTree.links.filter(
+    (link) => collapsedNodeIds.has(link.sourceNodeId) !== collapsedNodeIds.has(link.targetNodeId)
+  );
+  assert.equal(collapsedBox.width, 190, "a minimized frame must use the stable compact width");
+  assert.equal(collapsedBox.height, 76, "a minimized frame must use the stable compact height");
+  assert.equal(collapsedBox.expandedWidth, expandedFrameBox.width, "minimizing must remember the expanded width");
+  assert.equal(collapsedBox.expandedHeight, expandedFrameBox.height, "minimizing must remember the expanded height");
+  for (const [nodeId, relative] of Object.entries(preservedRelativeNodes)) {
+    const box = collapsedTree.layout.nodes[nodeId];
+    assert(box, "minimized frame content must remain in the persisted layout");
+    assert.equal(box.x - collapsedBox.x, relative.x, "minimizing must preserve relative node x");
+    assert.equal(box.y - collapsedBox.y, relative.y, "minimizing must preserve relative node y");
+  }
+  assert(internalLinks.length > 0, "the minimized frame fixture must include internal links");
+  assert(
+    internalLinks.every((link) => collapsedTree.layout.links[link.id].hidden && collapsedTree.layout.links[link.id].route.length === 0),
+    "links internal to a minimized frame must be hidden"
+  );
+  assert(externalLinks.length > 0, "the minimized frame fixture must include external links");
+  for (const link of externalLinks) {
+    const linkLayout = collapsedTree.layout.links[link.id];
+    const projectedEnd = linkLayout.projectedSourceId === collapsedFrameId ? linkLayout.route[0] : linkLayout.route.at(-1);
+    assert(
+      projectedEnd.x === collapsedBox.x ||
+        projectedEnd.x === collapsedBox.x + collapsedBox.width ||
+        projectedEnd.y === collapsedBox.y ||
+        projectedEnd.y === collapsedBox.y + collapsedBox.height,
+      "external links must meet the minimized frame at its border"
+    );
+  }
+  assert.deepEqual(validateComposedGeometry(collapsedResult), [], "minimized frames must preserve composed geometry");
+
+  const nestedCollapsedInput = structuredClone(expandedBaseline);
+  moveFrame(nestedCollapsedInput, "frame-csf-keyboard", collapsedFrameId);
+  frameFor(nestedCollapsedInput, collapsedFrameId).collapsed = true;
+  frameFor(nestedCollapsedInput, "frame-csf-keyboard").collapsed = true;
+  const nestedCollapsedResult = await runComposedLayout(nestedCollapsedInput);
+  const nestedExternalLayout = treeFor(nestedCollapsedResult).layout.links["link-csf-keyboard-to-goal"];
+  assert.equal(
+    nestedExternalLayout.projectedSourceId,
+    collapsedFrameId,
+    "nested minimized content must project to the outermost visible minimized frame"
+  );
+  assert.deepEqual(validateComposedGeometry(nestedCollapsedResult), [], "nested minimized frames must remain valid");
+
+  const restoredInput = structuredClone(collapsedResult);
+  frameFor(restoredInput, collapsedFrameId).collapsed = false;
+  canvasFor(restoredInput).layout.frames[collapsedFrameId].restoreExpandedLayout = true;
+  const restoredResult = await runComposedLayout(restoredInput);
+  const restoredFrameBox = canvasFor(restoredResult).layout.frames[collapsedFrameId];
+  assert.equal(restoredFrameBox.width, expandedFrameBox.width, "expanding must restore the previous width");
+  assert.equal(restoredFrameBox.height, expandedFrameBox.height, "expanding must restore the previous height");
+  assert.equal(restoredFrameBox.restoreExpandedLayout, undefined, "the one-shot restoration marker must be cleared");
+  for (const [nodeId, relative] of Object.entries(preservedRelativeNodes)) {
+    const box = treeFor(restoredResult).layout.nodes[nodeId];
+    assert.equal(box.x - restoredFrameBox.x, relative.x, "expanding must restore relative node x");
+    assert.equal(box.y - restoredFrameBox.y, relative.y, "expanding must restore relative node y");
+  }
+  assert.deepEqual(validateComposedGeometry(restoredResult), [], "expanded frames must restore valid composed geometry");
+
   const direct = structuredClone(fixture);
   const directTree = treeFor(direct);
   const directCanvas = canvasFor(direct);
@@ -236,7 +316,7 @@ const run = async () => {
   assert(scatteredOptimization.improvement >= 0.15, "ELK must clear the 15% threshold before replacing current positions");
   assert.deepEqual(validateComposedGeometry(scatteredResult), [], "the improved scattered layout must remain geometrically valid");
 
-  console.log("Composed layout tests passed: weighted quality, 15% stability gate, directional ports, routing, frames, nesting and determinism.");
+  console.log("Composed layout tests passed: weighted quality, stability gate, routing, reversible minimized frames, nesting and determinism.");
 };
 
 run().catch((error) => {

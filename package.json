@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3B.4.1",
-    "name": "Immediate Delete",
+    "id": "3C.0",
+    "name": "Minimized Frames",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
