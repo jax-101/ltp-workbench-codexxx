@@ -521,6 +521,24 @@ Evidencia:
 - Smoke test crea cuatro entidades consecutivas dentro del mismo contexto.
 - Las cuatro conservan separacion de cajas y sus cuatro hints son simultaneamente legibles.
 
+### Build 3C.9: seleccion de alto contraste
+
+Estado: implementado y validado automaticamente.
+
+Incluye:
+
+- Color azul reservado para la seleccion principal de entidades, frames y links.
+- Borde, fondo y halo redundantes para entidades seleccionadas.
+- Diferenciacion entre seleccion principal e inclusion colectiva.
+- Trazo de link seleccionado estable con zoom y punta ampliada.
+- Control central del link seleccionado visible aunque `H` este desactivado.
+
+Evidencia:
+
+- Smoke test verifica borde, fondo y sombra de una entidad seleccionada.
+- Smoke test verifica trazo de 5 px y control central visible en un link seleccionado.
+- Bateria visual `3C.9` con 37 escenarios en estado `PASS`.
+
 ## Iteracion 3C: operaciones sobre selecciones
 
 Incluye:

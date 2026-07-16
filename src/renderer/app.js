@@ -2056,8 +2056,8 @@ const renderLinks = () => {
         <marker id="arrow" markerWidth="${markerNumber(12)}" markerHeight="${markerNumber(12)}" refX="${markerNumber(11)}" refY="${markerNumber(4)}" orient="auto" markerUnits="userSpaceOnUse">
           <path d="M0,0 L0,${markerNumber(8)} L${markerNumber(11)},${markerNumber(4)} z" fill="#3f4945"></path>
         </marker>
-        <marker id="arrow-selected" markerWidth="${markerNumber(13)}" markerHeight="${markerNumber(13)}" refX="${markerNumber(12)}" refY="${markerNumber(4.5)}" orient="auto" markerUnits="userSpaceOnUse">
-          <path d="M0,0 L0,${markerNumber(9)} L${markerNumber(12)},${markerNumber(4.5)} z" fill="#9f4f45"></path>
+        <marker id="arrow-selected" markerWidth="${markerNumber(14)}" markerHeight="${markerNumber(14)}" refX="${markerNumber(13)}" refY="${markerNumber(5)}" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L0,${markerNumber(10)} L${markerNumber(13)},${markerNumber(5)} z" fill="#0969a8"></path>
         </marker>
         <marker id="arrow-included" markerWidth="${markerNumber(13)}" markerHeight="${markerNumber(13)}" refX="${markerNumber(12)}" refY="${markerNumber(4.5)}" orient="auto" markerUnits="userSpaceOnUse">
           <path d="M0,0 L0,${markerNumber(9)} L${markerNumber(12)},${markerNumber(4.5)} z" fill="#c58f2c"></path>
@@ -3531,6 +3531,24 @@ window.__ltpSmokeTest = async () => {
     (nodeId) => nodeById()[nodeId]?.type === repeatableTypes[2].id
   );
 
+  replaceSelection(typeCycleIds[0]);
+  render();
+  const selectedNodeStyle = getComputedStyle(document.querySelector(`[data-element-id="${typeCycleIds[0]}"]`));
+  const nodeSelectionIsProminent =
+    Number.parseFloat(selectedNodeStyle.borderTopWidth) >= 3 &&
+    selectedNodeStyle.boxShadow !== "none" &&
+    selectedNodeStyle.backgroundColor !== "rgb(255, 255, 255)";
+  const visibleSelectionLink = tree().links.find(linkIsVisible);
+  replaceSelection(visibleSelectionLink.id);
+  render();
+  const selectedLinkStyle = getComputedStyle(document.querySelector(`[data-link-id="${visibleSelectionLink.id}"]`));
+  const selectedLinkTargetStyle = getComputedStyle(
+    document.querySelector(`[data-element-id="${visibleSelectionLink.id}"]`)
+  );
+  const linkSelectionIsProminent =
+    Number.parseFloat(selectedLinkStyle.strokeWidth) >= 5 &&
+    selectedLinkTargetStyle.opacity === "1";
+
   hintEntries = visibleHintEntries();
   const finalTree = tree();
   const finalCanvas = canvas();
@@ -3620,6 +3638,8 @@ window.__ltpSmokeTest = async () => {
       multiTypeCycleAdvances &&
       multiTypeCycleWraps &&
       multiTypeCycleUndoIsAtomic &&
+      nodeSelectionIsProminent &&
+      linkSelectionIsProminent &&
       Object.keys(commandBindings).length >= 10 &&
       Boolean(exportResult.path),
     nodes: finalTree.nodes.length,
@@ -3701,6 +3721,8 @@ window.__ltpSmokeTest = async () => {
     multiTypeCycleAdvances,
     multiTypeCycleWraps,
     multiTypeCycleUndoIsAtomic,
+    nodeSelectionIsProminent,
+    linkSelectionIsProminent,
     exportPath: exportResult.path
   };
 };
@@ -3814,7 +3836,7 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.8" && hostVisible && rootHidden, "Build 3C.8 is visible; Goal Tree is finite and Root remains conceptual.");
+    return result("Build identity and composed canvas", buildInfo.id === "3C.9" && hostVisible && rootHidden, "Build 3C.9 is visible; Goal Tree is finite and Root remains conceptual.");
   }
 
   if (step === "frame-summary") {

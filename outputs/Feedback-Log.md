@@ -843,3 +843,18 @@ Criterios de aceptacion:
 - La funcion de calidad compara cruces, obstaculos, longitud, espacio y estabilidad usando los puertos adaptativos.
 - El frame se ajusta a las dimensiones del candidato ganador sin perder contencion.
 - El caso complejo conserva capas, cero cruces independientes y cero curvas atravesando entidades.
+
+### F-070: Seleccion claramente visible en entidades y flechas
+
+Feedback: al seleccionar entidades o flechas, la indicacion visual no destacaba lo suficiente sobre los colores semanticos del diagrama.
+
+Estado: implementado en `3C.9`.
+
+Criterios de aceptacion:
+
+- Una entidad seleccionada usa borde azul de 3 px, fondo tenue y un halo exterior visible.
+- La seleccion principal se distingue de los elementos incluidos por una seleccion de frame o grupo.
+- Una flecha seleccionada mantiene un trazo azul de 5 px visibles aunque cambie el zoom.
+- La punta seleccionada aumenta de tamano y conserva el mismo color que el enlace.
+- El control central del link seleccionado permanece visible aunque los hints generales esten ocultos.
+- La mejora no cambia la geometria, el layout ni el contenido de la seleccion.

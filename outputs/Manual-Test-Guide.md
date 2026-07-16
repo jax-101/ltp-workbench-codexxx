@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.8`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.9`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -398,6 +398,19 @@ Resultado esperado: puertos, posicion transversal y tamano del frame cooperan pa
 8. Comprueba que cambia el foco de campo y no modifica ningun Type.
 
 Resultado esperado: la seleccion individual continua desde su valor; la seleccion multiple se sincroniza y recorre un unico ciclo. Los Types unicos no aparecen como destino colectivo y el historial trata cada pulsacion como una operacion atomica.
+
+## Prueba 30: contraste de seleccion en entidades y links
+
+1. Oculta los hints con `H` si estaban visibles.
+2. Selecciona una entidad con el raton y comprueba que aparece un borde azul grueso, fondo azul tenue y halo exterior.
+3. Aleja el zoom hasta el 35% y comprueba que la entidad sigue siendo reconocible como seleccionada.
+4. Selecciona una flecha haciendo click sobre su linea.
+5. Comprueba que el enlace completo se vuelve azul, aumenta claramente de grosor y conserva una punta visible.
+6. Comprueba que el control circular central de esa flecha permanece visible aunque los demas hints esten ocultos.
+7. Selecciona un frame y compara la seleccion principal azul con las entidades y links incluidos, que deben conservar una indicacion dorada secundaria.
+8. Cambia el zoom entre 35%, 100% y 200% y comprueba que el grosor perceptible del link seleccionado se mantiene.
+
+Resultado esperado: la seleccion primaria se identifica inmediatamente por varios signos visuales y nunca se confunde con el Type ni con los elementos incluidos colectivamente.
 
 ## Registro de resultados
 

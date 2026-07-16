@@ -612,9 +612,19 @@ Aprendizaje: la deteccion espacial debe comparar las cajas reales, sus margenes 
 
 Aplicacion futura: modelar zonas ocupadas y de seguridad; probar secuencias repetidas, no solo una insercion; y verificar controles superpuestos en coordenadas de pantalla cuando mantienen tamano constante con zoom.
 
+### L-065: Un estado operativo no debe competir con el color semantico
+
+Fecha: 2026-07-16
+
+Evidencia: el borde seleccionado reutilizaba tonos cercanos a los Types y el trazo SVG se hacia mas fino al alejar el zoom. La seleccion existia en el modelo, pero dejaba de percibirse con rapidez tanto en entidades como en links.
+
+Aprendizaje: los estados de interaccion deben tener un canal visual propio, redundante y estable en pantalla. Color, grosor, halo y controles persistentes se complementan; depender de una sola variacion cromatica o de unidades que escalan con el contenido fragiliza la interfaz.
+
+Aplicacion futura: reservar colores para estados operativos; reforzarlos con forma o contorno; definir en unidades de pantalla los detalles criticos; y comprobar estilos calculados junto con capturas a distintos niveles de zoom.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-065`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-066`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

@@ -478,3 +478,9 @@ Razon: avanzar cada entidad desde un tipo distinto conserva la heterogeneidad y 
 Decision: la colocacion consecutiva de `N` compara rectangulos completos y usa una cuadricula con 44 unidades de separacion. Esta reserva incluye el area superior donde aparecen los hints. Si una nueva fila rebasa un frame finito, se amplian ese frame y sus ancestros para conservar contencion.
 
 Razon: evitar que dos origenes coincidan no evita que sus entidades o etiquetas se tapen. Los controles temporales tambien forman parte de la geometria de uso y deben influir en la separacion minima aunque no se persistan como elementos del dominio.
+
+### D-078: La seleccion primaria tiene un lenguaje visual propio y estable con zoom
+
+Decision: entidades y links seleccionados usan un azul exclusivo, un refuerzo de forma y un halo, mientras los elementos incluidos conservan una indicacion dorada secundaria. Los trazos SVG de seleccion no escalan con el canvas y el control central de un link seleccionado no depende del estado global de hints.
+
+Razon: reutilizar colores de Types obliga a interpretar el significado por tono y un trazo que se reduce con zoom deja de comunicar estado. La seleccion es una condicion operativa y debe reconocerse de inmediato por color, grosor y contorno, incluso sobre elementos semanticamente coloreados o en vistas alejadas.

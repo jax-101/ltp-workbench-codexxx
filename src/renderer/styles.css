@@ -13,6 +13,8 @@
   --red: #9f4f45;
   --blue: #3d628c;
   --green: #4f7f57;
+  --selection: #0969a8;
+  --selection-wash: #e9f5fb;
   --white: #ffffff;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -455,16 +457,18 @@ kbd {
   fill: none;
   stroke: #3f4945;
   stroke-width: 2.4;
+  vector-effect: non-scaling-stroke;
 }
 
 .tree-link-line.selected {
-  stroke: var(--red);
-  stroke-width: 3.2;
+  stroke: var(--selection);
+  stroke-width: 5;
+  filter: drop-shadow(0 0 1px var(--white)) drop-shadow(0 0 3px rgba(9, 105, 168, 0.56));
 }
 
 .tree-link-line.selection-included {
   stroke: var(--gold);
-  stroke-width: 2.8;
+  stroke-width: 3.4;
 }
 
 .tree-frame,
@@ -535,7 +539,10 @@ kbd {
 }
 
 .tree-frame.selected {
-  outline: 3px solid rgba(15, 107, 104, 0.22);
+  border-color: var(--selection);
+  outline: 4px solid rgba(9, 105, 168, 0.42);
+  outline-offset: 2px;
+  background: rgba(233, 245, 251, 0.68);
 }
 
 .tree-frame.selection-included {
@@ -590,8 +597,13 @@ kbd {
 }
 
 .tree-node.selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(15, 107, 104, 0.16), 0 6px 14px rgba(37, 43, 42, 0.1);
+  border-width: 3px;
+  border-color: var(--selection);
+  background: var(--selection-wash);
+  box-shadow:
+    0 0 0 2px var(--white),
+    0 0 0 7px rgba(9, 105, 168, 0.48),
+    0 8px 18px rgba(37, 43, 42, 0.2);
 }
 
 .tree-node.selection-included {
@@ -605,9 +617,10 @@ kbd {
 
 .tree-node.selected.multi-selected {
   box-shadow:
-    0 0 0 4px rgba(15, 107, 104, 0.18),
-    0 0 0 8px rgba(197, 143, 44, 0.18),
-    0 6px 14px rgba(37, 43, 42, 0.1);
+    0 0 0 2px var(--white),
+    0 0 0 7px rgba(9, 105, 168, 0.48),
+    0 0 0 11px rgba(197, 143, 44, 0.32),
+    0 8px 18px rgba(37, 43, 42, 0.2);
 }
 
 .node-goal {
@@ -649,8 +662,11 @@ kbd {
 }
 
 .link-target.selected {
-  border-color: var(--red);
-  color: var(--red);
+  border-color: var(--selection);
+  background: var(--selection);
+  color: var(--white);
+  opacity: 1;
+  box-shadow: 0 0 0 3px var(--white), 0 0 0 6px rgba(9, 105, 168, 0.46);
 }
 
 .link-target.selection-included {
