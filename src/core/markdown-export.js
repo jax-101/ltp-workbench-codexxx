@@ -1,6 +1,9 @@
 const relationVerbalization = (relation, elementById) => {
   const inputs = relation.inputs.map((endpoint) => elementById.get(endpoint.elementId)?.statement || endpoint.elementId);
   const outputs = relation.outputs.map((endpoint) => elementById.get(endpoint.elementId)?.statement || endpoint.elementId);
+  if (relation.type === "CONFLICT" && inputs.length === 2) {
+    return `${inputs[1]} conflicts with ${inputs[0]}.`;
+  }
   const combination = relation.combination === "SIMPLE" ? "" : ` ${relation.combination}`;
   return `If ${inputs.join(combination || ", ")}, then ${outputs.join(" and ")}.`;
 };
@@ -51,6 +54,16 @@ const nativeSemanticMarkdown = (tree, system) => {
       }
       lines.push("");
     }
+  }
+  if (graph.derivations?.length) {
+    lines.push("## Derivations", "");
+    for (const derivation of graph.derivations) {
+      const source = elementById.get(derivation.sourceElementId);
+      lines.push(
+        `- **${derivation.id}** [${derivation.type}]: ${source?.statement || derivation.sourceElementId} -> ${derivation.targetAssumptionId} (${derivation.status})`
+      );
+    }
+    lines.push("");
   }
   return lines.join("\n");
 };

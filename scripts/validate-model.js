@@ -5,7 +5,8 @@ const { validateWorkspace } = require("../src/core/workspace-validator");
 const fixtureNames = [
   "sample-workspace-v0.1.json",
   "complex-goal-tree-workspace-v0.1.json",
-  "crt-workspace-v0.1.json"
+  "crt-workspace-v0.1.json",
+  "ec-workspace-v0.1.json"
 ];
 
 for (const fixtureName of fixtureNames) {

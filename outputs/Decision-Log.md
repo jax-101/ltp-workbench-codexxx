@@ -645,3 +645,26 @@ participa en Type ni en el inventario semantico.
 
 Razon: el simbolo debe tener identidad estable para layout, seleccion, rutas y
 pruebas, pero no representa una afirmacion independiente del usuario.
+
+### D-095: Las restricciones canonicas se compilan sobre ELK
+
+Decision: ELK layered permanece como motor unico. Las definiciones pueden
+declarar columnas y ramas paralelas; un compilador neutral las transforma en
+particiones de rango, carriles y predicados de factibilidad aplicados a cada
+candidato antes de su puntuacion. Una disposicion que viola estas restricciones
+no se conserva por estabilidad aunque su mejora ponderada sea inferior al 15%.
+
+Razon: la estabilidad protege el mapa mental entre layouts validos, pero no
+puede legitimar una EC con ramas cruzadas. Separar constraint, generacion y
+puntuacion evita tanto las coordenadas hardcodeadas como un motor especial.
+
+### D-096: CONFLICT se renderiza pero no ordena las capas
+
+Decision: `CONFLICT` se proyecta como un enlace visual no direccional con estilo
+propio y sin punta de flecha. Participa en seleccion, assumptions, routing,
+geometria, borrado y export, pero queda excluido del ranking causal y del conteo
+de excepciones de direccion.
+
+Razon: D-D' expresa incompatibilidad contextual, no precedencia ni necesidad.
+Tratarlo como flecha de layout introduce un ciclo falso; ocultarlo eliminaria
+uno de los cinco break points de la Cloud.

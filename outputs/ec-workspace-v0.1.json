@@ -1,0 +1,815 @@
+{
+  "schemaVersion": "0.2",
+  "fixtureType": "ec-native-semantic-cloud",
+  "createdAt": "2026-07-17T16:00:00+02:00",
+  "updatedAt": "2026-07-17T16:00:00+02:00",
+  "workspace": {
+    "id": "ws-ec-oracle",
+    "name": "EC Semantic Oracle",
+    "activeSystemId": "sys-ec-oracle",
+    "settings": {
+      "keyboardFirst": true,
+      "defaultLayoutEngine": "elk",
+      "defaultExportFormat": "markdown"
+    },
+    "systems": [
+      {
+        "id": "sys-ec-oracle",
+        "name": "EC Oracle",
+        "path": "systems/sys-ec-oracle/system.json",
+        "updatedAt": "2026-07-17T16:00:00+02:00"
+      }
+    ]
+  },
+  "systems": [
+    {
+      "schemaVersion": "0.1",
+      "id": "sys-ec-oracle",
+      "name": "EC Oracle",
+      "createdAt": "2026-07-17T16:00:00+02:00",
+      "updatedAt": "2026-07-17T16:00:00+02:00",
+      "profile": {
+        "description": "Native semantic Evaporating Cloud fixture.",
+        "purpose": "Exercise canonical roles, parallel necessity branches, conflict assumptions and injections.",
+        "owner": {
+          "name": "LTP Workbench",
+          "role": "Regression fixture"
+        },
+        "boundary": {
+          "summary": "Canonical EC oracle.",
+          "inside": [],
+          "outside": []
+        },
+        "spanOfControl": [],
+        "sphereOfInfluence": [],
+        "externalEnvironment": [],
+        "stakeholders": [],
+        "constraints": [],
+        "initialSymptoms": [],
+        "sourceIds": [],
+        "completeness": "minimumComplete"
+      },
+      "relationships": {
+        "parentSystemIds": [],
+        "childSystemIds": []
+      },
+      "sources": [],
+      "benchmarks": [
+        {
+          "id": "benchmark-ec-oracle",
+          "type": "ec",
+          "treeId": "tree-ec-oracle",
+          "status": "draft",
+          "isPrimary": true,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        }
+      ],
+      "perspectives": [
+        {
+          "id": "perspective-ec",
+          "name": "Conflict",
+          "type": "conflict",
+          "treeIds": [
+            "tree-ec-oracle"
+          ],
+          "status": "active",
+          "origin": null
+        }
+      ]
+    }
+  ],
+  "trees": [
+    {
+      "schemaVersion": "0.2",
+      "id": "tree-ec-oracle",
+      "systemId": "sys-ec-oracle",
+      "perspectiveId": "perspective-ec",
+      "type": "ec",
+      "name": "Evaporating Cloud - Semantic Oracle",
+      "status": "draft",
+      "logicMode": "necessity",
+      "createdAt": "2026-07-17T16:00:00+02:00",
+      "updatedAt": "2026-07-17T16:00:00+02:00",
+      "nodes": [
+        {
+          "id": "injection",
+          "type": "injection",
+          "semanticType": "INJECTION",
+          "semanticRole": null,
+          "statement": "Use buffer-based replenishment",
+          "shortLabel": "Use buffer-based replenishment",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 0
+        },
+        {
+          "id": "need-cost",
+          "type": "need",
+          "semanticType": "NEED",
+          "semanticRole": "C",
+          "statement": "Control operating cost",
+          "shortLabel": "Control operating cost",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 1
+        },
+        {
+          "id": "need-flow",
+          "type": "need",
+          "semanticType": "NEED",
+          "semanticRole": "B",
+          "statement": "Protect system flow",
+          "shortLabel": "Protect system flow",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 2
+        },
+        {
+          "id": "objective",
+          "type": "objective",
+          "semanticType": "OBJECTIVE",
+          "semanticRole": "A",
+          "statement": "Operate profitably and reliably",
+          "shortLabel": "Operate profitably and reliably",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 3
+        },
+        {
+          "id": "want-large",
+          "type": "want",
+          "semanticType": "WANT",
+          "semanticRole": "D_PRIME",
+          "statement": "Produce large batches",
+          "shortLabel": "Produce large batches",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 4
+        },
+        {
+          "id": "want-small",
+          "type": "want",
+          "semanticType": "WANT",
+          "semanticRole": "D",
+          "statement": "Produce small batches",
+          "shortLabel": "Produce small batches",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 5
+        }
+      ],
+      "links": [
+        {
+          "id": "rel-b-a",
+          "sourceNodeId": "need-flow",
+          "targetNodeId": "objective",
+          "semanticRelationId": "rel-b-a",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Protect system flow, then Operate profitably and reliably.",
+          "verbalization": "If Protect system flow, then Operate profitably and reliably.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-c-a",
+          "sourceNodeId": "need-cost",
+          "targetNodeId": "objective",
+          "semanticRelationId": "rel-c-a",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Control operating cost, then Operate profitably and reliably.",
+          "verbalization": "If Control operating cost, then Operate profitably and reliably.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-d-b",
+          "sourceNodeId": "want-small",
+          "targetNodeId": "need-flow",
+          "semanticRelationId": "rel-d-b",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Produce small batches, then Protect system flow.",
+          "verbalization": "If Produce small batches, then Protect system flow.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-d-d-prime",
+          "sourceNodeId": "want-small",
+          "targetNodeId": "want-large",
+          "semanticRelationId": "rel-d-d-prime",
+          "segmentRole": "CONFLICT",
+          "directionality": "UNDIRECTED",
+          "type": "conflict",
+          "logic": "necessity",
+          "meaning": "Produce large batches conflicts with Produce small batches.",
+          "verbalization": "Produce large batches conflicts with Produce small batches.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-d-prime-c",
+          "sourceNodeId": "want-large",
+          "targetNodeId": "need-cost",
+          "semanticRelationId": "rel-d-prime-c",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Produce large batches, then Control operating cost.",
+          "verbalization": "If Produce large batches, then Control operating cost.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        }
+      ],
+      "assumptions": [],
+      "semanticKernel": {
+        "kernelVersion": "0.1",
+        "contractVersion": "0.1",
+        "storageMode": "NATIVE",
+        "diagramType": "EC",
+        "logicMode": "NECESSITY",
+        "elements": [
+          {
+            "id": "objective",
+            "type": "OBJECTIVE",
+            "role": "A",
+            "statement": "Operate profitably and reliably"
+          },
+          {
+            "id": "need-flow",
+            "type": "NEED",
+            "role": "B",
+            "statement": "Protect system flow"
+          },
+          {
+            "id": "need-cost",
+            "type": "NEED",
+            "role": "C",
+            "statement": "Control operating cost"
+          },
+          {
+            "id": "want-small",
+            "type": "WANT",
+            "role": "D",
+            "statement": "Produce small batches"
+          },
+          {
+            "id": "want-large",
+            "type": "WANT",
+            "role": "D_PRIME",
+            "statement": "Produce large batches"
+          },
+          {
+            "id": "injection",
+            "type": "INJECTION",
+            "statement": "Use buffer-based replenishment"
+          }
+        ],
+        "relations": [
+          {
+            "id": "rel-b-a",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "need-flow"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "objective"
+              }
+            ]
+          },
+          {
+            "id": "rel-c-a",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "need-cost"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "objective"
+              }
+            ]
+          },
+          {
+            "id": "rel-d-b",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "want-small"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "need-flow"
+              }
+            ]
+          },
+          {
+            "id": "rel-d-prime-c",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "want-large"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "need-cost"
+              }
+            ]
+          },
+          {
+            "id": "rel-d-d-prime",
+            "type": "CONFLICT",
+            "combination": null,
+            "renderMode": "CONFLICT",
+            "inputs": [
+              {
+                "elementId": "want-small"
+              },
+              {
+                "elementId": "want-large"
+              }
+            ],
+            "outputs": []
+          }
+        ],
+        "assumptions": [
+          {
+            "id": "assumption-b-a-1",
+            "statement": "Customer commitments depend on predictable system flow",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-b-a"
+            }
+          },
+          {
+            "id": "assumption-b-a-2",
+            "statement": "Interrupted flow causes late delivery and lost throughput",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-b-a"
+            }
+          },
+          {
+            "id": "assumption-b-a-3",
+            "statement": "Reliable operation requires flow to recover from variability",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-b-a"
+            }
+          },
+          {
+            "id": "assumption-c-a-1",
+            "statement": "Operating expense consumes the throughput generated by the system",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-c-a"
+            }
+          },
+          {
+            "id": "assumption-c-a-2",
+            "statement": "A system with uncontrolled operating cost cannot sustain profitability",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-c-a"
+            }
+          },
+          {
+            "id": "assumption-c-a-3",
+            "statement": "Reliable operation requires resources to remain financially viable",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-c-a"
+            }
+          },
+          {
+            "id": "assumption-d-b-1",
+            "statement": "Small batches shorten queues and feedback cycles",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-d-b"
+            }
+          },
+          {
+            "id": "assumption-d-b-2",
+            "statement": "Smaller transfer batches expose disruption before it spreads",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-d-b"
+            }
+          },
+          {
+            "id": "assumption-d-b-3",
+            "statement": "Current variability makes large batches block flow for too long",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-d-b"
+            }
+          },
+          {
+            "id": "assumption-d-prime-c-1",
+            "statement": "Current setup practices make small batches more expensive",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-d-prime-c"
+            }
+          },
+          {
+            "id": "assumption-d-prime-c-2",
+            "statement": "Current accounting allocates setup cost across the units in each batch",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-d-prime-c"
+            }
+          },
+          {
+            "id": "assumption-d-prime-c-3",
+            "statement": "Current capacity cannot absorb more frequent setups",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-d-prime-c"
+            }
+          },
+          {
+            "id": "assumption-conflict-1",
+            "statement": "The constrained resource lacks a rule for choosing batch size dynamically",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-d-d-prime"
+            }
+          },
+          {
+            "id": "assumption-conflict-2",
+            "statement": "The system lacks a method to protect flow while controlling setup cost",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-d-d-prime"
+            }
+          },
+          {
+            "id": "assumption-conflict-3",
+            "statement": "Production and finance lack a shared measure that reconciles flow and unit cost",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-d-d-prime"
+            }
+          }
+        ],
+        "derivations": [
+          {
+            "id": "derivation-injection",
+            "type": "CHALLENGES_ASSUMPTION",
+            "sourceElementId": "injection",
+            "targetAssumptionId": "assumption-d-prime-c-2",
+            "status": "PROPOSED"
+          }
+        ],
+        "annotations": []
+      },
+      "layout": {
+        "engine": "elk",
+        "direction": "RL",
+        "routingStyle": "CURVED",
+        "lastRunAt": null,
+        "settings": {
+          "spacingNodeNode": 72,
+          "spacingLayer": 126,
+          "respectPinned": true,
+          "minimizeCrossings": true
+        },
+        "nodes": {
+          "injection": {
+            "x": 80,
+            "y": 80,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "need-cost": {
+            "x": 380,
+            "y": 80,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "need-flow": {
+            "x": 680,
+            "y": 80,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "objective": {
+            "x": 80,
+            "y": 230,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "want-large": {
+            "x": 380,
+            "y": 230,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "want-small": {
+            "x": 680,
+            "y": 230,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          }
+        },
+        "links": {
+          "rel-b-a": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-c-a": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-d-b": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-d-d-prime": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-d-prime-c": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      "canvasId": "canvas-ec-oracle",
+      "hostFrameId": "frame-ec-diagram",
+      "renderProjection": {
+        "kind": "SEMANTIC_NATIVE",
+        "sourceFingerprint": "e06c70fff71455defaca6180328c2081b8bc3b5be2036a4ffc151318900ce786",
+        "nodeIds": [
+          "injection",
+          "need-cost",
+          "need-flow",
+          "objective",
+          "want-large",
+          "want-small"
+        ],
+        "linkIds": [
+          "rel-b-a",
+          "rel-c-a",
+          "rel-d-b",
+          "rel-d-d-prime",
+          "rel-d-prime-c"
+        ],
+        "frameByNodeId": {
+          "injection": "frame-ec-diagram",
+          "need-cost": "frame-ec-diagram",
+          "need-flow": "frame-ec-diagram",
+          "objective": "frame-ec-diagram",
+          "want-large": "frame-ec-diagram",
+          "want-small": "frame-ec-diagram"
+        }
+      }
+    }
+  ],
+  "exports": [],
+  "canvases": [
+    {
+      "schemaVersion": "0.2",
+      "id": "canvas-ec-oracle",
+      "systemId": "sys-ec-oracle",
+      "name": "EC Oracle canvas",
+      "rootFrameId": "frame-ec-root",
+      "frames": [
+        {
+          "id": "frame-ec-root",
+          "canvasId": "canvas-ec-oracle",
+          "treeId": null,
+          "kind": "root",
+          "parentFrameId": null,
+          "name": "Root",
+          "semanticType": "workspaceRoot",
+          "collapsed": false,
+          "childFrameIds": [
+            "frame-ec-diagram"
+          ],
+          "nodeIds": [],
+          "notes": "Infinite workspace root"
+        },
+        {
+          "id": "frame-ec-diagram",
+          "canvasId": "canvas-ec-oracle",
+          "treeId": "tree-ec-oracle",
+          "kind": "diagram",
+          "parentFrameId": "frame-ec-root",
+          "name": "Evaporating Cloud",
+          "semanticType": "ec",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "injection",
+            "need-cost",
+            "need-flow",
+            "objective",
+            "want-large",
+            "want-small"
+          ],
+          "notes": "Native semantic EC projection",
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        }
+      ],
+      "layout": {
+        "frames": {
+          "frame-ec-diagram": {
+            "x": 48,
+            "y": 40,
+            "width": 1180,
+            "height": 600,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          }
+        }
+      },
+      "viewState": {
+        "activeFrameId": "frame-ec-diagram",
+        "selectedElementId": "objective",
+        "selectionRootIds": [
+          "objective"
+        ],
+        "mode": "navigation",
+        "zoom": 0.9,
+        "pan": {
+          "x": 0,
+          "y": 0
+        },
+        "panels": {
+          "leftOpen": true,
+          "rightOpen": true
+        },
+        "breadcrumb": [
+          "EC Oracle",
+          "Evaporating Cloud"
+        ]
+      },
+      "createdAt": "2026-07-17T16:00:00+02:00",
+      "updatedAt": "2026-07-17T16:00:00+02:00"
+    }
+  ]
+}

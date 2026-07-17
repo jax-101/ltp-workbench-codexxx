@@ -49,7 +49,11 @@ const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze({
   entity: "ENTITY",
   ude: "UDE",
   rootCause: "ROOT_CAUSE",
-  criticalRootCause: "CRITICAL_ROOT_CAUSE"
+  criticalRootCause: "CRITICAL_ROOT_CAUSE",
+  objective: "OBJECTIVE",
+  need: "NEED",
+  want: "WANT",
+  injection: "INJECTION"
 });
 
 const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
@@ -74,6 +78,7 @@ const canvas = () => workspaceData?.canvases?.find((candidate) => candidate.id =
 const rootFrameId = () => canvas()?.rootFrameId;
 const system = () => workspaceData?.systems?.find((candidate) => candidate.id === tree()?.systemId);
 const nodeById = () => Object.fromEntries((tree()?.nodes || []).map((node) => [node.id, node]));
+const semanticRoleLabel = (role) => role === "D_PRIME" ? "D'" : role;
 const frameById = () => Object.fromEntries((canvas()?.frames || []).map((frame) => [frame.id, frame]));
 const linkById = () => Object.fromEntries((tree()?.links || []).map((link) => [link.id, link]));
 const selectedNode = () => nodeById()[selectedElementId];
@@ -92,6 +97,15 @@ const diagramDefinition = () => diagramDefinitions[tree()?.type] || diagramDefin
 const diagramNodeTypes = () => diagramDefinition()?.nodeTypes || [];
 const compatibleNodeTypes = (nodeIds) => {
   const selectedIds = new Set(nodeIds);
+  if (nativeSemanticTree()) {
+    const selectedNodes = nodeIds.map((nodeId) => nodeById()[nodeId]).filter(Boolean);
+    if (tree().type === "ec" || selectedNodes.some((node) => node.semanticRole)) {
+      const currentTypes = new Set(selectedNodes.map((node) => node.type));
+      return currentTypes.size === 1
+        ? diagramNodeTypes().filter((typeDefinition) => typeDefinition.id === selectedNodes[0].type)
+        : [];
+    }
+  }
   return diagramNodeTypes().filter((typeDefinition) => {
     if (typeDefinition.synthetic) return false;
     if (
@@ -1583,10 +1597,13 @@ const addAssumptionToSelectedLink = async () => {
         assumption: {
           id,
           statement: "New assumption behind this relation.",
-          subject: { kind: "RELATION", relationId: link.semanticRelationId || link.id }
+          subject: {
+            kind: link.type === "conflict" ? "CONFLICT" : "RELATION",
+            relationId: link.semanticRelationId || link.id
+          }
         }
       },
-      "Add CRT assumption"
+      tree().type === "ec" ? "Add EC assumption" : "Add CRT assumption"
     );
     render();
     return;
@@ -2216,7 +2233,7 @@ const renderNodes = () =>
         <button class="tree-node ${selected} ${included} ${multiSelected} node-${node.type}" data-element-id="${node.id}" data-element-type="node"
           style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;"
           title="${escapeHtml(node.statement)}">
-          <strong>${escapeHtml(node.synthetic?.combination || nodeTypeLabel(node.type))}</strong>
+          <strong>${escapeHtml(node.synthetic?.combination || semanticRoleLabel(node.semanticRole) || nodeTypeLabel(node.type))}</strong>
           <span>${escapeHtml(node.statement)}</span>
           ${box.pinned ? "<em>Pinned</em>" : ""}
         </button>
@@ -2340,7 +2357,10 @@ const renderLinks = () => {
       const { source, target, vector } = linkEndpoints(sourceBox, targetBox);
       const selected = selectionRootIds.has(link.id) ? "selected" : "";
       const included = selectionIds.has(link.id) && !selectionRootIds.has(link.id) ? "selection-included" : "";
+      const conflict = link.type === "conflict" || link.directionality === "UNDIRECTED";
       const marker = selected ? "arrow-selected" : included ? "arrow-included" : "arrow";
+      const markerEnd = conflict ? "" : `marker-end="url(#${marker})"`;
+      const linkClass = conflict ? "link-conflict" : "";
       const linkLayout = layoutLink(link.id);
       const routeMatchesProjection =
         linkLayout.projectedSourceId === visibleEndpointId(link.sourceNodeId) &&
@@ -2350,13 +2370,13 @@ const renderLinks = () => {
         const curvedRoute = !layoutAnimating && route.length >= 2 ? route : [source, target];
         const terminalStraight = Math.max(18, 15 / clamp(zoomLevel, 0.35, 2.5));
         const path = curvedLinkPath(curvedRoute, vector, terminalStraight);
-        return `<path class="tree-link-line link-curved ${selected} ${included}" data-link-id="${link.id}" d="${path}" marker-end="url(#${marker})" />`;
+        return `<path class="tree-link-line link-curved ${linkClass} ${selected} ${included}" data-link-id="${link.id}" d="${path}" ${markerEnd} />`;
       }
       if (!layoutAnimating && route.length >= 2) {
         const path = route.map((point, index) => `${index ? "L" : "M"}${point.x},${point.y}`).join(" ");
-        return `<path class="tree-link-line ${selected} ${included}" data-link-id="${link.id}" d="${path}" marker-end="url(#${marker})" />`;
+        return `<path class="tree-link-line ${linkClass} ${selected} ${included}" data-link-id="${link.id}" d="${path}" ${markerEnd} />`;
       }
-      return `<line class="tree-link-line ${selected} ${included}" data-link-id="${link.id}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" marker-end="url(#${marker})" />`;
+      return `<line class="tree-link-line ${linkClass} ${selected} ${included}" data-link-id="${link.id}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" ${markerEnd} />`;
     })
     .join("");
 
@@ -2366,8 +2386,9 @@ const renderLinks = () => {
       const selected = selectionRootIds.has(link.id) ? "selected" : "";
       const included = selectionIds.has(link.id) && !selectionRootIds.has(link.id) ? "selection-included" : "";
       const hintVisible = hintsVisible ? "hint-visible" : "";
+      const conflict = link.type === "conflict" || link.directionality === "UNDIRECTED";
       return `
-        <button class="link-target ${selected} ${included} ${hintVisible}" data-element-id="${link.id}" data-element-type="link" style="left:${label.x - 12}px;top:${label.y - 12}px;" title="${escapeHtml(link.meaning)}">L</button>
+        <button class="link-target ${conflict ? "link-target-conflict" : ""} ${selected} ${included} ${hintVisible}" data-element-id="${link.id}" data-element-type="link" style="left:${label.x - 12}px;top:${label.y - 12}px;" title="${escapeHtml(link.meaning)}">${conflict ? "×" : "L"}</button>
       `;
     })
     .join("");
@@ -2822,6 +2843,26 @@ const renderInspector = () => {
         </aside>
       `;
     }
+    const typeOptions = compatibleNodeTypes([node.id]);
+    const derivations = nativeSemanticTree()
+      ? (tree().semanticKernel.derivations || []).filter((derivation) => derivation.sourceElementId === node.id)
+      : [];
+    const assumptionById = new Map(
+      (tree().semanticKernel?.assumptions || []).map((assumption) => [assumption.id, assumption])
+    );
+    const derivationMarkup = derivations.length
+      ? `
+        <label>Challenges assumptions</label>
+        <div class="derivation-list">
+          ${derivations.map((derivation) => `
+            <article class="derivation-item">
+              <strong>${escapeHtml(derivation.status)}</strong>
+              <span>${escapeHtml(assumptionById.get(derivation.targetAssumptionId)?.statement || derivation.targetAssumptionId)}</span>
+            </article>
+          `).join("")}
+        </div>
+      `
+      : "";
     return `
       <aside class="inspector">
         <button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button>
@@ -2831,8 +2872,8 @@ const renderInspector = () => {
         <label>Short label</label>
         <input data-node-field="shortLabel" data-id="${node.id}" value="${escapeHtml(node.shortLabel || "")}" />
         <label>Type</label>
-        <select data-node-field="type" data-id="${node.id}">
-          ${diagramNodeTypes().filter((type) => !type.synthetic).map((type) => `<option value="${type.id}" ${node.type === type.id ? "selected" : ""}>${escapeHtml(type.label)}</option>`).join("")}
+        <select data-node-field="type" data-id="${node.id}" ${typeOptions.length <= 1 ? "disabled" : ""}>
+          ${typeOptions.map((type) => `<option value="${type.id}" ${node.type === type.id ? "selected" : ""}>${escapeHtml(type.label)}</option>`).join("")}
         </select>
         <label>Frame</label>
         <select data-node-frame data-id="${node.id}">
@@ -2844,6 +2885,7 @@ const renderInspector = () => {
             .join("")}
         </select>
         <button data-action="open-node-preview">View full statement</button>
+        ${derivationMarkup}
         <button data-action="pin">Toggle pin</button>
         <button class="danger-action" data-action="delete-selection">Delete node</button>
       </aside>
@@ -2874,10 +2916,11 @@ const renderInspector = () => {
 
   if (link) {
     const assumptions = assumptionsForLink(link.id);
+    const conflict = link.type === "conflict" || link.directionality === "UNDIRECTED";
     return `
       <aside class="inspector">
         <button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button>
-        <h2>Link</h2>
+        <h2>${conflict ? "Conflict" : "Link"}</h2>
         <label>Meaning</label>
         <textarea data-primary-editor data-link-field="meaning" data-id="${link.id}">${escapeHtml(link.meaning || "")}</textarea>
         <label>Verbalization</label>
@@ -2892,13 +2935,13 @@ const renderInspector = () => {
               (assumption) => `
                 <article class="assumption-item">
                   <textarea data-assumption-id="${assumption.id}">${escapeHtml(assumption.statement)}</textarea>
-                  <button data-promote-assumption="${assumption.id}">Promote to node</button>
+                  ${nativeSemanticTree() ? "" : `<button data-promote-assumption="${assumption.id}">Promote to node</button>`}
                 </article>
               `
             )
             .join("")}
         </div>
-        <button class="danger-action" data-action="delete-selection">Delete link</button>
+        <button class="danger-action" data-action="delete-selection">Delete ${conflict ? "conflict" : "link"}</button>
       </aside>
     `;
   }
@@ -4291,6 +4334,86 @@ window.__ltpCrtVisualTest = async () => {
   return {
     ok,
     detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; AND segments=${andSegments.length}; direction=${activeTree.layout.direction}; cycle breaks=${activeTree.layout.quality?.cycleBreaks}; geometry issues=${geometryIssues.length}; curved paths=${curvedPaths.length}; arrows=${allArrowsVisible}; junction=${junctionElement?.querySelector("strong")?.textContent.trim()}/${junctionStyle?.borderRadius}; shortcuts N/type/delete=${createShortcutWorks && createIsNative && createUndoWorks}/${typeShortcutWorks && typeChangedSemantically && typeUndoWorks}/${deleteShortcutWorks && deleteCascadesRelation && deleteUndoWorks}.`
+  };
+};
+
+window.__ltpEcVisualTest = async () => {
+  await bootPromise;
+  workspaceData = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
+  panelState.rightOpen = true;
+  replaceSelection("injection");
+  render();
+  const injectionDerivationVisible =
+    document.querySelectorAll(".derivation-list .derivation-item").length === 1 &&
+    document.querySelector(".derivation-list")?.textContent.includes("Current accounting allocates setup cost");
+  replaceSelection("rel-d-d-prime");
+  render();
+  fitView();
+  await new Promise((resolve) => setTimeout(resolve, 160));
+
+  const activeTree = tree();
+  const geometryIssues = await window.ltpPrototype.validateLayout(workspaceData);
+  const boxes = activeTree.layout.nodes;
+  const nodeCenter = (id) => {
+    const box = boxes[id];
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  const objective = nodeCenter("objective");
+  const needFlow = nodeCenter("need-flow");
+  const needCost = nodeCenter("need-cost");
+  const wantSmall = nodeCenter("want-small");
+  const wantLarge = nodeCenter("want-large");
+  const conflictPath = document.querySelector('[data-link-id="rel-d-d-prime"]');
+  const causalLinks = activeTree.links.filter((link) => link.type !== "conflict");
+  const causalArrowsVisible = causalLinks.every(
+    (link) => document.querySelector(`[data-link-id="${link.id}"]`)?.getAttribute("marker-end") === "url(#arrow)"
+  );
+  const conflictHasNoArrow = !conflictPath?.hasAttribute("marker-end");
+  const conflictIsDistinct =
+    conflictPath?.classList.contains("link-conflict") &&
+    document.querySelector('[data-element-id="rel-d-d-prime"]')?.textContent.trim() === "×";
+  const roleLabels = [
+    ["objective", "A"],
+    ["need-flow", "B"],
+    ["need-cost", "C"],
+    ["want-small", "D"],
+    ["want-large", "D'"]
+  ].every(([id, label]) => document.querySelector(`[data-element-id="${id}"] strong`)?.textContent.trim() === label);
+  const conflictAssumptionsVisible = document.querySelectorAll(".assumption-list .assumption-item").length === 3;
+  const derivation = activeTree.semanticKernel.derivations.find((item) => item.id === "derivation-injection");
+  const injectionVisible = Boolean(document.querySelector('[data-element-id="injection"].node-injection'));
+  const parallelBranches =
+    wantSmall.x > needFlow.x && needFlow.x > objective.x &&
+    wantLarge.x > needCost.x && needCost.x > objective.x &&
+    wantSmall.y === needFlow.y &&
+    wantLarge.y === needCost.y &&
+    wantSmall.y !== wantLarge.y &&
+    objective.y === (wantSmall.y + wantLarge.y) / 2;
+  const noJunctions = !activeTree.nodes.some((node) => node.synthetic?.kind === "JUNCTION");
+  const allLinksCurved = document.querySelectorAll("path.link-curved").length === activeTree.links.length;
+  const ok =
+    activeTree.type === "ec" &&
+    activeTree.layout.direction === "RL" &&
+    activeTree.nodes.length === 6 &&
+    activeTree.links.length === 5 &&
+    activeTree.semanticKernel.assumptions.length === 15 &&
+    parallelBranches &&
+    noJunctions &&
+    geometryIssues.length === 0 &&
+    activeTree.layout.quality?.directionExceptions === 0 &&
+    allLinksCurved &&
+    causalArrowsVisible &&
+    conflictHasNoArrow &&
+    conflictIsDistinct &&
+    roleLabels &&
+    conflictAssumptionsVisible &&
+    injectionVisible &&
+    injectionDerivationVisible &&
+    derivation?.targetAssumptionId === "assumption-d-prime-c-2";
+
+  return {
+    ok,
+    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; parallel=${parallelBranches}; conflict distinct/no arrow=${conflictIsDistinct}/${conflictHasNoArrow}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; conflict assumptions visible=${conflictAssumptionsVisible}; injection/derivation=${injectionVisible}/${injectionDerivationVisible}/${derivation?.targetAssumptionId}; geometry issues=${geometryIssues.length}.`
   };
 };
 

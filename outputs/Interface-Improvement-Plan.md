@@ -668,8 +668,9 @@ Evidencia Gate B:
 
 ### 3C.14: kernel semantico y prueba vertical CRT
 
-Estado: en curso. `3C.14a`, `3C.14b.0` y `3C.14b.1` estan en PASS. El
-siguiente subgate es `3C.14c`, el spike de EC sobre el mismo kernel.
+Estado: PASS. `3C.14a`, `3C.14b.0`, `3C.14b.1` y `3C.14c` estan cerrados. El
+siguiente gate es `3C.15`, empezando por publicar el formato declarativo que
+reemplace el registro embebido sin cambiar el comportamiento probado.
 
 Incluye:
 
@@ -699,9 +700,13 @@ Subgates:
   junctions, CRUD n-ario, cascadas, Undo/Redo, ELK layered `BT` con ciclo
   restaurado, renderer, atajos `N`/`Shift+Tab`/`Ctrl+D`, CLI, export y
   captura Electron. Evidencia en `outputs/CRT-Vertical-3C.14b.md`.
-- `3C.14c`: spike de EC para validar topologia, roles y assumptions antes de
-  publicar el formato. Si exige cambiar el kernel, se repiten las pruebas de
-  Goal Tree y CRT.
+- `3C.14c`: EC vertical en PASS sin cambiar las primitivas del kernel. Roles
+  `A/B/C/D/D'`, tres columnas, ramas paralelas, conflicto no direccional,
+  assumptions de scope `RELATION/CONFLICT`, injection y derivacion comparten
+  proyeccion, CRUD, Undo/Redo, CLI, export y ELK layered. Las restricciones de
+  presentacion se compilan desde configuracion semantica, no desde coordenadas.
+  Regresion CRT y captura Electron en PASS. Evidencia en
+  `outputs/EC-Vertical-3C.14c.md`.
 
 ### 3C.15: formato de definicion y herramientas headless
 

@@ -1,6 +1,7 @@
 const { getDiagramDefinition } = require("./diagram-registry");
 const { createElkLayeredEngine } = require("./layout-engines/elk-layered-engine");
 const { initialDocumentId } = require("./document-view");
+const { compilePresentationConstraints } = require("./presentation-constraints");
 
 const FRAME_SIDE_PADDING = 28;
 const FRAME_TOP_PADDING = 58;
@@ -99,6 +100,7 @@ const collapsedEdges = (containerFrameId, links, nodeOwners, frameById) => {
   const pairs = new Set();
   const edges = [];
   for (const link of links) {
+    if (link.type === "conflict" || link.directionality === "UNDIRECTED") continue;
     const source = directItemForNode(containerFrameId, link.sourceNodeId, nodeOwners, frameById);
     const target = directItemForNode(containerFrameId, link.targetNodeId, nodeOwners, frameById);
     if (!source || !target || source === target) continue;
@@ -545,9 +547,10 @@ const selectLayoutCandidate = async (
   let best = null;
   let bestFeasible = null;
   for (const generated of candidates) {
-    const quality = candidateQuality(items, generated.children, edges, direction, currentChildren);
+    const children = problem.transformCandidate ? problem.transformCandidate(generated.children) : generated.children;
+    const quality = candidateQuality(items, children, edges, direction, currentChildren);
     const candidate = {
-      laidOut: { children: generated.children },
+      laidOut: { children },
       quality,
       config: generated.config
     };
@@ -563,7 +566,9 @@ const selectLayoutCandidate = async (
   if (!currentChildren?.length) return { ...best, candidates: candidates.length };
 
   const currentQuality = candidateQuality(items, currentChildren, edges, direction, currentChildren);
-  const currentIsFeasible = currentQuality.directionExceptions <= maximumDirectionExceptions;
+  const currentIsFeasible =
+    currentQuality.directionExceptions <= maximumDirectionExceptions &&
+    (!problem.currentLayoutIsFeasible || problem.currentLayoutIsFeasible(currentChildren));
   const improvement = currentQuality.score
     ? (currentQuality.score - best.quality.score) / currentQuality.score
     : 0;
@@ -769,7 +774,7 @@ const routedLayoutQuality = (links, nodeLayouts, linkLayouts, direction) => {
     }
     const source = nodeLayouts[link.sourceNodeId];
     const target = nodeLayouts[link.targetNodeId];
-    if (source && target) {
+    if (source && target && link.type !== "conflict" && link.directionality !== "UNDIRECTED") {
       const sourceCenter = centerOf(source);
       const targetCenter = centerOf(target);
       const preferred = directionVector(direction);
@@ -950,18 +955,29 @@ const runComposedLayout = async (workspace, options = {}) => {
     if (items.length) {
       graphEdges = collapsedEdges(frameId, links, nodeOwners, frameById);
       const cycleBreak = breakCyclesForLayout(items.map((item) => item.id), graphEdges);
+      const canonicalConstraints = compilePresentationConstraints({
+        items,
+        nodeById: new Map(
+          items
+            .map((item) => [item.id, nodeOwners.get(item.id)?.node])
+            .filter(([, node]) => Boolean(node))
+        ),
+        definition: diagramDefinition,
+        direction,
+        spacing: spacingNodeNode
+      });
       const goalTreeRanks = diagramDefinition?.layering === "distanceToSink"
         ? longestSinkRanks(items.map((item) => item.id), cycleBreak.edges)
         : new Map();
       const maximumGoalTreeRank = goalTreeRanks.size ? Math.max(...goalTreeRanks.values()) : 0;
-      const rankPartitions = goalTreeRanks.size === items.length
+      const rankPartitions = canonicalConstraints?.rankPartitions || (goalTreeRanks.size === items.length
         ? new Map(
             [...goalTreeRanks.entries()].map(([itemId, rank]) => [
               itemId,
               maximumGoalTreeRank - rank
             ])
           )
-        : new Map();
+        : new Map());
       const optimize = !isRoot && items.length >= 3 && graphEdges.length >= 2 && !items.some((item) => item.pinned);
       const canCompareCurrent =
         !isRoot &&
@@ -979,7 +995,9 @@ const runComposedLayout = async (workspace, options = {}) => {
           spacingNodeNode,
           spacingLayer,
           rankPartitions,
-          optimize
+          optimize,
+          transformCandidate: canonicalConstraints?.apply,
+          currentLayoutIsFeasible: canonicalConstraints?.isSatisfied
         },
         items,
         graphEdges,
@@ -989,7 +1007,7 @@ const runComposedLayout = async (workspace, options = {}) => {
       );
       elkChildren = selectedLayout.laidOut.children || [];
       preserveCurrentLayout = Boolean(selectedLayout.config?.preserved);
-      if (optimize || cycleBreak.reversed) {
+      if (optimize || cycleBreak.reversed || canonicalConstraints) {
         optimization[frameId] = {
           strategy: "weighted-stable-layered",
           minimumImprovement: MINIMUM_LAYOUT_IMPROVEMENT,
@@ -997,6 +1015,7 @@ const runComposedLayout = async (workspace, options = {}) => {
           cycleBreakingStrategy: diagramDefinition?.cycleBreaking?.strategy || "greedyFeedbackArc",
           cycleBreaks: cycleBreak.reversed,
           cycleBreakEdgeIds: cycleBreak.reversedEdgeIds,
+          presentationConstraints: canonicalConstraints ? "canonicalRoles" : null,
           ...selectedLayout.config,
           ...selectedLayout.quality
         };

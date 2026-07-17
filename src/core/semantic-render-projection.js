@@ -8,7 +8,11 @@ const ELEMENT_TYPE_TO_NODE_TYPE = Object.freeze({
   ENTITY: "entity",
   UDE: "ude",
   ROOT_CAUSE: "rootCause",
-  CRITICAL_ROOT_CAUSE: "criticalRootCause"
+  CRITICAL_ROOT_CAUSE: "criticalRootCause",
+  OBJECTIVE: "objective",
+  NEED: "need",
+  WANT: "want",
+  INJECTION: "injection"
 });
 
 const canonicalize = (value) => {
@@ -42,6 +46,9 @@ const outputSegmentId = (relationId, elementId) => `${relationId}:output:${eleme
 const relationText = (relation, elementById) => {
   const inputs = relation.inputs.map((endpoint) => elementById.get(endpoint.elementId)?.statement || endpoint.elementId);
   const outputs = relation.outputs.map((endpoint) => elementById.get(endpoint.elementId)?.statement || endpoint.elementId);
+  if (relation.type === "CONFLICT" && inputs.length === 2) {
+    return `${inputs[1]} conflicts with ${inputs[0]}.`;
+  }
   const joiner = relation.combination === "AND" ? " and " : relation.combination === "XOR" ? " xor " : " plus ";
   return `If ${inputs.join(joiner)}, then ${outputs.join(" and ")}.`;
 };
@@ -53,6 +60,7 @@ const projectSemanticGraph = (graph) => {
     id: element.id,
     type: ELEMENT_TYPE_TO_NODE_TYPE[element.type] || "entity",
     semanticType: element.type,
+    semanticRole: element.role || null,
     statement: element.statement,
     shortLabel: element.shortLabel || element.statement,
     synthetic: null
@@ -60,8 +68,23 @@ const projectSemanticGraph = (graph) => {
   const links = [];
 
   for (const relation of graph.relations) {
-    const usesJunction = relation.renderMode === "JUNCTION" || relation.inputs.length !== 1 || relation.outputs.length !== 1;
     const verbalization = relation.verbalization || relationText(relation, elementById);
+    if (relation.type === "CONFLICT") {
+      links.push({
+        id: relation.id,
+        sourceNodeId: relation.inputs[0].elementId,
+        targetNodeId: relation.inputs[1].elementId,
+        semanticRelationId: relation.id,
+        segmentRole: "CONFLICT",
+        directionality: "UNDIRECTED",
+        type: "conflict",
+        logic: graph.logicMode.toLowerCase(),
+        meaning: verbalization,
+        verbalization
+      });
+      continue;
+    }
+    const usesJunction = relation.renderMode === "JUNCTION" || relation.inputs.length !== 1 || relation.outputs.length !== 1;
     if (!usesJunction) {
       links.push({
         id: relation.id,

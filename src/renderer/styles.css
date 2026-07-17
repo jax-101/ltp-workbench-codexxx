@@ -471,6 +471,17 @@ kbd {
   stroke-width: 3.4;
 }
 
+.tree-link-line.link-conflict {
+  stroke: #a84f49;
+  stroke-dasharray: 10 7;
+  stroke-width: 2.8;
+}
+
+.tree-link-line.link-conflict.selected {
+  stroke: var(--selection);
+  stroke-width: 5;
+}
+
 .tree-frame,
 .tree-node,
 .link-target,
@@ -658,6 +669,27 @@ kbd {
   background: #fff2ef;
 }
 
+.node-objective {
+  border-color: var(--accent);
+  background: #fff8f3;
+}
+
+.node-need {
+  border-color: var(--blue);
+  background: #f5faff;
+}
+
+.node-want {
+  border-color: var(--green);
+  background: #f6fbf7;
+}
+
+.node-injection {
+  border-color: var(--gold);
+  border-style: dashed;
+  background: #fffaf0;
+}
+
 .tree-node.node-junction {
   display: grid;
   place-items: center;
@@ -711,6 +743,16 @@ kbd {
 .link-target.selection-included {
   border-color: var(--gold);
   color: var(--gold);
+}
+
+.link-target.link-target-conflict {
+  width: 22px;
+  height: 22px;
+  border-color: #a84f49;
+  background: var(--white);
+  color: #a84f49;
+  font-size: 18px;
+  opacity: 1;
 }
 
 .hint-badge {
@@ -801,6 +843,22 @@ kbd {
   background: #a84f49;
 }
 
+.minimap-node-objective {
+  background: var(--accent);
+}
+
+.minimap-node-need {
+  background: var(--blue);
+}
+
+.minimap-node-want {
+  background: var(--green);
+}
+
+.minimap-node-injection {
+  background: var(--gold);
+}
+
 .minimap-node-rootCause,
 .minimap-node-criticalRootCause {
   background: #8a6f33;
@@ -869,6 +927,24 @@ kbd {
 
 .assumption-item button {
   min-height: 32px;
+}
+
+.derivation-list {
+  display: grid;
+  gap: 8px;
+}
+
+.derivation-item {
+  display: grid;
+  gap: 5px;
+  border-left: 4px solid var(--gold);
+  padding: 9px 10px;
+  background: #fffaf0;
+}
+
+.derivation-item strong {
+  color: #745b26;
+  font-size: 11px;
 }
 
 .danger-action {

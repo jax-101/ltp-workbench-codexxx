@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.14b.1",
-    "name": "Native CRT Vertical",
+    "id": "3C.14c",
+    "name": "Native Evaporating Cloud",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -25,10 +25,13 @@
     "test:semantic-migration": "node scripts/test-semantic-migration.js",
     "test:crt": "node scripts/test-crt-vertical.js",
     "test:crt:visual": "LTP_CRT_TEST=1 electron .",
+    "test:ec": "node scripts/test-ec-cloud.js",
+    "test:ec:visual": "LTP_EC_TEST=1 electron .",
     "test:layout": "node scripts/test-layout.js",
     "test:layout-random": "node scripts/test-random-layouts.js",
     "fixture:complex": "node scripts/build-complex-fixture.js",
     "fixture:crt": "node scripts/build-crt-fixture.js",
+    "fixture:ec": "node scripts/build-ec-fixture.js",
     "ltp": "node scripts/ltp-cli.js",
     "validate:model": "node scripts/validate-model.js",
     "package": "electron-builder --dir",
@@ -58,6 +61,7 @@
       "outputs/sample-workspace-v0.1.json",
       "outputs/complex-goal-tree-workspace-v0.1.json",
       "outputs/crt-workspace-v0.1.json",
+      "outputs/ec-workspace-v0.1.json",
       "package.json"
     ],
     "mac": {

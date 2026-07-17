@@ -948,9 +948,60 @@ Aplicacion futura: esperar una condicion interna explicita; bloquear entrada
 durante la ejecucion; capturar inmediatamente despues del resultado; y hacer que
 el informe incluya los mismos invariantes observados en la imagen.
 
+### L-088: No toda relacion visible debe participar en el ranking causal
+
+Fecha: 2026-07-17
+
+Evidencia: el conflicto D-D' de una EC tiene dos extremos y debe mostrarse,
+seleccionarse y enrutar, pero incluirlo como una flecha en ELK lo convertia en
+un ciclo artificial o una excepcion de direccion. Excluirlo del grafo causal
+conservo la Cloud y permitio evaluar su geometria por separado.
+
+Aprendizaje: visibilidad, conectividad semantica y restricciones de layout son
+responsabilidades distintas. Un edge puede pertenecer al dominio y al render
+sin imponer precedencia ni direccion al algoritmo de capas.
+
+Aplicacion futura: declarar directionality y participacion en ranking; filtrar
+por capacidad en el compilador; conservar seleccion, inspeccion y routing; y
+probar que las metricas direccionales ignoran solo las relaciones autorizadas.
+
+### L-089: Las topologias canonicas se expresan como restricciones, no coordenadas
+
+Fecha: 2026-07-17
+
+Evidencia: la EC exige tres columnas y dos ramas paralelas. Guardar posiciones
+fijas habria roto zoom, tamanos de texto y direcciones alternativas. Compilar
+roles, columnas, roles compartidos y carriles sobre candidatos ELK produjo una
+geometria estable sin sustituir el motor comun.
+
+Aprendizaje: cuando la posicion comunica significado, el layout no puede ser
+completamente libre, pero tampoco debe convertirse en un dibujo hardcodeado.
+Las restricciones semanticas declarativas son el nivel intermedio correcto.
+
+Aplicacion futura: mantener un solo backend; compilar constraints antes de
+puntuar candidatos; forzar una recolocacion si el layout actual viola la
+gramatica; y aplicar el margen de estabilidad solo entre variantes factibles.
+
+### L-090: Una proyeccion puede reducir aridad sin perder identidad semantica
+
+Fecha: 2026-07-17
+
+Evidencia: `CONFLICT` se almacena como una relacion con dos inputs y cero
+outputs, pero se representa como un enlace visual entre los dos wants. La
+identidad `semanticRelationId` permitio seleccionar, borrar y asociar
+assumptions sin inventar un junction ni una entidad intermedia.
+
+Aprendizaje: la forma optima del kernel no tiene por que coincidir con las
+primitivas del canvas. Una proyeccion determinista puede cambiar la aridad
+visual siempre que preserve identidad, scope y direccion de autoridad.
+
+Aplicacion futura: definir adaptadores por renderMode; conservar IDs estables;
+mapear acciones visuales al objeto propietario; y probar round trips, cascadas
+y export desde la fuente semantica, no desde la simplificacion grafica.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-088`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-091`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

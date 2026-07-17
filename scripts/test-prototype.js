@@ -27,6 +27,11 @@ const steps = [
     args: ["run", "test:crt"]
   },
   {
+    name: "Test native EC vertical",
+    command: "npm",
+    args: ["run", "test:ec"]
+  },
+  {
     name: "Test transactional core",
     command: "npm",
     args: ["run", "test:core"]

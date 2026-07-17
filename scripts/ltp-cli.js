@@ -12,7 +12,11 @@ const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze({
   entity: "ENTITY",
   ude: "UDE",
   rootCause: "ROOT_CAUSE",
-  criticalRootCause: "CRITICAL_ROOT_CAUSE"
+  criticalRootCause: "CRITICAL_ROOT_CAUSE",
+  objective: "OBJECTIVE",
+  need: "NEED",
+  want: "WANT",
+  injection: "INJECTION"
 });
 
 const args = process.argv.slice(2);
