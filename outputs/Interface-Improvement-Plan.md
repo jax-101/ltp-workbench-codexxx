@@ -726,6 +726,14 @@ Criterios de aceptacion de `3C.14c.2`:
   assumption invalidada.
 - `H` puede seleccionar flechas y conflictos; una accion contextual abre el
   conjunto de assumptions de la linea sin usar el raton.
+- Los indicadores de assumptions son targets de `H`. Elegir uno abre su linea
+  y mantiene los hints activos sobre las assumptions visibles para encadenar
+  la seleccion sin pulsar `H` de nuevo.
+- En el contexto de linea o Workbench, `M` selecciona varias assumptions
+  visibles y habilita operaciones colectivas sin incluir nodos, frames o links.
+- Dentro del contexto, `ArrowUp`/`ArrowDown` recorre assumptions de la linea y
+  `ArrowLeft`/`ArrowRight` cambia a la linea logica anterior o siguiente. El
+  pan del canvas queda suspendido solo mientras este scope esta abierto.
 - Dentro del contexto se puede recorrer assumptions, crear con `N`, editar con
   `Enter`, usar `Shift+Enter` para nueva linea y borrar con `Delete`/`Ctrl+D`.
 - Invalidar conserva statement, subject, evidencia, historial y derivaciones;

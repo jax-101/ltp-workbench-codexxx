@@ -1033,9 +1033,27 @@ Aplicacion futura: modelar lifecycle y provenance; reservar delete para errores;
 mostrar estados sin ocultar contenido; y hacer que export, historial y agentes
 headless puedan reconstruir la cadena de razonamiento.
 
+### L-093: Los atajos ergonomicos dependen del scope, no solo de la tecla
+
+Fecha: 2026-07-17
+
+Evidencia: usar corchetes para cambiar de linea era tecnicamente libre, pero
+incomodo en distribuciones de teclado no estadounidenses. Las flechas ya tenian
+una funcion global de pan, aunque dentro del Workbench expresaban mejor la
+navegacion entre lineas y assumptions.
+
+Aprendizaje: evitar colisiones no basta para producir una interfaz keyboard-first.
+Una misma tecla familiar puede ser mas predecible que otra globalmente libre si
+el contexto activo es visible, acotado y restaura el significado anterior al
+cerrarse.
+
+Aplicacion futura: modelar scopes en el registro de comandos; mostrar el scope
+activo; auditar varias distribuciones de teclado; probar entrada y salida del
+contexto; y evitar bindings basados en simbolos de acceso desigual.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-093`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-094`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

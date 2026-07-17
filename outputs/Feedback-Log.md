@@ -1004,3 +1004,23 @@ Criterios de aceptacion:
 - Invalidar no elimina la assumption ni su trazabilidad con injections.
 - El panel Keyboard, la paleta y la auditoria automatica nacen del mismo
   registro declarativo de comandos.
+
+### F-078: Navegacion ergonomica y hints para assumptions
+
+Feedback: `[` y `]` no son ergonomicos para cambiar de linea. `H` y `M` deben
+permitir acceder rapidamente desde teclado a las assumptions visibles.
+
+Estado: incorporado al diseno de `3C.14c.2`; implementacion pendiente.
+
+Criterios de aceptacion:
+
+- `ArrowUp`/`ArrowDown` recorre assumptions dentro de la linea actual.
+- `ArrowLeft`/`ArrowRight` cambia de linea dentro de un orden logico visible y
+  determinista; fuera de este scope vuelven a desplazar el canvas.
+- `H` asigna hints a indicadores y assumptions visibles.
+- Seleccionar con hint un indicador abre la linea y conserva el modo de hints
+  para elegir inmediatamente una assumption.
+- `M` en contexto de assumptions permite seleccion multiple y mantiene la
+  prioridad contextual de letras dentro de secuencias de hints.
+- Las operaciones colectivas afectan solo a assumptions seleccionadas y son
+  atomicas con Undo/Redo.

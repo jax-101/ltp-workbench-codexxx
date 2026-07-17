@@ -705,3 +705,15 @@ Razon: reutilizar teclas familiares dentro de un modo bien identificado reduce
 carga cognitiva sin crear colisiones. Resolverlo con listeners ad hoc haria que
 la misma pulsacion pudiera crear un nodo y una assumption o que la auditoria no
 reflejara el comportamiento real.
+
+### D-100: Navegacion bidimensional dentro del contexto de assumptions
+
+Decision: `ArrowUp` y `ArrowDown` recorreran assumptions de la linea activa;
+`ArrowLeft` y `ArrowRight` cambiaran a la linea logica anterior o siguiente.
+Fuera del contexto conservaran su funcion de pan. `H` y `M` usaran el mismo
+motor de hints existente, pero limitaran sus targets al scope activo.
+
+Razon: las flechas son mas accesibles que corchetes en distintas distribuciones
+de teclado y expresan naturalmente las dos dimensiones del Workbench. Un motor
+de hints compartido mantiene seleccion simple y multiple coherentes, incluida
+la prioridad contextual de letras que formen parte de una etiqueta.
