@@ -1107,9 +1107,27 @@ Aplicacion futura: declarar autoridad por capa; diferenciar funciones `preview`
 y `commit`; evitar reemplazar snapshots tras una transaccion; y probar
 secuencias dominio-layout-dominio, no solo operaciones aisladas.
 
+### L-097: El foco puede cambiar el scope aunque la pantalla no cambie
+
+Fecha: 2026-07-17
+
+Evidencia: Enter abria correctamente el textarea de una assumption, pero el
+listener generico de foco del inspector sustituia inmediatamente
+`assumption-editing` por `editing`. Visualmente el mismo campo seguia enfocado;
+solo la prueba granular revelo que el segundo Enter ya no regresaba al contexto
+correcto.
+
+Aprendizaje: foco DOM, modo de interaccion y seleccion de dominio son estados
+relacionados pero distintos. Un handler generico de foco no debe borrar un
+scope mas especifico.
+
+Aplicacion futura: definir precedencia de scopes; probar transiciones antes y
+despues del foco; conservar identidad activa al entrar en edicion; y verificar
+el segundo comando de journeys modales, no solo que el campo recibio foco.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-097`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-098`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

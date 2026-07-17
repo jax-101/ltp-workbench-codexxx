@@ -721,9 +721,13 @@ Subgates:
   y borrar sin raton. Una vista global permite revisar todos los break points,
   filtrar gaps y seguir injections hasta la assumption desafiada.
   Subincremento `3C.14c.2a` en PASS: lifecycle, transacciones individuales y
-  colectivas, CLI, export, indicadores de cobertura y editor de estado. Falta
-  cerrar el scope de navegacion H/M y el Workbench global. Evidencia en
+  colectivas, CLI, export, indicadores de cobertura y editor de estado. Dejo
+  preparado el lifecycle para el scope H/M y el Workbench global. Evidencia en
   `outputs/Assumption-Lifecycle-3C.14c.2a.md`.
+  Subincremento `3C.14c.2b` en PASS: H/M, navegacion bidimensional,
+  crear/editar/borrar, seleccion multiple y etiquetas contextuales funcionan
+  sin raton. Solo queda el Assumption Workbench global para cerrar `3C.14c.2`.
+  Evidencia en `outputs/Assumption-Keyboard-Context-3C.14c.2b.md`.
 
 Criterios de aceptacion de `3C.14c.2`:
 

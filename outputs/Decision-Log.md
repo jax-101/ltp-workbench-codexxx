@@ -747,3 +747,14 @@ Razon: el canvas necesita senalar rapidamente donde trabajar sin convertir una
 mezcla de assumptions en una conclusion binaria. La precedencia hace visibles
 los riesgos, mientras el detalle evita inferir que todas las assumptions estan
 invalidadas o soportadas por el color de la linea.
+
+### D-103: El contexto de assumptions reutiliza comandos, no listeners paralelos
+
+Decision: H, M, N, Enter, Delete y las cuatro direcciones pasan por el dispatcher
+de comandos existente. El scope activo cambia su accion y etiqueta, mientras
+Keyboard, Command Palette y la auditoria siguen leyendo el mismo registro.
+
+Razon: duplicar listeners para assumptions haria impredecible la prioridad de M
+dentro de hints y de Ctrl+F dentro de editores. Un dispatcher contextual permite
+aplicar explicitamente `editor > assumptions > canvas` y devolver cada tecla a
+su significado global al cerrar el contexto.

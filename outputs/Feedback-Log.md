@@ -1010,7 +1010,7 @@ Criterios de aceptacion:
 Feedback: `[` y `]` no son ergonomicos para cambiar de linea. `H` y `M` deben
 permitir acceder rapidamente desde teclado a las assumptions visibles.
 
-Estado: incorporado al diseno de `3C.14c.2`; implementacion pendiente.
+Estado: implementado y validado en `3C.14c.2b`.
 
 Criterios de aceptacion:
 

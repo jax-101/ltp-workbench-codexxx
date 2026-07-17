@@ -972,12 +972,44 @@ kbd {
 }
 
 .assumption-item {
+  position: relative;
   display: grid;
   gap: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 10px;
   background: #faf7ef;
+}
+
+.assumption-item.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(197, 143, 44, 0.24);
+}
+
+.assumption-item.active {
+  border-color: var(--selection);
+  box-shadow: 0 0 0 3px rgba(9, 105, 168, 0.26);
+}
+
+.assumption-item.selected.active {
+  box-shadow: 0 0 0 2px var(--white), 0 0 0 5px rgba(9, 105, 168, 0.42), 0 0 0 8px rgba(197, 143, 44, 0.24);
+}
+
+.assumption-hint {
+  position: absolute;
+  top: -9px;
+  right: -7px;
+  z-index: 4;
+  min-width: 26px;
+  height: 23px;
+  border: 2px solid #1d2423;
+  border-radius: 6px;
+  padding: 0 5px;
+  background: #f5c84b;
+  color: #1d2423;
+  font-size: 12px;
+  font-weight: 950;
+  box-shadow: 0 4px 10px rgba(37, 43, 42, 0.2);
 }
 
 .assumption-item button {
