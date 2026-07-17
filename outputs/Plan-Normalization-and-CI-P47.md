@@ -43,9 +43,9 @@ npm run test:prototype -- --no-smoke
 
 The active roadmap package after P47 is P48: Definition schema, canonical
 serialization and hash. `U012` tracks observation of the first hosted GitHub
-run separately from the locally verified workflow contract. The workflow was
-pushed successfully, but the active `gh` account cannot read this private
-repository through the API, so the hosted result is not claimed as verified.
+run separately from the locally verified workflow contract. It is now resolved:
+runs `29620978658` and `29621101076` passed, and the latter confirms that the
+functional job started only after the architecture job completed successfully.
 
 ## Delivery Metrics
 

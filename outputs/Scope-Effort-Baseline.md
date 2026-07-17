@@ -154,10 +154,10 @@ the denominator from that point onward.
 | U009 | Browser globals and script-order dependencies | Assessed | Covered by P46, P61 and P62 without adding scope |
 | U010 | Long-thread context overhead | Mitigated | P46 revised to 250k and P47 to 75k; broader recalibration deferred |
 | U011 | Layout output depended on implicit wall clock | Resolved | Layout requests accept an explicit timestamp for deterministic acceptance |
-| U012 | First hosted CI execution | Assessed | Local contract passes; first GitHub run pending observation |
+| U012 | First hosted CI execution | Resolved | Two hosted Quality Gate runs passed with functional regression gated by architecture |
 
-Current register: 12 unknowns; five converted, three assessed, two mitigated and
-two resolved. There are no untriaged open unknowns today. This does not
+Current register: 12 unknowns; five converted, two assessed, two mitigated and
+three resolved. There are no untriaged open unknowns today. This does not
 imply that future unknowns do not exist; it states only what has been
 discovered.
 

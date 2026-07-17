@@ -116,11 +116,11 @@
       "id": "U012",
       "title": "The new CI workflow has not yet run in the hosted GitHub environment",
       "discoveredDuring": "P47",
-      "status": "assessed",
+      "status": "resolved",
       "impact": "medium",
       "resultingPackages": ["P47"],
       "scopeAddedTokens": 0,
-      "note": "Static contract, YAML syntax and all constituent commands pass locally. Push succeeded, but the active gh account cannot see this private repository through the API; hosted-run observation remains external."
+      "note": "Hosted Quality Gate runs 29620978658 and 29621101076 passed. The latest run confirmed architecture and module contracts complete before the dependent headless functional regression."
     }
   ]
 }
