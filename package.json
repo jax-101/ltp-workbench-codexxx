@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.14c.2b",
-    "name": "Keyboard Assumption Context",
+    "id": "3C.14c.2c",
+    "name": "Global Assumption Workbench",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",

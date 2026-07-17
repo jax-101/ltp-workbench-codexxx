@@ -41,6 +41,10 @@ let assumptionContextLinkId = null;
 let activeAssumptionId = null;
 let selectedAssumptionIds = new Set();
 let assumptionMultiSelectionMode = false;
+let assumptionWorkbenchOpen = false;
+let assumptionWorkbenchQuery = "";
+let assumptionWorkbenchCoverage = "ALL";
+let assumptionWorkbenchStatus = "ALL";
 
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace("H", "");
@@ -99,6 +103,7 @@ const assumptionsForLink = (linkId) => {
 const allAssumptions = () => nativeSemanticTree() ? tree()?.semanticKernel?.assumptions || [] : tree()?.assumptions || [];
 const assumptionById = () => Object.fromEntries(allAssumptions().map((assumption) => [assumption.id, assumption]));
 const assumptionStatus = (assumption) => String(assumption.status || "DRAFT").toUpperCase();
+const ASSUMPTION_STATUSES = Object.freeze(["DRAFT", "SUPPORTED", "CHALLENGED", "INVALIDATED"]);
 const assumptionCoverageForLink = (linkId) => {
   const assumptions = assumptionsForLink(linkId);
   const statuses = assumptions.map(assumptionStatus);
@@ -148,9 +153,50 @@ const elementType = (id) => {
   return "unknown";
 };
 
+const semanticElementById = () => Object.fromEntries(
+  (tree()?.semanticKernel?.elements || []).map((element) => [element.id, element])
+);
+const derivationsForAssumption = (assumptionId) => nativeSemanticTree()
+  ? (tree()?.semanticKernel?.derivations || []).filter((derivation) => derivation.targetAssumptionId === assumptionId)
+  : [];
+const injectionLabel = (derivation) => {
+  const source = nodeById()[derivation.sourceElementId] || semanticElementById()[derivation.sourceElementId];
+  return source?.statement || source?.shortLabel || derivation.sourceElementId;
+};
+const sortLogicalLinks = (links) => links.slice().sort((left, right) => {
+  const leftPosition = layoutLink(left.id).labelPosition || { x: 0, y: 0 };
+  const rightPosition = layoutLink(right.id).labelPosition || { x: 0, y: 0 };
+  return leftPosition.y - rightPosition.y || leftPosition.x - rightPosition.x || left.id.localeCompare(right.id);
+});
 const contextAssumptions = () => assumptionContextLinkId ? assumptionsForLink(assumptionContextLinkId) : [];
+const assumptionWorkbenchLines = () => {
+  const query = assumptionWorkbenchQuery.trim().toLowerCase();
+  return sortLogicalLinks(tree()?.links || [])
+    .map((link) => {
+      const coverage = assumptionCoverageForLink(link.id);
+      const assumptions = assumptionsForLink(link.id);
+      const lineText = `${link.meaning || ""} ${link.verbalization || ""}`.toLowerCase();
+      const lineMatches = !query || lineText.includes(query);
+      const visibleAssumptions = assumptions.filter((assumption) => {
+        if (assumptionWorkbenchStatus !== "ALL" && assumptionStatus(assumption) !== assumptionWorkbenchStatus) return false;
+        if (lineMatches) return true;
+        const derivationText = derivationsForAssumption(assumption.id).map(injectionLabel).join(" ");
+        return `${assumption.statement} ${derivationText}`.toLowerCase().includes(query);
+      });
+      return { link, coverage, assumptions, visibleAssumptions, lineMatches };
+    })
+    .filter((entry) => assumptionWorkbenchCoverage === "ALL" || entry.coverage.state.toUpperCase() === assumptionWorkbenchCoverage)
+    .filter((entry) => {
+      if (assumptionWorkbenchStatus !== "ALL" && !entry.visibleAssumptions.length) return false;
+      if (!query) return true;
+      return entry.lineMatches || entry.visibleAssumptions.length > 0;
+    });
+};
+const assumptionWorkbenchAssumptions = () => assumptionWorkbenchLines().flatMap((entry) => entry.visibleAssumptions);
+const selectableContextAssumptions = () => assumptionWorkbenchOpen ? assumptionWorkbenchAssumptions() : contextAssumptions();
 const enterAssumptionContext = (linkId, options = {}) => {
   if (!linkById()[linkId]) return false;
+  assumptionWorkbenchOpen = Boolean(options.workbench) || assumptionWorkbenchOpen;
   assumptionContextLinkId = linkId;
   panelState.rightOpen = true;
   mode = "assumptions";
@@ -166,6 +212,7 @@ const enterAssumptionContext = (linkId, options = {}) => {
 };
 
 const leaveAssumptionContext = () => {
+  assumptionWorkbenchOpen = false;
   assumptionContextLinkId = null;
   activeAssumptionId = null;
   selectedAssumptionIds.clear();
@@ -177,7 +224,11 @@ const leaveAssumptionContext = () => {
 };
 
 const selectAssumption = (id) => {
-  if (!contextAssumptions().some((assumption) => assumption.id === id)) return;
+  if (!selectableContextAssumptions().some((assumption) => assumption.id === id)) return;
+  if (assumptionWorkbenchOpen) {
+    const owner = orderedLogicalLinks().find((link) => assumptionsForLink(link.id).some((assumption) => assumption.id === id));
+    if (owner) assumptionContextLinkId = owner.id;
+  }
   activeAssumptionId = id;
   if (assumptionMultiSelectionMode) {
     if (selectedAssumptionIds.has(id)) selectedAssumptionIds.delete(id);
@@ -651,7 +702,7 @@ const visibleHintEntries = () => {
   const entries = [];
 
   if (mode === "assumptions") {
-    const assumptions = contextAssumptions();
+    const assumptions = selectableContextAssumptions();
     const labels = generateHintLabels(assumptions.length);
     return assumptions.map((assumption, index) => ({
       id: assumption.id,
@@ -1675,7 +1726,7 @@ const createLinksToTarget = async (sourceNodeIds, targetNodeId) => {
 };
 
 const addAssumptionToSelectedLink = async () => {
-  const link = selectedLink();
+  const link = selectedLink() || linkById()[assumptionContextLinkId];
   if (!link) return null;
   const id = uid("assumption");
   if (nativeSemanticTree()) {
@@ -1720,10 +1771,14 @@ const addAssumptionToSelectedLink = async () => {
 };
 
 const navigateAssumption = (delta) => {
-  const assumptions = contextAssumptions();
+  const assumptions = assumptionWorkbenchOpen ? assumptionWorkbenchAssumptions() : contextAssumptions();
   if (!assumptions.length) return;
   const currentIndex = Math.max(0, assumptions.findIndex((assumption) => assumption.id === activeAssumptionId));
   const next = assumptions[(currentIndex + delta + assumptions.length) % assumptions.length];
+  if (assumptionWorkbenchOpen) {
+    const owner = orderedLogicalLinks().find((link) => assumptionsForLink(link.id).some((assumption) => assumption.id === next.id));
+    if (owner) assumptionContextLinkId = owner.id;
+  }
   activeAssumptionId = next.id;
   selectedAssumptionIds = new Set([next.id]);
   hintsVisible = false;
@@ -1731,22 +1786,19 @@ const navigateAssumption = (delta) => {
   render();
 };
 
-const orderedLogicalLinks = () => tree().links
-  .filter(linkIsVisible)
-  .slice()
-  .sort((left, right) => {
-    const leftPosition = layoutLink(left.id).labelPosition || { x: 0, y: 0 };
-    const rightPosition = layoutLink(right.id).labelPosition || { x: 0, y: 0 };
-    return leftPosition.y - rightPosition.y || leftPosition.x - rightPosition.x || left.id.localeCompare(right.id);
-  });
+const orderedLogicalLinks = () => sortLogicalLinks(tree().links.filter(linkIsVisible));
 
 const navigateAssumptionLine = (delta) => {
-  const links = orderedLogicalLinks();
+  const links = assumptionWorkbenchOpen
+    ? assumptionWorkbenchLines().map((entry) => entry.link)
+    : orderedLogicalLinks();
   if (!links.length) return;
   const currentIndex = Math.max(0, links.findIndex((link) => link.id === assumptionContextLinkId));
   const nextLink = links[(currentIndex + delta + links.length) % links.length];
   replaceSelection(nextLink.id);
-  enterAssumptionContext(nextLink.id, { hints: false });
+  enterAssumptionContext(nextLink.id, { hints: false, workbench: assumptionWorkbenchOpen });
+  activeAssumptionId = assumptionsForLink(nextLink.id)[0]?.id || null;
+  selectedAssumptionIds = new Set(activeAssumptionId ? [activeAssumptionId] : []);
   setStatus(`Line ${((currentIndex + delta + links.length) % links.length) + 1} of ${links.length}: ${contextAssumptions().length} assumptions`);
 };
 
@@ -1772,7 +1824,8 @@ const editActiveAssumption = () => {
   mode = "assumption-editing";
   hintsVisible = false;
   render();
-  const editor = app.querySelector(`[data-assumption-id="${assumption.id}"]`);
+  const editor = app.querySelector(`.assumption-workbench [data-assumption-id="${assumption.id}"]`)
+    || app.querySelector(`[data-assumption-id="${assumption.id}"]`);
   editor?.focus();
   editor?.setSelectionRange?.(editor.value.length, editor.value.length);
   setStatus("Editing assumption. Enter accepts; Shift+Enter adds a line.");
@@ -1786,7 +1839,7 @@ const deleteSelectedAssumptions = async () => {
     setStatus("Choose one or more assumptions to delete");
     return;
   }
-  const previous = contextAssumptions();
+  const previous = assumptionWorkbenchOpen ? assumptionWorkbenchAssumptions() : contextAssumptions();
   const previousIndex = Math.max(0, previous.findIndex((assumption) => assumption.id === activeAssumptionId));
   if (nativeSemanticTree()) {
     await executeDomainCommand(
@@ -1800,7 +1853,7 @@ const deleteSelectedAssumptions = async () => {
     for (const link of tree().links) link.assumptionIds = link.assumptionIds.filter((id) => !idSet.has(id));
     await persist(ids.length === 1 ? "Delete assumption" : "Delete assumptions");
   }
-  const remaining = contextAssumptions();
+  const remaining = assumptionWorkbenchOpen ? assumptionWorkbenchAssumptions() : contextAssumptions();
   activeAssumptionId = remaining[Math.min(previousIndex, Math.max(0, remaining.length - 1))]?.id || null;
   selectedAssumptionIds = new Set(activeAssumptionId ? [activeAssumptionId] : []);
   assumptionMultiSelectionMode = false;
@@ -1808,6 +1861,84 @@ const deleteSelectedAssumptions = async () => {
   hintsVisible = false;
   setStatus(`${ids.length} assumption${ids.length === 1 ? "" : "s"} deleted`);
   render();
+};
+
+const cycleSelectedAssumptionStatuses = async () => {
+  const ids = selectedAssumptionIds.size
+    ? [...selectedAssumptionIds]
+    : activeAssumptionId ? [activeAssumptionId] : [];
+  if (!ids.length) {
+    setStatus("Choose one or more assumptions first");
+    return;
+  }
+  const statuses = new Set(ids.map((id) => assumptionStatus(assumptionById()[id])));
+  const current = statuses.size === 1 ? [...statuses][0] : null;
+  const nextStatus = current
+    ? ASSUMPTION_STATUSES[(ASSUMPTION_STATUSES.indexOf(current) + 1) % ASSUMPTION_STATUSES.length]
+    : ASSUMPTION_STATUSES[0];
+  if (nativeSemanticTree()) {
+    await executeDomainCommand(
+      "semantic.assumptions.update-status",
+      { treeId: tree().id, assumptionIds: ids, status: nextStatus },
+      `Set ${ids.length} assumption status${ids.length === 1 ? "" : "es"} to ${nextStatus}`
+    );
+  } else {
+    for (const id of ids) {
+      const assumption = assumptionById()[id];
+      assumption.status = nextStatus.toLowerCase();
+      assumption.updatedAt = now();
+    }
+    await persist(`Set assumption status to ${nextStatus}`);
+  }
+  selectedAssumptionIds = new Set(ids);
+  activeAssumptionId = ids.at(-1) || null;
+  mode = "assumptions";
+  setStatus(`${ids.length} assumption${ids.length === 1 ? "" : "s"} set to ${nextStatus}`);
+  render();
+};
+
+const openAssumptionWorkbench = () => {
+  const lines = assumptionWorkbenchLines();
+  const initialLink = linkById()[assumptionContextLinkId] || selectedLink() || lines[0]?.link;
+  if (!initialLink) {
+    setStatus("This diagram has no logical lines");
+    return;
+  }
+  assumptionWorkbenchOpen = true;
+  enterAssumptionContext(initialLink.id, { hints: false, workbench: true });
+  activeAssumptionId = assumptionsForLink(initialLink.id)[0]?.id || assumptionWorkbenchAssumptions()[0]?.id || null;
+  selectedAssumptionIds = new Set(activeAssumptionId ? [activeAssumptionId] : []);
+  setStatus(`${assumptionWorkbenchLines().length} lines in Assumption Workbench`);
+  render();
+};
+
+const closeAssumptionWorkbench = () => {
+  leaveAssumptionContext();
+  setStatus("Assumption Workbench closed");
+  render();
+  focusCanvas();
+};
+
+const refreshAssumptionWorkbench = ({ focusSearch = false } = {}) => {
+  const lines = assumptionWorkbenchLines();
+  const assumptions = lines.flatMap((entry) => entry.visibleAssumptions);
+  if (!assumptions.some((assumption) => assumption.id === activeAssumptionId)) {
+    activeAssumptionId = assumptions[0]?.id || null;
+  }
+  const owner = lines.find((entry) => entry.assumptions.some((assumption) => assumption.id === activeAssumptionId));
+  assumptionContextLinkId = owner?.link.id || lines[0]?.link.id || null;
+  selectedAssumptionIds = new Set(
+    [...selectedAssumptionIds].filter((id) => assumptions.some((assumption) => assumption.id === id))
+  );
+  if (!selectedAssumptionIds.size && activeAssumptionId) selectedAssumptionIds.add(activeAssumptionId);
+  hintBuffer = "";
+  hintEntries = hintsVisible ? visibleHintEntries() : [];
+  render();
+  if (focusSearch) {
+    const search = app.querySelector("[data-assumption-workbench-search]");
+    search?.focus();
+    search?.setSelectionRange?.(search.value.length, search.value.length);
+  }
 };
 
 const promoteAssumption = async (assumptionId) => {
@@ -2189,16 +2320,19 @@ const formatShortcutBinding = (binding) => {
 const contextualCommandLabel = (command) => {
   if (!assumptionContextLinkId) return commandLabels[command] || command;
   const assumptionLabels = {
+    openAssumptionWorkbench: assumptionWorkbenchOpen ? "Close Assumption Workbench" : "Open Assumption Workbench",
     showHints: "Toggle assumption hints",
     toggleMultiSelect: "Select multiple assumptions",
     createNode: "Create assumption",
     focusInspector: "Edit active assumption",
     deleteSelection: "Delete selected assumptions",
+    cycleNodeTypes: "Cycle selected assumption statuses",
     panUp: "Previous assumption",
     panDown: "Next assumption",
     panLeft: "Previous logical line",
     panRight: "Next logical line",
-    cancelContext: "Close assumption context"
+    focusSearch: assumptionWorkbenchOpen ? "Search Assumption Workbench" : "Search",
+    cancelContext: assumptionWorkbenchOpen ? "Close Assumption Workbench" : "Close assumption context"
   };
   return assumptionLabels[command] || commandLabels[command] || command;
 };
@@ -2248,6 +2382,14 @@ const closeCommandPalette = () => {
   commandPaletteOpen = false;
   commandPaletteQuery = "";
   commandPaletteIndex = 0;
+  assumptionWorkbenchOpen = false;
+  assumptionWorkbenchQuery = "";
+  assumptionWorkbenchCoverage = "ALL";
+  assumptionWorkbenchStatus = "ALL";
+  assumptionContextLinkId = null;
+  activeAssumptionId = null;
+  selectedAssumptionIds.clear();
+  assumptionMultiSelectionMode = false;
   render();
   focusCanvas();
 };
@@ -2790,6 +2932,12 @@ const cancelContext = (options = {}) => {
     return;
   }
 
+  if (assumptionWorkbenchOpen) {
+    closeAssumptionWorkbench();
+    if (options.clearSelection) replaceSelection(null);
+    return;
+  }
+
   if (mode === "assumptions" || mode === "assumption-editing" || assumptionContextLinkId) {
     leaveAssumptionContext();
     if (options.clearSelection) replaceSelection(null);
@@ -3014,6 +3162,7 @@ const renderCanvas = () => {
               )
               .join("")}
           </select>
+          <button class="${assumptionWorkbenchOpen ? "is-active" : ""}" data-action="assumption-workbench" aria-pressed="${assumptionWorkbenchOpen}">Assumptions</button>
           <button class="${hintsVisible ? "is-active" : ""}" data-action="hints" aria-pressed="${hintsVisible}">Hints</button>
           <button data-action="layout">Layout</button>
         </div>
@@ -3187,6 +3336,101 @@ const renderInspector = () => {
   return `<aside class="inspector"><button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button><h2>Inspector</h2><p>Select a node, frame, or link.</p></aside>`;
 };
 
+const renderAssumptionTrace = (assumption) => {
+  const derivations = derivationsForAssumption(assumption.id);
+  if (!derivations.length) return "";
+  return `
+    <div class="workbench-traces" aria-label="Related injections">
+      ${derivations.map((derivation) => `
+        <span class="workbench-trace">
+          <strong>${escapeHtml(derivation.status || "PROPOSED")}</strong>
+          ${escapeHtml(injectionLabel(derivation))}
+        </span>
+      `).join("")}
+    </div>
+  `;
+};
+
+const renderAssumptionWorkbench = () => {
+  if (!assumptionWorkbenchOpen) return "";
+  const lines = assumptionWorkbenchLines();
+  const visibleAssumptions = lines.flatMap((entry) => entry.visibleAssumptions);
+  const statusCounts = Object.fromEntries(
+    ASSUMPTION_STATUSES.map((status) => [status, allAssumptions().filter((assumption) => assumptionStatus(assumption) === status).length])
+  );
+  return `
+    <div class="assumption-workbench-backdrop">
+      <section class="assumption-workbench" role="dialog" aria-modal="true" aria-labelledby="assumption-workbench-title">
+        <header class="assumption-workbench-header">
+          <div>
+            <span class="workbench-eyebrow">${escapeHtml(tree()?.name || "Diagram")}</span>
+            <h2 id="assumption-workbench-title">Assumption Workbench</h2>
+          </div>
+          <button class="workbench-close" data-action="close-assumption-workbench" title="Close Assumption Workbench" aria-label="Close Assumption Workbench">&times;</button>
+        </header>
+        <div class="assumption-workbench-toolbar">
+          <input data-assumption-workbench-search value="${escapeHtml(assumptionWorkbenchQuery)}" placeholder="Search assumptions, lines, injections" aria-label="Search assumptions, lines, and injections" />
+          <select data-assumption-workbench-coverage aria-label="Filter by coverage">
+            ${["ALL", "UNCOVERED", "DRAFT", "SUPPORTED", "CHALLENGED", "INVALIDATED"].map((coverage) =>
+              `<option value="${coverage}" ${assumptionWorkbenchCoverage === coverage ? "selected" : ""}>${coverage === "ALL" ? "All coverage" : coverage.charAt(0) + coverage.slice(1).toLowerCase()}</option>`
+            ).join("")}
+          </select>
+          <select data-assumption-workbench-status aria-label="Filter by assumption status">
+            ${["ALL", ...ASSUMPTION_STATUSES].map((status) =>
+              `<option value="${status}" ${assumptionWorkbenchStatus === status ? "selected" : ""}>${status === "ALL" ? "All statuses" : status.charAt(0) + status.slice(1).toLowerCase()}</option>`
+            ).join("")}
+          </select>
+          <button class="${hintsVisible ? "is-active" : ""}" data-action="hints" aria-pressed="${hintsVisible}">Hints</button>
+        </div>
+        <div class="assumption-workbench-summary" aria-label="Assumption summary">
+          <span>Lines <strong>${lines.length}</strong></span>
+          <span>Visible <strong>${visibleAssumptions.length}</strong></span>
+          ${ASSUMPTION_STATUSES.map((status) => `<span>${status.charAt(0) + status.slice(1).toLowerCase()} <strong>${statusCounts[status]}</strong></span>`).join("")}
+        </div>
+        <div class="assumption-workbench-lines">
+          ${lines.length ? lines.map(({ link, coverage, visibleAssumptions: assumptions }) => {
+            const conflict = link.type === "conflict" || link.directionality === "UNDIRECTED";
+            const active = assumptionContextLinkId === link.id ? "active" : "";
+            return `
+              <section class="workbench-line ${active}" data-workbench-line-row="${link.id}">
+                <button class="workbench-line-header" data-workbench-line="${link.id}">
+                  <span class="workbench-line-kind">${conflict ? "Conflict" : "Relation"}</span>
+                  <strong>${escapeHtml(link.meaning || link.verbalization || link.id)}</strong>
+                  <span class="coverage-chip coverage-${coverage.state}">${coverage.count} · ${escapeHtml(coverage.state)}</span>
+                </button>
+                <div class="workbench-assumptions">
+                  ${assumptions.length ? assumptions.map((assumption) => {
+                    const hint = hintsVisible
+                      ? hintEntries.find((entry) => entry.id === assumption.id)?.hint
+                      : null;
+                    const selected = selectedAssumptionIds.has(assumption.id) ? "selected" : "";
+                    const activeAssumption = activeAssumptionId === assumption.id ? "active" : "";
+                    return `
+                      <article class="workbench-assumption assumption-item ${selected} ${activeAssumption}" data-assumption-row="${assumption.id}">
+                        ${hint ? `<button class="assumption-hint" data-assumption-hint-id="${assumption.id}" aria-label="Select assumption ${hint}">${hint}</button>` : ""}
+                        <textarea data-assumption-id="${assumption.id}" aria-label="Assumption statement">${escapeHtml(assumption.statement)}</textarea>
+                        <div class="assumption-meta">
+                          <label for="workbench-assumption-status-${assumption.id}">Status</label>
+                          <select id="workbench-assumption-status-${assumption.id}" data-assumption-status-id="${assumption.id}">
+                            ${ASSUMPTION_STATUSES.map((status) =>
+                              `<option value="${status}" ${assumptionStatus(assumption) === status ? "selected" : ""}>${status.charAt(0) + status.slice(1).toLowerCase()}</option>`
+                            ).join("")}
+                          </select>
+                        </div>
+                        ${renderAssumptionTrace(assumption)}
+                      </article>
+                    `;
+                  }).join("") : '<p class="workbench-empty-line">No assumptions match the current filters.</p>'}
+                </div>
+              </section>
+            `;
+          }).join("") : '<p class="workbench-empty">No logical lines match the current filters.</p>'}
+        </div>
+      </section>
+    </div>
+  `;
+};
+
 const render = () => {
   captureViewport();
   updateViewState();
@@ -3197,6 +3441,7 @@ const render = () => {
       ${renderCanvas()}
       ${renderInspector()}
     </div>
+    ${renderAssumptionWorkbench()}
     ${renderNodePreview()}
     ${renderCommandPalette()}
   `;
@@ -3360,7 +3605,7 @@ const bindEvents = () => {
     });
   });
 
-  app.querySelectorAll(".inspector input, .inspector textarea, .inspector select").forEach((field) => {
+  app.querySelectorAll(".inspector input, .inspector textarea, .inspector select, .assumption-workbench [data-assumption-id], .assumption-workbench [data-assumption-status-id]").forEach((field) => {
     field.addEventListener("focus", () => {
       const focusedAssumptionId = field.dataset.assumptionId || field.dataset.assumptionStatusId;
       if (focusedAssumptionId && assumptionContextLinkId) {
@@ -3399,6 +3644,8 @@ const bindEvents = () => {
       if (action === "redo") moveHistory("redo");
       if (action === "export") exportMarkdown();
       if (action === "hints") toggleHints();
+      if (action === "assumption-workbench") openAssumptionWorkbench();
+      if (action === "close-assumption-workbench") closeAssumptionWorkbench();
       if (action === "pin") togglePin();
       if (action === "toggle-frame-collapsed") toggleFrameCollapsed();
       if (action === "add-assumption") addAssumptionToSelectedLink();
@@ -3454,6 +3701,32 @@ const bindEvents = () => {
     searchText = search.value;
   });
 
+  app.querySelectorAll("[data-workbench-line]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const linkId = button.dataset.workbenchLine;
+      assumptionContextLinkId = linkId;
+      replaceSelection(linkId);
+      activeAssumptionId = assumptionsForLink(linkId)[0]?.id || null;
+      selectedAssumptionIds = new Set(activeAssumptionId ? [activeAssumptionId] : []);
+      setStatus(`${assumptionsForLink(linkId).length} assumptions on this line`);
+      render();
+    });
+  });
+
+  const workbenchSearch = app.querySelector("[data-assumption-workbench-search]");
+  workbenchSearch?.addEventListener("input", () => {
+    assumptionWorkbenchQuery = workbenchSearch.value;
+    refreshAssumptionWorkbench({ focusSearch: true });
+  });
+  app.querySelector("[data-assumption-workbench-coverage]")?.addEventListener("change", (event) => {
+    assumptionWorkbenchCoverage = event.target.value;
+    refreshAssumptionWorkbench();
+  });
+  app.querySelector("[data-assumption-workbench-status]")?.addEventListener("change", (event) => {
+    assumptionWorkbenchStatus = event.target.value;
+    refreshAssumptionWorkbench();
+  });
+
   const paletteSearch = app.querySelector("[data-command-palette-search]");
   paletteSearch?.addEventListener("input", () => {
     commandPaletteQuery = paletteSearch.value;
@@ -3503,11 +3776,16 @@ const commandForEvent = (event) => {
 const executeCommand = (command) => {
   if (mode === "assumptions") {
     const assumptionCommands = {
+      openAssumptionWorkbench: () => assumptionWorkbenchOpen ? closeAssumptionWorkbench() : openAssumptionWorkbench(),
       showHints: toggleHints,
       toggleMultiSelect: toggleAssumptionMultiSelect,
       createNode: addAssumptionToSelectedLink,
       focusInspector: editActiveAssumption,
       deleteSelection: deleteSelectedAssumptions,
+      cycleNodeTypes: cycleSelectedAssumptionStatuses,
+      focusSearch: () => assumptionWorkbenchOpen
+        ? app.querySelector("[data-assumption-workbench-search]")?.focus()
+        : document.querySelector("[data-search]")?.focus(),
       panUp: () => navigateAssumption(-1),
       panDown: () => navigateAssumption(1),
       panLeft: () => navigateAssumptionLine(-1),
@@ -3520,6 +3798,7 @@ const executeCommand = (command) => {
   }
   const commands = {
     commandPalette: toggleCommandPalette,
+    openAssumptionWorkbench,
     showHints: toggleHints,
     toggleMultiSelect,
     moveSelectionToParent,
@@ -3561,6 +3840,9 @@ const handleKeydown = async (event) => {
   const target = event.target;
   const isTextField = target?.matches?.("input, textarea, select");
   const isInspectorField = Boolean(isTextField && target.closest?.(".inspector"));
+  const isAssumptionEditorField = Boolean(
+    isTextField && (target.dataset.assumptionId || target.dataset.assumptionStatusId)
+  );
 
   if (event.key === "Escape") {
     event.preventDefault();
@@ -3628,7 +3910,7 @@ const handleKeydown = async (event) => {
     return;
   }
 
-  if (isInspectorField && event.key === "Enter") {
+  if ((isInspectorField || isAssumptionEditorField) && event.key === "Enter") {
     if (event.shiftKey && target.matches("textarea")) return;
     event.preventDefault();
     await commitInspectorField(target);
@@ -4686,6 +4968,62 @@ window.__ltpEcVisualTest = async () => {
     objective.y === (wantSmall.y + wantLarge.y) / 2;
   const noJunctions = !activeTree.nodes.some((node) => node.synthetic?.kind === "JUNCTION");
   const allLinksCurved = document.querySelectorAll("path.link-curved").length === activeTree.links.length;
+  assumptionWorkbenchQuery = "";
+  assumptionWorkbenchCoverage = "ALL";
+  assumptionWorkbenchStatus = "ALL";
+  focusCanvas();
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "a", metaKey: true, shiftKey: true, bubbles: true, cancelable: true }));
+  const workbenchOpensFromKeyboard = assumptionWorkbenchOpen
+    && document.querySelectorAll("[data-workbench-line-row]").length === activeTree.links.length
+    && document.querySelectorAll(".workbench-assumption").length === activeTree.semanticKernel.assumptions.length;
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "/", bubbles: true, cancelable: true }));
+  const workbenchSearchShortcutWorks = document.activeElement === document.querySelector("[data-assumption-workbench-search]");
+  focusCanvas();
+  const statusFilter = document.querySelector("[data-assumption-workbench-status]");
+  statusFilter.value = "INVALIDATED";
+  statusFilter.dispatchEvent(new Event("change", { bubbles: true }));
+  const statusFilterWorks = document.querySelectorAll(".workbench-assumption").length === 1
+    && document.querySelector(".workbench-assumption")?.textContent.includes("The constrained resource lacks a rule");
+  assumptionWorkbenchStatus = "ALL";
+  refreshAssumptionWorkbench();
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "h", bubbles: true, cancelable: true }));
+  const globalHintsWork = hintsVisible
+    && hintEntries.length === activeTree.semanticKernel.assumptions.length
+    && document.querySelectorAll(".workbench-assumption .assumption-hint").length === activeTree.semanticKernel.assumptions.length;
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true }));
+  const globalMultiHints = [...hintEntries];
+  for (const key of globalMultiHints[1]?.hint || "") handleHintKey(key);
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+  const globallySelectedIds = [...selectedAssumptionIds];
+  const originalGlobalStatuses = globallySelectedIds.map((id) => assumptionStatus(assumptionById()[id]));
+  const originalStatusSet = new Set(originalGlobalStatuses);
+  const expectedCollectiveStatus = originalStatusSet.size === 1
+    ? ASSUMPTION_STATUSES[(ASSUMPTION_STATUSES.indexOf(originalGlobalStatuses[0]) + 1) % ASSUMPTION_STATUSES.length]
+    : ASSUMPTION_STATUSES[0];
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true }));
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const collectiveStatusWorks = globallySelectedIds.length === 2
+    && globallySelectedIds.every((id) => assumptionStatus(assumptionById()[id]) === expectedCollectiveStatus);
+  await moveHistory("undo");
+  const collectiveStatusUndoWorks = globallySelectedIds.every(
+    (id, index) => assumptionStatus(assumptionById()[id]) === originalGlobalStatuses[index]
+  );
+  assumptionWorkbenchQuery = "Current accounting";
+  assumptionWorkbenchCoverage = "ALL";
+  assumptionWorkbenchStatus = "ALL";
+  openAssumptionWorkbench();
+  showHints();
+  const injectionTraceWorks = document.querySelectorAll(".workbench-assumption").length === 1
+    && document.querySelector(".workbench-trace")?.textContent.includes("Use buffer-based replenishment")
+    && document.querySelector(".workbench-trace")?.textContent.includes("PROPOSED")
+    && document.querySelectorAll(".workbench-assumption .assumption-hint").length === 1;
+  const workbenchWorks = workbenchOpensFromKeyboard
+    && workbenchSearchShortcutWorks
+    && statusFilterWorks
+    && globalHintsWork
+    && collectiveStatusWorks
+    && collectiveStatusUndoWorks
+    && injectionTraceWorks;
   const ok =
     activeTree.type === "ec" &&
     activeTree.layout.direction === "RL" &&
@@ -4706,11 +5044,12 @@ window.__ltpEcVisualTest = async () => {
     invalidatedStatusVisible &&
     injectionVisible &&
     injectionDerivationVisible &&
-    derivation?.targetAssumptionId === "assumption-d-prime-c-2";
+    derivation?.targetAssumptionId === "assumption-d-prime-c-2" &&
+    workbenchWorks;
 
   return {
     ok,
-    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; parallel=${parallelBranches}; conflict distinct/no arrow=${conflictIsDistinct}/${conflictHasNoArrow}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; conflict assumptions visible=${conflictAssumptionsVisible}; coverage indicators/status=${coverageIndicatorsVisible}/${invalidatedStatusVisible}; injection/derivation=${injectionVisible}/${injectionDerivationVisible}/${derivation?.targetAssumptionId}; geometry issues=${geometryIssues.length}.`
+    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; parallel=${parallelBranches}; conflict distinct/no arrow=${conflictIsDistinct}/${conflictHasNoArrow}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; conflict assumptions visible=${conflictAssumptionsVisible}; coverage indicators/status=${coverageIndicatorsVisible}/${invalidatedStatusVisible}; injection/derivation=${injectionVisible}/${injectionDerivationVisible}/${derivation?.targetAssumptionId}; workbench=${workbenchWorks} [open=${workbenchOpensFromKeyboard}, search=${workbenchSearchShortcutWorks}, filter=${statusFilterWorks}, hints=${globalHintsWork}, collective/undo=${collectiveStatusWorks}/${collectiveStatusUndoWorks}, trace=${injectionTraceWorks}]; geometry issues=${geometryIssues.length}.`
   };
 };
 
@@ -4737,8 +5076,8 @@ window.__ltpEcTripartiteVisualTest = async () => {
   const horizontalNavigationWorks = mode === "assumptions" && assumptionContextLinkId !== firstContextLink;
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true }));
   const multiHints = [...hintEntries];
-  for (const key of multiHints[0]?.hint || "") handleHintKey(key);
-  for (const key of multiHints[1]?.hint || "") handleHintKey(key);
+  const additionalHint = multiHints.find((entry) => entry.id !== activeAssumptionId)?.hint || "";
+  for (const key of additionalHint) handleHintKey(key);
   const assumptionMultiSelectWorks = assumptionMultiSelectionMode && selectedAssumptionIds.size === 2;
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
   const countBeforeCreate = contextAssumptions().length;
@@ -4751,7 +5090,8 @@ window.__ltpEcTripartiteVisualTest = async () => {
   const editor = app.querySelector(`[data-assumption-id="${activeAssumptionId}"]`);
   const enterOpensEditor = mode === "assumption-editing" && document.activeElement === editor;
   editor?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
-  await new Promise((resolve) => setTimeout(resolve, 80));
+  await workspaceOperationQueue;
+  await new Promise((resolve) => setTimeout(resolve, 40));
   const secondEnterAccepts = mode === "assumptions";
   const contextualShortcutsVisible = document.querySelector('[data-shortcut-command="createNode"]')?.textContent.includes("Create assumption")
     && document.querySelector('[data-shortcut-command="panRight"]')?.textContent.includes("Next logical line")
@@ -5002,6 +5342,18 @@ window.__ltpShortcutAuditStep = async (command, bindingIndex) => {
     const reopens = commandPaletteOpen && Boolean(palette) && document.activeElement === search;
     const usable = opensFocused && filters && executes && reopens;
     return result(usable, `Opened with ${Object.keys(commandBindings).length - 1} commands=${opensFocused}; filtered Toggle hints=${filters}; Enter executed hints=${executes}; reopened focused=${reopens}.`);
+  }
+
+  if (command === "openAssumptionWorkbench") {
+    await press();
+    const lines = document.querySelectorAll("[data-workbench-line-row]").length;
+    const assumptions = document.querySelectorAll(".workbench-assumption").length;
+    const opens = assumptionWorkbenchOpen
+      && mode === "assumptions"
+      && Boolean(document.querySelector(".assumption-workbench"))
+      && lines === tree().links.length
+      && assumptions === allAssumptions().length;
+    return result(opens, `Open=${assumptionWorkbenchOpen}; mode=${mode}; lines=${lines}/${tree().links.length}; assumptions=${assumptions}/${allAssumptions().length}.`);
   }
 
   if (command === "showHints") {

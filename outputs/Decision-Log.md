@@ -758,3 +758,16 @@ Razon: duplicar listeners para assumptions haria impredecible la prioridad de M
 dentro de hints y de Ctrl+F dentro de editores. Un dispatcher contextual permite
 aplicar explicitamente `editor > assumptions > canvas` y devolver cada tecla a
 su significado global al cerrar el contexto.
+
+### D-104: El Workbench global consulta todo el arbol, no solo el canvas visible
+
+Decision: el Assumption Workbench enumera todas las relaciones y conflictos del
+arbol activo aunque un frame este minimizado o exista un foco visual. Los
+filtros de texto, coverage y estado operan sobre esa coleccion completa. H/M y
+las operaciones colectivas reutilizan el mismo scope transaccional del contexto
+de linea.
+
+Razon: foco, minimizacion y viewport son decisiones de presentacion. Si una
+revision global heredase esa visibilidad, podria declarar cobertura completa
+mientras omite assumptions ocultas. Compartir comandos evita que la vista
+global se convierta en una segunda implementacion del dominio.

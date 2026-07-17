@@ -726,8 +726,13 @@ Subgates:
   `outputs/Assumption-Lifecycle-3C.14c.2a.md`.
   Subincremento `3C.14c.2b` en PASS: H/M, navegacion bidimensional,
   crear/editar/borrar, seleccion multiple y etiquetas contextuales funcionan
-  sin raton. Solo queda el Assumption Workbench global para cerrar `3C.14c.2`.
+  sin raton.
   Evidencia en `outputs/Assumption-Keyboard-Context-3C.14c.2b.md`.
+  Subincremento `3C.14c.2c` en PASS: la vista global enumera todas las lineas,
+  filtra por texto, coverage y estado, conserva H/M y operaciones colectivas,
+  y muestra las injections que desafian cada assumption. Con ello se cierra
+  `3C.14c.2`. Evidencia en
+  `outputs/Global-Assumption-Workbench-3C.14c.2c.md`.
 
 Criterios de aceptacion de `3C.14c.2`:
 
@@ -760,9 +765,8 @@ Criterios de aceptacion de `3C.14c.2`:
 
 ### 3C.15: formato de definicion y herramientas headless
 
-Estado: bloqueado por `3C.14c.2`; `3C.14c.1` ya ha estabilizado la cardinalidad
-EC. Se publica despues de completar el ciclo de vida keyboard-first de las
-assumptions, antes del Diagram Studio visual.
+Estado: desbloqueado tras completar `3C.14c.2`. Es el siguiente incremento y
+se publica antes del Diagram Studio visual.
 
 Incluye:
 

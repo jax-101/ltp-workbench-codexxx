@@ -1,5 +1,6 @@
 window.LTP_COMMAND_BINDINGS = Object.freeze({
   commandPalette: [{ key: "k", primary: true }],
+  openAssumptionWorkbench: [{ key: "a", primary: true, shift: true }],
   showHints: [{ key: "h" }],
   toggleMultiSelect: [{ key: "m" }],
   moveSelectionToParent: [{ key: "p", command: true }],
@@ -37,6 +38,7 @@ window.LTP_COMMAND_BINDINGS = Object.freeze({
 
 window.LTP_COMMAND_LABELS = Object.freeze({
   commandPalette: "Command palette",
+  openAssumptionWorkbench: "Open Assumption Workbench",
   showHints: "Toggle hints",
   toggleMultiSelect: "Start multiple selection",
   moveSelectionToParent: "Move selection to parent frame",

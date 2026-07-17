@@ -1125,9 +1125,27 @@ Aplicacion futura: definir precedencia de scopes; probar transiciones antes y
 despues del foco; conservar identidad activa al entrar en edicion; y verificar
 el segundo comando de journeys modales, no solo que el campo recibio foco.
 
+### L-098: Una revision global no debe heredar filtros implicitos de presentacion
+
+Fecha: 2026-07-17
+
+Evidencia: la primera version del Assumption Workbench reutilizo el orden de
+links visibles del canvas. Eso excluia silenciosamente relaciones dentro de
+frames minimizados o fuera del foco, aunque la vista se presentaba como un
+inventario global.
+
+Aprendizaje: viewport, foco y colapso son proyecciones de trabajo, no filtros de
+dominio. Una auditoria global debe declarar sus filtros y partir de la fuente
+completa; de otro modo produce falsos negativos precisamente donde se espera
+exhaustividad.
+
+Aplicacion futura: separar consultas de dominio de selectores de render;
+mostrar filtros activos; probar elementos ocultos y colapsados; y exigir que
+los totales globales se calculen antes de cualquier proyeccion visual.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-098`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-099`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 
