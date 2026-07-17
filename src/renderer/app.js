@@ -2760,11 +2760,61 @@ const renderLinks = () => {
 
 const renderHints = () => {
   if (!hintsVisible) return "";
-  return hintEntries
-    .filter((entry) => entry.type !== "assumption")
+  const entries = hintEntries.filter((entry) => entry.type !== "assumption");
+  const viewport = {
+    left: viewportState.left + 6,
+    top: viewportState.top + 6,
+    right: viewportState.left + (viewportSize.width || 960) - 6,
+    bottom: viewportState.top + (viewportSize.height || 640) - 6
+  };
+  const indicatorObstacles = entries
+    .filter((entry) => entry.type === "link")
+    .map((entry) => ({
+      x: (entry.x - 18) * zoomLevel - 13,
+      y: (entry.y + 12) * zoomLevel - 13,
+      width: 26,
+      height: 26
+    }));
+  const placed = [];
+  const overlaps = (left, right, gap = 4) =>
+    left.x < right.x + right.width + gap &&
+    left.x + left.width + gap > right.x &&
+    left.y < right.y + right.height + gap &&
+    left.y + left.height + gap > right.y;
+  const offsets = [{ x: 0, y: 0 }];
+  for (let radius = 1; radius <= 12; radius += 1) {
+    for (let y = -radius; y <= radius; y += 1) {
+      for (let x = -radius; x <= radius; x += 1) {
+        if (Math.max(Math.abs(x), Math.abs(y)) !== radius) continue;
+        offsets.push({ x: x * 38, y: y * 28 });
+      }
+    }
+  }
+  const positionedEntries = entries.map((entry) => {
+    const width = Math.max(25, 14 + entry.hint.length * 8);
+    const height = 22;
+    const origin = { x: entry.x * zoomLevel, y: entry.y * zoomLevel };
+    let selected = null;
+    for (const offset of offsets) {
+      const box = {
+        x: clamp(origin.x + offset.x, viewport.left, Math.max(viewport.left, viewport.right - width)),
+        y: clamp(origin.y + offset.y, viewport.top, Math.max(viewport.top, viewport.bottom - height)),
+        width,
+        height
+      };
+      if (placed.some((candidate) => overlaps(box, candidate))) continue;
+      if (indicatorObstacles.some((candidate) => overlaps(box, candidate, 2))) continue;
+      selected = box;
+      break;
+    }
+    const box = selected || { ...origin, width, height };
+    placed.push(box);
+    return { ...entry, resolvedX: box.x, resolvedY: box.y };
+  });
+  return positionedEntries
     .map(
       (entry) => `
-        <div class="hint-badge hint-${entry.type}" style="left:${entry.x * zoomLevel}px;top:${entry.y * zoomLevel}px;">
+        <div class="hint-badge hint-${entry.type}" data-hint-id="${entry.id}" style="left:${entry.resolvedX}px;top:${entry.resolvedY}px;">
           ${entry.hint}
         </div>
       `
@@ -6252,6 +6302,7 @@ window.__ltpVisualTestStep = async (step) => {
   }
 
   if (step === "internal-frame-layout") {
+    hideHints();
     const hostFrameId = tree().hostFrameId;
     activeFrameId = hostFrameId;
     replaceSelection(hostFrameId);
@@ -6282,6 +6333,87 @@ window.__ltpVisualTestStep = async (step) => {
       "Optimize three independent entities inside a frame",
       distinctColumns > 1 && distinctRows <= 2 && contained && issues.length === 0,
       `Columns=${distinctColumns}; rows=${distinctRows}; frame=${frameBox.width}x${frameBox.height}; contained=${contained}; geometry issues=${issues.length}.`
+    );
+  }
+
+  if (step === "hint-collision-avoidance") {
+    fitView();
+    showHints();
+    const badges = [...document.querySelectorAll(".hint-badge")].map((element) => ({
+      id: element.dataset.hintId,
+      box: element.getBoundingClientRect()
+    }));
+    const indicators = [...document.querySelectorAll(".link-target.hint-visible")].map((element) => ({
+      id: element.dataset.elementId,
+      box: element.getBoundingClientRect()
+    }));
+    const rectanglesOverlap = (left, right, gap = 1) =>
+      left.left < right.right + gap &&
+      left.right + gap > right.left &&
+      left.top < right.bottom + gap &&
+      left.bottom + gap > right.top;
+    const overlappingBadgePairs = badges.flatMap((entry, index) =>
+      badges.slice(index + 1)
+        .filter((candidate) => rectanglesOverlap(entry.box, candidate.box))
+        .map((candidate) => `${entry.id}:${candidate.id}`)
+    );
+    const indicatorCollisions = badges.flatMap((entry) =>
+      indicators
+        .filter((candidate) => rectanglesOverlap(entry.box, candidate.box, 0))
+        .map((candidate) => `${entry.id}:${candidate.id}`)
+    );
+    const hasMultiLetterHints = hintEntries.some((entry) => entry.hint.length > 1);
+    return result(
+      "Keep dense keyboard hints legible",
+      badges.length === hintEntries.filter((entry) => entry.type !== "assumption").length &&
+        hasMultiLetterHints &&
+        overlappingBadgePairs.length === 0 &&
+        indicatorCollisions.length === 0,
+      `Hints=${badges.length}; multi-letter=${hasMultiLetterHints}; hint overlaps=${overlappingBadgePairs.length}; link-indicator overlaps=${indicatorCollisions.length}.`
+    );
+  }
+
+  if (step === "boundary-peer-frame-layout") {
+    hideHints();
+    cancelContext();
+    const hostFrameId = tree().hostFrameId;
+    activeFrameId = hostFrameId;
+    replaceSelection(hostFrameId);
+    await createFrame();
+    const peerFrameId = selectedElementId;
+    frameById()[peerFrameId].name = "CSF boundary peers";
+    const peerIds = [];
+    for (const label of ["Maximum revenues", "Optimized cost", "High return", "Customer retention"]) {
+      peerIds.push(await createNode(peerFrameId, "criticalSuccessFactor", label));
+    }
+    const goal = tree().nodes.find((node) => node.type === "goal" && node.frameId !== peerFrameId);
+    for (const peerId of peerIds) {
+      await createLink(peerId, goal.id, { selectCreated: false, persistAfter: false, renderAfter: false });
+    }
+    tree().layout.direction = "BT";
+    await persist("Create boundary peer frame visual fixture");
+    await runAutoLayout();
+    const boxes = peerIds.map((nodeId) => layoutNode(nodeId));
+    const frameBox = layoutFrame(peerFrameId);
+    const rowCount = new Set(boxes.map((box) => box.y)).size;
+    const columnCount = new Set(boxes.map((box) => box.x)).size;
+    const contained = boxes.every(
+      (box) =>
+        box.x >= frameBox.x &&
+        box.y >= frameBox.y &&
+        box.x + box.width <= frameBox.x + frameBox.width &&
+        box.y + box.height <= frameBox.y + frameBox.height
+    );
+    const strategy = tree().layout.optimization?.[peerFrameId]?.strategy;
+    const issues = await window.ltpPrototype.validateLayout(workspaceData);
+    replaceSelection(peerFrameId);
+    render();
+    fitView();
+    return result(
+      "Keep four CSFs in one layer inside their frame",
+      Boolean(goal) && rowCount === 1 && columnCount === peerIds.length && contained &&
+        strategy === "shared-boundary-layer" && issues.length === 0,
+      `Rows=${rowCount}; columns=${columnCount}; contained=${contained}; strategy=${strategy}; frame=${frameBox.width}x${frameBox.height}; geometry issues=${issues.length}.`
     );
   }
 

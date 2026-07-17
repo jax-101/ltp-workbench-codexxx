@@ -1043,3 +1043,35 @@ Criterios de aceptacion:
 - Una linea seleccionada o con contexto de assumptions conserva su indicador.
 - Al cerrar hints o el contexto, el resto vuelve a quedar oculto.
 - La informacion completa sigue disponible en inspector y Workbench global.
+
+### F-080: Hints densos sin oclusion
+
+Feedback: cuando varios hints estan muy juntos, una etiqueta puede ocultar la
+letra o secuencia situada detras. Los hints tampoco deben tapar el contador de
+assumptions del link que permiten seleccionar.
+
+Estado: implementado y validado en `3C.14c.2e`.
+
+Criterios de aceptacion:
+
+- Las etiquetas visibles no se solapan entre si, tambien con zoom reducido.
+- Las secuencias de dos letras conservan tamano y separacion legibles.
+- Los indicadores de links se reservan como obstaculos para las etiquetas.
+- La resolucion es determinista y no modifica la identidad ni el orden de hints.
+
+### F-081: Capas internas informadas por conexiones exteriores
+
+Feedback: cuatro CSF bien alineados no deben convertirse en una cuadricula
+`2x2` al introducirlos en un frame. Si comparten el mismo Goal exterior,
+siguen siendo pares de una misma capa semantica y deben disponerse en linea
+horizontal cuando la direccion preferente es vertical.
+
+Estado: implementado y validado en `3C.14c.2e`.
+
+Criterios de aceptacion:
+
+- Los elementos que comparten un extremo exterior forman una capa interna.
+- La capa se extiende sobre el eje perpendicular a la direccion preferente.
+- Se conserva el orden lateral previo para proteger el mapa mental.
+- El frame crece hasta contener completamente la fila.
+- Los elementos realmente desconectados mantienen su cuadricula compacta.

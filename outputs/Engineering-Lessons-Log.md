@@ -1160,9 +1160,42 @@ Aplicacion futura: clasificar informacion por tarea; usar revelado progresivo
 para diagnostico; conservar el elemento activo como ancla; y probar tanto el
 estado silencioso como el modo de inspeccion.
 
+### L-100: Un subgrafo necesita informacion de sus fronteras
+
+Fecha: 2026-07-17
+
+Evidencia: cuatro CSF compartian Goal y capa en el arbol completo, pero al
+meterlos en un frame sus enlaces exteriores desaparecian del problema local.
+El empaquetador los clasificaba como desconectados y producia una cuadricula
+`2x2` que empeoraba las rutas.
+
+Aprendizaje: la composicion jerarquica no permite aislar cada contenedor por
+completo. El sublayout debe conservar una interfaz de frontera minima que
+represente adyacencia, rango o puertos exteriores sin incorporar todo el grafo.
+
+Aplicacion futura: definir contratos de frontera para subgrafos; probar nodos
+sin enlaces internos pero con fan-in/fan-out exterior; y comprobar juntos el
+layout local, el del padre y las rutas que cruzan el borde.
+
+### L-101: Las etiquetas de overlay se resuelven en espacio de pantalla
+
+Fecha: 2026-07-17
+
+Evidencia: los hints tenian anclas separadas en el canvas, pero al reducir el
+zoom esa distancia se comprimia mientras las etiquetas conservaban su tamano.
+Una secuencia ocultaba otra y podia tapar el indicador del link.
+
+Aprendizaje: overlays de tamano fijo y geometria escalada viven en sistemas de
+coordenadas distintos. Su legibilidad solo puede garantizarse despues de la
+transformacion final, tratando otros overlays como obstaculos.
+
+Aplicacion futura: resolver tooltips, badges y handles en pixeles de pantalla;
+reservar controles interactivos; limitar al viewport; y probar densidad con
+zoom minimo y etiquetas de longitud variable.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-100`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-102`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

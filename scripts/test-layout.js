@@ -282,6 +282,83 @@ const run = async () => {
   );
   assert.deepEqual(validateComposedGeometry(disconnectedResult), [], "a compact disconnected container must remain valid");
 
+  const boundaryPeerContainer = structuredClone(fixture);
+  const boundaryPeerTree = treeFor(boundaryPeerContainer);
+  const boundaryGoalId = boundaryPeerTree.nodes[0].id;
+  const boundaryPeerIds = boundaryPeerTree.nodes.slice(1, 5).map((node) => node.id);
+  boundaryPeerTree.layout.direction = "BT";
+  boundaryPeerTree.links = boundaryPeerIds.map((nodeId, index) => ({
+    id: `boundary-peer-${index + 1}`,
+    sourceNodeId: nodeId,
+    targetNodeId: boundaryGoalId
+  }));
+  addContainerFrame(
+    boundaryPeerContainer,
+    "frame-four-boundary-peers",
+    boundaryPeerTree.hostFrameId,
+    boundaryPeerIds
+  );
+  const initialBoundaryPeerOrder = [...boundaryPeerIds].sort(
+    (left, right) => boundaryPeerTree.layout.nodes[left].x - boundaryPeerTree.layout.nodes[right].x
+  );
+  const boundaryPeerResult = await runComposedLayout(boundaryPeerContainer);
+  const boundaryPeerResultTree = treeFor(boundaryPeerResult);
+  const boundaryPeerBoxes = boundaryPeerIds.map((nodeId) => boundaryPeerResultTree.layout.nodes[nodeId]);
+  const boundaryPeerFrameBox = canvasFor(boundaryPeerResult).layout.frames["frame-four-boundary-peers"];
+  assert.equal(
+    new Set(boundaryPeerBoxes.map((box) => box.y)).size,
+    1,
+    "entities connected to the same external Goal must share one internal layer"
+  );
+  assert.equal(
+    new Set(boundaryPeerBoxes.map((box) => box.x)).size,
+    boundaryPeerIds.length,
+    "boundary peers must spread along the axis perpendicular to the preferred direction"
+  );
+  assert.deepEqual(
+    [...boundaryPeerIds].sort(
+      (left, right) => boundaryPeerResultTree.layout.nodes[left].x - boundaryPeerResultTree.layout.nodes[right].x
+    ),
+    initialBoundaryPeerOrder,
+    "the boundary layer must preserve the user's previous cross-axis order"
+  );
+  assert(
+    boundaryPeerBoxes.every((box) => boxContains(boundaryPeerFrameBox, box)),
+    "the frame must expand to contain the complete boundary peer layer"
+  );
+  assert.equal(
+    boundaryPeerResultTree.layout.optimization["frame-four-boundary-peers"].strategy,
+    "shared-boundary-layer",
+    "the optimizer must record when external context determines an internal layer"
+  );
+  assert.deepEqual(
+    validateComposedGeometry(boundaryPeerResult),
+    [],
+    "a boundary-aware internal layer must preserve composed geometry"
+  );
+
+  const horizontalBoundaryPeerContainer = structuredClone(boundaryPeerContainer);
+  treeFor(horizontalBoundaryPeerContainer).layout.direction = "LR";
+  const horizontalBoundaryPeerResult = await runComposedLayout(horizontalBoundaryPeerContainer);
+  const horizontalBoundaryPeerBoxes = boundaryPeerIds.map(
+    (nodeId) => treeFor(horizontalBoundaryPeerResult).layout.nodes[nodeId]
+  );
+  assert.equal(
+    new Set(horizontalBoundaryPeerBoxes.map((box) => box.x)).size,
+    1,
+    "horizontal diagrams must place boundary peers in one vertical layer"
+  );
+  assert.equal(
+    new Set(horizontalBoundaryPeerBoxes.map((box) => box.y)).size,
+    boundaryPeerIds.length,
+    "horizontal boundary peers must spread vertically"
+  );
+  assert.deepEqual(
+    validateComposedGeometry(horizontalBoundaryPeerResult),
+    [],
+    "horizontal boundary layers must preserve composed geometry"
+  );
+
   const connectedContainer = structuredClone(fixture);
   addContainerFrame(connectedContainer, "frame-three-connected", treeFor(connectedContainer).hostFrameId, threeNodeIds);
   treeFor(connectedContainer).layout.direction = "TB";

@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.14b.0`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.14c.2e`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -22,7 +22,7 @@ Para terminar, cierra la aplicacion con `Cmd+Q`.
 npm run test:shortcuts
 ```
 
-El comando prueba los 34 comandos y sus 43 combinaciones sobre copias limpias del ejemplo. Guarda `report.md`, `report.json` y una captura por binding en `outputs/shortcut-audit/<build>/`. Un resultado correcto termina con `passed: 43` y `failed: 0`.
+El comando prueba los 35 comandos y sus 44 combinaciones sobre copias limpias del ejemplo. Guarda `report.md`, `report.json` y una captura por binding en `outputs/shortcut-audit/<build>/`. Un resultado correcto termina con `passed: 44` y `failed: 0`.
 
 ## Prueba visual automatizada
 
@@ -32,11 +32,11 @@ La regresion visual puede ejecutarse sin intervencion manual:
 npm run test:visual
 ```
 
-El comando abre un workspace aislado, ejecuta minimizacion de frames, layout interno, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo, conexion y ruptura de ciclos, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 37 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
+El comando abre un workspace aislado, ejecuta minimizacion de frames, layout interno, seleccion, reasignacion, Layout compuesto, arrastre, Undo/Redo, conexion y ruptura de ciclos, y termina con cuatro escenarios aleatorios deterministas antes/despues. Guarda 39 capturas numeradas junto con `report.md` en `outputs/test-evidence/<build>/`.
 
 Las capturas `03` a `06` muestran minimizar, Undo, Redo y expandir. La captura `26-readable-routing.png` debe mostrar 18 entidades, rutas curvas sin entidades atravesadas, los tres CSF en una misma fila y tres puntas separadas sobre el borde inferior del Goal.
 
-La captura `27-internal-frame-layout.png` comprueba que tres entidades independientes forman una cuadricula compacta. La captura `28-multi-entity-frame-targets.png` comprueba que un frame usado inicialmente como contexto reaparece como destino tras seleccionar dos entidades con `M`. La captura `29-cycle-breaking.png` comprueba que un ciclo conserva sus tres links y produce una unica excepcion. Las capturas `30` a `37` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, excepciones, rupturas, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
+La captura `27-hint-collision-avoidance.png` comprueba 40 hints sin solapes ni indicadores ocultos. La captura `28-internal-frame-layout.png` comprueba que tres entidades realmente independientes forman una cuadricula compacta. La captura `29-boundary-peer-frame-layout.png` comprueba que cuatro CSF conectados al mismo Goal exterior forman una sola fila dentro de su frame. La captura `30-multi-entity-frame-targets.png` comprueba que un frame usado inicialmente como contexto reaparece como destino tras seleccionar dos entidades con `M`. La captura `31-cycle-breaking.png` comprueba que un ciclo conserva sus tres links y produce una unica excepcion. Las capturas `32` a `39` usan las semillas `4101` a `4104`. Sus informes registran cruces, codos, excepciones, rupturas, longitud, frames verticales y problemas geometricos. Para ejecutar solamente la evaluacion estructural y ver la tabla de resultados:
 
 ```bash
 npm run test:layout-random

@@ -159,6 +159,55 @@ const compactDisconnectedItems = (items, sidePadding, topPadding, spacing) => {
   });
 };
 
+const sharedBoundaryLayer = (containerFrameId, items, links, nodeOwners, frameById) => {
+  const itemIds = new Set(items.map((item) => item.id));
+  const peersByBoundary = new Map();
+  for (const link of links) {
+    if (link.type === "conflict" || link.directionality === "UNDIRECTED") continue;
+    const source = directItemForNode(containerFrameId, link.sourceNodeId, nodeOwners, frameById);
+    const target = directItemForNode(containerFrameId, link.targetNodeId, nodeOwners, frameById);
+    if (Boolean(source) === Boolean(target)) continue;
+    const insideId = source || target;
+    if (!itemIds.has(insideId)) continue;
+    const boundaryId = source ? link.targetNodeId : link.sourceNodeId;
+    const key = `${source ? "out" : "in"}:${boundaryId}`;
+    if (!peersByBoundary.has(key)) peersByBoundary.set(key, new Set());
+    peersByBoundary.get(key).add(insideId);
+  }
+
+  const candidates = [...peersByBoundary.entries()]
+    .filter(([, peerIds]) => peerIds.size >= 2)
+    .sort((left, right) => right[1].size - left[1].size || left[0].localeCompare(right[0]));
+  if (!candidates.length) return null;
+  const [boundaryKey, peerIds] = candidates[0];
+  return peerIds.size === items.length ? { boundaryKey, peerIds } : null;
+};
+
+const packSharedBoundaryLayer = (items, direction, sidePadding, topPadding, spacing, referenceChildren = []) => {
+  const referenceById = new Map(referenceChildren.map((child) => [child.id, child]));
+  const verticalLayers = direction === "TB" || direction === "BT";
+  const ordered = [...items].sort((left, right) => {
+    const leftReference = referenceById.get(left.id) || left;
+    const rightReference = referenceById.get(right.id) || right;
+    const crossDifference = verticalLayers
+      ? centerOf(leftReference).x - centerOf(rightReference).x
+      : centerOf(leftReference).y - centerOf(rightReference).y;
+    return Math.abs(crossDifference) > 1 ? crossDifference : left.id.localeCompare(right.id);
+  });
+  let cursor = verticalLayers ? sidePadding : topPadding;
+  for (const item of ordered) {
+    if (verticalLayers) {
+      item.x = cursor;
+      item.y = topPadding;
+      cursor += item.width + spacing;
+    } else {
+      item.x = sidePadding;
+      item.y = cursor;
+      cursor += item.height + spacing;
+    }
+  }
+};
+
 const centerOf = (box) => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
 
 const directionVector = (direction) =>
@@ -951,9 +1000,13 @@ const runComposedLayout = async (workspace, options = {}) => {
       .filter(Boolean);
     let elkChildren = [];
     let graphEdges = [];
+    let boundaryLayer = null;
     let preserveCurrentLayout = false;
     if (items.length) {
       graphEdges = collapsedEdges(frameId, links, nodeOwners, frameById);
+      boundaryLayer = graphEdges.length === 0
+        ? sharedBoundaryLayer(frameId, items, links, nodeOwners, frameById)
+        : null;
       const cycleBreak = breakCyclesForLayout(items.map((item) => item.id), graphEdges);
       const canonicalConstraints = compilePresentationConstraints({
         items,
@@ -1037,7 +1090,16 @@ const runComposedLayout = async (workspace, options = {}) => {
       }
     }
     if (!isRoot && frame.kind === "container" && graphEdges.length === 0) {
-      compactDisconnectedItems(items, sidePadding, topPadding, spacingNodeNode);
+      if (boundaryLayer) {
+        packSharedBoundaryLayer(items, direction, sidePadding, topPadding, spacingNodeNode, currentChildren);
+        optimization[frameId] = {
+          strategy: "shared-boundary-layer",
+          boundaryKey: boundaryLayer.boundaryKey,
+          peers: boundaryLayer.peerIds.size
+        };
+      } else {
+        compactDisconnectedItems(items, sidePadding, topPadding, spacingNodeNode);
+      }
     }
     for (const item of items) {
       if (!item.pinned) continue;

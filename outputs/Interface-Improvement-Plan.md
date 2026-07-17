@@ -737,6 +737,10 @@ Subgates:
   quedan ocultos por defecto, aparecen con `H` y permanecen visibles solo en
   la linea seleccionada o activa. Evidencia en
   `outputs/On-Demand-Assumption-Indicators-3C.14c.2d.md`.
+  Subincremento `3C.14c.2e` en PASS: los hints densos evitan colisiones en
+  espacio de pantalla y los frames conservan capas internas inferidas desde
+  conexiones exteriores compartidas. Evidencia en
+  `outputs/Boundary-Aware-Frame-Layout-3C.14c.2e.md`.
 
 Criterios de aceptacion de `3C.14c.2`:
 

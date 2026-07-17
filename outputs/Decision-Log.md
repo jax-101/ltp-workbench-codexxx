@@ -782,3 +782,25 @@ Razon: coverage es informacion de revision, no parte de la topologia primaria.
 Mostrarla siempre compite con flechas, nodos y conflictos; ocultarla por
 completo dificultaria descubrir gaps. El revelado progresivo mantiene ambas
 necesidades sin duplicar estados ni controles.
+
+### D-106: El layout de un frame conserva contexto de frontera
+
+Decision: el sublayout de un frame no considera desconectado a un elemento si
+tiene relaciones que cruzan el borde. Los elementos directos que comparten el
+mismo extremo exterior forman una sola capa interna; un frame anidado sigue
+actuando como una unidad en el layout de su padre.
+
+Razon: eliminar todas las relaciones exteriores al resolver un contenedor
+destruye informacion de rango y convierte capas semanticas en cuadriculas
+arbitrarias. Incorporar solo la firma de frontera necesaria mantiene la
+composicion jerarquica sin aplanar el grafo completo.
+
+### D-107: Los hints participan en un layout de etiquetas
+
+Decision: las posiciones de hints son anclas, no coordenadas finales. Antes de
+renderizar se busca una posicion cercana libre de otras etiquetas y de los
+indicadores de links, dentro del viewport actual y en pixeles de pantalla.
+
+Razon: con zoom, una separacion suficiente en coordenadas logicas puede quedar
+por debajo del ancho fijo de una etiqueta. Resolver colisiones en espacio de
+pantalla garantiza legibilidad sin alterar el diagrama ni el modelo de input.
