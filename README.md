@@ -1,5 +1,7 @@
 # LTP Workbench
 
+[![Quality Gate](https://github.com/jax-101/ltp-workbench/actions/workflows/quality.yml/badge.svg)](https://github.com/jax-101/ltp-workbench/actions/workflows/quality.yml)
+
 Aplicacion de escritorio standalone para trabajar problemas con la metodologia Logical Thinking Process de William Dettmer.
 
 ## Contexto para nuevas sesiones
@@ -7,6 +9,7 @@ Aplicacion de escritorio standalone para trabajar problemas con la metodologia L
 Antes de una sesion larga de desarrollo o una nueva ventana de contexto, lee
 `CONTEXT.md`. Resume arquitectura, tecnologias, reglas, estado y verificaciones.
 `ARCHITECTURE.md` contiene las reglas normativas del Diseno Modular Estricto.
+El estado completo del plan se genera en `outputs/Plan-Status.md`.
 
 ## Estado actual
 
@@ -51,10 +54,14 @@ Los aprendizajes reutilizables del desarrollo se mantienen en `outputs/Engineeri
 
 ```bash
 npm run test:architecture
+npm run test:modules
 npm run test:prototype
 npm run test:visual
 npm run test:shortcuts
 ```
+
+GitHub ejecuta primero los contratos de arquitectura y los UAT de modulo. La
+regresion funcional solo comienza cuando ese job termina correctamente.
 
 `test:shortcuts` deriva su inventario del mismo registro que alimenta el panel Keyboard, ejecuta cada combinacion sobre un workspace aislado y guarda un informe con una captura por binding en `outputs/shortcut-audit/<build>/`.
 

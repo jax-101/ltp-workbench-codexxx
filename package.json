@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.14d.2",
-    "name": "Module Contracts and Acceptance",
+    "id": "3C.14d.3",
+    "name": "Plan Normalization and CI Gates",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -18,6 +18,9 @@
     "test:contracts": "node scripts/test-contract-inventory.js",
     "test:module-contracts": "node scripts/test-module-contracts.js",
     "test:modules": "node scripts/test-module-acceptance.js",
+    "test:plan": "node scripts/test-plan.js",
+    "test:ci": "node scripts/test-ci-workflow.js",
+    "plan:write": "node scripts/plan-status.js --write",
     "scope:status": "node scripts/scope-status.js",
     "scope:record-effort": "node scripts/record-effort.js",
     "test:complex": "LTP_COMPLEX_TEST=1 electron .",

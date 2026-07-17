@@ -4,14 +4,17 @@ Before changing this repository:
 
 1. Read `CONTEXT.md` for current architecture, technology, status and commands.
 2. Read `ARCHITECTURE.md` for mandatory module boundaries and test policy.
-3. Check `outputs/Interface-Improvement-Plan.md` for the active increment.
-4. Check `planning/work-packages.json` for its scope ID, estimate and status.
-5. Check `planning/unknowns.json` and `planning/effort-log.json` for discoveries,
+3. Check generated `outputs/Plan-Status.md` for the active package and general roadmap.
+4. Check `outputs/Interface-Improvement-Plan.md` for the requirements narrative.
+5. Check `planning/work-packages.json` for scope IDs, estimates and statuses.
+6. Check `planning/unknowns.json` and `planning/effort-log.json` for discoveries,
    actual usage and prior estimate revisions.
 
 Work in one small, reversible capability at a time. Add unit, contract or
 module acceptance evidence at the boundary being changed. Run
 `npm run test:architecture` before broader suites.
+Never edit `outputs/Plan-Status.md` manually; change the canonical planning
+registers and run `npm run plan:write`.
 
 Do not add behavior directly to a legacy oversized file without first checking
 whether the touched responsibility can be extracted safely. Existing no-growth

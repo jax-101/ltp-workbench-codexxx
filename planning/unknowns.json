@@ -111,6 +111,16 @@
       "resultingPackages": ["P46"],
       "scopeAddedTokens": 0,
       "note": "runComposedLayout now accepts an explicit timestamp while retaining the default runtime clock."
+    },
+    {
+      "id": "U012",
+      "title": "The new CI workflow has not yet run in the hosted GitHub environment",
+      "discoveredDuring": "P47",
+      "status": "assessed",
+      "impact": "medium",
+      "resultingPackages": ["P47"],
+      "scopeAddedTokens": 0,
+      "note": "Static CI contract and all constituent commands pass locally; resolve after observing the first hosted run."
     }
   ]
 }

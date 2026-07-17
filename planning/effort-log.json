@@ -110,6 +110,15 @@
       "actualTokens": 233658,
       "source": "codex-goal",
       "note": "Final goal usage; elapsed runtime 549 seconds."
+    },
+    {
+      "id": "E0007",
+      "packageId": "P47",
+      "recordedAt": "2026-07-17T23:25:16.372Z",
+      "status": "tracking",
+      "actualTokens": null,
+      "source": "codex-goal",
+      "note": "Goal-backed measurement started for plan normalization and CI architecture gates."
     }
   ],
   "estimateRevisions": [

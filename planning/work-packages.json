@@ -51,7 +51,7 @@
     { "id": "P44", "phase": "Build 3C.14d.0", "name": "Strict modular architecture, context and gate foundation", "status": "done", "completion": 100, "estimatedTokens": 28000, "originUnknownIds": ["U004"] },
     { "id": "P45", "phase": "Build 3C.14d.1", "name": "Interaction and contract inventory", "status": "done", "completion": 100, "estimatedTokens": 35000, "originUnknownIds": ["U004"] },
     { "id": "P46", "phase": "Build 3C.14d.2", "name": "Module charters and module acceptance suites", "status": "done", "completion": 100, "estimatedTokens": 80000, "revisedEstimateTokens": 250000, "originUnknownIds": ["U004", "U008", "U009", "U010", "U011"] },
-    { "id": "P47", "phase": "Build 3C.14d.3", "name": "Plan normalization and CI architecture gates", "status": "planned", "completion": 0, "estimatedTokens": 25000, "revisedEstimateTokens": 75000, "originUnknownIds": ["U004", "U010"] },
+    { "id": "P47", "phase": "Build 3C.14d.3", "name": "Plan normalization and CI architecture gates", "status": "done", "completion": 100, "estimatedTokens": 25000, "revisedEstimateTokens": 75000, "originUnknownIds": ["U004", "U010", "U012"] },
     { "id": "P48", "phase": "Build 3C.15", "name": "Definition schema, canonical serialization and hash", "status": "planned", "completion": 0, "estimatedTokens": 55000, "originUnknownIds": ["U001"] },
     { "id": "P49", "phase": "Build 3C.15", "name": "Definition loader, security and rescue mode", "status": "planned", "completion": 0, "estimatedTokens": 65000, "originUnknownIds": ["U001"] },
     { "id": "P50", "phase": "Build 3C.15", "name": "Goal Tree, CRT and EC declarative packages", "status": "planned", "completion": 0, "estimatedTokens": 70000, "originUnknownIds": ["U001"] },

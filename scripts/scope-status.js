@@ -50,7 +50,7 @@ function validateRegister(register) {
   return ids;
 }
 
-function validateEffortLog(effortLog, packageIds) {
+function validateEffortLog(effortLog, register, packageIds) {
   if (effortLog.schemaVersion !== 1 || !Array.isArray(effortLog.measurements) ||
       !Array.isArray(effortLog.estimateRevisions)) {
     throw new Error("Unsupported effort log");
@@ -74,7 +74,18 @@ function validateEffortLog(effortLog, packageIds) {
     eventIds.add(event.id);
   }
 
+  const latestActualByPackage = new Map();
+  for (const event of effortLog.measurements) {
+    const previous = latestActualByPackage.get(event.packageId);
+    if (event.actualTokens !== null && previous?.actualTokens !== null &&
+        event.actualTokens < previous.actualTokens) {
+      throw new Error(`Actual effort decreases between snapshots for ${event.packageId}`);
+    }
+    latestActualByPackage.set(event.packageId, event);
+  }
+
   const revisionIds = new Set();
+  const revisionValues = new Map(register.packages.map((item) => [item.id, item.estimatedTokens]));
   for (const revision of effortLog.estimateRevisions) {
     if (!/^R\d{4,}$/.test(revision.id) || revisionIds.has(revision.id) ||
         !packageIds.has(revision.packageId)) {
@@ -85,6 +96,14 @@ function validateEffortLog(effortLog, packageIds) {
         !revision.reason) {
       throw new Error(`Invalid estimate revision values: ${revision.id}`);
     }
+    if (revision.previousTokens !== revisionValues.get(revision.packageId)) {
+      throw new Error(`Broken estimate revision chain: ${revision.id}`);
+    }
+    if (!Array.isArray(revision.evidenceEvents) || revision.evidenceEvents.length === 0 ||
+        revision.evidenceEvents.some((id) => !eventIds.has(id))) {
+      throw new Error(`Invalid estimate revision evidence: ${revision.id}`);
+    }
+    revisionValues.set(revision.packageId, revision.revisedTokens);
     revisionIds.add(revision.id);
   }
 }
@@ -94,6 +113,7 @@ function validateUnknowns(unknownRegister, register, packageIds) {
     throw new Error("Unsupported unknown register");
   }
   const unknownIds = new Set();
+  const unknownsById = new Map();
   const packagesById = new Map(register.packages.map((item) => [item.id, item]));
   for (const unknown of unknownRegister.unknowns) {
     if (!/^U\d{3,}$/.test(unknown.id) || unknownIds.has(unknown.id) ||
@@ -107,11 +127,19 @@ function validateUnknowns(unknownRegister, register, packageIds) {
         throw new Error(`${unknown.id} -> ${packageId} is not bidirectional`);
       }
     }
+    if (unknown.scopeAddedTokens !== null &&
+        (!Number.isInteger(unknown.scopeAddedTokens) || unknown.scopeAddedTokens < 0)) {
+      throw new Error(`${unknown.id} has invalid added scope`);
+    }
+    unknownsById.set(unknown.id, unknown);
     unknownIds.add(unknown.id);
   }
   for (const item of register.packages) {
     for (const unknownId of item.originUnknownIds || []) {
       if (!unknownIds.has(unknownId)) throw new Error(`${item.id} references missing ${unknownId}`);
+      if (!(unknownsById.get(unknownId).resultingPackages || []).includes(item.id)) {
+        throw new Error(`${item.id} -> ${unknownId} is not bidirectional`);
+      }
     }
   }
 }
@@ -122,7 +150,7 @@ function latestMeasurements(events) {
 
 function summarize(register, effortLog = loadEffortLog(), unknownRegister = loadUnknowns()) {
   const packageIds = validateRegister(register);
-  validateEffortLog(effortLog, packageIds);
+  validateEffortLog(effortLog, register, packageIds);
   validateUnknowns(unknownRegister, register, packageIds);
   const latestRevisions = new Map(
     effortLog.estimateRevisions.map((revision) => [revision.packageId, revision])

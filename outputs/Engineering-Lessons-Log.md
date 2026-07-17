@@ -1314,9 +1314,26 @@ en la firma.
 Aplicacion futura: inyectar esas entradas en el limite publico, fijarlas en los
 fixtures y mantener al menos una prueba de repeticion exacta por modulo.
 
+### L-109: La documentacion ejecutable necesita una unica direccion de escritura
+
+Fecha: 2026-07-18
+
+Evidencia: el roadmap, el contexto y el baseline repetian paquete activo,
+estados y porcentaje. Las comprobaciones parciales detectaban algunas cifras,
+pero no podian demostrar que los 78 paquetes aparecieran una sola vez ni que la
+secuencia general fuera completa.
+
+Aprendizaje: una fuente canonica no basta si las vistas derivadas siguen
+editandose a mano. La proyeccion debe generarse y el gate debe comparar el
+artefacto completo, incluyendo pruebas negativas de omision y duplicacion.
+
+Aplicacion futura: asignar ownership por dato, generar vistas para personas,
+fallar ante drift y hacer que CI ejecute esa comprobacion antes de las pruebas
+de comportamiento.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-109`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-110`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

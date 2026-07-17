@@ -1,7 +1,7 @@
 # Scope and Effort Baseline
 
 Updated: 2026-07-18  
-Baseline build: `3C.14d.2`
+Baseline build: `3C.14d.3`
 Machine-readable register: `planning/work-packages.json`
 Actual-effort ledger: `planning/effort-log.json`  
 Unknown register: `planning/unknowns.json`
@@ -55,18 +55,18 @@ its calibration class.
 | Measure | Value |
 | --- | ---: |
 | Known packages | 78 |
-| Completed packages | 48 |
+| Completed packages | 49 |
 | Partially completed packages | 1 |
-| Planned packages | 29 |
+| Planned packages | 28 |
 | Total estimated scope | 4,056,000 tokens |
-| Earned effort | 2,137,750 tokens |
-| Remaining effort | 1,918,250 tokens |
-| **Weighted scope complete** | **52.7%** |
+| Earned effort | 2,212,750 tokens |
+| Remaining effort | 1,843,250 tokens |
+| **Weighted scope complete** | **54.6%** |
 
 `P18` is credited at 85%; its remaining nested-frame optimization is represented
 again only where it becomes distinct advanced layout work, avoiding double
-counting. The next active package is `P47`, plan normalization and CI gates for
-strict modular due diligence.
+counting. The next active package is `P48`, the definition schema, canonical
+serialization and hash foundation for Definition Runtime.
 
 ## Portfolio View
 
@@ -76,7 +76,7 @@ strict modular due diligence.
 | Iterations 1 through 3A | P01-P11 | 378k | 378k |
 | Layout builds 3B | P12-P18 | 323k | 314.75k |
 | Builds 3C through modular foundation | P19-P44 | 990k | 990k |
-| Modular due diligence | P45-P47 | 360k | 285k |
+| Modular due diligence | P45-P47 | 360k | 360k |
 | Definition Runtime | P48-P51 | 245k | 0 |
 | Interaction backlog | P52-P54 | 82k | 0 |
 | Frame focus | P55-P57 | 148k | 0 |
@@ -147,8 +147,9 @@ the denominator from that point onward.
 | U009 | Browser globals and script-order dependencies | Assessed | Covered by P46, P61 and P62 without adding scope |
 | U010 | Long-thread context overhead | Mitigated | P46 revised to 250k and P47 to 75k; broader recalibration deferred |
 | U011 | Layout output depended on implicit wall clock | Resolved | Layout requests accept an explicit timestamp for deterministic acceptance |
+| U012 | First hosted CI execution | Assessed | Local contract passes; first GitHub run pending observation |
 
-Current register: 11 unknowns; five converted, two assessed, two mitigated and
+Current register: 12 unknowns; five converted, three assessed, two mitigated and
 two resolved. There are no untriaged open unknowns today. This does not
 imply that future unknowns do not exist; it states only what has been
 discovered.
@@ -207,7 +208,7 @@ completion percentage, and `Planned` packages receive no credit.
 | P44 | Strict modular architecture, context and gate foundation | Done | 100% | 28k |
 | P45 | Interaction and contract inventory | Done | 100% | 35k |
 | P46 | Module charters and module acceptance suites | Done | 100% | 80k -> 250k |
-| P47 | Plan normalization and CI architecture gates | Planned | 0% | 25k -> 75k |
+| P47 | Plan normalization and CI architecture gates | Done | 100% | 25k -> 75k |
 | P48 | Definition schema, canonical serialization and hash | Planned | 0% | 55k |
 | P49 | Definition loader, security and rescue mode | Planned | 0% | 65k |
 | P50 | Goal Tree, CRT and EC declarative packages | Planned | 0% | 70k |

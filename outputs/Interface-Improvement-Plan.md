@@ -780,9 +780,9 @@ Criterios de aceptacion de `3C.14c.2`:
 
 ### 3C.14d: due diligence de Diseno Modular Estricto
 
-Estado: activo. La base normativa, el inventario ejecutable y `P46` estan en
-PASS. Queda `P47`, normalizacion del plan y gates de CI, antes de iniciar las
-extracciones estructurales.
+Estado: PASS. La base normativa, el inventario ejecutable, los contratos de
+modulo y la gobernanza de entrega estan automatizados. El siguiente bloque es
+`3C.15`, Definition Runtime.
 
 Incluye:
 
@@ -804,6 +804,10 @@ Incluye:
   interacciones asignadas a un contrato. Siete modulos implementados se prueban
   como procesos independientes; Diagram Studio conserva un contrato planificado.
   Evidencia en `outputs/Module-Contracts-and-Acceptance-P46.md`.
+- `P47` en PASS: 16 etapas y 78 paquetes tienen cobertura exacta en el roadmap
+  canonico; `Plan-Status.md` se genera desde los registros, y GitHub bloquea la
+  regresion funcional hasta superar arquitectura y UAT modulares. Evidencia en
+  `outputs/Plan-Normalization-and-CI-P47.md`.
 
 Criterios de aceptacion:
 

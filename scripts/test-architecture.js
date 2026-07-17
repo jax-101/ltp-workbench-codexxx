@@ -3,6 +3,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 require("./test-contract-inventory");
 require("./test-module-contracts");
+require("./test-plan");
+require("./test-ci-workflow");
 const { loadRegister, summarize } = require("./scope-status");
 
 const root = path.join(__dirname, "..");

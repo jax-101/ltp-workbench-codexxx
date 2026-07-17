@@ -1,13 +1,14 @@
 # LTP Workbench - Session Context
 
 Updated: 2026-07-18
-Current build: `3C.14d.2` - Module Contracts and Acceptance
+Current build: `3C.14d.3` - Plan Normalization and CI Gates
 Architecture: strict modular monolith with a headless core
-Current scope progress: `52.7%` estimated weighted scope
+Current scope progress: `54.6%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;
-`outputs/Interface-Improvement-Plan.md` is the delivery roadmap, and
+`outputs/Plan-Status.md` is the generated delivery roadmap,
+`outputs/Interface-Improvement-Plan.md` retains the requirements narrative, and
 `outputs/Scope-Effort-Baseline.md` defines its weighted progress baseline.
 
 ## Product
@@ -148,11 +149,12 @@ Working:
 - Executable ownership, cross-module import, browser-global and IPC inventory.
 - Eight machine-readable module charters and 14 versioned public contracts.
 - Seven independent black-box module acceptance suites; Diagram Studio remains planned.
+- Canonical 16-stage roadmap with an exact generated Markdown projection.
+- GitHub CI blocks functional regression until architecture and module UAT pass.
 
 Next architectural work:
 
-- Complete P47 plan normalization and CI architecture gates.
-- Implement `3C.15` Definition Runtime and headless definition tooling.
+- Implement `3C.15` Definition Runtime and headless definition tooling, starting with P48.
 - Extract a neutral layout compiler from `composed-layout.js`.
 - Move remaining renderer mutations behind application commands.
 - Split renderer state, interaction, projection and rendering.
@@ -168,6 +170,8 @@ npm run test:architecture
 npm run test:contracts
 npm run test:module-contracts
 npm run test:modules
+npm run test:plan
+npm run test:ci
 npm run scope:status
 npm run test:prototype -- --no-smoke
 npm run smoke
@@ -185,5 +189,7 @@ Relevant references:
 - `outputs/Scope-Effort-Baseline.md`
 - `outputs/Module-Interaction-Inventory.md`
 - `outputs/Module-Contracts-and-Acceptance-P46.md`
+- `outputs/Plan-Normalization-and-CI-P47.md`
+- `outputs/Plan-Status.md`
 - `outputs/Decision-Log.md`
 - `outputs/Engineering-Lessons-Log.md`

@@ -899,3 +899,14 @@ misma operacion.
 Razon: el UAT de Layout produjo geometria identica pero snapshots distintos por
 `lastRunAt`. Hacer explicita la entrada temporal permite reproducir, comparar y
 firmar resultados sin eliminar la metadata util en ejecucion normal.
+
+### D-116: El plan legible es una proyeccion, no otra fuente de verdad
+
+Decision: `work-packages.json` gobierna estado y esfuerzo, `roadmap.json`
+gobierna orden y paquete activo, y `Plan-Status.md` se genera exactamente desde
+ambos. El plan narrativo conserva requisitos y decisiones, pero no duplica el
+estado operativo.
+
+Razon: mantener manualmente las mismas cifras y estados en varios Markdown crea
+drift inevitable. Separar ownership por concepto y generar la vista humana
+permite explicacion rica sin sacrificar consistencia automatica.

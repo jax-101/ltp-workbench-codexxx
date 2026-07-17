@@ -244,6 +244,20 @@ After 3-4 feature increments, schedule a behavior-preserving refactor. The
 refactor must improve boundaries, naming, duplication or file size and must pass
 the same acceptance evidence before and after.
 
+## Delivery Governance
+
+`planning/work-packages.json` owns package state and effort;
+`planning/roadmap.json` owns stage ordering and the active package. The generated
+`outputs/Plan-Status.md` is the human-readable projection and is never edited by
+hand. `test:plan` rejects omitted or duplicated packages, stale projections,
+broken estimate evidence and one-way unknown traceability.
+
+GitHub runs `.github/workflows/quality.yml` with read-only repository access.
+Its architecture job executes the architecture gate and independent module UAT.
+The functional job declares `needs: architecture`, so no functional regression
+starts after a boundary, plan or contract failure. `test:ci` protects this job
+ordering and the required commands from silent workflow drift.
+
 ## Current Violations and Treatment
 
 The repository is functional but not yet compliant with the target structure:
@@ -268,12 +282,13 @@ contract at a time, preserving behavior and keeping the application runnable.
    P45 and guarded by `test:contracts`.
 3. Define module charters, ports, schemas and acceptance fixtures. Complete in
    P46 and guarded by `test:module-contracts` and `test:modules`.
-4. Complete Definition Runtime (`3C.15`) behind a versioned contract.
-5. Introduce an Application facade and remove direct renderer writes.
-6. Extract neutral LayoutGraph compilation and engine contracts.
-7. Split View state, interaction controllers and render components.
-8. Introduce project-folder, tabs and windows through Workspace/View contracts.
-9. Add MCP/LLM as a permission-scoped adapter only after those gates pass.
+4. Normalize plan delivery and enforce architecture-first CI. Complete in P47.
+5. Complete Definition Runtime (`3C.15`) behind a versioned contract.
+6. Introduce an Application facade and remove direct renderer writes.
+7. Extract neutral LayoutGraph compilation and engine contracts.
+8. Split View state, interaction controllers and render components.
+9. Introduce project-folder, tabs and windows through Workspace/View contracts.
+10. Add MCP/LLM as a permission-scoped adapter only after those gates pass.
 
 No large-bang rewrite is permitted. Each extraction ends with a green build,
 module acceptance evidence and unchanged system behavior.
