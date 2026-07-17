@@ -1227,9 +1227,80 @@ Aplicacion futura: registrar excepciones heredadas con presupuesto exacto;
 prohibir nuevas excepciones sin decision; reducir el limite tras cada
 extraccion; y verificar comportamiento antes y despues con UAT de modulo.
 
+### L-104: Una metrica de avance necesita denominador y procedencia
+
+Fecha: 2026-07-18
+
+Evidencia: el proyecto tenia decenas de incrementos de tamanos muy distintos,
+pero no almacenaba consumo de tokens por iteracion. Un porcentaje por numero de
+paquetes habria sobrevalorado cambios pequenos; presentar estimaciones como
+telemetria habria creado una precision inexistente.
+
+Aprendizaje: una metrica de progreso solo es interpretable si declara que
+incluye el scope total, como pondera cada unidad y de donde proceden sus datos.
+El trabajo nuevo debe aumentar explicitamente el denominador y la incertidumbre
+debe formar parte del resultado.
+
+Aplicacion futura: conservar un registro legible por maquina; calibrar con
+trabajo terminado comparable; calcular esfuerzo ganado automaticamente; y
+revisar pesos con evidencia sin reescribir retrospectivamente la historia.
+
+### L-105: La ausencia de telemetria tambien es un dato
+
+Fecha: 2026-07-18
+
+Evidencia: Git permitia observar commits, archivos y lineas, pero el runtime no
+exponia tokens por paquete para el trabajo historico ni para la tarea actual.
+Usar esos proxies como consumo real habria permitido calcular desviaciones
+aparentes, pero no calibrar el modelo con datos comparables.
+
+Aprendizaje: un sistema de estimacion mejora solo si conserva por separado el
+baseline, sus revisiones y una medicion real con procedencia. `Unavailable` es
+preferible a cero o a una cifra fabricada. Los descubrimientos tambien deben
+mantener identidad propia para explicar por que crecio el scope.
+
+Aplicacion futura: iniciar la medicion al abrir cada paquete; conservar
+snapshots acumulados; exigir una fuente; calcular varianza solo con paquetes
+medidos; y convertir unknowns en paquetes mediante referencias bidireccionales.
+
+### L-106: Las dependencias ocultas requieren detectores por mecanismo
+
+Fecha: 2026-07-18
+
+Evidencia: el primer mapa de `require()` cubria todos los imports CommonJS, pero
+dejaba fuera tres APIs de Definition y View cargadas por `index.html` como
+scripts globales. El codigo funcionaba gracias al orden de etiquetas, sin un
+import que apareciera en el grafo inicial.
+
+Aprendizaje: ningun analizador unico descubre todas las comunicaciones de una
+aplicacion. Imports, inyeccion, IPC, globals, archivos y callbacks pueden formar
+contratos igual de reales. Un inventario solo es completo respecto a los
+mecanismos que declara observar.
+
+Aplicacion futura: enumerar mecanismos antes de extraer modulos; contrastar
+cada uno automaticamente; registrar los gaps como unknowns; y sustituir globals
+ordenados por APIs o puertos con contratos de consumidor.
+
+### L-107: El coste de contexto debe formar parte de la calibracion
+
+Fecha: 2026-07-18
+
+Evidencia: P45 se estimo en 35k tokens de trabajo y el goal reporto 237.419
+tokens reales. La tarea incluyo un hilo historico muy largo, inspeccion repetida
+del repositorio, un inventario extenso y varias reconciliaciones automaticas.
+
+Aprendizaje: el consumo de un agente no depende solo del volumen de codigo que
+produce. Contexto de entrada, outputs de herramientas, verificaciones y
+gobernanza pueden dominar. Una estimacion en tokens debe definir la superficie
+de medicion y calibrarse con ejecuciones del mismo entorno y clase de trabajo.
+
+Aplicacion futura: medir desde el inicio; registrar duracion y fuente; comparar
+por clase de paquete; revisar primero el siguiente comparable; y esperar varias
+muestras antes de aplicar un multiplicador global.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-104`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-108`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

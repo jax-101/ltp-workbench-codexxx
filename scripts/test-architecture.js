@@ -1,6 +1,8 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+require("./test-contract-inventory");
+const { loadRegister, summarize } = require("./scope-status");
 
 const root = path.join(__dirname, "..");
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), "utf8");
@@ -54,6 +56,8 @@ for (const heading of ["## Architecture", "## Technologies", "## Engineering Rul
 const packageMetadata = JSON.parse(read("package.json"));
 const lock = JSON.parse(read("package-lock.json"));
 assert(context.includes(packageMetadata.ltpBuild.id), "CONTEXT.md build identity is stale");
+assert(packageMetadata.scripts["scope:status"], "package.json is missing scope:status");
+assert(packageMetadata.scripts["scope:record-effort"], "package.json is missing scope:record-effort");
 for (const dependency of ["electron", "electron-builder", "elkjs", "immer", "proper-lockfile"]) {
   const version = lock.packages[`node_modules/${dependency}`]?.version;
   assert(
@@ -70,8 +74,34 @@ for (const section of ["## Target Modules", "## Dependency Rules", "## Module Te
 const agentInstructions = read("AGENTS.md");
 assert(agentInstructions.includes("CONTEXT.md"), "AGENTS.md must direct agents to CONTEXT.md");
 assert(agentInstructions.includes("ARCHITECTURE.md"), "AGENTS.md must direct agents to ARCHITECTURE.md");
+assert(agentInstructions.includes("planning/work-packages.json"), "AGENTS.md must direct agents to the scope register");
+assert(agentInstructions.includes("npm run scope:status"), "AGENTS.md must require scope reporting");
+assert(agentInstructions.includes("planning/effort-log.json"), "AGENTS.md must require actual-effort tracking");
+assert(agentInstructions.includes("planning/unknowns.json"), "AGENTS.md must require unknown tracking");
+
+const scope = summarize(loadRegister());
+const scopePercentage = `${scope.progressPercent.toFixed(1)}%`;
+const scopeReport = read("outputs/Scope-Effort-Baseline.md");
+assert(context.includes(scopePercentage), "CONTEXT.md scope percentage is stale");
+assert(scopeReport.includes(`**${scopePercentage}**`), "Scope effort report percentage is stale");
+assert(scopeReport.includes(`| Known packages | ${scope.packageCount} |`), "Scope effort report package count is stale");
+assert(scopeReport.includes(`| Completed packages | ${scope.statusCounts.done} |`), "Scope effort report done count is stale");
+assert(scopeReport.includes(`| Total estimated scope | ${scope.estimatedTokens.toLocaleString("en-US")} tokens |`),
+  "Scope effort report total is stale");
+assert(scopeReport.includes(`| Earned effort | ${scope.earnedTokens.toLocaleString("en-US")} tokens |`),
+  "Scope effort report earned value is stale");
+assert(scopeReport.includes(`Current register: ten unknowns`), "Scope effort report unknown summary is stale");
+for (const item of loadRegister().packages) {
+  const status = item.status[0].toUpperCase() + item.status.slice(1);
+  const estimate = item.revisedEstimateTokens
+    ? `${item.estimatedTokens / 1000}k -> ${item.revisedEstimateTokens / 1000}k`
+    : `${item.estimatedTokens / 1000}k`;
+  const row = `| ${item.id} | ${item.name} | ${status} | ${item.completion}% | ${estimate} |`;
+  assert(scopeReport.includes(row), `Scope effort report is stale for ${item.id}`);
+}
 
 console.log(
   `Architecture gate passed: ${productionFiles.length} production files, ` +
-  `${Object.keys(legacyBudgets).length} legacy no-growth budgets, headless core and context are valid.`
+  `${Object.keys(legacyBudgets).length} legacy no-growth budgets, headless core, context and ` +
+  `${scopePercentage} scope baseline are valid.`
 );

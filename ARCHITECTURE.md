@@ -181,6 +181,18 @@ Known extraction targets:
    collective operations.
 5. `main.js`: composition root, workspace IPC, fixtures and test harness.
 
+## Current Interaction Inventory
+
+`architecture/interaction-inventory.json` is the canonical current-state map.
+It assigns every runtime source to one module and maps every cross-module
+CommonJS import, browser-global dependency and Electron IPC method to an
+explicit interaction or named debt. `outputs/Module-Interaction-Inventory.md`
+contains the assessment and P46 handoff.
+
+`npm run test:contracts` compares the declaration with the live source. A new
+cross-module dependency cannot enter silently: it requires a contract decision,
+owner, data/error description and formalization package.
+
 ## Module Test Contract
 
 Each module has four test layers:
@@ -224,6 +236,9 @@ The repository is functional but not yet compliant with the target structure:
 - renderer performs some direct compatibility mutations;
 - layout coordinator reads workspace and diagram definitions directly;
 - command handlers share one large registry;
+- Workspace and Application currently depend on each other;
+- renderer receives Definition and View helpers through browser globals;
+- stable error ownership and IPC serialization are not yet defined;
 - repository imports revision logic from the transaction engine;
 - official definitions remain hardcoded;
 - Electron main includes test and fixture responsibilities.
@@ -234,7 +249,8 @@ contract at a time, preserving behavior and keeping the application runnable.
 ## Modularization Sequence
 
 1. Context, normative architecture and automatic architecture gate.
-2. Inventory every public and implicit cross-module interaction.
+2. Inventory every public and implicit cross-module interaction. Complete in
+   P45 and guarded by `test:contracts`.
 3. Define module charters, ports, schemas and acceptance fixtures.
 4. Complete Definition Runtime (`3C.15`) behind a versioned contract.
 5. Introduce an Application facade and remove direct renderer writes.

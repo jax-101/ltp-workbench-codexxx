@@ -836,3 +836,55 @@ extraer una responsabilidad cuando sea seguro.
 Razon: una reescritura general pondria en riesgo comportamiento ya validado;
 permitir crecimiento perpetuaria el problema. El ratchet permite modularizar
 con micro-pasos verdes y evidencia antes/despues.
+
+### D-111: El avance se mide por esfuerzo ganado y muestra su incertidumbre
+
+Decision: cada paquete declara una estimacion de tokens de trabajo y un
+porcentaje de completitud. El avance global es la suma del esfuerzo ganado
+dividida por el alcance total. El registro distingue esta estimacion de la
+telemetria real, publica su incertidumbre y hace visible cualquier ampliacion
+del denominador.
+
+Razon: contar paquetes atribuye el mismo peso a un ajuste visual y a un vertical
+semantico completo. Tampoco existe telemetria historica de tokens por iteracion
+que permita reconstruir consumo exacto. Una medida ponderada y reproducible es
+mas util, siempre que no oculte su naturaleza estimada ni el crecimiento del
+scope.
+
+### D-112: Actual, estimado y desconocido tienen registros separados
+
+Decision: el estimate inicial es inmutable, sus revisiones conservan historial
+y el actual solo acepta uso de tokens reportado por el runtime. Cuando no hay
+telemetria se registra `unavailable`. Los unknowns tienen identidad y ciclo de
+vida propios; al convertirse en trabajo referencian paquetes nuevos y hacen
+visible el aumento del denominador.
+
+Razon: sobrescribir una estimacion elimina la evidencia necesaria para aprender
+de la desviacion, mientras reconstruir un actual desde commits lo convierte en
+otra estimacion con nombre enganoso. Del mismo modo, introducir trabajo
+descubierto dentro de un paquete existente oculta el riesgo que materializo y
+hace que el porcentaje parezca mas estable de lo que es.
+
+### D-113: El inventario de contratos se contrasta con el grafo ejecutable
+
+Decision: cada fuente de runtime tiene propietario y todo import entre modulos,
+dependencia browser-global y canal IPC referencia una interaccion declarada. El
+gate compara el inventario con el codigo real y falla ante cualquier alta, baja
+o redireccion no decidida.
+
+Razon: un documento manual describe bien la intencion, pero se degrada en cuanto
+un cambio introduce una dependencia sin actualizarlo. Comparar mecanismos
+reales convierte el inventario en linea base verificable y obliga a clasificar
+cada nuevo cruce como contrato o deuda antes de integrarlo.
+
+### D-114: La recalibracion se aplica primero al paquete comparable mas cercano
+
+Decision: una desviacion extrema actualiza de inmediato el forecast del
+siguiente paquete de la misma clase, pero no multiplica todo el roadmap con una
+sola muestra. El baseline permanece visible, la revision conserva evidencia y
+la calibracion global espera varias mediciones comparables.
+
+Razon: ignorar P45, con un actual 6,78 veces superior al estimate, mantendria un
+forecast que ya sabemos defectuoso. Aplicar ese factor a layout, UI, semantica y
+release supondria que todos comparten el mismo coste fijo y distribucion. La
+revision local aprende pronto sin fabricar una precision global.

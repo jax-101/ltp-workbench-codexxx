@@ -1,12 +1,14 @@
 # LTP Workbench - Session Context
 
-Updated: 2026-07-17
+Updated: 2026-07-18
 Current build: `3C.14c.2e` - Collision-free Hints and Boundary Layers
 Architecture: strict modular monolith with a headless core
+Current scope progress: `47.1%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;
-`outputs/Interface-Improvement-Plan.md` is the delivery roadmap.
+`outputs/Interface-Improvement-Plan.md` is the delivery roadmap, and
+`outputs/Scope-Effort-Baseline.md` defines its weighted progress baseline.
 
 ## Product
 
@@ -110,6 +112,13 @@ not declared project dependencies and are not part of the active architecture.
 4. Guided refactor: after every 3-4 feature micro-steps, stop and reduce debt
    without changing behavior.
 
+At the end of each development step, update `planning/work-packages.json`, run
+`npm run scope:status` and report the weighted scope percentage. New accepted
+scope must be added explicitly so changes to the denominator remain visible.
+Record runtime-reported usage in `planning/effort-log.json`; never substitute
+an estimate for an unavailable actual. Register discoveries in
+`planning/unknowns.json` before converting them into work packages.
+
 Every module requires:
 
 - a short charter and public API;
@@ -132,10 +141,11 @@ Working:
 - ELK layered composed layout, frames, curved routing and visual transitions.
 - Keyboard-first navigation, hints, multi-selection and Assumption Workbench.
 - Automated core, semantic, layout, randomized, visual and shortcut suites.
+- Executable ownership, cross-module import, browser-global and IPC inventory.
 
 Next architectural work:
 
-- Complete strict modular due diligence and module contracts.
+- Define P46 module charters, public ports and black-box acceptance suites.
 - Implement `3C.15` Definition Runtime and headless definition tooling.
 - Extract a neutral layout compiler from `composed-layout.js`.
 - Move remaining renderer mutations behind application commands.
@@ -149,6 +159,8 @@ Run before publishing a change:
 
 ```bash
 npm run test:architecture
+npm run test:contracts
+npm run scope:status
 npm run test:prototype -- --no-smoke
 npm run smoke
 npm run test:visual
@@ -162,5 +174,7 @@ Relevant references:
 - `outputs/Headless-Architecture.md`
 - `outputs/Multi-Project-Architecture.md`
 - `outputs/Interface-Improvement-Plan.md`
+- `outputs/Scope-Effort-Baseline.md`
+- `outputs/Module-Interaction-Inventory.md`
 - `outputs/Decision-Log.md`
 - `outputs/Engineering-Lessons-Log.md`

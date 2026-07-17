@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-07-18",
+  "unknowns": [
+    {
+      "id": "U001",
+      "title": "Semantic diversity across official LTP diagrams",
+      "discoveredDuring": "P31",
+      "status": "converted",
+      "impact": "high",
+      "resultingPackages": ["P32", "P33", "P34", "P36", "P37", "P38", "P48", "P49", "P50", "P51", "P69", "P70", "P71"],
+      "scopeAddedTokens": null,
+      "note": "Historical discovery; the exact scope delta at discovery was not recorded."
+    },
+    {
+      "id": "U002",
+      "title": "Projects, documents, tabs and synchronized detached views",
+      "discoveredDuring": "P34",
+      "status": "converted",
+      "impact": "high",
+      "resultingPackages": ["P35", "P63", "P64", "P65"],
+      "scopeAddedTokens": null,
+      "note": "The session foundation exists; the complete workspace UI remains planned."
+    },
+    {
+      "id": "U003",
+      "title": "Assumptions are first-class semantics behind every eligible line",
+      "discoveredDuring": "P37",
+      "status": "resolved",
+      "impact": "high",
+      "resultingPackages": ["P39", "P40", "P41", "P42"],
+      "scopeAddedTokens": null,
+      "note": "Lifecycle, keyboard context, global workbench and progressive indicators are complete."
+    },
+    {
+      "id": "U004",
+      "title": "Oversized modules and implicit contracts limit safe evolution",
+      "discoveredDuring": "P43",
+      "status": "converted",
+      "impact": "high",
+      "resultingPackages": ["P44", "P45", "P46", "P47", "P58", "P59", "P60", "P61", "P62"],
+      "scopeAddedTokens": null,
+      "note": "The strict modular foundation is complete; inventory, contracts, UATs and extractions remain."
+    },
+    {
+      "id": "U005",
+      "title": "Nested frames require explicit boundary contracts and further optimization",
+      "discoveredDuring": "P18",
+      "status": "converted",
+      "impact": "medium",
+      "resultingPackages": ["P19", "P20", "P43", "P55", "P56", "P57", "P66"],
+      "scopeAddedTokens": null,
+      "note": "Core frame composition exists; focus, portals and advanced optimization remain."
+    },
+    {
+      "id": "U006",
+      "title": "LLM assistance requires a permission-scoped headless adapter and evaluations",
+      "discoveredDuring": "P35",
+      "status": "converted",
+      "impact": "high",
+      "resultingPackages": ["P72", "P73", "P74"],
+      "scopeAddedTokens": null,
+      "note": "Architecture is anticipated but implementation remains deliberately late in the roadmap."
+    },
+    {
+      "id": "U007",
+      "title": "Per-package runtime token telemetry is unavailable for historical work",
+      "discoveredDuring": "P76",
+      "status": "mitigated",
+      "impact": "medium",
+      "resultingPackages": ["P77"],
+      "scopeAddedTokens": 25000,
+      "note": "Future runtime-reported snapshots are retained; historical actuals remain explicitly unavailable."
+    },
+    {
+      "id": "U008",
+      "title": "Stable error ownership and adapter serialization are undefined",
+      "discoveredDuring": "P45",
+      "status": "assessed",
+      "impact": "medium",
+      "resultingPackages": ["P46", "P58"],
+      "scopeAddedTokens": 0,
+      "note": "Covered by existing module-contract and Application-facade packages; no denominator increase."
+    },
+    {
+      "id": "U009",
+      "title": "Renderer module dependencies are hidden in browser globals and script order",
+      "discoveredDuring": "P45",
+      "status": "assessed",
+      "impact": "medium",
+      "resultingPackages": ["P46", "P61", "P62"],
+      "scopeAddedTokens": 0,
+      "note": "Covered by existing contract, View Store and renderer decomposition packages."
+    },
+    {
+      "id": "U010",
+      "title": "Long-thread context overhead dominates runtime token usage",
+      "discoveredDuring": "P45",
+      "status": "mitigated",
+      "impact": "high",
+      "resultingPackages": ["P46"],
+      "scopeAddedTokens": 170000,
+      "note": "P45 finished at 237419 tokens versus a 35k baseline. P46 was revised from 80k to 250k; broader recalibration waits for more measured packages."
+    }
+  ]
+}

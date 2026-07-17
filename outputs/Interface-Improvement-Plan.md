@@ -2,6 +2,13 @@
 
 Plan de evolucion del prototipo a partir del feedback F-010 a F-047. Estas son iteraciones de interfaz y no sustituyen las fases de producto definidas en el PRD.
 
+Seguimiento cuantitativo: `outputs/Scope-Effort-Baseline.md`. El registro
+canónico de paquetes, estimaciones y avance es `planning/work-packages.json`;
+`npm run scope:status` calcula el porcentaje ponderado vigente.
+El esfuerzo real y las revisiones de estimacion se conservan en
+`planning/effort-log.json`; los descubrimientos de scope se trazan en
+`planning/unknowns.json` antes de convertirse en nuevos paquetes.
+
 ## Principios de ejecucion
 
 - Mantener `main` estable y trabajar cada iteracion en una rama.
@@ -773,9 +780,9 @@ Criterios de aceptacion de `3C.14c.2`:
 
 ### 3C.14d: due diligence de Diseno Modular Estricto
 
-Estado: activo. La base normativa y el primer gate automatico estan
-implementados; quedan el inventario completo de contratos implicitos y los UAT
-de aceptacion por modulo antes de iniciar extracciones estructurales.
+Estado: activo. La base normativa y el inventario ejecutable de interacciones
+estan en PASS. Quedan los charters, contratos publicos y UAT de aceptacion por
+modulo antes de iniciar extracciones estructurales.
 
 Incluye:
 
@@ -789,6 +796,10 @@ Incluye:
   niveles distintos.
 - Micro-pasos funcionales y refactorizacion sin cambio de comportamiento cada
   3-4 incrementos.
+- `P45` en PASS: 26 fuentes con propietario, 32 imports entre modulos, tres
+  dependencias browser-global, 17 metodos IPC y 21 interacciones inventariadas.
+  El gate `test:contracts` detecta cualquier desviacion. Evidencia en
+  `outputs/Module-Interaction-Inventory.md`.
 
 Criterios de aceptacion:
 
