@@ -100,7 +100,7 @@
       "impact": "high",
       "resultingPackages": ["P46", "P47"],
       "scopeAddedTokens": 220000,
-      "note": "P45 finished at 237419 tokens versus a 35k baseline. P46 finished at 233658 versus an 80k baseline and within 6.5% of its revised 250k forecast. P47 was revised from 25k to 75k; unrelated packages still await comparable measurements."
+      "note": "P45 finished at 237419 tokens versus 35k. P46 finished at 233658 versus 80k and within 6.5% of its revised 250k forecast. P47 finished at 208093 versus its revised 75k forecast. No unrelated package is recalibrated without a comparable implementation sample."
     },
     {
       "id": "U011",
@@ -120,7 +120,7 @@
       "impact": "medium",
       "resultingPackages": ["P47"],
       "scopeAddedTokens": 0,
-      "note": "Static CI contract and all constituent commands pass locally; resolve after observing the first hosted run."
+      "note": "Static contract, YAML syntax and all constituent commands pass locally. Push succeeded, but the active gh account cannot see this private repository through the API; hosted-run observation remains external."
     }
   ]
 }

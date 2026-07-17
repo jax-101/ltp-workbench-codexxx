@@ -119,6 +119,15 @@
       "actualTokens": null,
       "source": "codex-goal",
       "note": "Goal-backed measurement started for plan normalization and CI architecture gates."
+    },
+    {
+      "id": "E0008",
+      "packageId": "P47",
+      "recordedAt": "2026-07-17T23:34:41.451Z",
+      "status": "measured",
+      "actualTokens": 208093,
+      "source": "codex-goal",
+      "note": "Final goal usage; elapsed runtime 560 seconds."
     }
   ],
   "estimateRevisions": [

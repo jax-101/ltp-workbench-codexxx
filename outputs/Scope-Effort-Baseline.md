@@ -99,12 +99,19 @@ the current coverage and actual total are calculated by `scope:status`.
 P45 closed at `237,419` actual tokens and 743 seconds against a `35,000`
 baseline: `+202,419`, or `+578.3%` (`6.78x`). P46 closed at `233,658` tokens and
 549 seconds against its `80,000` baseline: `+153,658`, or `+192.1%` (`2.92x`).
-It landed 6.5% below its revised `250k` forecast. Measurement coverage is now
-`2/49` started packages, with `471,077` actual tokens recorded.
+It landed 6.5% below its revised `250k` forecast. At P46 close, measurement
+coverage was `2/49` started packages, with `471,077` actual tokens recorded.
 
-The two architecture-governance observations revise only their nearest
+Those first two architecture-governance observations revised only their nearest
 comparables: P46 from `80k` to `250k`, and P47 from `25k` to `75k`. Unrelated
 packages wait for measurements from their own implementation class.
+
+P47 subsequently closed at `208,093` tokens and 560 seconds. That is `+183,093`
+or `+732.4%` (`8.32x`) against its original `25k` baseline, and `+133,093` or
+`+177.5%` (`2.77x`) against its revised `75k` forecast. Measurement coverage is
+now `3/50` started packages, with `679,170` actual tokens recorded. P48 is a
+Definition Runtime implementation package rather than architecture governance,
+so this result does not revise it without comparable evidence.
 
 For every subsequent package, cumulative runtime usage is recorded as an
 append-only snapshot:
