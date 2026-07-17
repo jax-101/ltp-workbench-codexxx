@@ -11,13 +11,17 @@ Electron UI       CLI JSON       MCP futuro
      |               |               |
      +------- adaptadores -----------+
                      |
+             WorkspaceManager
+                     |
+          WorkspaceSession activa
+                     |
           servicio de aplicacion
                      |
        motor transaccional de comandos
           |          |          |
       validacion   historial   repositorio
                                  |
-                         workspace JSON
+                     repositorio del proyecto
 ```
 
 El nucleo vive en `src/core/` y no depende de Electron, DOM o CSS.
@@ -91,6 +95,10 @@ Las operaciones de escritura exigen una revision esperada. `--dry-run` devuelve 
   `semantic.assumption.*`, junto con cambio de Type y borrado colectivos.
 - Cascadas de relaciones y assumptions, validacion completa y Undo/Redo
   atomicos disponibles desde `apply` sin una ruta de escritura alternativa.
+- Manager de sesiones que aisla proyectos por locator canonico y deduplica
+  aperturas concurrentes del mismo workspace.
+- Identidades separadas de documento y vista para que CLI, ventanas y futuros
+  agentes compartan dominio sin compartir contexto visual.
 
 ## Evolucion pendiente
 

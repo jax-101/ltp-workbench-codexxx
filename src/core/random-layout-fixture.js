@@ -1,3 +1,5 @@
+const { initialDocumentId } = require("./document-view");
+
 const DEFAULT_NODE_WIDTH = 210;
 const DEFAULT_NODE_HEIGHT = 64;
 
@@ -113,7 +115,8 @@ const generateRandomLayoutFixture = (sourceWorkspace, options = {}) => {
   const seed = Number.isFinite(options.seed) ? options.seed : scenario.seed;
   const random = seededRandom(seed);
   const workspace = structuredClone(sourceWorkspace);
-  const tree = workspace.trees[0];
+  const documentId = initialDocumentId(workspace, options.treeId);
+  const tree = workspace.trees.find((candidate) => candidate.id === documentId);
   const canvas = workspace.canvases.find((candidate) => candidate.id === tree.canvasId);
   const rootFrame = frameFor(canvas, canvas.rootFrameId);
   const hostFrame = frameFor(canvas, tree.hostFrameId);

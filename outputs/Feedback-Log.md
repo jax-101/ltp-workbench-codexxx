@@ -906,3 +906,41 @@ Criterios de aceptacion:
 - `Esc` limpia primero una secuencia parcial; con el buffer vacio cancela el modo.
 - `Ctrl+G` cancela el modo y limpia la seleccion.
 - Los comandos modificados, como `Cmd+F`, siguen disponibles dentro del modo.
+
+### F-073: Proyectos y sistemas abiertos en paralelo
+
+Feedback: la aplicacion debe permitir trabajar simultaneamente con varios
+proyectos o sistemas sin mezclar contenido, historial, exportaciones ni futuro
+contexto LLM.
+
+Estado: fundamento de core implementado en `3C.14b.0`; selector de carpetas y
+experiencia multiwindow pendientes.
+
+Criterios de aceptacion:
+
+- Cada carpeta abierta posee una sola `WorkspaceSession` aunque tenga varias
+  ventanas.
+- Proyectos distintos tienen repositorio, revision, Undo/Redo y agentes
+  independientes.
+- Sistemas del mismo proyecto pueden abrirse en pestanas de una ventana.
+- La cabecera y el titulo identifican proyecto, sistema y documento activos.
+- Abrir, cerrar o fallar en un proyecto no corrompe ni bloquea los demas.
+
+### F-074: Pestanas, ventanas desacoplables y vistas adicionales
+
+Feedback: varios arboles deben poder permanecer abiertos en pestanas; una
+pestana debe poder llevarse a otra pantalla y un mismo arbol debe admitir una
+segunda vista con foco o zoom diferentes.
+
+Estado: identidades `Document` y `View` implementadas y probadas en
+`3C.14b.0`; UI y broadcast entre ventanas pendientes.
+
+Criterios de aceptacion:
+
+- Cambiar de pestana no altera seleccion, zoom, pan o foco de las otras vistas.
+- Duplicar una vista no duplica el arbol ni su historial.
+- Separar y reinsertar una pestana conserva identidad y estado visual.
+- Una edicion se refleja en todas las vistas del documento sin mover sus
+  viewports.
+- Cerrar la ultima vista no borra el documento.
+- El estado de ventanas se guarda fuera del dominio semantico.

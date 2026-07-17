@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.14a",
-    "name": "Goal Tree Semantic Kernel",
+    "id": "3C.14b.0",
+    "name": "Multi-document Session Foundation",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -20,6 +20,7 @@
     "test:shortcuts": "LTP_SHORTCUT_TEST=1 LTP_USE_SAMPLE=1 electron .",
     "test:prototype": "node scripts/test-prototype.js",
     "test:core": "node scripts/test-core.js",
+    "test:workspace-manager": "node scripts/test-workspace-manager.js",
     "test:semantic": "node scripts/test-semantic-contract.js",
     "test:semantic-migration": "node scripts/test-semantic-migration.js",
     "test:layout": "node scripts/test-layout.js",

@@ -2,15 +2,15 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs/promises");
 const { randomUUID } = require("node:crypto");
-const { TransactionEngine, workspaceRevision } = require("./core/transaction-engine");
-const { WorkspaceRepository } = require("./core/workspace-repository");
+const { workspaceRevision } = require("./core/transaction-engine");
+const { WorkspaceManager } = require("./core/workspace-manager");
+const { listDocuments, resolveDocument } = require("./core/document-view");
 const { runComposedLayout, validateComposedGeometry } = require("./core/composed-layout");
 const { migrateWorkspace } = require("./core/workspace-migrations");
 const { generateRandomLayoutFixture } = require("./core/random-layout-fixture");
 const packageMetadata = require("../package.json");
 
-let workspaceEngine = null;
-let workspaceEnginePromise = null;
+const workspaceManager = new WorkspaceManager();
 
 const buildInfo = Object.freeze({
   version: packageMetadata.version,
@@ -165,32 +165,13 @@ const loadWorkspace = async () => {
   }
 };
 
-const getWorkspaceEngine = async () => {
-  if (workspaceEngine) return workspaceEngine;
-  if (!workspaceEnginePromise) {
-    workspaceEnginePromise = (async () => {
-      const initialWorkspace = migrateWorkspace(await loadWorkspace()).workspace;
-      const repository = new WorkspaceRepository(prototypeDataPath());
-      const normalizedWorkspace = {
-        ...initialWorkspace,
-        revision: workspaceRevision(initialWorkspace)
-      };
-      const persistedWorkspace = process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1"
-        ? await repository.reset(normalizedWorkspace)
-        : await repository.initialize(normalizedWorkspace);
-      const migration = migrateWorkspace(persistedWorkspace);
-      const readyWorkspace = migration.changed ? await repository.reset(migration.workspace) : migration.workspace;
-      workspaceEngine = new TransactionEngine(readyWorkspace, {
-        persist: (workspace, metadata) => repository.commit(workspace, metadata)
-      });
-      return workspaceEngine;
-    })().catch((error) => {
-      workspaceEnginePromise = null;
-      throw error;
-    });
-  }
-  return workspaceEnginePromise;
-};
+const getWorkspaceSession = () => workspaceManager.open({
+  filePath: prototypeDataPath(),
+  loadInitialWorkspace: loadWorkspace,
+  reset: process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1"
+});
+
+const getWorkspaceEngine = async () => (await getWorkspaceSession()).engine;
 
 const saveWorkspaceTransaction = async (workspace, options = {}) => {
   const engine = await getWorkspaceEngine();
@@ -225,9 +206,10 @@ const saveViewStateTransaction = async (canvasId, viewState) => {
   );
 };
 
-const exportMarkdown = async (workspace) => {
-  const system = workspace.systems[0];
-  const tree = workspace.trees[0];
+const exportMarkdown = async (workspace, treeId) => {
+  const tree = resolveDocument(workspace, treeId);
+  const system = workspace.systems.find((candidate) => candidate.id === tree.systemId);
+  if (!system) throw new Error(`System ${tree.systemId} was not found for tree ${tree.id}`);
   const nodeById = Object.fromEntries(tree.nodes.map((node) => [node.id, node]));
   const assumptionsByLink = Object.groupBy
     ? Object.groupBy(tree.assumptions, (assumption) => assumption.linkId)
@@ -518,6 +500,11 @@ const createWindow = () => {
 };
 
 ipcMain.handle("workspace:load", async () => (await getWorkspaceEngine()).getSnapshot());
+ipcMain.handle("workspace:session-info", async () => {
+  const session = await getWorkspaceSession();
+  const workspace = session.getSnapshot();
+  return { id: session.id, locator: session.key, documents: listDocuments(workspace) };
+});
 ipcMain.handle("fixture:sample-workspace", async () => migrateWorkspace(await readJson(sampleDataPath())).workspace);
 ipcMain.handle("fixture:complex-goal-tree", async () => migrateWorkspace(await readJson(complexFixturePath())).workspace);
 ipcMain.handle("fixture:random-layout", async (_event, options) =>
@@ -530,9 +517,9 @@ ipcMain.handle("workspace:execute", async (_event, command, options) => (await g
 ipcMain.handle("history:undo", async () => (await getWorkspaceEngine()).undo());
 ipcMain.handle("history:redo", async () => (await getWorkspaceEngine()).redo());
 ipcMain.handle("history:state", async () => (await getWorkspaceEngine()).getHistoryState());
-ipcMain.handle("layout:run", async (_event, workspace) => runComposedLayout(workspace));
+ipcMain.handle("layout:run", async (_event, workspace, options) => runComposedLayout(workspace, options));
 ipcMain.handle("layout:validate", async (_event, workspace) => validateComposedGeometry(workspace));
-ipcMain.handle("export:markdown", async (_event, workspace) => exportMarkdown(workspace));
+ipcMain.handle("export:markdown", async (_event, workspace, treeId) => exportMarkdown(workspace, treeId));
 
 app.whenReady().then(() => {
   createWindow();

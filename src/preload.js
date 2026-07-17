@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("ltpPrototype", {
   getBuildInfo: () => ipcRenderer.invoke("app:build-info"),
   loadWorkspace: () => ipcRenderer.invoke("workspace:load"),
+  getWorkspaceSessionInfo: () => ipcRenderer.invoke("workspace:session-info"),
   loadSampleWorkspaceFixture: () => ipcRenderer.invoke("fixture:sample-workspace"),
   loadComplexGoalTreeFixture: () => ipcRenderer.invoke("fixture:complex-goal-tree"),
   loadRandomLayoutFixture: (options) => ipcRenderer.invoke("fixture:random-layout", options),
@@ -12,7 +13,7 @@ contextBridge.exposeInMainWorld("ltpPrototype", {
   undo: () => ipcRenderer.invoke("history:undo"),
   redo: () => ipcRenderer.invoke("history:redo"),
   getHistoryState: () => ipcRenderer.invoke("history:state"),
-  runLayout: (workspace) => ipcRenderer.invoke("layout:run", workspace),
+  runLayout: (workspace, options) => ipcRenderer.invoke("layout:run", workspace, options),
   validateLayout: (workspace) => ipcRenderer.invoke("layout:validate", workspace),
-  exportMarkdown: (workspace) => ipcRenderer.invoke("export:markdown", workspace)
+  exportMarkdown: (workspace, treeId) => ipcRenderer.invoke("export:markdown", workspace, treeId)
 });

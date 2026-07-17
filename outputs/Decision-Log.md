@@ -604,3 +604,24 @@ Razon: las assumptions no decoran la Cloud; son el material sobre el que se
 descubre una injection. El conflicto requiere una pregunta diferente de una
 flecha de necesidad, y mezclar ambos scopes induce respuestas que defienden una
 rama en vez de explicar por que las dos posiciones no pueden coexistir.
+
+### D-091: Cada proyecto abierto posee una unica WorkspaceSession
+
+Decision: el proceso principal mantendra un `WorkspaceManager` indexado por el
+locator canonico de cada carpeta. Dos aperturas del mismo proyecto compartiran
+repositorio, motor, revision e historial; proyectos distintos conservaran
+sesiones completamente aisladas.
+
+Razon: crear un motor por ventana permite que dos copias del mismo proyecto
+divergieran en memoria. Usar un unico motor global impide trabajar con proyectos
+en paralelo y mezcla Undo, revision y futuro contexto LLM.
+
+### D-092: Documento, vista y ventana son identidades distintas
+
+Decision: un documento identifica un arbol persistente; una vista identifica
+zoom, pan, seleccion y frame enfocado; una ventana aloja una o mas vistas. Un
+mismo documento podra tener varias vistas simultaneas sin duplicar datos.
+
+Razon: pestanas, multimonitor y foco de frames son composiciones de vistas, no
+copias del arbol. Mezclar estado visual con identidad documental provoca
+sobrescrituras, Undo espacial inesperado y documentos duplicados.

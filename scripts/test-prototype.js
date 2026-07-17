@@ -27,6 +27,11 @@ const steps = [
     args: ["run", "test:core"]
   },
   {
+    name: "Test workspace sessions and document views",
+    command: "npm",
+    args: ["run", "test:workspace-manager"]
+  },
+  {
     name: "Test composed layout",
     command: "npm",
     args: ["run", "test:layout"]

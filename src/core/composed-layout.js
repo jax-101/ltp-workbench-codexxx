@@ -1,5 +1,6 @@
 const { getDiagramDefinition } = require("./diagram-registry");
 const { createElkLayeredEngine } = require("./layout-engines/elk-layered-engine");
+const { initialDocumentId } = require("./document-view");
 
 const FRAME_SIDE_PADDING = 28;
 const FRAME_TOP_PADDING = 58;
@@ -817,9 +818,8 @@ const routedLayoutQuality = (links, nodeLayouts, linkLayouts, direction) => {
 
 const runComposedLayout = async (workspace, options = {}) => {
   const nextWorkspace = structuredClone(workspace);
-  const activeTree = options.treeId
-    ? nextWorkspace.trees.find((tree) => tree.id === options.treeId)
-    : nextWorkspace.trees[0];
+  const activeDocumentId = initialDocumentId(nextWorkspace, options.treeId);
+  const activeTree = nextWorkspace.trees.find((tree) => tree.id === activeDocumentId);
   if (!activeTree) return nextWorkspace;
   const canvas = nextWorkspace.canvases.find((candidate) => candidate.id === activeTree.canvasId);
   if (!canvas) return nextWorkspace;

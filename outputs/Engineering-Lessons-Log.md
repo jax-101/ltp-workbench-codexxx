@@ -881,9 +881,26 @@ Aplicacion futura: calcular capacidades desde seleccion y relaciones; compartir
 el mismo predicado entre UI y pruebas; conservar una validacion defensiva en el
 core; y explicar por que una opcion no aparece cuando sea necesario.
 
+### L-084: Una ventana no es una sesion y una vista no es un documento
+
+Fecha: 2026-07-17
+
+Evidencia: el prototipo podia usar un motor global y `trees[0]` mientras solo
+existian una ventana y un arbol. Pestañas, multimonitor y proyectos paralelos
+convertirian ambos atajos en mezcla de historial o copias divergentes.
+
+Aprendizaje: identidad de proceso, sesion, documento, vista y ventana deben
+separarse antes de implementar navegacion multidocumento. Una ventana aloja
+vistas; no posee la fuente de verdad.
+
+Aplicacion futura: una sesion por locator canonico; un motor compartido por las
+ventanas del proyecto; IDs explicitos en comandos; estado visual por vista; y
+pruebas con dos proyectos y dos vistas del mismo documento antes de construir
+la interfaz final.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-084`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-085`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

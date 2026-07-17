@@ -1,4 +1,8 @@
 let workspaceData = null;
+let workspaceSessionInfo = { id: null, locator: null, documents: [] };
+let activeDocumentId = null;
+let activeViewId = null;
+let focusFrameId = null;
 let buildInfo = { version: "0.0.0", id: "loading", name: "Loading build" };
 let selectedElementId = null;
 let selectedElementType = "node";
@@ -51,10 +55,17 @@ const escapeHtml = (value = "") =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
-const tree = () => workspaceData?.trees?.[0];
+const initialDocumentIdFor = (workspace, preferredId = null) => {
+  const candidates = [preferredId, workspace?.workspace?.activeTreeId].filter(Boolean);
+  for (const candidate of candidates) {
+    if (workspace?.trees?.some((tree) => tree.id === candidate)) return candidate;
+  }
+  return workspace?.trees?.find(() => true)?.id || null;
+};
+const tree = () => workspaceData?.trees?.find((candidate) => candidate.id === activeDocumentId);
 const canvas = () => workspaceData?.canvases?.find((candidate) => candidate.id === tree()?.canvasId);
 const rootFrameId = () => canvas()?.rootFrameId;
-const system = () => workspaceData?.systems?.[0];
+const system = () => workspaceData?.systems?.find((candidate) => candidate.id === tree()?.systemId);
 const nodeById = () => Object.fromEntries((tree()?.nodes || []).map((node) => [node.id, node]));
 const frameById = () => Object.fromEntries((canvas()?.frames || []).map((frame) => [frame.id, frame]));
 const linkById = () => Object.fromEntries((tree()?.links || []).map((link) => [link.id, link]));
@@ -1616,7 +1627,7 @@ const interpolatedLinkMap = (startMap = {}, targetMap = {}, progress) =>
 const animateToLayout = async (nextWorkspace) => {
   const activeTree = tree();
   const activeCanvas = canvas();
-  const nextTree = nextWorkspace.trees[0];
+  const nextTree = nextWorkspace.trees.find((candidate) => candidate.id === activeDocumentId);
   const nextCanvas = nextWorkspace.canvases.find((candidate) => candidate.id === nextTree.canvasId);
   const startLayout = structuredClone(activeTree.layout);
   const targetLayout = nextTree.layout;
@@ -1693,7 +1704,7 @@ const runAutoLayout = async (options = {}) => {
   layoutAnimating = true;
   setStatus("Running ELK layout...");
   try {
-    const nextWorkspace = await window.ltpPrototype.runLayout(workspaceData);
+    const nextWorkspace = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
     setStatus("Repositioning diagram...");
     await animateToLayout(nextWorkspace);
     await persist(options.persistLabel || "Apply layout", "spatial.layout");
@@ -1717,7 +1728,7 @@ const runAutoLayout = async (options = {}) => {
 };
 
 const exportMarkdown = async () => {
-  const result = await window.ltpPrototype.exportMarkdown(workspaceData);
+  const result = await window.ltpPrototype.exportMarkdown(workspaceData, activeDocumentId);
   setStatus(`Exported Markdown: ${result.path}`);
 };
 
@@ -3187,11 +3198,14 @@ const handleKeydown = async (event) => {
 document.addEventListener("keydown", handleKeydown);
 
 const bootPromise = (async () => {
-  [workspaceData, historyState, buildInfo] = await Promise.all([
+  [workspaceData, workspaceSessionInfo, historyState, buildInfo] = await Promise.all([
     window.ltpPrototype.loadWorkspace(),
+    window.ltpPrototype.getWorkspaceSessionInfo(),
     window.ltpPrototype.getHistoryState(),
     window.ltpPrototype.getBuildInfo()
   ]);
+  activeDocumentId = initialDocumentIdFor(workspaceData);
+  activeViewId = uid("view");
   const activeTree = tree();
   const activeViewState = canvas().viewState || {};
   selectedElementId = activeViewState.selectedElementId || activeTree.nodes[0]?.id;
@@ -3226,8 +3240,8 @@ window.__ltpSmokeTest = async () => {
     }
     return predicate();
   };
-  workspaceData = await window.ltpPrototype.runLayout(workspaceData);
-  const exportResult = await window.ltpPrototype.exportMarkdown(workspaceData);
+  workspaceData = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
+  const exportResult = await window.ltpPrototype.exportMarkdown(workspaceData, activeDocumentId);
   render();
   const activeTree = tree();
   const activeCanvas = canvas();
@@ -3652,8 +3666,8 @@ window.__ltpSmokeTest = async () => {
   await workspaceOperationQueue;
   const directionTestTree = tree();
   directionTestTree.layout.direction = "LR";
-  const leftToRightWorkspace = await window.ltpPrototype.runLayout(workspaceData);
-  const leftToRightTree = leftToRightWorkspace.trees[0];
+  const leftToRightWorkspace = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
+  const leftToRightTree = leftToRightWorkspace.trees.find((candidate) => candidate.id === activeDocumentId);
   const directionTestLink = leftToRightTree.links[0];
   const directionSource = leftToRightTree.layout.nodes[directionTestLink.sourceNodeId];
   const directionTarget = leftToRightTree.layout.nodes[directionTestLink.targetNodeId];
@@ -3662,7 +3676,7 @@ window.__ltpSmokeTest = async () => {
     directionSource.x + directionSource.width / 2 < directionTarget.x + directionTarget.width / 2;
   workspaceData = leftToRightWorkspace;
   tree().layout.direction = "TB";
-  workspaceData = await window.ltpPrototype.runLayout(workspaceData);
+  workspaceData = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
   render();
 
   const animationNode = tree().nodes.find((node) => !layoutNode(node.id).pinned);
@@ -3846,10 +3860,16 @@ window.__ltpSmokeTest = async () => {
   hintEntries = visibleHintEntries();
   const finalTree = tree();
   const finalCanvas = canvas();
+  const explicitDocumentViewContext =
+    Boolean(workspaceSessionInfo.id) &&
+    workspaceSessionInfo.documents.some((document) => document.id === activeDocumentId) &&
+    finalTree.id === activeDocumentId &&
+    Boolean(activeViewId);
 
   return {
     ok:
       Boolean(workspaceData) &&
+      explicitDocumentViewContext &&
       finalTree.nodes.length >= 10 &&
       finalCanvas.frames.length >= 5 &&
       finalTree.links.length >= 6 &&
@@ -3942,6 +3962,10 @@ window.__ltpSmokeTest = async () => {
     frames: finalCanvas.frames.length,
     links: finalTree.links.length,
     hints: hintEntries.length,
+    workspaceSessionId: workspaceSessionInfo.id,
+    activeDocumentId,
+    activeViewId,
+    explicitDocumentViewContext,
     hintsArePrefixFree,
     buildIdentityVisible,
     rootFrameIsConceptual,
@@ -4048,6 +4072,7 @@ const resetShortcutAuditWorkspace = async () => {
     label: "Reset keyboard shortcut audit",
     category: "test"
   });
+  activeDocumentId = initialDocumentIdFor(workspaceData, activeDocumentId);
   historyState = await window.ltpPrototype.getHistoryState();
   selectedElementId = null;
   selectedElementType = "unknown";

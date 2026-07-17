@@ -12,7 +12,7 @@ Esta prueba abre el ejemplo incluido con la aplicacion y guarda los cambios en u
    npm run test:manual
    ```
 
-3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.12`.
+3. Comprueba que el titulo de la ventana y la insignia junto al nombre del arbol muestran `v0.1.0` y `build 3C.14b.0`.
 
 Para terminar, cierra la aplicacion con `Cmd+Q`.
 
@@ -22,7 +22,7 @@ Para terminar, cierra la aplicacion con `Cmd+Q`.
 npm run test:shortcuts
 ```
 
-El comando prueba los 34 comandos y sus 43 combinaciones sobre copias limpias del ejemplo. Guarda `report.md`, `report.json` y una captura por binding en `outputs/shortcut-audit/3C.12/`. Un resultado correcto termina con `passed: 43` y `failed: 0`.
+El comando prueba los 34 comandos y sus 43 combinaciones sobre copias limpias del ejemplo. Guarda `report.md`, `report.json` y una captura por binding en `outputs/shortcut-audit/<build>/`. Un resultado correcto termina con `passed: 43` y `failed: 0`.
 
 ## Prueba visual automatizada
 

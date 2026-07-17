@@ -25,7 +25,7 @@ definiciones ni para iniciar Diagram Studio. El riesgo principal es convertir
 suposiciones metodologicas y tecnicas todavia no probadas en una API que luego
 sea costosa de corregir.
 
-La recomendacion es conservar `3C.14a` como baseline y avanzar mediante pruebas
+La recomendacion es conservar `3C.14b.0` como baseline y avanzar mediante pruebas
 verticales. El contrato solo se publica despues de que Goal Tree, CRT y un spike
 de EC funcionen sobre el mismo kernel sin ramas de dominio en las operaciones
 comunes.
@@ -35,7 +35,7 @@ comunes.
 | Prioridad | Hat | Gap | Riesgo | Cierre requerido |
 | --- | --- | --- | --- | --- |
 | P0 | Metodo | El contrato ejecutable y los oraculos revisados estan aprobados; falta validar CRT real sobre el kernel | Un modelo correcto en fixtures puede fallar al editar una relacion n-aria real | Ejecutar `3C.14b` antes de congelar el schema |
-| P0 | Arquitectura | Goal Tree ya tiene activacion, CRUD y paridad completa; faltan relaciones n-arias y junctions | Extender el adaptador binario en vez del kernel generico crearia ramas de dominio | Mantener `3C.14a` como baseline y construir CRT directamente sobre primitivas n-arias |
+| P0 | Arquitectura | Goal Tree ya tiene paridad y el runtime separa sesion, documento y vista; faltan relaciones n-arias y junctions | Extender el adaptador binario o volver a asumir un unico documento crearia ramas de dominio | Mantener `3C.14b.0` como baseline y construir CRT sobre IDs y primitivas n-arias explicitos |
 | P0 | MVP | La secuencia del plan era contradictoria: `3C.14` contenia CRT, pero las dependencias colocaban CRT despues de formato y operaciones | Trabajo en el orden equivocado y criterios de salida ambiguos | Corregido en esta revision mediante una unica secuencia con gates `A-H` y criterios de parada |
 | P0 | Arquitectura/UX | Borrar, copiar, pegar y seleccionar no tienen todavia semantica cerrada para relaciones n-arias y junctions derivadas | Datos huerfanos, selecciones engañosas y Undo parcial | Semantica atomica de cierre de seleccion y comandos genericos antes de congelar el formato |
 | P1 | Producto | Workbench y Diagram Studio no tienen una frontera de producto explicita | El editor de metamodelos puede desplazar el valor para el analista LTP | Studio como modo avanzado y milestone separado, con una experiencia principal medible |
@@ -46,7 +46,8 @@ comunes.
 
 Estado actualizado el 2026-07-17: la validacion metodologica esta aprobada y
 `3C.14a` pasa con activacion reversible, CRUD Goal Tree, operaciones colectivas,
-CLI, renderer compatible, Undo/Redo y smoke Electron. Quedan la vertical CRT,
+CLI, renderer compatible, Undo/Redo y smoke Electron. `3C.14b.0` anade sesiones
+aisladas, documentos y vistas explicitos. Quedan la vertical CRT,
 creacion/borrado n-ario y junctions antes de publicar el formato.
 
 ## Hat 1: Producto

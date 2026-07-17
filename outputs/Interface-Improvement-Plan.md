@@ -690,6 +690,12 @@ Subgates:
   de frescura, idempotencia, downgrade exacto, validador compartido, CRUD y
   operaciones colectivas, CLI, renderer compatible, Undo/Redo y smoke
   Electron. Evidencia en `outputs/Semantic-Migration-3C.14a.md`.
+- `3C.14b.0`: frontera multiproyecto y multidocumento. En PASS: manager de
+  sesiones aisladas por locator canonico, deduplicacion de aperturas
+  concurrentes, identidad explicita de documento y vista, dos vistas
+  independientes del mismo arbol y `treeId` explicito en layout y exportacion.
+  La UI de carpetas, pestanas y ventanas queda deliberadamente para sus
+  incrementos posteriores. Evidencia en `outputs/Multi-Project-Architecture.md`.
 - `3C.14b`: CRT vertical en core, CLI, renderer, teclado y layout.
 - `3C.14c`: spike de EC para validar topologia, roles y assumptions antes de
   publicar el formato. Si exige cambiar el kernel, se repiten las pruebas de
