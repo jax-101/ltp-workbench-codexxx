@@ -999,9 +999,43 @@ Aplicacion futura: definir adaptadores por renderMode; conservar IDs estables;
 mapear acciones visuales al objeto propietario; y probar round trips, cascadas
 y export desde la fuente semantica, no desde la simplificacion grafica.
 
+### L-091: Soportar CRUD en el core no completa un flujo keyboard-first
+
+Fecha: 2026-07-17
+
+Evidencia: el kernel ya podia crear, editar y borrar assumptions con Undo/Redo,
+y el EC las mostraba al seleccionar una linea. Sin embargo, la UI exigia usar
+botones o foco manual, no permitia navegar entre ellas, invalidarlas ni revisar
+la cobertura del diagrama completo solo con teclado.
+
+Aprendizaje: capacidad de dominio, visibilidad y operabilidad son gates
+distintos. Una funcion no esta terminada para un producto keyboard-first hasta
+que el flujo completo, incluidos estados vacios, errores y Undo, puede
+ejecutarse y comprenderse sin apuntador.
+
+Aplicacion futura: definir journeys completos antes de declarar paridad;
+compartir comandos entre UI, paleta y CLI; probar efectos, foco y evidencia
+visual; y medir cobertura por tarea, no por existencia de handlers.
+
+### L-092: El conocimiento descartado debe conservarse como trazabilidad
+
+Fecha: 2026-07-17
+
+Evidencia: en una EC, invalidar una assumption puede revelar la injection que
+rompe el conflicto. Borrarla produciria una vista aparentemente limpia, pero
+eliminaria la explicacion de por que la solucion propuesta es valida.
+
+Aprendizaje: invalidacion y eliminacion representan intenciones distintas. En
+sistemas de razonamiento, hipotesis rechazadas siguen siendo resultados y
+deben permanecer enlazadas a evidencia, decisiones y alternativas.
+
+Aplicacion futura: modelar lifecycle y provenance; reservar delete para errores;
+mostrar estados sin ocultar contenido; y hacer que export, historial y agentes
+headless puedan reconstruir la cadena de razonamiento.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-091`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-093`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

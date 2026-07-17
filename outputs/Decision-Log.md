@@ -594,11 +594,13 @@ un grafo conectado que ya no sea una Cloud metodologicamente reconocible.
 
 ### D-090: Cada break point de EC posee assumptions inspeccionables
 
-Decision: las cuatro flechas rectas y el conflicto `D-D'` seran cinco subjects
-independientes de assumptions. Una EC `ACCEPTED` no podra dejar ninguno sin
-cobertura y el oraculo conservara tres assumptions por subject. Las flechas
-rectas usaran scope `RELATION`; el conflicto exigira scope `CONFLICT` y una
-formulacion que explique que falta para permitir ambos wants.
+Decision: cada flecha de necesidad y cada conflicto entre prerequisites sera un
+subject independiente de assumptions. En la EC bipolar son las cuatro flechas
+rectas y el conflicto `D-D'`; una EC multipartita anade los subjects de sus
+ramas y conflictos concretos. Una EC `ACCEPTED` no podra dejar ninguno sin
+cobertura. Las flechas rectas usaran scope `RELATION`; el conflicto exigira
+scope `CONFLICT` y una formulacion que explique que falta para permitir ambas
+posiciones.
 
 Razon: las assumptions no decoran la Cloud; son el material sobre el que se
 descubre una injection. El conflicto requiere una pregunta diferente de una
@@ -668,3 +670,38 @@ de excepciones de direccion.
 Razon: D-D' expresa incompatibilidad contextual, no precedencia ni necesidad.
 Tratarlo como flecha de layout introduce un ciclo falso; ocultarlo eliminaria
 uno de los cinco break points de la Cloud.
+
+### D-097: Assumptions es una superficie principal de trabajo
+
+Decision: cada linea mostrara un indicador compacto de cantidad y estado de sus
+assumptions. La inspeccion detallada tendra dos niveles: contexto de la linea y
+Assumption Workbench global. Ambos seran completamente operables con teclado y
+compartiran comandos de dominio y Undo/Redo.
+
+Razon: en EC, la linea solo expresa la relacion asumida; el trabajo de romper la
+Cloud ocurre al explicitar e invalidar lo que la sostiene. Ocultar assumptions
+en un inspector secundario convierte el contenido central del metodo en
+metadatos y dificulta detectar break points sin cobertura.
+
+### D-098: Invalidar una assumption no equivale a borrarla
+
+Decision: las assumptions tendran un estado de revision que distinga al menos
+borrador, soportada, desafiada e invalidada. Invalidar preservara statement,
+subject, fuentes, notas, historial e injections relacionadas. El borrado se
+reservara para errores de captura o duplicados.
+
+Razon: una assumption invalidada es la evidencia que explica por que una
+injection puede evaporar el conflicto. Eliminarla destruye la trazabilidad del
+razonamiento y hace imposible revisar o revertir la decision.
+
+### D-099: Los atajos de assumptions usan un scope contextual
+
+Decision: el canvas, el contexto de una linea y el Assumption Workbench tendran
+scopes de comando explicitos. Dentro del contexto, teclas como `N`, `Enter` y
+`Delete` operaran sobre assumptions; al cerrarlo recuperaran su significado en
+el canvas. Keyboard, Command Palette y pruebas se generaran del mismo registro.
+
+Razon: reutilizar teclas familiares dentro de un modo bien identificado reduce
+carga cognitiva sin crear colisiones. Resolverlo con listeners ad hoc haria que
+la misma pulsacion pudiera crear un nodo y una assumption o que la auditoria no
+reflejara el comportamiento real.

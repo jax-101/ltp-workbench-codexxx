@@ -963,3 +963,44 @@ Criterios de aceptacion:
 - `N`, `Shift+Tab` y `Ctrl+D` funcionan sobre CRT sin editar la proyeccion.
 - Una prueba Electron guarda captura e informe y verifica flechas, geometria,
   direccion, junction y atajos.
+
+### F-076: EC con tres o mas ramas
+
+Feedback: Dettmer contempla conflictos no bipolares. Una EC puede tener tres o
+mas pares requirement-prerequisite en conflicto, aunque recomienda resolver un
+conflicto de dos posiciones cada vez y comprobar despues los restantes.
+
+Estado: documentado como `3C.14c.1`, pendiente antes de publicar el formato
+de definiciones.
+
+Criterios de aceptacion:
+
+- El oracle bipolar se conserva como caso comun.
+- Un segundo oracle reproduce la estructura tripartita de la Figura 5.9.
+- Objective es unico; requirements y prerequisites admiten cardinalidad dos o
+  mayor y mantienen correspondencia por rama.
+- Los conflictos se representan entre prerequisites concretos y conservan
+  assumptions independientes por pareja.
+- Layout genera dinamicamente todos los carriles sin coordenadas hardcodeadas.
+- La UX puede resolver una pareja y volver a evaluar los conflictos restantes.
+
+### F-077: Assumptions visibles y operables completamente con teclado
+
+Feedback: detras de cada linea existe un conjunto de assumptions, incluida la
+linea quebrada de conflicto. Romper la Cloud consiste en definir, inspeccionar,
+desafiar e invalidar esas assumptions. Deben poder verse, anadirse, editarse,
+eliminarse e inspeccionarse individualmente y en conjunto sin utilizar raton.
+
+Estado: kernel CRUD y scopes `RELATION/INPUT/OUTPUT/CONFLICT` disponibles; UI
+parcial en el inspector. Flujo completo planificado como `3C.14c.2`.
+
+Criterios de aceptacion:
+
+- Cada linea muestra un resumen visual compacto de assumptions y coverage.
+- Una linea seleccionada abre su contexto de assumptions solo con teclado.
+- Navegar, crear, editar, invalidar y borrar funciona sin raton y con Undo/Redo.
+- El conflicto emplea prompts y scope propios, no se trata como flecha causal.
+- Existe una vista global keyboard-first para revisar todos los break points.
+- Invalidar no elimina la assumption ni su trazabilidad con injections.
+- El panel Keyboard, la paleta y la auditoria automatica nacen del mismo
+  registro declarativo de comandos.

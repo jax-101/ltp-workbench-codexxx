@@ -668,9 +668,10 @@ Evidencia Gate B:
 
 ### 3C.14: kernel semantico y prueba vertical CRT
 
-Estado: PASS. `3C.14a`, `3C.14b.0`, `3C.14b.1` y `3C.14c` estan cerrados. El
-siguiente gate es `3C.15`, empezando por publicar el formato declarativo que
-reemplace el registro embebido sin cambiar el comportamiento probado.
+Estado: reabierto de forma controlada. `3C.14a`, `3C.14b.0`, `3C.14b.1` y la
+vertical bipolar `3C.14c` estan en PASS. Antes de `3C.15` se completan
+`3C.14c.1`, EC multipartita segun Dettmer, y `3C.14c.2`, flujo de trabajo de
+assumptions completamente operable con teclado.
 
 Incluye:
 
@@ -707,11 +708,40 @@ Subgates:
   presentacion se compilan desde configuracion semantica, no desde coordenadas.
   Regresion CRT y captura Electron en PASS. Evidencia en
   `outputs/EC-Vertical-3C.14c.md`.
+- `3C.14c.1`: EC multipartita. Anade un oracle basado en la Figura 5.9 de
+  Dettmer, permite tres o mas pares requirement-prerequisite, compila un numero
+  dinamico de carriles y conserva conflictos y assumptions por pareja. La EC
+  bipolar sigue siendo la variante comun, no la unica forma valida.
+- `3C.14c.2`: Assumption Workbench keyboard-first. Cada linea muestra un
+  indicador compacto de cantidad y cobertura. Seleccionar una linea permite
+  abrir sus assumptions, recorrerlas, crear, editar, cambiar estado, invalidar
+  y borrar sin raton. Una vista global permite revisar todos los break points,
+  filtrar gaps y seguir injections hasta la assumption desafiada.
+
+Criterios de aceptacion de `3C.14c.2`:
+
+- Toda relacion o tramo que admita assumptions expone visualmente cantidad y
+  estado de cobertura sin mostrar etiquetas `L` permanentes.
+- Una linea sin assumptions se distingue de otra cubierta, desafiada o con una
+  assumption invalidada.
+- `H` puede seleccionar flechas y conflictos; una accion contextual abre el
+  conjunto de assumptions de la linea sin usar el raton.
+- Dentro del contexto se puede recorrer assumptions, crear con `N`, editar con
+  `Enter`, usar `Shift+Enter` para nueva linea y borrar con `Delete`/`Ctrl+D`.
+- Invalidar conserva statement, subject, evidencia, historial y derivaciones;
+  borrar queda reservado para errores o duplicados.
+- La vista global enumera todas las relaciones, conflictos y tramos con sus
+  assumptions, coverage, estado e injections relacionadas.
+- Todos los comandos aparecen en Keyboard y Command Palette, respetan scopes,
+  detectan colisiones y tienen pruebas autonomas de efecto y capturas.
+- Crear, editar, invalidar, borrar y restaurar son transacciones atomicas con
+  Undo/Redo y tienen equivalentes headless en la CLI.
 
 ### 3C.15: formato de definicion y herramientas headless
 
-Estado: planificado despues de la paridad Goal Tree, la vertical CRT, el spike
-EC y las operaciones colectivas n-arias; antes del Diagram Studio visual.
+Estado: bloqueado por los subgates `3C.14c.1` y `3C.14c.2`; se publica despues
+de estabilizar la cardinalidad EC y el ciclo de vida keyboard-first de las
+assumptions, antes del Diagram Studio visual.
 
 Incluye:
 
