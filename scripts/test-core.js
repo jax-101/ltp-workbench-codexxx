@@ -7,6 +7,7 @@ const { WorkspaceRepository } = require("../src/core/workspace-repository");
 const { getDiagramDefinition, getNodeTypeDefinition } = require("../src/core/diagram-registry");
 const { selectionClosure } = require("../src/core/selection-model");
 const { migrateWorkspace } = require("../src/core/workspace-migrations");
+const { removeSemanticKernel } = require("../src/core/semantic-migration");
 const { validateWorkspace } = require("../src/core/workspace-validator");
 
 const fixturePath = path.join(__dirname, "..", "outputs", "sample-workspace-v0.1.json");
@@ -72,10 +73,21 @@ const run = async () => {
   delete legacyFixture.canvases;
   const migrated = migrateWorkspace(legacyFixture);
   assert.equal(migrated.changed, true);
+  assert.equal(migrated.legacyChanged, true);
+  assert.equal(migrated.semanticChanged, true);
   assert.equal(migrated.workspace.trees[0].hostFrameId, fixtureTree.hostFrameId);
   assert.equal(migrated.workspace.canvases[0].frames.length, fixtureCanvas.frames.length);
   assert.deepEqual(migrated.workspace.trees[0].nodes, fixtureTree.nodes);
-  assert.equal(migrateWorkspace(migrated.workspace).changed, false, "migration must be idempotent");
+  assert(migrated.workspace.trees[0].semanticKernel, "workspace activation must add the Goal Tree semantic kernel");
+  const repeatedMigration = migrateWorkspace(migrated.workspace);
+  assert.equal(repeatedMigration.changed, false, "migration must be idempotent");
+  assert.equal(repeatedMigration.legacyChanged, false);
+  assert.equal(repeatedMigration.semanticChanged, false);
+
+  const formatOnlyMigration = migrateWorkspace(legacyFixture, { semanticKernel: false });
+  assert.equal(formatOnlyMigration.legacyChanged, true);
+  assert.equal(formatOnlyMigration.semanticChanged, false);
+  assert.equal(formatOnlyMigration.workspace.trees[0].semanticKernel, undefined);
   const disconnectedFixture = structuredClone(fixture);
   disconnectedFixture.canvases[0].frames.find((frame) => frame.kind === "root").childFrameIds = [];
   assert(
@@ -98,12 +110,12 @@ const run = async () => {
     type: "nodes.update-type",
     label: "Cycle selected entity Types",
     expectedRevision: 0,
-    payload: { treeId: fixtureTree.id, nodeIds: typeCycleNodeIds, value: "assumption" }
+    payload: { treeId: fixtureTree.id, nodeIds: typeCycleNodeIds, value: "criticalSuccessFactor" }
   });
   assert(
     synchronizedTypes.workspace.trees[0].nodes
       .filter((node) => typeCycleNodeIds.includes(node.id))
-      .every((node) => node.type === "assumption"),
+      .every((node) => node.type === "criticalSuccessFactor"),
     "a multi-entity Type change must update every selected node atomically"
   );
   const synchronizedTypesUndone = await typeCycleEngine.undo();
@@ -165,7 +177,7 @@ const run = async () => {
       expectedRevision: 3,
       payload: { ...command().payload, value: "" }
     })),
-    (error) => error.code === "WORKSPACE_INVALID"
+    (error) => error.code === "SEMANTIC_GRAPH_INVALID"
   );
   assert.equal(engine.getSnapshot().revision, 3, "invalid transaction must roll back completely");
 
@@ -194,7 +206,20 @@ const run = async () => {
   try {
     const workspacePath = path.join(temporaryDirectory, "workspace.json");
     const repository = new WorkspaceRepository(workspacePath);
-    await repository.initialize({ ...fixture, revision: 0 });
+    const sourceWithoutKernel = removeSemanticKernel(fixture).workspace;
+    await repository.initialize({ ...sourceWithoutKernel, revision: 0 });
+    const activation = migrateWorkspace(await repository.read());
+    assert.equal(activation.legacyChanged, false);
+    assert.equal(activation.semanticChanged, true);
+    await repository.reset(activation.workspace);
+    const activatedWorkspace = await repository.read();
+    assert(activatedWorkspace.trees[0].semanticKernel, "repository activation must persist the semantic kernel");
+    assert.deepEqual(
+      removeSemanticKernel(activatedWorkspace).workspace,
+      { ...sourceWithoutKernel, revision: 0 },
+      "removing the additive kernel must restore the exact pre-activation workspace"
+    );
+    assert.equal(migrateWorkspace(activatedWorkspace).changed, false, "persisted activation must be idempotent");
     const first = new TransactionEngine(await repository.read(), {
       persist: (workspace, metadata) => repository.commit(workspace, metadata)
     });
@@ -210,7 +235,7 @@ const run = async () => {
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 
-  console.log("Core tests passed: canvas migration, selection, atomic Type cycling, patches, undo/redo, validation, idempotency, dry-run and concurrency.");
+  console.log("Core tests passed: format and semantic activation, exact kernel removal, selection, atomic Type cycling, patches, undo/redo, validation, idempotency, dry-run and concurrency.");
 };
 
 run().catch((error) => {

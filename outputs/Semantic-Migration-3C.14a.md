@@ -1,6 +1,6 @@
 # Semantic Migration 3C.14a
 
-Fecha: 2026-07-16.
+Fecha: 2026-07-17.
 
 ## Objetivo
 
@@ -28,23 +28,27 @@ Cambiar pan, zoom, layout o frame no la invalida. Cambiar una afirmacion, un
 extremo, una verbalizacion o una assumption obliga a regenerarla y una
 proyeccion obsoleta se rechaza con `SEMANTIC_MIGRATION_STALE`.
 
-## Frontera deliberada
+## Activacion controlada
 
-Esta primera pieza es un preview reversible de lectura. El runtime no la anade
-automaticamente al abrir un workspace y `semanticKernel` no es una segunda
-fuente editable. Si un workspace ya la contiene, el motor transaccional
-regenera la proyeccion derivada en la misma operacion atomica que cambia el
-origen `0.2`; Undo/Redo restaura ambas piezas juntas.
+El runtime anade y persiste automaticamente el kernel al abrir un Goal Tree.
+La migracion de formato y la activacion semantica forman un pipeline unico,
+idempotente y atomico. Puede ejecutarse solo la migracion de formato mediante
+`migrateWorkspace(workspace, { semanticKernel: false })` para rescate o pruebas.
+
+El modelo `0.2` sigue siendo la proyeccion de compatibilidad que consume el
+renderer. El motor transaccional garantiza que cualquier escritura, incluida
+una sustitucion procedente de un cliente antiguo sin kernel, regenere la
+proyeccion semantica antes de validar y persistir. Undo/Redo restaura ambas
+piezas juntas.
 
 El downgrade elimina la proyeccion aditiva. Como los datos anteriores no se
 reescriben, el workspace resultante es estructuralmente identico al de entrada.
 
-Antes de activar escrituras sobre el kernel se debe cerrar un unico punto de
-commit que:
+El punto unico de commit:
 
-1. aplique comandos genericos al kernel;
-2. valide el resultado completo;
-3. derive la vista binaria de compatibilidad dentro de la misma transaccion;
+1. interprete comandos genericos mediante el adaptador Goal Tree;
+2. actualice la vista binaria de compatibilidad dentro de la misma transaccion;
+3. regenere y valide el kernel completo;
 4. rechace cualquier huella obsoleta;
 5. permita Undo/Redo atomico de ambas representaciones durante la transicion.
 
@@ -68,6 +72,13 @@ commit que:
 - ausencia de parches semanticos ante cambios exclusivamente visuales.
 - comandos headless genericos para editar element, retargetear una relacion
   `SIMPLE` y editar una assumption, con proyeccion legacy y Undo atomicos.
+- activacion automatica al abrir, persistencia atomica e idempotencia tras una
+  segunda apertura;
+- CRUD headless de elements, relaciones `SIMPLE` y assumptions;
+- cambio de Type y borrado colectivos, con cascada de relaciones y assumptions;
+- recuperacion automatica ante un `workspace.replace` sin kernel;
+- escritura CLI real en un archivo temporal y validacion posterior;
+- smoke Electron completo con el kernel activo.
 
 Preview manual o para agentes:
 
@@ -75,12 +86,13 @@ Preview manual o para agentes:
 npm run ltp -- semantic preview --workspace ./workspace.json --json
 ```
 
-La respuesta incluye perfil, version, fingerprint y cardinalidades, con
-`persisted: false`.
+La respuesta incluye perfil, version, fingerprint y cardinalidades. El preview
+no realiza una escritura adicional; la apertura normal y `apply` si activan y
+persisten el kernel.
 
 ## Estado
 
-La migracion aditiva, el validador compartido, el refresco transaccional y una
-primera vertical de comandos genericos estan implementados. Quedan pendientes
-crear/borrar relaciones y junctions, operaciones colectivas y la paridad
-completa de UI antes de dar `3C.14a` por cerrado.
+`3C.14a`: **PASS**. Goal Tree conserva paridad en UI, CLI, persistencia,
+Undo/Redo y downgrade. Las junctions y relaciones n-arias se mantienen fuera
+del adaptador binario y pasan deliberadamente a `3C.14b`, junto con la vertical
+CRT.

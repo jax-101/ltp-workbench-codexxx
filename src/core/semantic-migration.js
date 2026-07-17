@@ -197,7 +197,12 @@ const removeSemanticKernel = (source) => {
 const refreshSemanticProjections = (workspace) => {
   const refreshedTreeIds = [];
   for (const tree of workspace.trees || []) {
-    if (!tree.semanticKernel) continue;
+    if (!tree.semanticKernel) {
+      if (!PROFILE_BY_TREE_TYPE[tree.type]) continue;
+      tree.semanticKernel = projectTreeToSemantic(tree);
+      refreshedTreeIds.push(tree.id);
+      continue;
+    }
     if (tree.semanticKernel.sourceFingerprint === semanticFingerprint(tree)) continue;
     tree.semanticKernel = projectTreeToSemantic(tree);
     refreshedTreeIds.push(tree.id);

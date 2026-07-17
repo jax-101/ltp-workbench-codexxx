@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.12",
-    "name": "Contextual Hint Input",
+    "id": "3C.14a",
+    "name": "Goal Tree Semantic Kernel",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",

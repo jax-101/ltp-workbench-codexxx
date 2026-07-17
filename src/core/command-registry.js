@@ -4,6 +4,12 @@ const { getDiagramDefinition } = require("./diagram-registry");
 
 const cloneValue = (value) => structuredClone(isDraft(value) ? current(value) : value);
 
+const LEGACY_TYPE_BY_SEMANTIC_TYPE = Object.freeze({
+  GOAL: "goal",
+  CSF: "criticalSuccessFactor",
+  NC: "necessaryCondition"
+});
+
 const findTree = (workspace, treeId) => {
   const tree = workspace.trees?.find((candidate) => candidate.id === treeId);
   if (!tree) throw new LtpError("TREE_NOT_FOUND", `Tree ${treeId} was not found`, { treeId });
@@ -21,6 +27,51 @@ const requireSemanticKernel = (tree) => {
     throw new LtpError("SEMANTIC_KERNEL_MISSING", `Tree ${tree.id} has no semantic kernel projection`, { treeId: tree.id });
   }
   return tree.semanticKernel;
+};
+
+const requireSemanticId = (payload, key) => {
+  const value = payload[key];
+  if (typeof value !== "string" || !value.trim()) {
+    throw new LtpError("COMMAND_INVALID", `${key} must be a non-empty string`, { key });
+  }
+  return value;
+};
+
+const requireSemanticElementType = (tree, semanticType, excludedNodeIds = []) => {
+  const legacyType = LEGACY_TYPE_BY_SEMANTIC_TYPE[semanticType];
+  const typeDefinition = getDiagramDefinition(tree.type)?.nodeTypes.find((candidate) => candidate.id === legacyType);
+  if (!typeDefinition) {
+    throw new LtpError("SEMANTIC_ELEMENT_TYPE_INVALID", `Type ${semanticType} is not allowed in ${tree.type}`, {
+      treeId: tree.id,
+      semanticType
+    });
+  }
+  if (
+    typeDefinition.unique &&
+    tree.nodes.some((candidate) => !excludedNodeIds.includes(candidate.id) && candidate.type === legacyType)
+  ) {
+    throw new LtpError("NODE_TYPE_UNIQUE", `Type ${semanticType} can only be used once`, { type: semanticType });
+  }
+  return legacyType;
+};
+
+const requireUniqueSemanticId = (tree, id) => {
+  const ids = new Set([
+    ...(tree.nodes || []).map((item) => item.id),
+    ...(tree.links || []).map((item) => item.id),
+    ...(tree.assumptions || []).map((item) => item.id)
+  ]);
+  if (ids.has(id)) throw new LtpError("SEMANTIC_ID_DUPLICATE", `ID ${id} is already in use`, { id });
+};
+
+const removeGoalTreeRelations = (tree, relationIds) => {
+  const removedAssumptionIds = new Set(
+    tree.assumptions.filter((assumption) => relationIds.has(assumption.linkId)).map((assumption) => assumption.id)
+  );
+  tree.links = tree.links.filter((link) => !relationIds.has(link.id));
+  tree.assumptions = tree.assumptions.filter((assumption) => !relationIds.has(assumption.linkId));
+  for (const relationId of relationIds) delete tree.layout.links[relationId];
+  return removedAssumptionIds;
 };
 
 const refreshGoalTreeLinkText = (tree, link) => {
@@ -108,7 +159,7 @@ const createCommandRegistry = () => {
   });
 
   register("semantic.element.update", (draft, payload, context) => {
-    if (payload.field !== "statement") {
+    if (!new Set(["statement", "type"]).has(payload.field)) {
       throw new LtpError("FIELD_NOT_ALLOWED", `Field ${payload.field} cannot be updated by semantic.element.update`, { field: payload.field });
     }
     const tree = findTree(draft, payload.treeId);
@@ -117,12 +168,106 @@ const createCommandRegistry = () => {
     if (!element) throw new LtpError("SEMANTIC_ELEMENT_NOT_FOUND", `Element ${payload.elementId} was not found`, { elementId: payload.elementId });
     const node = tree.nodes.find((candidate) => candidate.id === element.id);
     if (!node) throw new LtpError("NODE_NOT_FOUND", `Compatibility node ${element.id} was not found`, { nodeId: element.id });
-    node.statement = payload.value;
+    if (payload.field === "type") {
+      node.type = requireSemanticElementType(tree, payload.value, [node.id]);
+    } else {
+      node.statement = payload.value;
+    }
     node.updatedAt = context.now;
     for (const link of tree.links.filter((candidate) => candidate.sourceNodeId === node.id || candidate.targetNodeId === node.id)) {
       refreshGoalTreeLinkText(tree, link);
       link.updatedAt = context.now;
     }
+    tree.updatedAt = context.now;
+  });
+
+  register("semantic.elements.update-type", (draft, payload, context) => {
+    const tree = findTree(draft, payload.treeId);
+    const kernel = requireSemanticKernel(tree);
+    const elementIds = [...new Set(payload.elementIds || [])];
+    if (!elementIds.length) throw new LtpError("SEMANTIC_SELECTION_EMPTY", "semantic.elements.update-type requires elements");
+    const elements = elementIds.map((elementId) => {
+      const element = kernel.elements.find((candidate) => candidate.id === elementId);
+      if (!element) throw new LtpError("SEMANTIC_ELEMENT_NOT_FOUND", `Element ${elementId} was not found`, { elementId });
+      return element;
+    });
+    const legacyType = requireSemanticElementType(tree, payload.value, elementIds);
+    if (legacyType === "goal" && elements.length > 1) {
+      throw new LtpError("NODE_TYPE_UNIQUE", "Type GOAL can only be used once", { type: payload.value });
+    }
+    for (const element of elements) {
+      const node = tree.nodes.find((candidate) => candidate.id === element.id);
+      node.type = legacyType;
+      node.updatedAt = context.now;
+    }
+    tree.updatedAt = context.now;
+  });
+
+  register("semantic.element.create", (draft, payload, context) => {
+    const tree = findTree(draft, payload.treeId);
+    requireSemanticKernel(tree);
+    const element = payload.element || {};
+    const id = requireSemanticId(element, "id");
+    requireUniqueSemanticId(tree, id);
+    const legacyType = requireSemanticElementType(tree, element.type);
+    const canvas = findCanvas(draft, tree.canvasId);
+    const frameId = payload.frameId || tree.hostFrameId;
+    const frame = canvas.frames.find((candidate) => candidate.id === frameId && candidate.treeId === tree.id);
+    if (!frame) throw new LtpError("FRAME_NOT_FOUND", `Frame ${frameId} is not part of tree ${tree.id}`, { frameId, treeId: tree.id });
+    const statement = element.statement;
+    const box = payload.layout || {};
+    const frameBox = canvas.layout?.frames?.[frameId] || { x: 0, y: 0 };
+    const offset = frame.nodeIds.length * 24;
+    tree.nodes.push({
+      id,
+      treeId: tree.id,
+      frameId,
+      type: legacyType,
+      statement,
+      shortLabel: element.shortLabel || statement,
+      status: element.status || "draft",
+      tags: [...(element.tags || [legacyType])],
+      sourceIds: [...(element.sourceIds || [])],
+      validation: cloneValue(element.validation || {}),
+      promotedFrom: null,
+      createdAt: context.now,
+      updatedAt: context.now
+    });
+    frame.nodeIds.push(id);
+    tree.layout.nodes[id] = {
+      x: Number.isFinite(box.x) ? box.x : frameBox.x + 48 + offset,
+      y: Number.isFinite(box.y) ? box.y : frameBox.y + 80 + offset,
+      width: Number.isFinite(box.width) ? box.width : 250,
+      height: Number.isFinite(box.height) ? box.height : 72,
+      pinned: Boolean(box.pinned),
+      layoutSource: box.layoutSource || "manual"
+    };
+    tree.updatedAt = context.now;
+  });
+
+  register("semantic.elements.delete", (draft, payload, context) => {
+    const tree = findTree(draft, payload.treeId);
+    const kernel = requireSemanticKernel(tree);
+    const elementIds = new Set(payload.elementIds || []);
+    if (!elementIds.size) throw new LtpError("SEMANTIC_SELECTION_EMPTY", "semantic.elements.delete requires elements");
+    for (const elementId of elementIds) {
+      if (!kernel.elements.some((candidate) => candidate.id === elementId)) {
+        throw new LtpError("SEMANTIC_ELEMENT_NOT_FOUND", `Element ${elementId} was not found`, { elementId });
+      }
+    }
+    const relationIds = new Set(
+      tree.links
+        .filter((link) => elementIds.has(link.sourceNodeId) || elementIds.has(link.targetNodeId))
+        .map((link) => link.id)
+    );
+    removeGoalTreeRelations(tree, relationIds);
+    tree.nodes = tree.nodes.filter((node) => !elementIds.has(node.id));
+    const canvas = findCanvas(draft, tree.canvasId);
+    for (const frame of canvas.frames) frame.nodeIds = frame.nodeIds.filter((nodeId) => !elementIds.has(nodeId));
+    for (const assumption of tree.assumptions) {
+      if (elementIds.has(assumption.promotedNodeId)) assumption.promotedNodeId = null;
+    }
+    for (const elementId of elementIds) delete tree.layout.nodes[elementId];
     tree.updatedAt = context.now;
   });
 
@@ -153,6 +298,84 @@ const createCommandRegistry = () => {
     tree.updatedAt = context.now;
   });
 
+  register("semantic.relation.create", (draft, payload, context) => {
+    const tree = findTree(draft, payload.treeId);
+    const kernel = requireSemanticKernel(tree);
+    const relation = payload.relation || {};
+    const id = requireSemanticId(relation, "id");
+    requireUniqueSemanticId(tree, id);
+    if (relation.type !== "NECESSITY" || relation.combination !== "SIMPLE" || relation.renderMode !== "IMPLICIT") {
+      throw new LtpError("SEMANTIC_COMPATIBILITY_UNSUPPORTED", "Goal Tree compatibility supports NECESSITY/SIMPLE/IMPLICIT relations", {
+        relationId: id
+      });
+    }
+    const inputs = relation.inputs || [];
+    const outputs = relation.outputs || [];
+    if (inputs.length !== 1 || outputs.length !== 1) {
+      throw new LtpError("SEMANTIC_COMPATIBILITY_UNSUPPORTED", "A Goal Tree relation requires one input and one output", {
+        relationId: id
+      });
+    }
+    const elementIds = new Set(kernel.elements.map((element) => element.id));
+    const sourceNodeId = inputs[0].elementId;
+    const targetNodeId = outputs[0].elementId;
+    if (!elementIds.has(sourceNodeId) || !elementIds.has(targetNodeId)) {
+      throw new LtpError("SEMANTIC_ENDPOINT_MISSING", "Relation endpoints must reference semantic elements", {
+        sourceNodeId,
+        targetNodeId
+      });
+    }
+    if (tree.links.some((link) => link.sourceNodeId === sourceNodeId && link.targetNodeId === targetNodeId)) {
+      throw new LtpError("SEMANTIC_RELATION_DUPLICATE", "A relation with these endpoints already exists", {
+        sourceNodeId,
+        targetNodeId
+      });
+    }
+    const sourceBox = tree.layout.nodes[sourceNodeId];
+    const targetBox = tree.layout.nodes[targetNodeId];
+    const link = {
+      id,
+      treeId: tree.id,
+      sourceNodeId,
+      targetNodeId,
+      type: "necessity",
+      logic: "necessity",
+      meaning: "",
+      verbalization: "",
+      assumptionIds: [],
+      sourceIds: [...(relation.sourceIds || [])],
+      validation: cloneValue(relation.validation || { status: "draft" }),
+      visual: {
+        route: [],
+        routeSource: "auto",
+        labelPosition: {
+          x: Math.round(((sourceBox?.x || 0) + (targetBox?.x || 0)) / 2),
+          y: Math.round(((sourceBox?.y || 0) + (targetBox?.y || 0)) / 2)
+        }
+      },
+      createdAt: context.now,
+      updatedAt: context.now
+    };
+    refreshGoalTreeLinkText(tree, link);
+    tree.links.push(link);
+    tree.layout.links[id] = cloneValue(link.visual);
+    tree.updatedAt = context.now;
+  });
+
+  register("semantic.relations.delete", (draft, payload, context) => {
+    const tree = findTree(draft, payload.treeId);
+    const kernel = requireSemanticKernel(tree);
+    const relationIds = new Set(payload.relationIds || []);
+    if (!relationIds.size) throw new LtpError("SEMANTIC_SELECTION_EMPTY", "semantic.relations.delete requires relations");
+    for (const relationId of relationIds) {
+      if (!kernel.relations.some((candidate) => candidate.id === relationId)) {
+        throw new LtpError("SEMANTIC_RELATION_NOT_FOUND", `Relation ${relationId} was not found`, { relationId });
+      }
+    }
+    removeGoalTreeRelations(tree, relationIds);
+    tree.updatedAt = context.now;
+  });
+
   register("semantic.assumption.update", (draft, payload, context) => {
     if (payload.field !== "statement") {
       throw new LtpError("FIELD_NOT_ALLOWED", `Field ${payload.field} cannot be updated by semantic.assumption.update`, { field: payload.field });
@@ -171,6 +394,83 @@ const createCommandRegistry = () => {
     assumption.updatedAt = context.now;
     tree.updatedAt = context.now;
   });
+
+  register("semantic.assumption.create", (draft, payload, context) => {
+    const tree = findTree(draft, payload.treeId);
+    const kernel = requireSemanticKernel(tree);
+    const semanticAssumption = payload.assumption || {};
+    const id = requireSemanticId(semanticAssumption, "id");
+    requireUniqueSemanticId(tree, id);
+    const subject = semanticAssumption.subject || {};
+    if (subject.kind !== "RELATION") {
+      throw new LtpError("SEMANTIC_COMPATIBILITY_UNSUPPORTED", "Goal Tree assumptions must target a complete relation", {
+        assumptionId: id,
+        subjectKind: subject.kind
+      });
+    }
+    const relation = kernel.relations.find((candidate) => candidate.id === subject.relationId);
+    if (!relation) {
+      throw new LtpError("SEMANTIC_RELATION_NOT_FOUND", `Relation ${subject.relationId} was not found`, {
+        relationId: subject.relationId
+      });
+    }
+    const link = tree.links.find((candidate) => candidate.id === relation.id);
+    tree.assumptions.push({
+      id,
+      treeId: tree.id,
+      linkId: relation.id,
+      statement: semanticAssumption.statement,
+      status: semanticAssumption.status || "draft",
+      sourceIds: [...(semanticAssumption.sourceIds || [])],
+      promotedNodeId: null,
+      createdAt: context.now,
+      updatedAt: context.now
+    });
+    link.assumptionIds.push(id);
+    link.updatedAt = context.now;
+    tree.updatedAt = context.now;
+  });
+
+  register("semantic.assumptions.delete", (draft, payload, context) => {
+    const tree = findTree(draft, payload.treeId);
+    const kernel = requireSemanticKernel(tree);
+    const assumptionIds = new Set(payload.assumptionIds || []);
+    if (!assumptionIds.size) throw new LtpError("SEMANTIC_SELECTION_EMPTY", "semantic.assumptions.delete requires assumptions");
+    for (const assumptionId of assumptionIds) {
+      if (!kernel.assumptions.some((candidate) => candidate.id === assumptionId)) {
+        throw new LtpError("SEMANTIC_ASSUMPTION_NOT_FOUND", `Assumption ${assumptionId} was not found`, { assumptionId });
+      }
+    }
+    tree.assumptions = tree.assumptions.filter((assumption) => !assumptionIds.has(assumption.id));
+    for (const link of tree.links) {
+      link.assumptionIds = link.assumptionIds.filter((assumptionId) => !assumptionIds.has(assumptionId));
+    }
+    tree.updatedAt = context.now;
+  });
+
+  register("semantic.element.delete", (draft, payload, context) =>
+    handlers.get("semantic.elements.delete")(
+      draft,
+      { ...payload, elementIds: [requireSemanticId(payload, "elementId")] },
+      context
+    )
+  );
+
+  register("semantic.relation.delete", (draft, payload, context) =>
+    handlers.get("semantic.relations.delete")(
+      draft,
+      { ...payload, relationIds: [requireSemanticId(payload, "relationId")] },
+      context
+    )
+  );
+
+  register("semantic.assumption.delete", (draft, payload, context) =>
+    handlers.get("semantic.assumptions.delete")(
+      draft,
+      { ...payload, assumptionIds: [requireSemanticId(payload, "assumptionId")] },
+      context
+    )
+  );
 
   register("view.update", (draft, payload) => {
     if (payload.canvasId) {

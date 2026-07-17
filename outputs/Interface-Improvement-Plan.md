@@ -668,11 +668,9 @@ Evidencia Gate B:
 
 ### 3C.14: kernel semantico y prueba vertical CRT
 
-Estado: temporalmente pausado mientras se confirma la correccion metodologica
-del EC. Gate B, migracion reversible, validador compartido, preview
-CLI, refresco transaccional y primera vertical de comandos genericos de
-`3C.14a` estan implementados. La creacion/borrado n-ario y la paridad UI siguen
-pendientes.
+Estado: en curso. La base metodologica esta aprobada y `3C.14a` esta cerrado en
+PASS. El siguiente subgate es `3C.14b`, la vertical CRT con relaciones n-arias
+y junctions.
 
 Incluye:
 
@@ -688,12 +686,10 @@ Gate: no se inicia la implementacion completa de EC/FRT hasta que Goal Tree y CR
 Subgates:
 
 - `3C.14a`: kernel interno y migracion aditiva con paridad de Goal Tree. En
-  PASS: proyeccion determinista, huella de frescura, idempotencia, downgrade
-  exacto, validador compartido, preview CLI, refresco dentro del mismo commit,
-  Undo/Redo y comandos de update para elements, relaciones `SIMPLE` y
-  assumptions. Pendientes crear/borrar relaciones y junctions, operaciones
-  colectivas, activacion controlada y paridad del renderer. Evidencia en
-  `outputs/Semantic-Migration-3C.14a.md`.
+  PASS: activacion y persistencia automaticas, proyeccion determinista, huella
+  de frescura, idempotencia, downgrade exacto, validador compartido, CRUD y
+  operaciones colectivas, CLI, renderer compatible, Undo/Redo y smoke
+  Electron. Evidencia en `outputs/Semantic-Migration-3C.14a.md`.
 - `3C.14b`: CRT vertical en core, CLI, renderer, teclado y layout.
 - `3C.14c`: spike de EC para validar topologia, roles y assumptions antes de
   publicar el formato. Si exige cambiar el kernel, se repiten las pruebas de

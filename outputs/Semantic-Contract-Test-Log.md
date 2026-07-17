@@ -1,6 +1,6 @@
 # Semantic Contract Test Log
 
-Fecha: 2026-07-16.
+Fecha: 2026-07-17.
 
 Contrato: `semantic-contract/v0.1/contract.json`.
 
@@ -40,10 +40,9 @@ Estado tecnico de Gate B: `PASS`.
 - `npm run test:prototype`: PASS, incluido Electron smoke.
 - `npm run test:visual`: 37/37 PASS.
 
-Tras la correccion del oraculo EC, `npm run test:prototype -- --no-smoke`
-volvio a pasar completo. El reintento del smoke Electron no llego a lanzarse en
-dos ocasiones porque caduco la autorizacion externa; el ultimo smoke de la misma
-rama, anterior a esta correccion sin cambios de renderer, permanece en PASS.
+Tras la activacion de `3C.14a`, `npm run test:prototype -- --no-smoke` y el smoke
+Electron pasan completos. El smoke verifico tambien el ciclo contextual de
+Types, las operaciones colectivas y Undo con el kernel activo.
 
 ## Hallazgo durante la revision
 
@@ -67,14 +66,20 @@ ahora roles canonicos, dos ramas paralelas y tres assumptions para cada uno de
 los cinco break points. Las mutaciones rechazan ramas cruzadas, roles
 intercambiados, cobertura ausente y scope incorrecto en `D-D'`.
 
+## Aprobacion metodologica
+
+La base semantica y la hoja de oraculos fueron aprobadas el 2026-07-17 para
+proceder con `3C.14a`. Esta aprobacion desbloquea la vertical tecnica, pero no
+convierte recomendaciones CLR en errores duros ni publica todavia el contrato.
+
 ## Pendiente
 
-- Validacion metodologica del usuario sobre los cuatro oraculos y sus
-  verbalizaciones.
 - Seleccion, borrado y copia parcial de relaciones n-arias, que pertenece a Gate
   F despues de la vertical CRT.
 - Capturas de junctions reales, que no pueden producirse hasta que el renderer
   del kernel exista en `3C.14b`.
 
-`3C.14a` dispone ya de un incremento reversible separado. Esta correccion de
-Gate B modifica contrato y oraculos, no el renderer ni el schema publico `0.2`.
+`3C.14a` esta cerrado en PASS con activacion reversible, CRUD Goal Tree y
+paridad UI/CLI/Undo/Redo. El schema publico sigue siendo `0.2`; las relaciones
+n-arias y junctions se introduciran en `3C.14b` sin forzarlas dentro de links
+binarios.

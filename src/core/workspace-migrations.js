@@ -1,4 +1,5 @@
 const clone = (value) => structuredClone(value);
+const { addSemanticKernel } = require("./semantic-migration");
 
 const migrateLegacyWorkspace = (source) => {
   const workspace = clone(source);
@@ -93,6 +94,25 @@ const migrateLegacyWorkspace = (source) => {
   return { workspace, changed: true };
 };
 
-const migrateWorkspace = (workspace) => migrateLegacyWorkspace(workspace);
+const migrateWorkspace = (workspace, options = {}) => {
+  const legacyMigration = migrateLegacyWorkspace(workspace);
+  if (options.semanticKernel === false) {
+    return {
+      ...legacyMigration,
+      legacyChanged: legacyMigration.changed,
+      semanticChanged: false,
+      migratedTreeIds: []
+    };
+  }
+
+  const semanticMigration = addSemanticKernel(legacyMigration.workspace);
+  return {
+    workspace: semanticMigration.workspace,
+    changed: legacyMigration.changed || semanticMigration.changed,
+    legacyChanged: legacyMigration.changed,
+    semanticChanged: semanticMigration.changed,
+    migratedTreeIds: semanticMigration.migratedTreeIds
+  };
+};
 
 module.exports = { migrateWorkspace };

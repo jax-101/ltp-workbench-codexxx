@@ -832,9 +832,58 @@ cobertura por relacion; distinguir prompts por tipo de subject; permitir drafts
 incompletos pero impedir aceptacion silenciosa; y probar borrado, copia y Undo
 de la assumption junto con su relacion.
 
+### L-081: Una migracion se activa en el limite transaccional, no en la UI
+
+Fecha: 2026-07-17
+
+Evidencia: activar el kernel solo durante la apertura dejaba una salida por la
+que `workspace.replace` podia introducir una copia antigua sin proyeccion. La
+UI normal no lo hacia, pero CLI, fixtures o clientes futuros si podian hacerlo.
+
+Aprendizaje: un invariante de persistencia debe ser garantizado por la ultima
+frontera comun antes de validar y guardar. Las superficies de entrada no son un
+lugar suficiente para imponerlo.
+
+Aplicacion futura: normalizar cada candidato dentro de la transaccion; probar
+clientes antiguos; hacer idempotente la reparacion; y validar el estado ya
+normalizado antes del commit atomico.
+
+### L-082: Una recomendacion metodologica no es un error de integridad
+
+Fecha: 2026-07-17
+
+Evidencia: reducir temporalmente un Goal Tree de tres a dos CSF producia una
+advertencia correcta, pero el validador de workspace la convertia en rechazo de
+la operacion. El diagrama seguia siendo estructural y semanticamente valido.
+
+Aprendizaje: mezclar warnings y errores hace que una guia de calidad se
+convierta accidentalmente en una restriccion del modelo. La severidad forma
+parte del contrato y debe conservarse en todas las capas.
+
+Aplicacion futura: bloquear commits solo ante errores; mostrar recomendaciones
+sin impedir el trabajo incremental; y probar explicitamente que cada warning
+permite persistir mientras su mutacion equivalente de error hace rollback.
+
+### L-083: Las acciones disponibles deben respetar el contexto semantico
+
+Fecha: 2026-07-17
+
+Evidencia: el ciclo de Types permitia convertir un nodo conectado en una
+assumption, aunque una assumption promovida es una anotacion y no un extremo
+causal. Filtrar esa opcion para selecciones conectadas mantuvo el atajo y evito
+crear estados que el kernel debia rechazar.
+
+Aprendizaje: una lista de comandos o Types globalmente valida puede contener
+opciones invalidas para la seleccion actual. La UX debe expresar las mismas
+precondiciones que el dominio, sin esperar al error de guardado.
+
+Aplicacion futura: calcular capacidades desde seleccion y relaciones; compartir
+el mismo predicado entre UI y pruebas; conservar una validacion defensiva en el
+core; y explicar por que una opcion no aparece cuando sea necesario.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-081`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-084`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

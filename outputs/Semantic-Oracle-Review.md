@@ -1,6 +1,8 @@
 # Semantic Oracle Review
 
-Fecha: 2026-07-16.
+Fecha: 2026-07-17.
+
+Estado: **APROBADO** como base metodologica para iniciar `3C.14a`.
 
 Objetivo: validar el significado de los cuatro oraculos de Gate B antes de
 iniciar `3C.14a`. Los diagramas no fijan posiciones ni apariencia final; fijan

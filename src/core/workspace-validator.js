@@ -115,7 +115,7 @@ const validateWorkspace = (workspace) => {
     const hostFrame = frames.find((frame) => frame.id === tree.hostFrameId);
 
     if (tree.semanticKernel) {
-      for (const semanticIssue of validateSemanticGraph(tree.semanticKernel)) {
+      for (const semanticIssue of validateSemanticGraph(tree.semanticKernel).filter((issue) => issue.severity === "ERROR")) {
         add(
           `SEMANTIC_${semanticIssue.code}`,
           `${treePath}.semanticKernel.${semanticIssue.path}`,

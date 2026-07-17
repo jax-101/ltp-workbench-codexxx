@@ -85,16 +85,17 @@ Las operaciones de escritura exigen una revision esperada. `--dry-run` devuelve 
 - Bloqueo entre procesos y escritura atomica.
 - CLI con validacion, consulta, actualizacion de nodos y aplicacion de comandos JSON.
 - Salida y errores estructurados para automatizacion.
-- Preview read-only de la migracion al kernel semantico con fingerprint y
-  cardinalidades, sin modificar el workspace.
-- Comandos `semantic.element.update`, `semantic.relation.update-endpoints` y
-  `semantic.assumption.update` disponibles mediante `apply`, con compatibilidad
-  Goal Tree y Undo/Redo atomicos.
+- Activacion automatica e idempotente del kernel semantico al abrir o aplicar
+  comandos, con fingerprint, downgrade exacto y persistencia atomica.
+- CRUD Goal Tree mediante `semantic.element.*`, `semantic.relation.*` y
+  `semantic.assumption.*`, junto con cambio de Type y borrado colectivos.
+- Cascadas de relaciones y assumptions, validacion completa y Undo/Redo
+  atomicos disponibles desde `apply` sin una ruta de escritura alternativa.
 
 ## Evolucion pendiente
 
 - Migrar cada mutacion del renderer a un comando granular.
-- Transacciones batch atomicas para subgrafos completos.
+- Transacciones batch atomicas para subgrafos n-arios completos.
 - Diario append-only con identidad del actor y recuperacion tras fallo.
 - Checkpoints nombrados y comparacion entre revisiones.
 - Scopes de permisos para agentes y confirmacion de operaciones destructivas.

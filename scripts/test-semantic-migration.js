@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const {
@@ -150,6 +151,21 @@ const run = async () => {
   }, { recordHistory: false });
   assert.equal(viewResult.patches.some((patch) => patch.path.includes("semanticKernel")), false, "visual edits must not rewrite semantic data");
 
+  const replacementWithoutKernel = removeSemanticKernel(viewResult.workspace).workspace;
+  replacementWithoutKernel.trees[0].nodes[0].statement = "Legacy caller replacement";
+  const replacementResult = await engine.execute({
+    commandId: "semantic-kernel-recovery",
+    type: "workspace.replace",
+    label: "Replace from a legacy caller",
+    expectedRevision: 4,
+    payload: { workspace: replacementWithoutKernel, includeViewState: true }
+  });
+  assert(replacementResult.workspace.trees[0].semanticKernel, "every Goal Tree write must restore a missing semantic kernel");
+  assert.equal(
+    replacementResult.workspace.trees[0].semanticKernel.elements.find((element) => element.id === editedNode.id).statement,
+    "Legacy caller replacement"
+  );
+
   const genericEngine = new TransactionEngine(addSemanticKernel(fixtures[0]).workspace, {
     clock: () => "2026-07-16T13:00:00.000Z"
   });
@@ -240,7 +256,167 @@ const run = async () => {
   );
   assert.equal(guardedEngine.getSnapshot().revision || 0, 0, "invalid semantic commands must roll back completely");
 
-  console.log("Semantic migration passed: 2 Goal Tree workspaces, exact downgrade, shared validation, transactional parity, generic updates and rollback guards.");
+  const crudEngine = new TransactionEngine(addSemanticKernel(fixtures[0]).workspace, {
+    clock: () => "2026-07-16T14:00:00.000Z"
+  });
+  const crudTree = crudEngine.getSnapshot().trees[0];
+  const createdElementIds = ["semantic-created-a", "semantic-created-b"];
+  for (const [index, elementId] of createdElementIds.entries()) {
+    const created = await crudEngine.execute({
+      commandId: `semantic-element-create-${index}`,
+      type: "semantic.element.create",
+      label: "Create semantic element",
+      expectedRevision: index,
+      payload: {
+        treeId: crudTree.id,
+        frameId: crudTree.hostFrameId,
+        element: { id: elementId, type: "NC", statement: `Created semantic condition ${index + 1}` }
+      }
+    });
+    assert(created.workspace.trees[0].nodes.some((node) => node.id === elementId));
+    assert(created.workspace.trees[0].semanticKernel.elements.some((element) => element.id === elementId));
+  }
+
+  const collectiveType = await crudEngine.execute({
+    commandId: "semantic-elements-update-type",
+    type: "semantic.elements.update-type",
+    label: "Update semantic element Types",
+    expectedRevision: 2,
+    payload: { treeId: crudTree.id, elementIds: createdElementIds, value: "CSF" }
+  });
+  assert(
+    collectiveType.workspace.trees[0].semanticKernel.elements
+      .filter((element) => createdElementIds.includes(element.id))
+      .every((element) => element.type === "CSF")
+  );
+  const collectiveTypeUndone = await crudEngine.undo();
+  assert(
+    collectiveTypeUndone.workspace.trees[0].semanticKernel.elements
+      .filter((element) => createdElementIds.includes(element.id))
+      .every((element) => element.type === "NC"),
+    "one Undo must restore the full collective Type change"
+  );
+
+  const relationId = "semantic-created-relation";
+  const relationCreated = await crudEngine.execute({
+    commandId: "semantic-relation-create",
+    type: "semantic.relation.create",
+    label: "Create semantic relation",
+    expectedRevision: 4,
+    payload: {
+      treeId: crudTree.id,
+      relation: {
+        id: relationId,
+        type: "NECESSITY",
+        combination: "SIMPLE",
+        renderMode: "IMPLICIT",
+        inputs: [{ elementId: createdElementIds[0] }],
+        outputs: [{ elementId: createdElementIds[1] }]
+      }
+    }
+  });
+  assert(relationCreated.workspace.trees[0].links.some((link) => link.id === relationId));
+  assert(relationCreated.workspace.trees[0].semanticKernel.relations.some((relation) => relation.id === relationId));
+
+  const assumptionId = "semantic-created-assumption";
+  const assumptionCreated = await crudEngine.execute({
+    commandId: "semantic-assumption-create",
+    type: "semantic.assumption.create",
+    label: "Create semantic assumption",
+    expectedRevision: 5,
+    payload: {
+      treeId: crudTree.id,
+      assumption: {
+        id: assumptionId,
+        statement: "The created relation remains necessary.",
+        status: "draft",
+        subject: { kind: "RELATION", relationId }
+      }
+    }
+  });
+  assert(assumptionCreated.workspace.trees[0].assumptions.some((assumption) => assumption.id === assumptionId));
+  assert(assumptionCreated.workspace.trees[0].semanticKernel.assumptions.some((assumption) => assumption.id === assumptionId));
+
+  const relationDeleted = await crudEngine.execute({
+    commandId: "semantic-relation-delete",
+    type: "semantic.relation.delete",
+    label: "Delete semantic relation",
+    expectedRevision: 6,
+    payload: { treeId: crudTree.id, relationId }
+  });
+  assert.equal(relationDeleted.workspace.trees[0].links.some((link) => link.id === relationId), false);
+  assert.equal(relationDeleted.workspace.trees[0].assumptions.some((assumption) => assumption.id === assumptionId), false);
+  const relationDeleteUndone = await crudEngine.undo();
+  assert(relationDeleteUndone.workspace.trees[0].links.some((link) => link.id === relationId));
+  assert(relationDeleteUndone.workspace.trees[0].assumptions.some((assumption) => assumption.id === assumptionId));
+
+  const elementsDeleted = await crudEngine.execute({
+    commandId: "semantic-elements-delete",
+    type: "semantic.elements.delete",
+    label: "Delete semantic elements",
+    expectedRevision: 8,
+    payload: { treeId: crudTree.id, elementIds: createdElementIds }
+  });
+  assert(createdElementIds.every((elementId) => !elementsDeleted.workspace.trees[0].nodes.some((node) => node.id === elementId)));
+  assert.equal(elementsDeleted.workspace.trees[0].links.some((link) => link.id === relationId), false);
+  assert.equal(elementsDeleted.workspace.trees[0].assumptions.some((assumption) => assumption.id === assumptionId), false);
+  const elementDeleteUndone = await crudEngine.undo();
+  assert(createdElementIds.every((elementId) => elementDeleteUndone.workspace.trees[0].nodes.some((node) => node.id === elementId)));
+  assert(elementDeleteUndone.workspace.trees[0].links.some((link) => link.id === relationId));
+  assert(elementDeleteUndone.workspace.trees[0].assumptions.some((assumption) => assumption.id === assumptionId));
+
+  const assumptionsDeleted = await crudEngine.execute({
+    commandId: "semantic-assumption-delete",
+    type: "semantic.assumption.delete",
+    label: "Delete semantic assumptions",
+    expectedRevision: 10,
+    payload: { treeId: crudTree.id, assumptionId }
+  });
+  assert.equal(assumptionsDeleted.workspace.trees[0].assumptions.some((assumption) => assumption.id === assumptionId), false);
+  assert.equal(
+    assumptionsDeleted.workspace.trees[0].links.find((link) => link.id === relationId).assumptionIds.includes(assumptionId),
+    false
+  );
+  const assumptionDeleteUndone = await crudEngine.undo();
+  assert(assumptionDeleteUndone.workspace.trees[0].assumptions.some((assumption) => assumption.id === assumptionId));
+  assert(assumptionDeleteUndone.workspace.trees[0].links.find((link) => link.id === relationId).assumptionIds.includes(assumptionId));
+
+  const cliDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "ltp-semantic-cli-"));
+  try {
+    const workspacePath = path.join(cliDirectory, "workspace.json");
+    const commandPath = path.join(cliDirectory, "command.json");
+    fs.writeFileSync(workspacePath, `${JSON.stringify(removeSemanticKernel(fixtures[0]).workspace, null, 2)}\n`);
+    fs.writeFileSync(commandPath, `${JSON.stringify({
+      commandId: "cli-semantic-create",
+      type: "semantic.element.create",
+      label: "Create semantic element from CLI",
+      expectedRevision: 0,
+      payload: {
+        treeId: fixtures[0].trees[0].id,
+        frameId: fixtures[0].trees[0].hostFrameId,
+        element: { id: "cli-created-element", type: "NC", statement: "Created headlessly" }
+      }
+    }, null, 2)}\n`);
+    const cliApply = spawnSync(process.execPath, [
+      path.join(__dirname, "ltp-cli.js"),
+      "apply",
+      "--workspace",
+      workspacePath,
+      "--command",
+      commandPath,
+      "--json"
+    ], { encoding: "utf8" });
+    assert.equal(cliApply.status, 0, cliApply.stderr);
+    const cliWorkspace = JSON.parse(fs.readFileSync(workspacePath, "utf8"));
+    assert.equal(cliWorkspace.revision, 1);
+    assert(cliWorkspace.trees[0].nodes.some((node) => node.id === "cli-created-element"));
+    assert(cliWorkspace.trees[0].semanticKernel.elements.some((element) => element.id === "cli-created-element"));
+    assert.deepEqual(validateWorkspace(cliWorkspace), []);
+  } finally {
+    fs.rmSync(cliDirectory, { recursive: true, force: true });
+  }
+
+  console.log("Semantic migration passed: activation, exact downgrade, shared validation, full Goal Tree CRUD, collective commands, atomic Undo/Redo and rollback guards.");
 };
 
 run().catch((error) => {

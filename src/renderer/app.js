@@ -65,6 +65,20 @@ const assumptionsForLink = (linkId) => (tree()?.assumptions || []).filter((assum
 const selectedSourceNodeIds = () => [...connectionSourceIds].filter((id) => Boolean(nodeById()[id]));
 const diagramDefinition = () => diagramDefinitions[tree()?.type] || diagramDefinitions.goalTree;
 const diagramNodeTypes = () => diagramDefinition()?.nodeTypes || [];
+const compatibleNodeTypes = (nodeIds) => {
+  const selectedIds = new Set(nodeIds);
+  return diagramNodeTypes().filter((typeDefinition) => {
+    if (
+      typeDefinition.id === "assumption" &&
+      nodeIds.some((nodeId) => tree().links.some((link) => link.sourceNodeId === nodeId || link.targetNodeId === nodeId))
+    ) {
+      return false;
+    }
+    if (!typeDefinition.unique) return true;
+    if (nodeIds.length > 1) return false;
+    return !tree().nodes.some((node) => node.type === typeDefinition.id && !selectedIds.has(node.id));
+  });
+};
 const resetTypeCycle = () => {
   multiTypeCycleState = { signature: null, index: -1 };
 };
@@ -664,12 +678,7 @@ const cycleSelectedNodeTypes = async () => {
     return;
   }
 
-  const selectedIds = new Set(nodeIds);
-  const availableTypes = diagramNodeTypes().filter((typeDefinition) => {
-    if (!typeDefinition.unique) return true;
-    if (nodeIds.length > 1) return false;
-    return !tree().nodes.some((node) => node.type === typeDefinition.id && !selectedIds.has(node.id));
-  });
+  const availableTypes = compatibleNodeTypes(nodeIds);
   if (!availableTypes.length) {
     setStatus("No compatible entity Types are available");
     return;
@@ -3781,11 +3790,7 @@ window.__ltpSmokeTest = async () => {
     .slice(0, 2)
     .map((node) => node.id);
   replaceSelection(typeCycleIds[0]);
-  const singleTypeOptions = diagramNodeTypes().filter(
-    (typeDefinition) =>
-      !typeDefinition.unique ||
-      !tree().nodes.some((node) => node.id !== typeCycleIds[0] && node.type === typeDefinition.id)
-  );
+  const singleTypeOptions = compatibleNodeTypes([typeCycleIds[0]]);
   const singleTypeBefore = nodeById()[typeCycleIds[0]].type;
   const singleTypeIndex = singleTypeOptions.findIndex((typeDefinition) => typeDefinition.id === singleTypeBefore);
   const expectedSingleType = singleTypeOptions[(singleTypeIndex + 1 + singleTypeOptions.length) % singleTypeOptions.length].id;
@@ -3795,7 +3800,7 @@ window.__ltpSmokeTest = async () => {
 
   replaceSelection(typeCycleIds[0]);
   toggleSelectionRoot(typeCycleIds[1]);
-  const repeatableTypes = diagramNodeTypes().filter((typeDefinition) => !typeDefinition.unique);
+  const repeatableTypes = compatibleNodeTypes(typeCycleIds).filter((typeDefinition) => !typeDefinition.unique);
   const pressTypeCycle = async (expectedType) => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true }));
     const changed = await waitFor(() => typeCycleIds.every((nodeId) => nodeById()[nodeId]?.type === expectedType));
@@ -3803,12 +3808,15 @@ window.__ltpSmokeTest = async () => {
     return changed;
   };
   const multiTypeCycleResets = await pressTypeCycle(repeatableTypes[0].id);
-  const multiTypeCycleAdvances = await pressTypeCycle(repeatableTypes[1].id);
-  await pressTypeCycle(repeatableTypes[2].id);
+  let multiTypeCycleAdvances = true;
+  for (const typeDefinition of repeatableTypes.slice(1)) {
+    multiTypeCycleAdvances = (await pressTypeCycle(typeDefinition.id)) && multiTypeCycleAdvances;
+  }
+  const typeBeforeWrap = repeatableTypes.at(-1).id;
   const multiTypeCycleWraps = await pressTypeCycle(repeatableTypes[0].id);
   await moveHistory("undo");
   const multiTypeCycleUndoIsAtomic = typeCycleIds.every(
-    (nodeId) => nodeById()[nodeId]?.type === repeatableTypes[2].id
+    (nodeId) => nodeById()[nodeId]?.type === typeBeforeWrap
   );
 
   replaceSelection(typeCycleIds[0]);
