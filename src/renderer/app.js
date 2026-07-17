@@ -2382,14 +2382,6 @@ const closeCommandPalette = () => {
   commandPaletteOpen = false;
   commandPaletteQuery = "";
   commandPaletteIndex = 0;
-  assumptionWorkbenchOpen = false;
-  assumptionWorkbenchQuery = "";
-  assumptionWorkbenchCoverage = "ALL";
-  assumptionWorkbenchStatus = "ALL";
-  assumptionContextLinkId = null;
-  activeAssumptionId = null;
-  selectedAssumptionIds.clear();
-  assumptionMultiSelectionMode = false;
   render();
   focusCanvas();
 };
@@ -4914,6 +4906,14 @@ window.__ltpEcVisualTest = async () => {
   panelState.rightOpen = true;
   replaceSelection("injection");
   render();
+  const coverageHiddenByDefault = tree().links.every((link) =>
+    getComputedStyle(document.querySelector(`[data-element-id="${link.id}"][data-assumption-coverage]`)).opacity === "0"
+  );
+  showHints();
+  const coverageVisibleWithHints = tree().links.every((link) =>
+    getComputedStyle(document.querySelector(`[data-element-id="${link.id}"][data-assumption-coverage]`)).opacity === "1"
+  );
+  hideHints();
   const injectionDerivationVisible =
     document.querySelectorAll(".derivation-list .derivation-item").length === 1 &&
     document.querySelector(".derivation-list")?.textContent.includes("Current accounting allocates setup cost");
@@ -4976,6 +4976,9 @@ window.__ltpEcVisualTest = async () => {
   const workbenchOpensFromKeyboard = assumptionWorkbenchOpen
     && document.querySelectorAll("[data-workbench-line-row]").length === activeTree.links.length
     && document.querySelectorAll(".workbench-assumption").length === activeTree.semanticKernel.assumptions.length;
+  openCommandPalette();
+  closeCommandPalette();
+  const palettePreservesWorkbench = assumptionWorkbenchOpen && Boolean(document.querySelector(".assumption-workbench"));
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "/", bubbles: true, cancelable: true }));
   const workbenchSearchShortcutWorks = document.activeElement === document.querySelector("[data-assumption-workbench-search]");
   focusCanvas();
@@ -5018,6 +5021,7 @@ window.__ltpEcVisualTest = async () => {
     && document.querySelector(".workbench-trace")?.textContent.includes("PROPOSED")
     && document.querySelectorAll(".workbench-assumption .assumption-hint").length === 1;
   const workbenchWorks = workbenchOpensFromKeyboard
+    && palettePreservesWorkbench
     && workbenchSearchShortcutWorks
     && statusFilterWorks
     && globalHintsWork
@@ -5045,11 +5049,13 @@ window.__ltpEcVisualTest = async () => {
     injectionVisible &&
     injectionDerivationVisible &&
     derivation?.targetAssumptionId === "assumption-d-prime-c-2" &&
+    coverageHiddenByDefault &&
+    coverageVisibleWithHints &&
     workbenchWorks;
 
   return {
     ok,
-    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; parallel=${parallelBranches}; conflict distinct/no arrow=${conflictIsDistinct}/${conflictHasNoArrow}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; conflict assumptions visible=${conflictAssumptionsVisible}; coverage indicators/status=${coverageIndicatorsVisible}/${invalidatedStatusVisible}; injection/derivation=${injectionVisible}/${injectionDerivationVisible}/${derivation?.targetAssumptionId}; workbench=${workbenchWorks} [open=${workbenchOpensFromKeyboard}, search=${workbenchSearchShortcutWorks}, filter=${statusFilterWorks}, hints=${globalHintsWork}, collective/undo=${collectiveStatusWorks}/${collectiveStatusUndoWorks}, trace=${injectionTraceWorks}]; geometry issues=${geometryIssues.length}.`
+    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; parallel=${parallelBranches}; conflict distinct/no arrow=${conflictIsDistinct}/${conflictHasNoArrow}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; conflict assumptions visible=${conflictAssumptionsVisible}; coverage indicators/status=${coverageIndicatorsVisible}/${invalidatedStatusVisible}; coverage demand hidden/shown=${coverageHiddenByDefault}/${coverageVisibleWithHints}; injection/derivation=${injectionVisible}/${injectionDerivationVisible}/${derivation?.targetAssumptionId}; workbench=${workbenchWorks} [open=${workbenchOpensFromKeyboard}, palette=${palettePreservesWorkbench}, search=${workbenchSearchShortcutWorks}, filter=${statusFilterWorks}, hints=${globalHintsWork}, collective/undo=${collectiveStatusWorks}/${collectiveStatusUndoWorks}, trace=${injectionTraceWorks}]; geometry issues=${geometryIssues.length}.`
   };
 };
 
@@ -5241,6 +5247,14 @@ const resetShortcutAuditWorkspace = async () => {
   commandPaletteOpen = false;
   commandPaletteQuery = "";
   commandPaletteIndex = 0;
+  assumptionWorkbenchOpen = false;
+  assumptionWorkbenchQuery = "";
+  assumptionWorkbenchCoverage = "ALL";
+  assumptionWorkbenchStatus = "ALL";
+  assumptionContextLinkId = null;
+  activeAssumptionId = null;
+  selectedAssumptionIds.clear();
+  assumptionMultiSelectionMode = false;
   replaceSelection(tree().nodes.find((node) => node.type === "necessaryCondition")?.id || tree().nodes[0]?.id);
   setStatus("Keyboard shortcut audit ready");
   render();
@@ -5638,6 +5652,7 @@ window.__ltpVisualTestStep = async (step) => {
       const previousRevision = workspaceData.revision;
       workspaceData = await window.ltpPrototype.loadRandomLayoutFixture({ scenarioId, seed });
       workspaceData.revision = previousRevision;
+      activeDocumentId = initialDocumentIdFor(workspaceData);
       const randomTree = tree();
       const randomCanvas = canvas();
       activeFrameId = randomTree.hostFrameId;
@@ -5715,7 +5730,8 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     const hostVisible = Boolean(document.querySelector(`[data-element-id="${activeTree.hostFrameId}"]`));
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
-    return result("Build identity and composed canvas", buildInfo.id === "3C.12" && hostVisible && rootHidden, "Build 3C.12 is visible; Goal Tree is finite and Root remains conceptual.");
+    const buildVisible = document.querySelector(".build-identity")?.textContent.includes(`build ${buildInfo.id}`);
+    return result("Build identity and composed canvas", buildVisible && hostVisible && rootHidden, `Build ${buildInfo.id} is visible; Goal Tree is finite and Root remains conceptual.`);
   }
 
   if (step === "frame-summary") {
@@ -6131,6 +6147,7 @@ window.__ltpVisualTestStep = async (step) => {
     const previousRevision = workspaceData.revision;
     workspaceData = await window.ltpPrototype.loadComplexGoalTreeFixture();
     workspaceData.revision = previousRevision;
+    activeDocumentId = initialDocumentIdFor(workspaceData);
     const complexTree = tree();
     const hostFrame = frameById()[complexTree.hostFrameId];
     activeFrameId = hostFrame.id;
@@ -6317,8 +6334,8 @@ window.__ltpVisualTestStep = async (step) => {
           })
         );
       }
-      await persist("Create visual cycle fixture");
-      await runAutoLayout();
+      workspaceData = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
+      render();
     }
     const semanticCyclePreserved = linkIds.every((linkId, index) => {
       const link = linkById()[linkId];

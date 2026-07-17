@@ -733,6 +733,10 @@ Subgates:
   y muestra las injections que desafian cada assumption. Con ello se cierra
   `3C.14c.2`. Evidencia en
   `outputs/Global-Assumption-Workbench-3C.14c.2c.md`.
+  Subincremento `3C.14c.2d` en PASS: los indicadores de cantidad y coverage
+  quedan ocultos por defecto, aparecen con `H` y permanecen visibles solo en
+  la linea seleccionada o activa. Evidencia en
+  `outputs/On-Demand-Assumption-Indicators-3C.14c.2d.md`.
 
 Criterios de aceptacion de `3C.14c.2`:
 

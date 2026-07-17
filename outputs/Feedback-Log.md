@@ -1027,3 +1027,19 @@ Criterios de aceptacion:
   prioridad contextual de letras dentro de secuencias de hints.
 - Las operaciones colectivas afectan solo a assumptions seleccionadas y son
   atomicas con Undo/Redo.
+
+### F-079: Indicadores de assumptions bajo demanda
+
+Feedback: mostrar permanentemente el numero de assumptions detras de cada link
+anade demasiado ruido visual. Debe permanecer oculto por defecto y mostrarse a
+demanda junto con los targets de links al pulsar `H`.
+
+Estado: implementado y validado en `3C.14c.2d`.
+
+Criterios de aceptacion:
+
+- Sin hints ni una linea activa, ningun contador queda visible.
+- `H` muestra cantidad y coverage de todos los links visibles.
+- Una linea seleccionada o con contexto de assumptions conserva su indicador.
+- Al cerrar hints o el contexto, el resto vuelve a quedar oculto.
+- La informacion completa sigue disponible en inspector y Workbench global.

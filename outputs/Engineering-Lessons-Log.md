@@ -1143,9 +1143,26 @@ Aplicacion futura: separar consultas de dominio de selectores de render;
 mostrar filtros activos; probar elementos ocultos y colapsados; y exigir que
 los totales globales se calculen antes de cualquier proyeccion visual.
 
+### L-099: La informacion secundaria puede ser critica sin ser permanente
+
+Fecha: 2026-07-17
+
+Evidencia: los contadores de assumptions ayudaban a detectar coverage, pero al
+mostrarse sobre cada link dominaban visualmente el diagrama y parecian parte de
+su notacion primaria.
+
+Aprendizaje: importancia y permanencia visual son dimensiones distintas. La
+informacion de auditoria puede conservar acceso inmediato mediante un modo
+temporal y contexto seleccionado, dejando el estado de reposo dedicado a la
+estructura principal.
+
+Aplicacion futura: clasificar informacion por tarea; usar revelado progresivo
+para diagnostico; conservar el elemento activo como ancla; y probar tanto el
+estado silencioso como el modo de inspeccion.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-099`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-100`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

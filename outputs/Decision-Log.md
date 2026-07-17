@@ -771,3 +771,14 @@ Razon: foco, minimizacion y viewport son decisiones de presentacion. Si una
 revision global heredase esa visibilidad, podria declarar cobertura completa
 mientras omite assumptions ocultas. Compartir comandos evita que la vista
 global se convierta en una segunda implementacion del dominio.
+
+### D-105: Coverage usa revelado progresivo en el canvas
+
+Decision: los indicadores de assumptions quedan ocultos en reposo. `H` los
+revela para navegar y una linea activa conserva solo su propio indicador. El
+inspector y el Workbench mantienen el detalle persistente.
+
+Razon: coverage es informacion de revision, no parte de la topologia primaria.
+Mostrarla siempre compite con flechas, nodos y conflictos; ocultarla por
+completo dificultaria descubrir gaps. El revelado progresivo mantiene ambas
+necesidades sin duplicar estados ni controles.
