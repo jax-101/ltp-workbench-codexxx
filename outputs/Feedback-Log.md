@@ -990,8 +990,9 @@ linea quebrada de conflicto. Romper la Cloud consiste en definir, inspeccionar,
 desafiar e invalidar esas assumptions. Deben poder verse, anadirse, editarse,
 eliminarse e inspeccionarse individualmente y en conjunto sin utilizar raton.
 
-Estado: kernel CRUD y scopes `RELATION/INPUT/OUTPUT/CONFLICT` disponibles; UI
-parcial en el inspector. Flujo completo planificado como `3C.14c.2`.
+Estado: `3C.14c.2a` implementa lifecycle, comandos individuales/colectivos,
+Undo/Redo, CLI, export, indicadores por linea y cambio de estado en inspector.
+La navegacion H/M y el Workbench global siguen en curso dentro de `3C.14c.2`.
 
 Criterios de aceptacion:
 

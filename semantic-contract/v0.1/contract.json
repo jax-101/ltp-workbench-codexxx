@@ -156,5 +156,6 @@
   "assumptionScopes": ["RELATION", "INPUT", "OUTPUT", "CONFLICT"],
   "derivationTypes": ["CHALLENGES_ASSUMPTION", "DERIVED_FROM", "VALIDATES", "MITIGATES"],
   "derivationStatuses": ["PROPOSED", "VALIDATED", "REJECTED", "SUPERSEDED"],
+  "assumptionStatuses": ["DRAFT", "SUPPORTED", "CHALLENGED", "INVALIDATED"],
   "reviewStates": ["UNREVIEWED", "ACCEPTED", "NEEDS_WORK", "WAIVED"]
 }

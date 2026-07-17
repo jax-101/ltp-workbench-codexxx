@@ -1088,9 +1088,28 @@ Aplicacion futura: elegir aridad por significado atomico; validar propiedades
 globales como conectividad aparte; conservar provenance por edge; y probar
 operaciones parciales sobre subgrafos antes de introducir hiperrelaciones.
 
+### L-096: Un resultado derivado no se convierte en estado autoritativo por ser visible
+
+Fecha: 2026-07-17
+
+Evidencia: una prueba Electron calculo Layout y lo asigno solo a la variable del
+renderer. Al ejecutar despues una transaccion de assumption, el motor devolvio
+su snapshot persistido anterior y parecio deshacer la geometria. El producto no
+fallaba; el test habia mezclado una proyeccion pura no guardada con una fuente
+transaccional autoritativa.
+
+Aprendizaje: mostrar un resultado calculado no equivale a comprometerlo. Cuando
+coexisten proyecciones, caches y un command engine, las pruebas deben respetar
+la misma frontera de commit que el producto o ejecutar primero los cambios de
+dominio y derivar despues.
+
+Aplicacion futura: declarar autoridad por capa; diferenciar funciones `preview`
+y `commit`; evitar reemplazar snapshots tras una transaccion; y probar
+secuencias dominio-layout-dominio, no solo operaciones aisladas.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-096`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-097`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

@@ -720,6 +720,10 @@ Subgates:
   abrir sus assumptions, recorrerlas, crear, editar, cambiar estado, invalidar
   y borrar sin raton. Una vista global permite revisar todos los break points,
   filtrar gaps y seguir injections hasta la assumption desafiada.
+  Subincremento `3C.14c.2a` en PASS: lifecycle, transacciones individuales y
+  colectivas, CLI, export, indicadores de cobertura y editor de estado. Falta
+  cerrar el scope de navegacion H/M y el Workbench global. Evidencia en
+  `outputs/Assumption-Lifecycle-3C.14c.2a.md`.
 
 Criterios de aceptacion de `3C.14c.2`:
 

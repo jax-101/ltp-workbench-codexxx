@@ -735,3 +735,15 @@ conflictos por parejas y reevaluar las restantes. Inventar `D''`, `D'''` o una
 relacion ternaria hardcodeada mezclaria notacion con identidad, complicaria
 assumptions por conflicto y obligaria a reescribir layout y validacion para cada
 cardinalidad.
+
+### D-102: El estado agregado de una linea no sustituye el detalle
+
+Decision: cada linea muestra cantidad y un estado agregado con precedencia
+`INVALIDATED > CHALLENGED > SUPPORTED > DRAFT`; cero assumptions se representa
+como `uncovered`. El inspector y el Workbench conservan siempre los estados
+individuales.
+
+Razon: el canvas necesita senalar rapidamente donde trabajar sin convertir una
+mezcla de assumptions en una conclusion binaria. La precedencia hace visibles
+los riesgos, mientras el detalle evita inferir que todas las assumptions estan
+invalidadas o soportadas por el color de la linea.

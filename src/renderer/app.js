@@ -92,6 +92,17 @@ const assumptionsForLink = (linkId) => {
   }
   return (tree()?.assumptions || []).filter((assumption) => assumption.linkId === linkId);
 };
+const assumptionStatus = (assumption) => String(assumption.status || "DRAFT").toUpperCase();
+const assumptionCoverageForLink = (linkId) => {
+  const assumptions = assumptionsForLink(linkId);
+  const statuses = assumptions.map(assumptionStatus);
+  let state = "uncovered";
+  if (statuses.includes("INVALIDATED")) state = "invalidated";
+  else if (statuses.includes("CHALLENGED")) state = "challenged";
+  else if (statuses.length && statuses.every((status) => status === "SUPPORTED")) state = "supported";
+  else if (statuses.length) state = "draft";
+  return { count: assumptions.length, state };
+};
 const selectedSourceNodeIds = () => [...connectionSourceIds].filter((id) => Boolean(nodeById()[id]));
 const diagramDefinition = () => diagramDefinitions[tree()?.type] || diagramDefinitions.goalTree;
 const diagramNodeTypes = () => diagramDefinition()?.nodeTypes || [];
@@ -793,18 +804,18 @@ const updateLink = async (id, field, value) => {
   await persist("Edit link");
 };
 
-const updateAssumption = async (id, value) => {
+const updateAssumption = async (id, value, field = "statement") => {
   if (nativeSemanticTree()) {
     await executeDomainCommand(
       "semantic.assumption.update",
-      { treeId: tree().id, assumptionId: id, field: "statement", value },
+      { treeId: tree().id, assumptionId: id, field, value },
       "Edit assumption"
     );
     render();
     return;
   }
   const assumption = tree().assumptions.find((item) => item.id === id);
-  assumption.statement = value;
+  assumption[field] = field === "status" ? String(value).toLowerCase() : value;
   assumption.updatedAt = now();
   render();
   await persist("Edit assumption");
@@ -2387,8 +2398,9 @@ const renderLinks = () => {
       const included = selectionIds.has(link.id) && !selectionRootIds.has(link.id) ? "selection-included" : "";
       const hintVisible = hintsVisible ? "hint-visible" : "";
       const conflict = link.type === "conflict" || link.directionality === "UNDIRECTED";
+      const coverage = assumptionCoverageForLink(link.id);
       return `
-        <button class="link-target ${conflict ? "link-target-conflict" : ""} ${selected} ${included} ${hintVisible}" data-element-id="${link.id}" data-element-type="link" style="left:${label.x - 12}px;top:${label.y - 12}px;" title="${escapeHtml(link.meaning)}">${conflict ? "×" : "L"}</button>
+        <button class="link-target ${conflict ? "link-target-conflict" : ""} assumption-coverage assumption-coverage-${coverage.state} ${selected} ${included} ${hintVisible}" data-element-id="${link.id}" data-element-type="link" data-assumption-coverage="${coverage.state}" style="left:${label.x - 12}px;top:${label.y - 12}px;" title="${escapeHtml(`${link.meaning} - ${coverage.count} assumptions, ${coverage.state}`)}"><span class="link-kind">${conflict ? "×" : ""}</span><span class="assumption-count">${coverage.count}</span></button>
       `;
     })
     .join("");
@@ -2935,6 +2947,14 @@ const renderInspector = () => {
               (assumption) => `
                 <article class="assumption-item">
                   <textarea data-assumption-id="${assumption.id}">${escapeHtml(assumption.statement)}</textarea>
+                  <div class="assumption-meta">
+                    <label for="assumption-status-${assumption.id}">Status</label>
+                    <select id="assumption-status-${assumption.id}" data-assumption-status-id="${assumption.id}">
+                      ${["DRAFT", "SUPPORTED", "CHALLENGED", "INVALIDATED"].map((status) =>
+                        `<option value="${status}" ${assumptionStatus(assumption) === status ? "selected" : ""}>${status.charAt(0) + status.slice(1).toLowerCase()}</option>`
+                      ).join("")}
+                    </select>
+                  </div>
                   ${nativeSemanticTree() ? "" : `<button data-promote-assumption="${assumption.id}">Promote to node</button>`}
                 </article>
               `
@@ -3099,6 +3119,10 @@ const bindEvents = () => {
 
   app.querySelectorAll("[data-assumption-id]").forEach((field) => {
     field.addEventListener("change", () => updateAssumption(field.dataset.assumptionId, field.value));
+  });
+
+  app.querySelectorAll("[data-assumption-status-id]").forEach((field) => {
+    field.addEventListener("change", () => updateAssumption(field.dataset.assumptionStatusId, field.value, "status"));
   });
 
   app.querySelectorAll(".inspector input, .inspector textarea, .inspector select").forEach((field) => {
@@ -4339,6 +4363,7 @@ window.__ltpCrtVisualTest = async () => {
 
 window.__ltpEcVisualTest = async () => {
   await bootPromise;
+  await updateAssumption("assumption-conflict-1", "INVALIDATED", "status");
   workspaceData = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
   panelState.rightOpen = true;
   replaceSelection("injection");
@@ -4371,7 +4396,7 @@ window.__ltpEcVisualTest = async () => {
   const conflictHasNoArrow = !conflictPath?.hasAttribute("marker-end");
   const conflictIsDistinct =
     conflictPath?.classList.contains("link-conflict") &&
-    document.querySelector('[data-element-id="rel-d-d-prime"]')?.textContent.trim() === "×";
+    document.querySelector('[data-element-id="rel-d-d-prime"] .link-kind')?.textContent.trim() === "×";
   const roleLabels = [
     ["objective", "A"],
     ["need-flow", "B"],
@@ -4380,6 +4405,12 @@ window.__ltpEcVisualTest = async () => {
     ["want-large", "D'"]
   ].every(([id, label]) => document.querySelector(`[data-element-id="${id}"] strong`)?.textContent.trim() === label);
   const conflictAssumptionsVisible = document.querySelectorAll(".assumption-list .assumption-item").length === 3;
+  const coverageIndicatorsVisible = activeTree.links.every((link) => {
+    const target = document.querySelector(`[data-element-id="${link.id}"][data-assumption-coverage]`);
+    const expectedState = link.id === "rel-d-d-prime" ? "invalidated" : "draft";
+    return target?.dataset.assumptionCoverage === expectedState && target.querySelector(".assumption-count")?.textContent.trim() === "3";
+  });
+  const invalidatedStatusVisible = document.querySelector('[data-assumption-status-id="assumption-conflict-1"]')?.value === "INVALIDATED";
   const derivation = activeTree.semanticKernel.derivations.find((item) => item.id === "derivation-injection");
   const injectionVisible = Boolean(document.querySelector('[data-element-id="injection"].node-injection'));
   const parallelBranches =
@@ -4407,18 +4438,21 @@ window.__ltpEcVisualTest = async () => {
     conflictIsDistinct &&
     roleLabels &&
     conflictAssumptionsVisible &&
+    coverageIndicatorsVisible &&
+    invalidatedStatusVisible &&
     injectionVisible &&
     injectionDerivationVisible &&
     derivation?.targetAssumptionId === "assumption-d-prime-c-2";
 
   return {
     ok,
-    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; parallel=${parallelBranches}; conflict distinct/no arrow=${conflictIsDistinct}/${conflictHasNoArrow}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; conflict assumptions visible=${conflictAssumptionsVisible}; injection/derivation=${injectionVisible}/${injectionDerivationVisible}/${derivation?.targetAssumptionId}; geometry issues=${geometryIssues.length}.`
+    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; parallel=${parallelBranches}; conflict distinct/no arrow=${conflictIsDistinct}/${conflictHasNoArrow}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; conflict assumptions visible=${conflictAssumptionsVisible}; coverage indicators/status=${coverageIndicatorsVisible}/${invalidatedStatusVisible}; injection/derivation=${injectionVisible}/${injectionDerivationVisible}/${derivation?.targetAssumptionId}; geometry issues=${geometryIssues.length}.`
   };
 };
 
 window.__ltpEcTripartiteVisualTest = async () => {
   await bootPromise;
+  await updateAssumption("assumption-p1-p2-1", "INVALIDATED", "status");
   workspaceData = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
   panelState.rightOpen = true;
   const conflictIds = ["rel-p1-p2", "rel-p1-p3", "rel-p2-p3"];
@@ -4457,7 +4491,7 @@ window.__ltpEcTripartiteVisualTest = async () => {
     const path = document.querySelector(`[data-link-id="${linkId}"]`);
     return path?.classList.contains("link-conflict")
       && !path.hasAttribute("marker-end")
-      && document.querySelector(`[data-element-id="${linkId}"]`)?.textContent.trim() === "×";
+      && document.querySelector(`[data-element-id="${linkId}"] .link-kind`)?.textContent.trim() === "×";
   });
   const roleLabels = [
     ["objective", "A"],
@@ -4468,6 +4502,12 @@ window.__ltpEcTripartiteVisualTest = async () => {
     ["want-patients", "P2"],
     ["want-insurers", "P3"]
   ].every(([id, label]) => document.querySelector(`[data-element-id="${id}"] strong`)?.textContent.trim() === label);
+  const coverageIndicatorsVisible = activeTree.links.every((link) => {
+    const target = document.querySelector(`[data-element-id="${link.id}"][data-assumption-coverage]`);
+    const expectedState = link.id === "rel-p1-p2" ? "invalidated" : "draft";
+    return target?.dataset.assumptionCoverage === expectedState && target.querySelector(".assumption-count")?.textContent.trim() === "3";
+  });
+  const invalidatedStatusVisible = document.querySelector('[data-assumption-status-id="assumption-p1-p2-1"]')?.value === "INVALIDATED";
   const noJunctions = !activeTree.nodes.some((node) => node.synthetic?.kind === "JUNCTION");
   const allLinksCurved = document.querySelectorAll("path.link-curved").length === activeTree.links.length;
   const ok = activeTree.type === "ec"
@@ -4483,11 +4523,13 @@ window.__ltpEcTripartiteVisualTest = async () => {
     && causalArrowsVisible
     && conflictsDistinct
     && roleLabels
+    && coverageIndicatorsVisible
+    && invalidatedStatusVisible
     && conflictAssumptionsVisible;
 
   return {
     ok,
-    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; three parallel branches=${parallelBranches}; conflicts distinct/no arrow=${conflictsDistinct}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; assumptions per conflict=${conflictAssumptionsVisible}; curved=${allLinksCurved}; geometry issues=${geometryIssues.length}.`
+    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; three parallel branches=${parallelBranches}; conflicts distinct/no arrow=${conflictsDistinct}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; coverage indicators/status=${coverageIndicatorsVisible}/${invalidatedStatusVisible}; assumptions per conflict=${conflictAssumptionsVisible}; curved=${allLinksCurved}; geometry issues=${geometryIssues.length}.`
   };
 };
 

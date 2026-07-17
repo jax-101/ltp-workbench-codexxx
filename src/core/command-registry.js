@@ -2,6 +2,7 @@ const { LtpError } = require("./errors");
 const { current, isDraft } = require("immer");
 const { getDiagramDefinition } = require("./diagram-registry");
 const { NATIVE_STORAGE_MODE } = require("./semantic-render-projection");
+const { normalizeAssumptionStatus } = require("./semantic-lifecycle");
 
 const cloneValue = (value) => structuredClone(isDraft(value) ? current(value) : value);
 
@@ -508,7 +509,7 @@ const createCommandRegistry = () => {
   });
 
   register("semantic.assumption.update", (draft, payload, context) => {
-    if (payload.field !== "statement") {
+    if (!["statement", "status"].includes(payload.field)) {
       throw new LtpError("FIELD_NOT_ALLOWED", `Field ${payload.field} cannot be updated by semantic.assumption.update`, { field: payload.field });
     }
     const tree = findTree(draft, payload.treeId);
@@ -517,8 +518,12 @@ const createCommandRegistry = () => {
     if (!semanticAssumption) {
       throw new LtpError("SEMANTIC_ASSUMPTION_NOT_FOUND", `Assumption ${payload.assumptionId} was not found`, { assumptionId: payload.assumptionId });
     }
+    const value = payload.field === "status" ? normalizeAssumptionStatus(payload.value) : payload.value;
+    if (payload.field === "status" && !value) {
+      throw new LtpError("ASSUMPTION_STATUS_INVALID", `Assumption status ${payload.value} is invalid`, { status: payload.value });
+    }
     if (isNativeSemanticTree(tree)) {
-      semanticAssumption.statement = payload.value;
+      semanticAssumption[payload.field] = value;
       tree.updatedAt = context.now;
       return;
     }
@@ -526,7 +531,7 @@ const createCommandRegistry = () => {
     if (!assumption) {
       throw new LtpError("ASSUMPTION_NOT_FOUND", `Compatibility assumption ${semanticAssumption.id} was not found`, { assumptionId: semanticAssumption.id });
     }
-    assumption.statement = payload.value;
+    assumption[payload.field] = payload.field === "status" ? value.toLowerCase() : value;
     assumption.updatedAt = context.now;
     tree.updatedAt = context.now;
   });
@@ -534,11 +539,15 @@ const createCommandRegistry = () => {
   register("semantic.assumption.create", (draft, payload, context) => {
     const tree = findTree(draft, payload.treeId);
     const kernel = requireSemanticKernel(tree);
-    const semanticAssumption = payload.assumption || {};
+    const semanticAssumption = cloneValue(payload.assumption || {});
     const id = requireSemanticId(semanticAssumption, "id");
     requireUniqueSemanticId(tree, id);
+    semanticAssumption.status = normalizeAssumptionStatus(semanticAssumption.status, "DRAFT");
+    if (!semanticAssumption.status) {
+      throw new LtpError("ASSUMPTION_STATUS_INVALID", `Assumption status ${payload.assumption?.status} is invalid`, { status: payload.assumption?.status });
+    }
     if (isNativeSemanticTree(tree)) {
-      kernel.assumptions.push(cloneValue(semanticAssumption));
+      kernel.assumptions.push(semanticAssumption);
       tree.updatedAt = context.now;
       return;
     }
@@ -561,7 +570,7 @@ const createCommandRegistry = () => {
       treeId: tree.id,
       linkId: relation.id,
       statement: semanticAssumption.statement,
-      status: semanticAssumption.status || "draft",
+      status: semanticAssumption.status.toLowerCase(),
       sourceIds: [...(semanticAssumption.sourceIds || [])],
       promotedNodeId: null,
       createdAt: context.now,
@@ -595,6 +604,33 @@ const createCommandRegistry = () => {
     tree.updatedAt = context.now;
   });
 
+  register("semantic.assumptions.update-status", (draft, payload, context) => {
+    const tree = findTree(draft, payload.treeId);
+    const kernel = requireSemanticKernel(tree);
+    const assumptionIds = new Set(payload.assumptionIds || []);
+    if (!assumptionIds.size) throw new LtpError("SEMANTIC_SELECTION_EMPTY", "semantic.assumptions.update-status requires assumptions");
+    const status = normalizeAssumptionStatus(payload.status);
+    if (!status) throw new LtpError("ASSUMPTION_STATUS_INVALID", `Assumption status ${payload.status} is invalid`, { status: payload.status });
+    for (const assumptionId of assumptionIds) {
+      if (!kernel.assumptions.some((candidate) => candidate.id === assumptionId)) {
+        throw new LtpError("SEMANTIC_ASSUMPTION_NOT_FOUND", `Assumption ${assumptionId} was not found`, { assumptionId });
+      }
+    }
+    if (isNativeSemanticTree(tree)) {
+      for (const assumption of kernel.assumptions) {
+        if (assumptionIds.has(assumption.id)) assumption.status = status;
+      }
+      tree.updatedAt = context.now;
+      return;
+    }
+    for (const assumption of tree.assumptions) {
+      if (!assumptionIds.has(assumption.id)) continue;
+      assumption.status = status.toLowerCase();
+      assumption.updatedAt = context.now;
+    }
+    tree.updatedAt = context.now;
+  });
+
   register("semantic.element.delete", (draft, payload, context) =>
     handlers.get("semantic.elements.delete")(
       draft,
@@ -613,6 +649,14 @@ const createCommandRegistry = () => {
 
   register("semantic.assumption.delete", (draft, payload, context) =>
     handlers.get("semantic.assumptions.delete")(
+      draft,
+      { ...payload, assumptionIds: [requireSemanticId(payload, "assumptionId")] },
+      context
+    )
+  );
+
+  register("semantic.assumption.update-status", (draft, payload, context) =>
+    handlers.get("semantic.assumptions.update-status")(
       draft,
       { ...payload, assumptionIds: [requireSemanticId(payload, "assumptionId")] },
       context

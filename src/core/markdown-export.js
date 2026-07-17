@@ -50,7 +50,7 @@ const nativeSemanticMarkdown = (tree, system) => {
         const scope = assumption.subject?.kind === "RELATION"
           ? ""
           : ` (${assumption.subject?.kind}: ${assumption.subject?.elementId || "conflict"})`;
-        lines.push(`- ${assumption.statement}${scope}`);
+        lines.push(`- [${assumption.status || "DRAFT"}] ${assumption.statement}${scope}`);
       }
       lines.push("");
     }

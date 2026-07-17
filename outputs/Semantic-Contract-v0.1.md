@@ -87,6 +87,10 @@ Esta granularidad evita perder significado al convertir varias flechas en una
 relacion n-aria. El runner rechaza una assumption que apunte a un tramo que no
 pertenece a la relacion.
 
+Su lifecycle es `DRAFT`, `SUPPORTED`, `CHALLENGED` o `INVALIDATED`.
+`INVALIDATED` conserva statement, subject, fuentes y derivaciones; no equivale
+a borrado.
+
 ## Derivaciones
 
 Las derivaciones soportadas inicialmente son:

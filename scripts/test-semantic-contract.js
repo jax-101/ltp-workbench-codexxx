@@ -237,6 +237,9 @@ const validateFixtureReference = (fixture) => {
     const subject = assumption.subject || {};
     const relation = relationById.get(subject.relationId);
     if (!assumption.statement) issue(issues, "ERROR", "ASSUMPTION_STATEMENT_REQUIRED", `${assumptionPath}.statement`, "Statement is required");
+    if (assumption.status && !contract.assumptionStatuses.includes(assumption.status)) {
+      issue(issues, "ERROR", "ASSUMPTION_STATUS_INVALID", `${assumptionPath}.status`, `${assumption.status} is invalid`);
+    }
     if (!contract.assumptionScopes.includes(subject.kind)) {
       issue(issues, "ERROR", "ASSUMPTION_SCOPE_INVALID", `${assumptionPath}.subject.kind`, `${subject.kind} is invalid`);
       continue;
@@ -557,6 +560,10 @@ assert(
   validateFixture(wrongConflictScope).some((entry) => entry.code === "ASSUMPTION_CONFLICT_SCOPE_REQUIRED"),
   "Conflict assumptions require conflict scope"
 );
+
+const invalidAssumptionStatus = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
+invalidAssumptionStatus.assumptions[0].status = "DISCARDED";
+assert(validateFixture(invalidAssumptionStatus).some((entry) => entry.code === "ASSUMPTION_STATUS_INVALID"), "Unknown assumption lifecycle status must fail");
 
 const wrongLogicMode = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-goal-tree"));
 wrongLogicMode.logicMode = "SUFFICIENCY";

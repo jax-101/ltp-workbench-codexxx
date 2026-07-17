@@ -244,6 +244,9 @@ const validateSemanticGraph = (graph, contract = defaultContract) => {
     if (!assumption.statement) {
       addIssue(issues, "ERROR", "ASSUMPTION_STATEMENT_REQUIRED", `${assumptionPath}.statement`, "Statement is required");
     }
+    if (assumption.status && !contract.assumptionStatuses.includes(assumption.status)) {
+      addIssue(issues, "ERROR", "ASSUMPTION_STATUS_INVALID", `${assumptionPath}.status`, `${assumption.status} is invalid`);
+    }
     if (!contract.assumptionScopes.includes(subject.kind)) {
       addIssue(issues, "ERROR", "ASSUMPTION_SCOPE_INVALID", `${assumptionPath}.subject.kind`, `${subject.kind} is invalid`);
       continue;

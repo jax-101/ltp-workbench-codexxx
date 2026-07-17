@@ -2,6 +2,7 @@ const { createHash } = require("node:crypto");
 const { LtpError } = require("./errors");
 const { assertSemanticGraph } = require("./semantic-validator");
 const { NATIVE_STORAGE_MODE, applyNativeSemanticProjection } = require("./semantic-render-projection");
+const { normalizeAssumptionStatus } = require("./semantic-lifecycle");
 
 const KERNEL_VERSION = "0.1";
 const CONTRACT_VERSION = "0.1";
@@ -138,7 +139,7 @@ const projectGoalTree = (tree) => {
     return {
       id: assumption.id,
       statement: assumption.statement,
-      status: assumption.status,
+      status: normalizeAssumptionStatus(assumption.status, "DRAFT"),
       subject: { kind: "RELATION", relationId: assumption.linkId }
     };
   }).sort(byId);

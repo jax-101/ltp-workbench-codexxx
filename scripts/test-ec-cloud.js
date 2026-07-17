@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { runComposedLayout, validateComposedGeometry } = require("../src/core/composed-layout");
@@ -49,6 +51,52 @@ const run = async () => {
   assert.equal(cliOutput.graph.diagramType, "EC");
   assert.equal(cliOutput.graph.assumptions.length, 15);
 
+  const cliDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "ltp-ec-assumptions-"));
+  try {
+    const cliWorkspacePath = path.join(cliDirectory, "workspace.json");
+    fs.writeFileSync(cliWorkspacePath, `${JSON.stringify(buildEcFixture(), null, 2)}\n`);
+    const runCli = (...commandArgs) => spawnSync(process.execPath, [
+      path.join(__dirname, "ltp-cli.js"),
+      ...commandArgs,
+      "--workspace",
+      cliWorkspacePath,
+      "--json"
+    ], { encoding: "utf8" });
+    const statusResult = runCli(
+      "assumption", "status", "--tree", tree.id,
+      "--assumption", "assumption-d-prime-c-2", "--status", "invalidated", "--expected-revision", "0"
+    );
+    assert.equal(statusResult.status, 0, statusResult.stderr);
+    const invalidatedList = runCli(
+      "assumption", "list", "--tree", tree.id, "--status", "INVALIDATED"
+    );
+    assert.equal(invalidatedList.status, 0, invalidatedList.stderr);
+    assert.deepEqual(JSON.parse(invalidatedList.stdout).assumptions.map((assumption) => assumption.id), ["assumption-d-prime-c-2"]);
+    const createResult = runCli(
+      "assumption", "create", "--tree", tree.id, "--relation", "rel-d-b",
+      "--id", "cli-created-assumption", "--statement", "CLI captures an explicit test assumption.",
+      "--status", "challenged", "--expected-revision", "1"
+    );
+    assert.equal(createResult.status, 0, createResult.stderr);
+    const challengedList = runCli(
+      "assumption", "list", "--tree", tree.id, "--relation", "rel-d-b", "--status", "CHALLENGED"
+    );
+    assert.equal(challengedList.status, 0, challengedList.stderr);
+    assert.deepEqual(JSON.parse(challengedList.stdout).assumptions.map((assumption) => assumption.id), ["cli-created-assumption"]);
+    const deleteResult = runCli(
+      "assumption", "delete", "--tree", tree.id, "--assumption", "cli-created-assumption", "--expected-revision", "2"
+    );
+    assert.equal(deleteResult.status, 0, deleteResult.stderr);
+    const cliShow = runCli("semantic", "show", "--tree", tree.id);
+    assert.equal(cliShow.status, 0, cliShow.stderr);
+    const cliGraph = JSON.parse(cliShow.stdout).graph;
+    assert.equal(cliGraph.assumptions.find((assumption) => assumption.id === "assumption-d-prime-c-2").status, "INVALIDATED");
+    assert.equal(cliGraph.assumptions.some((assumption) => assumption.id === "cli-created-assumption"), false);
+    assert.equal(cliGraph.derivations.find((derivation) => derivation.id === "derivation-injection").targetAssumptionId, "assumption-d-prime-c-2");
+  } finally {
+    fs.rmSync(cliDirectory, { recursive: true, force: true });
+  }
+
   const laidOut = await runComposedLayout(fixture);
   const laidOutTree = laidOut.trees[0];
   const boxes = laidOutTree.layout.nodes;
@@ -93,6 +141,41 @@ const run = async () => {
   assert.equal(engine.getSnapshot().trees[0].semanticKernel.assumptions.length, 15);
   await engine.redo();
   assert.equal(engine.getSnapshot().trees[0].semanticKernel.assumptions.length, 16);
+
+  const lifecycleIds = ["assumption-d-prime-c-2", "assumption-conflict-1"];
+  const invalidated = await engine.execute({
+    commandId: "ec-invalidate-assumptions",
+    expectedRevision: 3,
+    type: "semantic.assumptions.update-status",
+    label: "Invalidate EC assumptions",
+    payload: { treeId: tree.id, assumptionIds: lifecycleIds, status: "INVALIDATED" }
+  });
+  assert(lifecycleIds.every((assumptionId) =>
+    invalidated.workspace.trees[0].semanticKernel.assumptions.find((assumption) => assumption.id === assumptionId).status === "INVALIDATED"
+  ));
+  assert.equal(
+    invalidated.workspace.trees[0].semanticKernel.derivations.find((derivation) => derivation.id === "derivation-injection").targetAssumptionId,
+    "assumption-d-prime-c-2",
+    "invalidation must preserve the injection-to-assumption derivation"
+  );
+  const lifecycleUndone = await engine.undo();
+  assert(lifecycleIds.every((assumptionId) =>
+    lifecycleUndone.workspace.trees[0].semanticKernel.assumptions.find((assumption) => assumption.id === assumptionId).status === undefined
+  ));
+  const lifecycleRedone = await engine.redo();
+  assert(lifecycleIds.every((assumptionId) =>
+    lifecycleRedone.workspace.trees[0].semanticKernel.assumptions.find((assumption) => assumption.id === assumptionId).status === "INVALIDATED"
+  ));
+  await assert.rejects(
+    engine.execute({
+      commandId: "ec-invalid-assumption-status",
+      expectedRevision: 6,
+      type: "semantic.assumption.update-status",
+      label: "Reject invalid assumption status",
+      payload: { treeId: tree.id, assumptionId: lifecycleIds[0], status: "DISCARDED" }
+    }),
+    (error) => error.code === "ASSUMPTION_STATUS_INVALID"
+  );
 
   const tripartiteFixture = buildEcTripartiteFixture();
   const tripartiteTree = tripartiteFixture.trees[0];

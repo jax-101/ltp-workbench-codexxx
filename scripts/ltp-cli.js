@@ -73,6 +73,16 @@ const parseExpectedRevision = () => {
   return value;
 };
 
+const parseIdList = (name) => requireFlag(name)
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+const executeAndOutput = async (engine, command) => {
+  const result = await engine.execute(command, { dryRun: Boolean(flags["dry-run"]) });
+  output({ ok: true, commandId: command.commandId, ...result }, `${result.dryRun ? "Previewed" : "Applied"} ${command.type} at revision ${result.revision}`);
+};
+
 const run = async () => {
   const [resource, action] = positional;
 
@@ -153,6 +163,111 @@ const run = async () => {
     return;
   }
 
+  if (resource === "assumption" && action === "list") {
+    const workspace = await readWorkspace();
+    const treeId = requireFlag("tree");
+    const tree = workspace.trees.find((candidate) => candidate.id === treeId);
+    if (!tree) {
+      const error = new Error(`Tree ${treeId} was not found`);
+      error.code = "TREE_NOT_FOUND";
+      throw error;
+    }
+    if (!tree.semanticKernel) {
+      const error = new Error(`Tree ${treeId} has no semantic kernel`);
+      error.code = "SEMANTIC_KERNEL_MISSING";
+      throw error;
+    }
+    const relationId = flags.relation === true ? null : flags.relation;
+    const status = flags.status === true ? null : flags.status?.toUpperCase();
+    const assumptions = tree.semanticKernel.assumptions.filter((assumption) =>
+      (!relationId || assumption.subject?.relationId === relationId)
+      && (!status || (assumption.status || "DRAFT") === status)
+    );
+    output({ ok: true, revision: workspaceRevision(workspace), treeId, assumptions }, `${assumptions.length} assumption(s)`);
+    return;
+  }
+
+  if (resource === "assumption" && action === "create") {
+    const engine = await createEngine();
+    const treeId = requireFlag("tree");
+    const relationId = requireFlag("relation");
+    const tree = engine.getSnapshot().trees.find((candidate) => candidate.id === treeId);
+    const relation = tree?.semanticKernel?.relations.find((candidate) => candidate.id === relationId);
+    if (!relation) {
+      const error = new Error(`Relation ${relationId} was not found`);
+      error.code = "SEMANTIC_RELATION_NOT_FOUND";
+      throw error;
+    }
+    const kind = flags.scope && flags.scope !== true ? String(flags.scope).toUpperCase() : relation.type === "CONFLICT" ? "CONFLICT" : "RELATION";
+    const subject = { kind, relationId };
+    if (["INPUT", "OUTPUT"].includes(kind)) subject.elementId = requireFlag("element");
+    const command = {
+      commandId: flags["command-id"] || randomUUID(),
+      type: "semantic.assumption.create",
+      label: "Create assumption from CLI",
+      expectedRevision: parseExpectedRevision(),
+      payload: {
+        treeId,
+        assumption: {
+          id: flags.id && flags.id !== true ? flags.id : randomUUID(),
+          statement: requireFlag("statement"),
+          status: flags.status && flags.status !== true ? flags.status : "DRAFT",
+          subject
+        }
+      }
+    };
+    await executeAndOutput(engine, command);
+    return;
+  }
+
+  if (resource === "assumption" && action === "update") {
+    const engine = await createEngine();
+    const command = {
+      commandId: flags["command-id"] || randomUUID(),
+      type: "semantic.assumption.update",
+      label: "Update assumption from CLI",
+      expectedRevision: parseExpectedRevision(),
+      payload: {
+        treeId: requireFlag("tree"),
+        assumptionId: requireFlag("assumption"),
+        field: requireFlag("field"),
+        value: requireFlag("value")
+      }
+    };
+    await executeAndOutput(engine, command);
+    return;
+  }
+
+  if (resource === "assumption" && action === "status") {
+    const engine = await createEngine();
+    const command = {
+      commandId: flags["command-id"] || randomUUID(),
+      type: "semantic.assumptions.update-status",
+      label: "Update assumption status from CLI",
+      expectedRevision: parseExpectedRevision(),
+      payload: {
+        treeId: requireFlag("tree"),
+        assumptionIds: parseIdList("assumption"),
+        status: requireFlag("status")
+      }
+    };
+    await executeAndOutput(engine, command);
+    return;
+  }
+
+  if (resource === "assumption" && action === "delete") {
+    const engine = await createEngine();
+    const command = {
+      commandId: flags["command-id"] || randomUUID(),
+      type: "semantic.assumptions.delete",
+      label: "Delete assumptions from CLI",
+      expectedRevision: parseExpectedRevision(),
+      payload: { treeId: requireFlag("tree"), assumptionIds: parseIdList("assumption") }
+    };
+    await executeAndOutput(engine, command);
+    return;
+  }
+
   if (resource === "node" && action === "update") {
     const engine = await createEngine();
     const treeId = requireFlag("tree");
@@ -179,20 +294,18 @@ const run = async () => {
           }
         : { treeId, nodeId: requireFlag("node"), field, value: rawValue }
     };
-    const result = await engine.execute(command, { dryRun: Boolean(flags["dry-run"]) });
-    output({ ok: true, commandId: command.commandId, ...result }, `${result.dryRun ? "Previewed" : "Applied"} ${command.type} at revision ${result.revision}`);
+    await executeAndOutput(engine, command);
     return;
   }
 
   if (resource === "apply") {
     const engine = await createEngine();
     const command = JSON.parse(await fs.readFile(requireFlag("command"), "utf8"));
-    const result = await engine.execute(command, { dryRun: Boolean(flags["dry-run"]) });
-    output({ ok: true, commandId: command.commandId, ...result }, `${result.dryRun ? "Previewed" : "Applied"} ${command.type} at revision ${result.revision}`);
+    await executeAndOutput(engine, command);
     return;
   }
 
-  const error = new Error("Unknown command. Use validate, tree list, semantic preview, semantic show, node update, or apply.");
+  const error = new Error("Unknown command. Use validate, tree list, semantic preview/show, assumption list/create/update/status/delete, node update, or apply.");
   error.code = "COMMAND_UNKNOWN";
   throw error;
 };

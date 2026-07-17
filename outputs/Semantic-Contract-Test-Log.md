@@ -27,6 +27,7 @@ Estado tecnico de Gate B: `PASS`.
 - ramas EC cruzadas, roles duplicados o grafo de conflictos desconectado;
 - EC aceptada con una flecha sin assumptions;
 - assumption de conflicto sin scope `CONFLICT`;
+- estado de assumption desconocido;
 - `logicMode` incompatible;
 - estado de derivacion desconocido;
 - conflicto proyectado incorrectamente como junctor.

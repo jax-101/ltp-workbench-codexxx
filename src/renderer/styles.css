@@ -755,6 +755,61 @@ kbd {
   opacity: 1;
 }
 
+.link-target.assumption-coverage {
+  grid-template-columns: auto auto;
+  gap: 2px;
+  width: auto;
+  min-width: 24px;
+  padding: 0 5px;
+  opacity: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.link-target.assumption-coverage .link-kind:empty {
+  display: none;
+}
+
+.link-target.assumption-coverage .assumption-count {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.link-target.assumption-coverage-uncovered {
+  border-color: #8e938f;
+  border-style: dashed;
+  color: #6a716d;
+  background: #fffefa;
+}
+
+.link-target.assumption-coverage-supported {
+  border-color: #39744d;
+  color: #285b3a;
+  background: #edf8f0;
+}
+
+.link-target.assumption-coverage-challenged {
+  border-color: #b17b17;
+  color: #76500d;
+  background: #fff6d9;
+}
+
+.link-target.assumption-coverage-invalidated {
+  border-color: #a84f49;
+  color: #843a35;
+  background: #fff0ed;
+}
+
+.assumption-meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.assumption-meta label {
+  margin: 0;
+}
+
 .hint-badge {
   z-index: 30;
   display: grid;
