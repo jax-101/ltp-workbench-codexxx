@@ -708,10 +708,13 @@ Subgates:
   presentacion se compilan desde configuracion semantica, no desde coordenadas.
   Regresion CRT y captura Electron en PASS. Evidencia en
   `outputs/EC-Vertical-3C.14c.md`.
-- `3C.14c.1`: EC multipartita. Anade un oracle basado en la Figura 5.9 de
-  Dettmer, permite tres o mas pares requirement-prerequisite, compila un numero
-  dinamico de carriles y conserva conflictos y assumptions por pareja. La EC
-  bipolar sigue siendo la variante comun, no la unica forma valida.
+- `3C.14c.1`: EC multipartita en PASS. El oracle basado en la Figura 5.9 de
+  Dettmer contiene tres pares requirement-prerequisite y tres conflictos
+  binarios con 27 assumptions. El contrato usa `branchId` estable, exige una
+  pareja completa por rama y un grafo de conflictos conectado. El compilador
+  genera columnas y carriles dinamicamente, sin roles ni coordenadas
+  hardcodeados. La EC bipolar sigue pasando como variante comun. Evidencia en
+  `outputs/EC-Multipartite-3C.14c.1.md`.
 - `3C.14c.2`: Assumption Workbench keyboard-first. Cada linea muestra un
   indicador compacto de cantidad y cobertura. Seleccionar una linea permite
   abrir sus assumptions, recorrerlas, crear, editar, cambiar estado, invalidar
@@ -749,8 +752,8 @@ Criterios de aceptacion de `3C.14c.2`:
 
 ### 3C.15: formato de definicion y herramientas headless
 
-Estado: bloqueado por los subgates `3C.14c.1` y `3C.14c.2`; se publica despues
-de estabilizar la cardinalidad EC y el ciclo de vida keyboard-first de las
+Estado: bloqueado por `3C.14c.2`; `3C.14c.1` ya ha estabilizado la cardinalidad
+EC. Se publica despues de completar el ciclo de vida keyboard-first de las
 assumptions, antes del Diagram Studio visual.
 
 Incluye:

@@ -61,6 +61,8 @@ const projectSemanticGraph = (graph) => {
     type: ELEMENT_TYPE_TO_NODE_TYPE[element.type] || "entity",
     semanticType: element.type,
     semanticRole: element.role || null,
+    semanticBranchId: element.branchId || null,
+    semanticBranchOrder: Number.isFinite(element.branchOrder) ? element.branchOrder : null,
     statement: element.statement,
     shortLabel: element.shortLabel || element.statement,
     synthetic: null

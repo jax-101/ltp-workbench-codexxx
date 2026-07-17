@@ -41,6 +41,8 @@ Estado: PASS en build 3C.14c.
 
 - El registro de diagramas sigue embebido en codigo; su publicacion como
   paquete declarativo versionado es el siguiente gate, `3C.15`.
+- Este incremento valida la variante bipolar. La generalizacion a dos o mas
+  ramas queda cerrada en `outputs/EC-Multipartite-3C.14c.1.md`.
 - La UI consume el EC existente y permite operaciones genericas, pero aun no
   ofrece un asistente metodologico para construir A-B-C-D-D' desde cero.
 - La injection se inspecciona y exporta; la edicion visual de derivaciones se

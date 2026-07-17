@@ -31,12 +31,14 @@ const prototypeDataPath = () => {
   if (process.env.LTP_SHORTCUT_TEST === "1") fileName = "shortcut-test-workspace.json";
   if (process.env.LTP_CRT_TEST === "1") fileName = "crt-test-workspace.json";
   if (process.env.LTP_EC_TEST === "1") fileName = "ec-test-workspace.json";
+  if (process.env.LTP_EC_TRIPARTITE_TEST === "1") fileName = "ec-tripartite-test-workspace.json";
   return path.join(app.getPath("userData"), fileName);
 };
 const sampleDataPath = () => path.join(app.getAppPath(), "outputs", "sample-workspace-v0.1.json");
 const complexFixturePath = () => path.join(app.getAppPath(), "outputs", "complex-goal-tree-workspace-v0.1.json");
 const crtFixturePath = () => path.join(app.getAppPath(), "outputs", "crt-workspace-v0.1.json");
 const ecFixturePath = () => path.join(app.getAppPath(), "outputs", "ec-workspace-v0.1.json");
+const ecTripartiteFixturePath = () => path.join(app.getAppPath(), "outputs", "ec-tripartite-workspace-v0.1.json");
 const exportPath = (tree) => path.join(
   app.getAppPath(),
   "outputs",
@@ -123,6 +125,9 @@ const loadWorkspace = async () => {
   if (process.env.LTP_EC_TEST === "1") {
     return readJson(ecFixturePath());
   }
+  if (process.env.LTP_EC_TRIPARTITE_TEST === "1") {
+    return readJson(ecTripartiteFixturePath());
+  }
 
   if (process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1") {
     try {
@@ -184,7 +189,7 @@ const loadWorkspace = async () => {
 const getWorkspaceSession = () => workspaceManager.open({
   filePath: prototypeDataPath(),
   loadInitialWorkspace: loadWorkspace,
-  reset: process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1" || process.env.LTP_CRT_TEST === "1" || process.env.LTP_EC_TEST === "1"
+  reset: process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1" || process.env.LTP_CRT_TEST === "1" || process.env.LTP_EC_TEST === "1" || process.env.LTP_EC_TRIPARTITE_TEST === "1"
 });
 
 const getWorkspaceEngine = async () => (await getWorkspaceSession()).engine;
@@ -338,22 +343,25 @@ const runCrtVisualTest = async (mainWindow) => {
   return report;
 };
 
-const runEcVisualTest = async (mainWindow) => {
-  const evidenceDirectory = path.join(app.getAppPath(), "outputs", "test-evidence", buildInfo.id, "ec");
+const runEcVisualTest = async (mainWindow, { tripartite = false } = {}) => {
+  const evidenceName = tripartite ? "ec-tripartite" : "ec";
+  const evidenceDirectory = path.join(app.getAppPath(), "outputs", "test-evidence", buildInfo.id, evidenceName);
   await fs.rm(evidenceDirectory, { recursive: true, force: true });
   await fs.mkdir(evidenceDirectory, { recursive: true });
   mainWindow.setIgnoreMouseEvents(true);
   const result = await mainWindow.webContents.executeJavaScript(
-    "window.__ltpEcVisualTest && window.__ltpEcVisualTest()"
+    tripartite
+      ? "window.__ltpEcTripartiteVisualTest && window.__ltpEcTripartiteVisualTest()"
+      : "window.__ltpEcVisualTest && window.__ltpEcVisualTest()"
   );
   const image = await mainWindow.webContents.capturePage();
-  const screenshot = "ec-oracle-layout.png";
+  const screenshot = tripartite ? "ec-tripartite-oracle-layout.png" : "ec-oracle-layout.png";
   await fs.writeFile(path.join(evidenceDirectory, screenshot), image.toPNG());
   const report = { build: buildInfo, generatedAt: new Date().toISOString(), ...result, screenshot };
   await fs.writeFile(path.join(evidenceDirectory, "report.json"), `${JSON.stringify(report, null, 2)}\n`);
   await fs.writeFile(
     path.join(evidenceDirectory, "report.md"),
-    `# EC visual test - build ${buildInfo.id}\n\nResult: ${report.ok ? "PASS" : "FAIL"}\n\n${report.detail}\n\n![EC oracle](${screenshot})\n`
+    `# ${tripartite ? "Tripartite EC" : "EC"} visual test - build ${buildInfo.id}\n\nResult: ${report.ok ? "PASS" : "FAIL"}\n\n${report.detail}\n\n![EC oracle](${screenshot})\n`
   );
   console.log(JSON.stringify({ ok: report.ok, evidenceDirectory, detail: report.detail }));
   return report;
@@ -445,7 +453,7 @@ const createWindow = () => {
     height: 900,
     minWidth: 1120,
     minHeight: 720,
-    title: `LTP Workbench - ${buildLabel()}${process.env.LTP_MANUAL_TEST === "1" ? " - Manual Test" : ""}${process.env.LTP_COMPLEX_TEST === "1" ? " - Complex Goal Tree Test" : ""}${process.env.LTP_CRT_TEST === "1" ? " - CRT Test" : ""}${process.env.LTP_EC_TEST === "1" ? " - EC Test" : ""}`,
+    title: `LTP Workbench - ${buildLabel()}${process.env.LTP_MANUAL_TEST === "1" ? " - Manual Test" : ""}${process.env.LTP_COMPLEX_TEST === "1" ? " - Complex Goal Tree Test" : ""}${process.env.LTP_CRT_TEST === "1" ? " - CRT Test" : ""}${process.env.LTP_EC_TEST === "1" ? " - EC Test" : ""}${process.env.LTP_EC_TRIPARTITE_TEST === "1" ? " - Tripartite EC Test" : ""}`,
     backgroundColor: "#f7f5ef",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -513,6 +521,18 @@ const createWindow = () => {
     mainWindow.webContents.once("did-finish-load", async () => {
       try {
         const result = await runEcVisualTest(mainWindow);
+        app.exit(result.ok ? 0 : 1);
+      } catch (error) {
+        console.error(error);
+        app.exit(1);
+      }
+    });
+  }
+
+  if (process.env.LTP_EC_TRIPARTITE_TEST === "1") {
+    mainWindow.webContents.once("did-finish-load", async () => {
+      try {
+        const result = await runEcVisualTest(mainWindow, { tripartite: true });
         app.exit(result.ok ? 0 : 1);
       } catch (error) {
         console.error(error);

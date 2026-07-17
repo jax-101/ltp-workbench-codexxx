@@ -5,7 +5,7 @@ const { runComposedLayout, validateComposedGeometry } = require("../src/core/com
 const { projectSemanticGraph } = require("../src/core/semantic-render-projection");
 const { validateWorkspace } = require("../src/core/workspace-validator");
 const { TransactionEngine } = require("../src/core/transaction-engine");
-const { buildEcFixture } = require("./build-ec-fixture");
+const { buildEcFixture, buildEcTripartiteFixture } = require("./build-ec-fixture");
 const { buildMarkdownExport } = require("../src/core/markdown-export");
 
 const center = (box) => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
@@ -94,7 +94,42 @@ const run = async () => {
   await engine.redo();
   assert.equal(engine.getSnapshot().trees[0].semanticKernel.assumptions.length, 16);
 
-  console.log("EC cloud passed: native roles, parallel branches, undirected conflict, assumptions and stable canonical layout.");
+  const tripartiteFixture = buildEcTripartiteFixture();
+  const tripartiteTree = tripartiteFixture.trees[0];
+  const tripartiteKernel = structuredClone(tripartiteTree.semanticKernel);
+  assert.equal(tripartiteTree.nodes.length, 7, "tripartite EC must project one objective and three complete branches");
+  assert.equal(tripartiteTree.links.length, 9, "tripartite EC must project six necessity arrows and three conflicts");
+  assert.equal(tripartiteTree.links.filter((link) => link.type === "conflict").length, 3);
+  assert.equal(tripartiteTree.semanticKernel.assumptions.length, 27, "every tripartite EC line must expose three assumptions");
+  assert.deepEqual(validateWorkspace(tripartiteFixture), []);
+
+  const laidOutTripartite = await runComposedLayout(tripartiteFixture);
+  const laidOutTripartiteTree = laidOutTripartite.trees[0];
+  const tripartiteBoxes = laidOutTripartiteTree.layout.nodes;
+  const tripartiteObjective = center(tripartiteBoxes.objective);
+  const branchPairs = [
+    ["want-doctors", "need-treatment"],
+    ["want-patients", "need-satisfaction"],
+    ["want-insurers", "need-cost"]
+  ].map(([wantId, needId]) => ({ want: center(tripartiteBoxes[wantId]), need: center(tripartiteBoxes[needId]) }));
+  for (const branch of branchPairs) {
+    assert(branch.want.x > branch.need.x && branch.need.x > tripartiteObjective.x, "every tripartite branch must point right to left");
+    assert.equal(branch.want.y, branch.need.y, "each want and need pair must share one lane");
+  }
+  assert.equal(new Set(branchPairs.map((branch) => branch.want.y)).size, 3, "tripartite branches must occupy three distinct lanes");
+  assert.equal(
+    tripartiteObjective.y,
+    branchPairs.reduce((sum, branch) => sum + branch.want.y, 0) / branchPairs.length,
+    "the shared objective must be centered across all lanes"
+  );
+  assert.equal(laidOutTripartiteTree.layout.quality.directionExceptions, 0);
+  assert.deepEqual(laidOutTripartiteTree.semanticKernel, tripartiteKernel, "tripartite layout must preserve semantics");
+  assert.deepEqual(validateComposedGeometry(laidOutTripartite), []);
+  assert.deepEqual(validateWorkspace(laidOutTripartite), []);
+  const repeatedTripartite = await runComposedLayout(laidOutTripartite);
+  assert.deepEqual(repeatedTripartite.trees[0].layout.nodes, laidOutTripartiteTree.layout.nodes, "repeated tripartite layout must be stable");
+
+  console.log("EC cloud passed: bipolar and tripartite native branches, undirected conflicts, assumptions and stable canonical layout.");
 };
 
 run().catch((error) => {

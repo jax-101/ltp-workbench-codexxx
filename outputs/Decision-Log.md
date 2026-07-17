@@ -721,3 +721,17 @@ de hints compartido mantiene seleccion simple y multiple coherentes, incluida
 la prioridad contextual de letras que formen parte de una etiqueta. La
 precedencia `editor > assumptions > canvas` evita capturar comandos de edicion
 o confundir `Ctrl+F` con `Cmd+F`.
+
+### D-101: La cardinalidad EC se modela con ramas, no con nuevos roles rigidos
+
+Decision: cada pareja requirement-prerequisite tiene un `branchId` estable y
+forma `WANT -> NEED -> OBJECTIVE`. Los conflictos permanecen binarios entre
+wants de ramas concretas y deben formar un grafo conectado. Los roles
+`B/C/D/D'` o `R1/R2/R3/P1/P2/P3` son etiquetas visibles unicas, no claves
+estructurales.
+
+Razon: Dettmer admite EC con tres o mas posiciones, pero recomienda resolver
+conflictos por parejas y reevaluar las restantes. Inventar `D''`, `D'''` o una
+relacion ternaria hardcodeada mezclaria notacion con identidad, complicaria
+assumptions por conflicto y obligaria a reescribir layout y validacion para cada
+cardinalidad.

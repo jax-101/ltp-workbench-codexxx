@@ -4417,6 +4417,80 @@ window.__ltpEcVisualTest = async () => {
   };
 };
 
+window.__ltpEcTripartiteVisualTest = async () => {
+  await bootPromise;
+  workspaceData = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
+  panelState.rightOpen = true;
+  const conflictIds = ["rel-p1-p2", "rel-p1-p3", "rel-p2-p3"];
+  const conflictAssumptionsVisible = conflictIds.every((linkId) => {
+    replaceSelection(linkId);
+    render();
+    return document.querySelectorAll(".assumption-list .assumption-item").length === 3;
+  });
+  replaceSelection(conflictIds[0]);
+  render();
+  fitView();
+  await new Promise((resolve) => setTimeout(resolve, 160));
+
+  const activeTree = tree();
+  const geometryIssues = await window.ltpPrototype.validateLayout(workspaceData);
+  const boxes = activeTree.layout.nodes;
+  const center = (id) => {
+    const box = boxes[id];
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  const objective = center("objective");
+  const branches = [
+    ["want-doctors", "need-treatment"],
+    ["want-patients", "need-satisfaction"],
+    ["want-insurers", "need-cost"]
+  ].map(([wantId, needId]) => ({ want: center(wantId), need: center(needId) }));
+  const parallelBranches = branches.every((branch) =>
+    branch.want.x > branch.need.x && branch.need.x > objective.x && branch.want.y === branch.need.y
+  ) && new Set(branches.map((branch) => branch.want.y)).size === 3
+    && objective.y === branches.reduce((sum, branch) => sum + branch.want.y, 0) / branches.length;
+  const causalLinks = activeTree.links.filter((link) => link.type !== "conflict");
+  const causalArrowsVisible = causalLinks.every(
+    (link) => document.querySelector(`[data-link-id="${link.id}"]`)?.getAttribute("marker-end") === "url(#arrow)"
+  );
+  const conflictsDistinct = conflictIds.every((linkId) => {
+    const path = document.querySelector(`[data-link-id="${linkId}"]`);
+    return path?.classList.contains("link-conflict")
+      && !path.hasAttribute("marker-end")
+      && document.querySelector(`[data-element-id="${linkId}"]`)?.textContent.trim() === "×";
+  });
+  const roleLabels = [
+    ["objective", "A"],
+    ["need-treatment", "R1"],
+    ["need-satisfaction", "R2"],
+    ["need-cost", "R3"],
+    ["want-doctors", "P1"],
+    ["want-patients", "P2"],
+    ["want-insurers", "P3"]
+  ].every(([id, label]) => document.querySelector(`[data-element-id="${id}"] strong`)?.textContent.trim() === label);
+  const noJunctions = !activeTree.nodes.some((node) => node.synthetic?.kind === "JUNCTION");
+  const allLinksCurved = document.querySelectorAll("path.link-curved").length === activeTree.links.length;
+  const ok = activeTree.type === "ec"
+    && activeTree.layout.direction === "RL"
+    && activeTree.nodes.length === 7
+    && activeTree.links.length === 9
+    && activeTree.semanticKernel.assumptions.length === 27
+    && parallelBranches
+    && noJunctions
+    && geometryIssues.length === 0
+    && activeTree.layout.quality?.directionExceptions === 0
+    && allLinksCurved
+    && causalArrowsVisible
+    && conflictsDistinct
+    && roleLabels
+    && conflictAssumptionsVisible;
+
+  return {
+    ok,
+    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; assumptions=${activeTree.semanticKernel.assumptions.length}; direction=${activeTree.layout.direction}; three parallel branches=${parallelBranches}; conflicts distinct/no arrow=${conflictsDistinct}; causal arrows=${causalArrowsVisible}; roles=${roleLabels}; assumptions per conflict=${conflictAssumptionsVisible}; curved=${allLinksCurved}; geometry issues=${geometryIssues.length}.`
+  };
+};
+
 const shortcutAuditBindingEvent = (binding) => ({
   key: binding.key,
   metaKey: Boolean(binding.command || binding.primary),

@@ -39,6 +39,88 @@ const countByType = (elements) => {
   return counts;
 };
 
+const validateBranchTopology = ({ add, elements, relations, profile }) => {
+  const topology = profile.branchTopology;
+  if (!topology) return;
+
+  const branchField = topology.branchField || "branchId";
+  const needs = elements.filter((element) => element.type === topology.needType);
+  const wants = elements.filter((element) => element.type === topology.wantType);
+  const objective = elements.find((element) => element.role === topology.objectiveRole);
+  const branchedElements = [...needs, ...wants];
+  for (const element of branchedElements) {
+    if (typeof element[branchField] !== "string" || !element[branchField].trim()) {
+      add("ERROR", "EC_BRANCH_ID_REQUIRED", `elements.${element.id}.${branchField}`, `${element.type} requires a stable ${branchField}`);
+    }
+  }
+
+  const branchIds = [...new Set(branchedElements
+    .map((element) => element[branchField])
+    .filter((value) => typeof value === "string" && value.trim()))];
+  if (branchIds.length < topology.minimumBranches) {
+    add("ERROR", "EC_BRANCH_COUNT", `elements.${branchField}`, `EC requires at least ${topology.minimumBranches} branches`);
+  }
+
+  const simpleEdges = relations.filter((relation) => relation.type === topology.relationType
+    && relation.combination === "SIMPLE"
+    && relationEndpoints(relation, "inputs").length === 1
+    && relationEndpoints(relation, "outputs").length === 1);
+  const edgeCount = (sourceId, targetId) => simpleEdges.filter((relation) => relation.inputs[0].elementId === sourceId
+    && relation.outputs[0].elementId === targetId).length;
+
+  for (const branchId of branchIds) {
+    const branchNeeds = needs.filter((element) => element[branchField] === branchId);
+    const branchWants = wants.filter((element) => element[branchField] === branchId);
+    if (branchNeeds.length !== 1 || branchWants.length !== 1) {
+      add("ERROR", "EC_BRANCH_CARDINALITY", `elements.${branchField}.${branchId}`, `Branch ${branchId} requires exactly one ${topology.needType} and one ${topology.wantType}`);
+      continue;
+    }
+    if (objective && edgeCount(branchNeeds[0].id, objective.id) !== 1) {
+      add("ERROR", "EC_BRANCH_RELATION_REQUIRED", `relations.${branchId}.need-objective`, `Branch ${branchId} requires exactly one ${topology.needType}-to-objective relation`);
+    }
+    if (edgeCount(branchWants[0].id, branchNeeds[0].id) !== 1) {
+      add("ERROR", "EC_BRANCH_RELATION_REQUIRED", `relations.${branchId}.want-need`, `Branch ${branchId} requires exactly one ${topology.wantType}-to-${topology.needType} relation`);
+    }
+  }
+
+  const elementById = new Map(elements.map((element) => [element.id, element]));
+  for (const relation of simpleEdges) {
+    const source = elementById.get(relation.inputs[0].elementId);
+    const target = elementById.get(relation.outputs[0].elementId);
+    if (source?.type === topology.wantType && target?.type === topology.needType
+      && source[branchField] && target[branchField] && source[branchField] !== target[branchField]) {
+      add("ERROR", "EC_BRANCH_RELATION_MISMATCH", `relations.${relation.id}`, `${topology.wantType}-to-${topology.needType} relations must remain inside one branch`);
+    }
+  }
+
+  if (topology.conflictGraph !== "CONNECTED" || branchIds.length === 0) return;
+  const adjacency = new Map(branchIds.map((branchId) => [branchId, new Set()]));
+  for (const relation of relations.filter((candidate) => candidate.type === topology.conflictType)) {
+    const endpoints = relationEndpoints(relation, "inputs").map((input) => elementById.get(input.elementId));
+    const valid = endpoints.length === 2
+      && endpoints.every((element) => element?.type === topology.wantType && adjacency.has(element[branchField]))
+      && endpoints[0][branchField] !== endpoints[1][branchField];
+    if (!valid) {
+      add("ERROR", "EC_CONFLICT_ENDPOINT_INVALID", `relations.${relation.id}`, `Conflicts must connect wants from two different branches`);
+      continue;
+    }
+    const [left, right] = endpoints.map((element) => element[branchField]);
+    adjacency.get(left).add(right);
+    adjacency.get(right).add(left);
+  }
+  const visited = new Set();
+  const pending = [branchIds[0]];
+  while (pending.length) {
+    const branchId = pending.pop();
+    if (visited.has(branchId)) continue;
+    visited.add(branchId);
+    pending.push(...adjacency.get(branchId));
+  }
+  if (visited.size !== branchIds.length) {
+    add("ERROR", "EC_CONFLICT_GRAPH_DISCONNECTED", "relations.CONFLICT", "Every EC branch must participate in the connected conflict graph");
+  }
+};
+
 const validateSemanticGraph = (graph, contract = defaultContract) => {
   const issues = [];
   const diagramType = graph.diagramType || graph.profile;
@@ -74,8 +156,17 @@ const validateSemanticGraph = (graph, contract = defaultContract) => {
   const requiredRoles = profile.requiredRoles || {};
   const allowedRoles = new Set(Object.keys(requiredRoles));
   for (const element of elements) {
-    if (element.role && !allowedRoles.has(element.role)) {
+    if (element.role && !profile.allowAdditionalRoles && !allowedRoles.has(element.role)) {
       addIssue(issues, "ERROR", "ROLE_NOT_ALLOWED", `elements.${element.id}.role`, `${element.role} is not a canonical role`);
+    }
+  }
+  if (profile.uniqueRoles) {
+    const roleCounts = new Map();
+    for (const element of elements) {
+      if (element.role) roleCounts.set(element.role, (roleCounts.get(element.role) || 0) + 1);
+    }
+    for (const [role, count] of roleCounts) {
+      if (count > 1) addIssue(issues, "ERROR", "ROLE_CARDINALITY", `elements.role.${role}`, `Role ${role} must occur at most once`);
     }
   }
   for (const [role, expectedType] of Object.entries(requiredRoles)) {
@@ -242,6 +333,13 @@ const validateSemanticGraph = (graph, contract = defaultContract) => {
       addIssue(issues, "ERROR", "RELATION_PATTERN_REQUIRED", `relations.${pattern.id}`, `${pattern.id} requires ${pattern.min} relation(s)`);
     }
   }
+
+  validateBranchTopology({
+    add: (severity, code, pathValue, message) => addIssue(issues, severity, code, pathValue, message),
+    elements,
+    relations,
+    profile,
+  });
 
   if (profile.cyclePolicy === "FORBIDDEN" && graphHasCycle(graph)) {
     addIssue(issues, "ERROR", "CYCLE_FORBIDDEN", "relations", `${diagramType} cannot contain a directed cycle`);

@@ -3,10 +3,13 @@ const path = require("node:path");
 const { assertWorkspace } = require("../src/core/workspace-validator");
 const { applyNativeSemanticProjection } = require("../src/core/semantic-render-projection");
 
-const oracle = require("../semantic-contract/v0.1/ec.json");
+const bipolarOracle = require("../semantic-contract/v0.1/ec.json");
+const tripartiteOracle = require("../semantic-contract/v0.1/ec-tripartite.json");
 const timestamp = "2026-07-17T16:00:00+02:00";
 
-const buildEcFixture = () => {
+const buildEcFixture = ({ oracle = bipolarOracle, variant = "bipolar" } = {}) => {
+  const tripartite = variant === "tripartite";
+  const fixtureLabel = tripartite ? "EC Tripartite Oracle" : "EC Oracle";
   const treeId = "tree-ec-oracle";
   const canvasId = "canvas-ec-oracle";
   const rootFrameId = "frame-ec-root";
@@ -25,25 +28,27 @@ const buildEcFixture = () => {
   };
   const workspace = {
     schemaVersion: "0.2",
-    fixtureType: "ec-native-semantic-cloud",
+    fixtureType: tripartite ? "ec-native-semantic-cloud-tripartite" : "ec-native-semantic-cloud",
     createdAt: timestamp,
     updatedAt: timestamp,
     workspace: {
       id: "ws-ec-oracle",
-      name: "EC Semantic Oracle",
+      name: tripartite ? "EC Tripartite Semantic Oracle" : "EC Semantic Oracle",
       activeSystemId: "sys-ec-oracle",
       settings: { keyboardFirst: true, defaultLayoutEngine: "elk", defaultExportFormat: "markdown" },
-      systems: [{ id: "sys-ec-oracle", name: "EC Oracle", path: "systems/sys-ec-oracle/system.json", updatedAt: timestamp }]
+      systems: [{ id: "sys-ec-oracle", name: fixtureLabel, path: "systems/sys-ec-oracle/system.json", updatedAt: timestamp }]
     },
     systems: [{
       schemaVersion: "0.1",
       id: "sys-ec-oracle",
-      name: "EC Oracle",
+      name: fixtureLabel,
       createdAt: timestamp,
       updatedAt: timestamp,
       profile: {
-        description: "Native semantic Evaporating Cloud fixture.",
-        purpose: "Exercise canonical roles, parallel necessity branches, conflict assumptions and injections.",
+        description: `Native semantic ${tripartite ? "tripartite " : ""}Evaporating Cloud fixture.`,
+        purpose: tripartite
+          ? "Exercise dynamic parallel branches, a connected conflict graph and assumptions on every line."
+          : "Exercise canonical roles, parallel necessity branches, conflict assumptions and injections.",
         owner: { name: "LTP Workbench", role: "Regression fixture" },
         boundary: { summary: "Canonical EC oracle.", inside: [], outside: [] },
         spanOfControl: [],
@@ -66,7 +71,7 @@ const buildEcFixture = () => {
       systemId: "sys-ec-oracle",
       perspectiveId: "perspective-ec",
       type: "ec",
-      name: "Evaporating Cloud - Semantic Oracle",
+      name: tripartite ? "Evaporating Cloud - Tripartite Oracle" : "Evaporating Cloud - Semantic Oracle",
       status: "draft",
       logicMode: "necessity",
       createdAt: timestamp,
@@ -92,7 +97,7 @@ const buildEcFixture = () => {
       schemaVersion: "0.2",
       id: canvasId,
       systemId: "sys-ec-oracle",
-      name: "EC Oracle canvas",
+      name: `${fixtureLabel} canvas`,
       rootFrameId,
       frames: [
         {
@@ -137,7 +142,7 @@ const buildEcFixture = () => {
         zoom: 0.9,
         pan: { x: 0, y: 0 },
         panels: { leftOpen: true, rightOpen: true },
-        breadcrumb: ["EC Oracle", "Evaporating Cloud"]
+        breadcrumb: [fixtureLabel, "Evaporating Cloud"]
       },
       createdAt: timestamp,
       updatedAt: timestamp
@@ -149,10 +154,15 @@ const buildEcFixture = () => {
   return workspace;
 };
 
+const buildEcTripartiteFixture = () => buildEcFixture({ oracle: tripartiteOracle, variant: "tripartite" });
+
 if (require.main === module) {
   const outputPath = path.join(__dirname, "..", "outputs", "ec-workspace-v0.1.json");
+  const tripartiteOutputPath = path.join(__dirname, "..", "outputs", "ec-tripartite-workspace-v0.1.json");
   fs.writeFileSync(outputPath, `${JSON.stringify(buildEcFixture(), null, 2)}\n`);
+  fs.writeFileSync(tripartiteOutputPath, `${JSON.stringify(buildEcTripartiteFixture(), null, 2)}\n`);
   console.log(`Wrote ${outputPath}`);
+  console.log(`Wrote ${tripartiteOutputPath}`);
 }
 
-module.exports = { buildEcFixture };
+module.exports = { buildEcFixture, buildEcTripartiteFixture };

@@ -970,8 +970,7 @@ Feedback: Dettmer contempla conflictos no bipolares. Una EC puede tener tres o
 mas pares requirement-prerequisite en conflicto, aunque recomienda resolver un
 conflicto de dos posiciones cada vez y comprobar despues los restantes.
 
-Estado: documentado como `3C.14c.1`, pendiente antes de publicar el formato
-de definiciones.
+Estado: implementado y validado en `3C.14c.1`.
 
 Criterios de aceptacion:
 

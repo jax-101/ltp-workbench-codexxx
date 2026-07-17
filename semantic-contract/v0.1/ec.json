@@ -6,10 +6,10 @@
   "reviewState": "ACCEPTED",
   "elements": [
     { "id": "objective", "type": "OBJECTIVE", "role": "A", "statement": "Operate profitably and reliably" },
-    { "id": "need-flow", "type": "NEED", "role": "B", "statement": "Protect system flow" },
-    { "id": "need-cost", "type": "NEED", "role": "C", "statement": "Control operating cost" },
-    { "id": "want-small", "type": "WANT", "role": "D", "statement": "Produce small batches" },
-    { "id": "want-large", "type": "WANT", "role": "D_PRIME", "statement": "Produce large batches" },
+    { "id": "need-flow", "type": "NEED", "role": "B", "branchId": "flow", "branchOrder": 0, "statement": "Protect system flow" },
+    { "id": "need-cost", "type": "NEED", "role": "C", "branchId": "cost", "branchOrder": 1, "statement": "Control operating cost" },
+    { "id": "want-small", "type": "WANT", "role": "D", "branchId": "flow", "branchOrder": 0, "statement": "Produce small batches" },
+    { "id": "want-large", "type": "WANT", "role": "D_PRIME", "branchId": "cost", "branchOrder": 1, "statement": "Produce large batches" },
     { "id": "injection", "type": "INJECTION", "statement": "Use buffer-based replenishment" }
   ],
   "relations": [

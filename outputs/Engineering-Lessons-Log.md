@@ -1051,9 +1051,46 @@ Aplicacion futura: modelar scopes en el registro de comandos; mostrar el scope
 activo; auditar varias distribuciones de teclado; probar entrada y salida del
 contexto; y evitar bindings basados en simbolos de acceso desigual.
 
+### L-094: La notacion visible no debe convertirse accidentalmente en identidad
+
+Fecha: 2026-07-17
+
+Evidencia: el primer EC funcionaba porque el layout interpretaba literalmente
+`B/C/D/D'`. Al introducir la variante tripartita de Dettmer, ampliar esa serie
+con roles inventados habria acoplado contrato, validador y posiciones a una
+cardinalidad concreta. Separar `branchId` de `role` permitio que los oraculos de
+dos y tres ramas usaran exactamente el mismo compilador.
+
+Aprendizaje: etiquetas metodologicas, numeros de paso y nombres de presentacion
+son metadatos humanos; la identidad estructural debe expresar la relacion
+estable que sobrevive a traducciones, renombrados y crecimiento.
+
+Aplicacion futura: persistir IDs de dominio independientes de labels; compilar
+la presentacion desde propiedades semanticas; probar al menos una cardinalidad
+superior a la comun; y rechazar duplicados visibles sin usarlos como foreign
+keys.
+
+### L-095: Una relacion multipartita puede ser un grafo de relaciones binarias
+
+Fecha: 2026-07-17
+
+Evidencia: la EC tripartita no necesita un conflicto de aridad tres. Tres
+conflictos por parejas conservan assumptions independientes, permiten resolver
+una pareja y reevaluar la tercera posicion, y se proyectan con las primitivas ya
+probadas. Exigir conectividad evita ramas que aparentan pertenecer a la Cloud
+sin participar en el conflicto.
+
+Aprendizaje: aumentar la cardinalidad del problema no implica aumentar la
+aridad de cada relacion. Un grafo de relaciones pequenas suele preservar mejor
+explicacion, edicion local e historial.
+
+Aplicacion futura: elegir aridad por significado atomico; validar propiedades
+globales como conectividad aparte; conservar provenance por edge; y probar
+operaciones parciales sobre subgrafos antes de introducir hiperrelaciones.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-094`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-096`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

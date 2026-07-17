@@ -104,23 +104,24 @@
       "cyclePolicy": "FORBIDDEN",
       "requiredElementCounts": {
         "OBJECTIVE": { "min": 1, "max": 1 },
-        "NEED": { "min": 2, "max": 2 },
-        "WANT": { "min": 2, "max": 2 }
+        "NEED": { "min": 2, "max": null },
+        "WANT": { "min": 2, "max": null }
       },
       "requiredRoles": {
-        "A": "OBJECTIVE",
-        "B": "NEED",
-        "C": "NEED",
-        "D": "WANT",
-        "D_PRIME": "WANT"
+        "A": "OBJECTIVE"
       },
-      "requiredRelationPatterns": [
-        { "id": "branch-b-a", "type": "NECESSITY", "inputRole": "B", "outputRole": "A", "min": 1 },
-        { "id": "branch-c-a", "type": "NECESSITY", "inputRole": "C", "outputRole": "A", "min": 1 },
-        { "id": "branch-d-b", "type": "NECESSITY", "inputRole": "D", "outputRole": "B", "min": 1 },
-        { "id": "branch-d-prime-c", "type": "NECESSITY", "inputRole": "D_PRIME", "outputRole": "C", "min": 1 },
-        { "id": "want-conflict", "type": "CONFLICT", "inputRole": "D", "secondInputRole": "D_PRIME", "outputType": null, "min": 1 }
-      ],
+      "allowAdditionalRoles": true,
+      "uniqueRoles": true,
+      "branchTopology": {
+        "branchField": "branchId",
+        "minimumBranches": 2,
+        "needType": "NEED",
+        "wantType": "WANT",
+        "objectiveRole": "A",
+        "relationType": "NECESSITY",
+        "conflictType": "CONFLICT",
+        "conflictGraph": "CONNECTED"
+      },
       "assumptionPolicy": {
         "minimumPerRelation": 1,
         "recommendedPerRelation": 3,
@@ -133,9 +134,10 @@
       },
       "canonicalPresentation": {
         "direction": "RL",
-        "columns": [["A"], ["B", "C"], ["D", "D_PRIME"]],
-        "parallelBranches": [["D", "B", "A"], ["D_PRIME", "C", "A"]],
-        "conflictRoles": ["D", "D_PRIME"]
+        "columnTypes": ["OBJECTIVE", "NEED", "WANT"],
+        "branchField": "branchId",
+        "branchPathTypes": ["WANT", "NEED", "OBJECTIVE"],
+        "sharedRole": "A"
       }
     },
     "FRT": {

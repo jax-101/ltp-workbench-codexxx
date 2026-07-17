@@ -60,16 +60,11 @@ const DIAGRAM_DEFINITIONS = Object.freeze({
       Object.freeze({ id: "injection", label: "Injection", shortLabel: "INJ" })
     ]),
     canonicalPresentation: Object.freeze({
-      columns: Object.freeze([
-        Object.freeze(["A"]),
-        Object.freeze(["B", "C"]),
-        Object.freeze(["D", "D_PRIME"])
-      ]),
-      parallelBranches: Object.freeze([
-        Object.freeze(["D", "B", "A"]),
-        Object.freeze(["D_PRIME", "C", "A"])
-      ]),
-      conflictRoles: Object.freeze(["D", "D_PRIME"])
+      columnTypes: Object.freeze(["OBJECTIVE", "NEED", "WANT"]),
+      branchField: "semanticBranchId",
+      branchOrderField: "semanticBranchOrder",
+      branchPathTypes: Object.freeze(["WANT", "NEED", "OBJECTIVE"]),
+      sharedRole: "A"
     })
   })
 });

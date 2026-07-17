@@ -42,6 +42,82 @@ const graphHasCycle = (fixture) => {
   return [...adjacency.keys()].some(visit);
 };
 
+const validateBranchTopologyReference = ({ elements, relations, profile, issues }) => {
+  const topology = profile.branchTopology;
+  if (!topology) return;
+  const branchField = topology.branchField || "branchId";
+  const needs = elements.filter((element) => element.type === topology.needType);
+  const wants = elements.filter((element) => element.type === topology.wantType);
+  const objective = elements.find((element) => element.role === topology.objectiveRole);
+  const branchedElements = [...needs, ...wants];
+  for (const element of branchedElements) {
+    if (typeof element[branchField] !== "string" || !element[branchField].trim()) {
+      issue(issues, "ERROR", "EC_BRANCH_ID_REQUIRED", `elements.${element.id}.${branchField}`, `${element.type} requires a stable ${branchField}`);
+    }
+  }
+  const branchIds = [...new Set(branchedElements
+    .map((element) => element[branchField])
+    .filter((value) => typeof value === "string" && value.trim()))];
+  if (branchIds.length < topology.minimumBranches) {
+    issue(issues, "ERROR", "EC_BRANCH_COUNT", `elements.${branchField}`, `EC requires at least ${topology.minimumBranches} branches`);
+  }
+  const simpleEdges = relations.filter((relation) => relation.type === topology.relationType
+    && relation.combination === "SIMPLE"
+    && relationEndpoints(relation, "inputs").length === 1
+    && relationEndpoints(relation, "outputs").length === 1);
+  const edgeCount = (sourceId, targetId) => simpleEdges.filter((relation) => relation.inputs[0].elementId === sourceId
+    && relation.outputs[0].elementId === targetId).length;
+  for (const branchId of branchIds) {
+    const branchNeeds = needs.filter((element) => element[branchField] === branchId);
+    const branchWants = wants.filter((element) => element[branchField] === branchId);
+    if (branchNeeds.length !== 1 || branchWants.length !== 1) {
+      issue(issues, "ERROR", "EC_BRANCH_CARDINALITY", `elements.${branchField}.${branchId}`, `Branch ${branchId} requires exactly one ${topology.needType} and one ${topology.wantType}`);
+      continue;
+    }
+    if (objective && edgeCount(branchNeeds[0].id, objective.id) !== 1) {
+      issue(issues, "ERROR", "EC_BRANCH_RELATION_REQUIRED", `relations.${branchId}.need-objective`, `Branch ${branchId} requires exactly one ${topology.needType}-to-objective relation`);
+    }
+    if (edgeCount(branchWants[0].id, branchNeeds[0].id) !== 1) {
+      issue(issues, "ERROR", "EC_BRANCH_RELATION_REQUIRED", `relations.${branchId}.want-need`, `Branch ${branchId} requires exactly one ${topology.wantType}-to-${topology.needType} relation`);
+    }
+  }
+  const elementById = new Map(elements.map((element) => [element.id, element]));
+  for (const relation of simpleEdges) {
+    const source = elementById.get(relation.inputs[0].elementId);
+    const target = elementById.get(relation.outputs[0].elementId);
+    if (source?.type === topology.wantType && target?.type === topology.needType
+      && source[branchField] && target[branchField] && source[branchField] !== target[branchField]) {
+      issue(issues, "ERROR", "EC_BRANCH_RELATION_MISMATCH", `relations.${relation.id}`, `${topology.wantType}-to-${topology.needType} relations must remain inside one branch`);
+    }
+  }
+  if (topology.conflictGraph !== "CONNECTED" || branchIds.length === 0) return;
+  const adjacency = new Map(branchIds.map((branchId) => [branchId, new Set()]));
+  for (const relation of relations.filter((candidate) => candidate.type === topology.conflictType)) {
+    const endpoints = relationEndpoints(relation, "inputs").map((input) => elementById.get(input.elementId));
+    const valid = endpoints.length === 2
+      && endpoints.every((element) => element?.type === topology.wantType && adjacency.has(element[branchField]))
+      && endpoints[0][branchField] !== endpoints[1][branchField];
+    if (!valid) {
+      issue(issues, "ERROR", "EC_CONFLICT_ENDPOINT_INVALID", `relations.${relation.id}`, "Conflicts must connect wants from two different branches");
+      continue;
+    }
+    const [left, right] = endpoints.map((element) => element[branchField]);
+    adjacency.get(left).add(right);
+    adjacency.get(right).add(left);
+  }
+  const visited = new Set();
+  const pending = [branchIds[0]];
+  while (pending.length) {
+    const branchId = pending.pop();
+    if (visited.has(branchId)) continue;
+    visited.add(branchId);
+    pending.push(...adjacency.get(branchId));
+  }
+  if (visited.size !== branchIds.length) {
+    issue(issues, "ERROR", "EC_CONFLICT_GRAPH_DISCONNECTED", "relations.CONFLICT", "Every EC branch must participate in the connected conflict graph");
+  }
+};
+
 const validateFixtureReference = (fixture) => {
   const issues = [];
   const profile = contract.profiles[fixture.diagramType];
@@ -75,8 +151,17 @@ const validateFixtureReference = (fixture) => {
   const requiredRoles = profile.requiredRoles || {};
   const allowedRoles = new Set(Object.keys(requiredRoles));
   for (const element of elements) {
-    if (element.role && !allowedRoles.has(element.role)) {
+    if (element.role && !profile.allowAdditionalRoles && !allowedRoles.has(element.role)) {
       issue(issues, "ERROR", "ROLE_NOT_ALLOWED", `elements.${element.id}.role`, `${element.role} is not a canonical role`);
+    }
+  }
+  if (profile.uniqueRoles) {
+    const roleCounts = new Map();
+    for (const element of elements) {
+      if (element.role) roleCounts.set(element.role, (roleCounts.get(element.role) || 0) + 1);
+    }
+    for (const [role, count] of roleCounts) {
+      if (count > 1) issue(issues, "ERROR", "ROLE_CARDINALITY", `elements.role.${role}`, `Role ${role} must occur at most once`);
     }
   }
   for (const [role, expectedType] of Object.entries(requiredRoles)) {
@@ -240,6 +325,8 @@ const validateFixtureReference = (fixture) => {
     if (count < pattern.min) issue(issues, "ERROR", "RELATION_PATTERN_REQUIRED", `relations.${pattern.id}`, `${pattern.id} requires ${pattern.min} relation(s)`);
   }
 
+  validateBranchTopologyReference({ elements, relations, profile, issues });
+
   if (profile.cyclePolicy === "FORBIDDEN" && graphHasCycle(fixture)) {
     issue(issues, "ERROR", "CYCLE_FORBIDDEN", "relations", `${fixture.diagramType} cannot contain a directed cycle`);
   }
@@ -324,8 +411,9 @@ for (const [name, profile] of Object.entries(contract.profiles)) {
   assert(profile.allowedCombinations.every((value) => contract.combinations[value]), `${name}: known combinations`);
   assert(profile.allowedRelationTypes.every((value) => contract.relationTypes[value]), `${name}: known relation types`);
 }
-assert.deepEqual(contract.profiles.EC.canonicalPresentation.columns, [["A"], ["B", "C"], ["D", "D_PRIME"]]);
-assert.deepEqual(contract.profiles.EC.canonicalPresentation.parallelBranches, [["D", "B", "A"], ["D_PRIME", "C", "A"]]);
+assert.deepEqual(contract.profiles.EC.canonicalPresentation.columnTypes, ["OBJECTIVE", "NEED", "WANT"]);
+assert.deepEqual(contract.profiles.EC.canonicalPresentation.branchPathTypes, ["WANT", "NEED", "OBJECTIVE"]);
+assert.equal(contract.profiles.EC.canonicalPresentation.branchField, "branchId");
 for (const fixture of fixtures) {
   const issues = validateFixture(fixture);
   assert.deepEqual(issues, validateFixtureReference(fixture), `${fixture.id}: shared validator parity`);
@@ -371,6 +459,13 @@ for (const fixture of fixtures) {
   for (const [relationId, expectedPrompt] of Object.entries(fixture.expected.assumptionPrompts || {})) {
     const relation = fixture.relations.find((candidate) => candidate.id === relationId);
     assert.equal(assumptionPrompt(fixture, relation), expectedPrompt, `${fixture.id}: assumption prompt ${relationId}`);
+  }
+  if (Number.isFinite(fixture.expected.branchCount)) {
+    const branches = new Set(fixture.elements.map((element) => element.branchId).filter(Boolean));
+    assert.equal(branches.size, fixture.expected.branchCount, `${fixture.id}: branch count`);
+  }
+  if (Number.isFinite(fixture.expected.conflictCount)) {
+    assert.equal(fixture.relations.filter((relation) => relation.type === "CONFLICT").length, fixture.expected.conflictCount, `${fixture.id}: conflict count`);
   }
 }
 
@@ -419,19 +514,25 @@ assert(validateFixture(partialMag).some((entry) => entry.code === "MAG_PARTIAL_Q
 
 const brokenEc = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
 brokenEc.relations = brokenEc.relations.filter((relation) => relation.id !== "rel-d-prime-c");
-assert(validateFixture(brokenEc).some((entry) => entry.code === "RELATION_PATTERN_REQUIRED"), "Broken EC topology must fail");
+assert(validateFixture(brokenEc).some((entry) => entry.code === "EC_BRANCH_RELATION_REQUIRED"), "Broken EC topology must fail");
 
 const crossedEcBranch = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
 crossedEcBranch.relations.find((relation) => relation.id === "rel-d-b").outputs[0].elementId = "need-cost";
 assert(
-  validateFixture(crossedEcBranch).some((entry) => entry.code === "RELATION_PATTERN_REQUIRED" && entry.path.includes("branch-d-b")),
+  validateFixture(crossedEcBranch).some((entry) => entry.code === "EC_BRANCH_RELATION_MISMATCH"),
   "Crossed EC branches must fail"
 );
 
-const wrongEcRole = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
-wrongEcRole.elements.find((element) => element.id === "need-flow").role = "D";
-wrongEcRole.elements.find((element) => element.id === "want-small").role = "B";
-assert(validateFixture(wrongEcRole).some((entry) => entry.code === "ROLE_TYPE_MISMATCH"), "EC roles must retain canonical Types");
+const duplicateEcRole = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
+duplicateEcRole.elements.find((element) => element.id === "need-cost").role = "B";
+assert(validateFixture(duplicateEcRole).some((entry) => entry.code === "ROLE_CARDINALITY"), "EC role labels must remain unique");
+
+const disconnectedTripartiteEc = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec-tripartite"));
+disconnectedTripartiteEc.relations = disconnectedTripartiteEc.relations.filter((relation) => relation.id !== "rel-p1-p3" && relation.id !== "rel-p2-p3");
+assert(
+  validateFixture(disconnectedTripartiteEc).some((entry) => entry.code === "EC_CONFLICT_GRAPH_DISCONNECTED"),
+  "Every branch in a multipartite EC must participate in its conflict graph"
+);
 
 const uncoveredEcArrow = structuredClone(fixtures.find((fixture) => fixture.id === "oracle-ec"));
 uncoveredEcArrow.assumptions = uncoveredEcArrow.assumptions.filter((assumption) => assumption.subject.relationId !== "rel-d-b");

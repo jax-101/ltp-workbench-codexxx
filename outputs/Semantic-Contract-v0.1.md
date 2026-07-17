@@ -106,7 +106,7 @@ solucion.
 | --- | --- | --- | --- |
 | Goal Tree | Necesidad | `AND` | Un Goal, CSF recomendados 3-5, sin ciclos ni junctors |
 | CRT | Suficiencia | `OR` | Causas independientes, `AND`, assumptions y loop negativo |
-| EC | Necesidad | `AND` | Roles A-B-C-D-D', ramas paralelas, cinco break points, assumptions por relacion e injection |
+| EC | Necesidad | `AND` | Objective comun, dos o mas ramas NEED/WANT, conflictos conectados, assumptions por relacion e injection |
 | FRT | Suficiencia | `OR` | Injection, `AND`, desired effect y negative branch |
 
 Los microfixtures verifican por separado `AND`, `OR`, `MAG`, `XOR`, aridad,
@@ -114,17 +114,24 @@ render, referencias y ciclos prohibidos.
 
 ### Contrato especifico de EC
 
-La EC no se valida solo contando un objective, dos needs y dos wants. Los roles
-son canonicos y unicos: `A=OBJECTIVE`, `B/C=NEED`, `D/D'=WANT`. Las relaciones
-deben formar exactamente las ramas `D -> B -> A` y `D' -> C -> A`, con conflicto
-entre `D` y `D'`. La presentacion recomendada usa direccion `RL`, tres columnas
-`[A] [B,C] [D,D']` y conserva las dos ramas en filas paralelas.
+La EC no se valida solo contando elementos ni queda limitada a la forma bipolar.
+`A=OBJECTIVE` es unico. Cada rama tiene un `branchId` estable, exactamente un
+`NEED` y un `WANT`, y forma `WANT -> NEED -> OBJECTIVE`. Deben existir al menos
+dos ramas. Los conflictos siguen siendo relaciones binarias entre wants de
+ramas distintas y su grafo debe conectar todas las ramas. Las etiquetas
+metodologicas `B/C/D/D'` o `R1/R2/R3/P1/P2/P3` son roles visibles unicos, no la
+estructura persistida.
 
-El perfil exige cobertura de assumptions para las cinco relaciones cuando la
+La presentacion recomendada usa direccion `RL`, columnas dinamicas
+`[OBJECTIVE] [NEED...] [WANT...]` y un carril por `branchId`. El objective
+compartido queda centrado entre todos los carriles. El oracle bipolar y el
+tripartito de la Figura 5.9 se validan con el mismo compilador.
+
+El perfil exige cobertura de assumptions para todas las relaciones cuando la
 EC esta `ACCEPTED`. Una EC en captura puede avisar de cobertura incompleta; una
-EC aceptada no puede dejar un break point sin assumptions. El oraculo conserva
-tres assumptions por relacion y usa scope `CONFLICT` obligatoriamente en
-`D-D'`.
+EC aceptada no puede dejar un break point sin assumptions. Ambos oraculos
+conservan tres assumptions por relacion y usan scope `CONFLICT`
+obligatoriamente en cada conflicto.
 
 ## Validacion progresiva
 

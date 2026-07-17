@@ -8,9 +8,9 @@ Contrato: `semantic-contract/v0.1/contract.json`.
 
 Estado tecnico de Gate B: `PASS`.
 
-- 15 fixtures persistidos: 11 validos y 4 invalidos.
-- 36 casos generados de agregacion y eliminacion de endpoints.
-- Cuatro oraculos: Goal Tree, CRT, EC y FRT.
+- 16 fixtures persistidos: 12 validos y 4 invalidos.
+- 42 casos generados de agregacion y eliminacion de endpoints.
+- Cinco oraculos: Goal Tree, CRT, EC bipolar, EC tripartita y FRT.
 - Microfixtures de `AND`, `OR`, `MAG` cuantificado y cualitativo, y `XOR`.
 - Verbalizacion determinista e invariante ante permutacion de inputs.
 - IDs de junction derivados exclusivamente de la relacion.
@@ -24,7 +24,7 @@ Estado tecnico de Gate B: `PASS`.
 - assumption asociada a un input ajeno;
 - cuantificacion parcial de `MAG`;
 - topologia EC incompleta;
-- ramas EC cruzadas o roles A-B-C-D-D' mal asignados;
+- ramas EC cruzadas, roles duplicados o grafo de conflictos desconectado;
 - EC aceptada con una flecha sin assumptions;
 - assumption de conflicto sin scope `CONFLICT`;
 - `logicMode` incompatible;
@@ -61,10 +61,11 @@ alternativas de una EC pueden ser incompatibles solo bajo las restricciones
 actuales; no siempre son mutuamente excluyentes por naturaleza. Una regresion
 impide volver a proyectar el conflicto como junctor.
 
-La revision de fuentes del 2026-07-16 reforzo el oraculo EC. El fixture contiene
-ahora roles canonicos, dos ramas paralelas y tres assumptions para cada uno de
-los cinco break points. Las mutaciones rechazan ramas cruzadas, roles
-intercambiados, cobertura ausente y scope incorrecto en `D-D'`.
+La revision de fuentes del 2026-07-16 reforzo el oraculo EC bipolar con dos
+ramas y tres assumptions para cada uno de los cinco break points. `3C.14c.1`
+anade el oraculo tripartito de Dettmer: tres ramas, seis flechas, tres conflictos
+y 27 assumptions. Las mutaciones rechazan ramas cruzadas o incompletas, roles
+duplicados, conflictos desconectados, cobertura ausente y scope incorrecto.
 
 ## Aprobacion metodologica
 

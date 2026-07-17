@@ -80,7 +80,9 @@ artefactos tampoco se modelan como flechas internas.
 
 `CONFLICT` usa `combination: null`: no es un junctor `XOR`. Una EC puede contener
 condiciones opuestas o alternativas que serian compatibles si cambiasen las
-restricciones de recursos. `XOR` se reserva para causalidad realmente exclusiva.
+restricciones de recursos. Tambien puede contener tres o mas ramas: se modelan
+como conflictos binarios conectados entre wants concretos, no como un junctor
+de mayor aridad. `XOR` se reserva para causalidad realmente exclusiva.
 
 ### Registro por diagrama
 

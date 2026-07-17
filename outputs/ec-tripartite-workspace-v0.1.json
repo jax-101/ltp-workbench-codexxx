@@ -1,0 +1,1166 @@
+{
+  "schemaVersion": "0.2",
+  "fixtureType": "ec-native-semantic-cloud-tripartite",
+  "createdAt": "2026-07-17T16:00:00+02:00",
+  "updatedAt": "2026-07-17T16:00:00+02:00",
+  "workspace": {
+    "id": "ws-ec-oracle",
+    "name": "EC Tripartite Semantic Oracle",
+    "activeSystemId": "sys-ec-oracle",
+    "settings": {
+      "keyboardFirst": true,
+      "defaultLayoutEngine": "elk",
+      "defaultExportFormat": "markdown"
+    },
+    "systems": [
+      {
+        "id": "sys-ec-oracle",
+        "name": "EC Tripartite Oracle",
+        "path": "systems/sys-ec-oracle/system.json",
+        "updatedAt": "2026-07-17T16:00:00+02:00"
+      }
+    ]
+  },
+  "systems": [
+    {
+      "schemaVersion": "0.1",
+      "id": "sys-ec-oracle",
+      "name": "EC Tripartite Oracle",
+      "createdAt": "2026-07-17T16:00:00+02:00",
+      "updatedAt": "2026-07-17T16:00:00+02:00",
+      "profile": {
+        "description": "Native semantic tripartite Evaporating Cloud fixture.",
+        "purpose": "Exercise dynamic parallel branches, a connected conflict graph and assumptions on every line.",
+        "owner": {
+          "name": "LTP Workbench",
+          "role": "Regression fixture"
+        },
+        "boundary": {
+          "summary": "Canonical EC oracle.",
+          "inside": [],
+          "outside": []
+        },
+        "spanOfControl": [],
+        "sphereOfInfluence": [],
+        "externalEnvironment": [],
+        "stakeholders": [],
+        "constraints": [],
+        "initialSymptoms": [],
+        "sourceIds": [],
+        "completeness": "minimumComplete"
+      },
+      "relationships": {
+        "parentSystemIds": [],
+        "childSystemIds": []
+      },
+      "sources": [],
+      "benchmarks": [
+        {
+          "id": "benchmark-ec-oracle",
+          "type": "ec",
+          "treeId": "tree-ec-oracle",
+          "status": "draft",
+          "isPrimary": true,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        }
+      ],
+      "perspectives": [
+        {
+          "id": "perspective-ec",
+          "name": "Conflict",
+          "type": "conflict",
+          "treeIds": [
+            "tree-ec-oracle"
+          ],
+          "status": "active",
+          "origin": null
+        }
+      ]
+    }
+  ],
+  "trees": [
+    {
+      "schemaVersion": "0.2",
+      "id": "tree-ec-oracle",
+      "systemId": "sys-ec-oracle",
+      "perspectiveId": "perspective-ec",
+      "type": "ec",
+      "name": "Evaporating Cloud - Tripartite Oracle",
+      "status": "draft",
+      "logicMode": "necessity",
+      "createdAt": "2026-07-17T16:00:00+02:00",
+      "updatedAt": "2026-07-17T16:00:00+02:00",
+      "nodes": [
+        {
+          "id": "need-cost",
+          "type": "need",
+          "semanticType": "NEED",
+          "semanticRole": "R3",
+          "semanticBranchId": "cost",
+          "semanticBranchOrder": 2,
+          "statement": "Control health care costs",
+          "shortLabel": "Control health care costs",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 0
+        },
+        {
+          "id": "need-satisfaction",
+          "type": "need",
+          "semanticType": "NEED",
+          "semanticRole": "R2",
+          "semanticBranchId": "satisfaction",
+          "semanticBranchOrder": 1,
+          "statement": "Keep patients satisfied",
+          "shortLabel": "Keep patients satisfied",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 1
+        },
+        {
+          "id": "need-treatment",
+          "type": "need",
+          "semanticType": "NEED",
+          "semanticRole": "R1",
+          "semanticBranchId": "treatment",
+          "semanticBranchOrder": 0,
+          "statement": "Provide appropriate treatment",
+          "shortLabel": "Provide appropriate treatment",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 2
+        },
+        {
+          "id": "objective",
+          "type": "objective",
+          "semanticType": "OBJECTIVE",
+          "semanticRole": "A",
+          "semanticBranchId": null,
+          "semanticBranchOrder": null,
+          "statement": "Provide effective health care",
+          "shortLabel": "Provide effective health care",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 3
+        },
+        {
+          "id": "want-doctors",
+          "type": "want",
+          "semanticType": "WANT",
+          "semanticRole": "P1",
+          "semanticBranchId": "treatment",
+          "semanticBranchOrder": 0,
+          "statement": "Doctors make final treatment decisions",
+          "shortLabel": "Doctors make final treatment decisions",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 4
+        },
+        {
+          "id": "want-insurers",
+          "type": "want",
+          "semanticType": "WANT",
+          "semanticRole": "P3",
+          "semanticBranchId": "cost",
+          "semanticBranchOrder": 2,
+          "statement": "Insurance companies make final treatment decisions",
+          "shortLabel": "Insurance companies make final treatment decisions",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 5
+        },
+        {
+          "id": "want-patients",
+          "type": "want",
+          "semanticType": "WANT",
+          "semanticRole": "P2",
+          "semanticBranchId": "satisfaction",
+          "semanticBranchOrder": 1,
+          "statement": "Patients make final treatment decisions",
+          "shortLabel": "Patients make final treatment decisions",
+          "synthetic": null,
+          "treeId": "tree-ec-oracle",
+          "frameId": "frame-ec-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00",
+          "projectionOrder": 6
+        }
+      ],
+      "links": [
+        {
+          "id": "rel-p1-p2",
+          "sourceNodeId": "want-doctors",
+          "targetNodeId": "want-patients",
+          "semanticRelationId": "rel-p1-p2",
+          "segmentRole": "CONFLICT",
+          "directionality": "UNDIRECTED",
+          "type": "conflict",
+          "logic": "necessity",
+          "meaning": "Patients make final treatment decisions conflicts with Doctors make final treatment decisions.",
+          "verbalization": "Patients make final treatment decisions conflicts with Doctors make final treatment decisions.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-p1-p3",
+          "sourceNodeId": "want-doctors",
+          "targetNodeId": "want-insurers",
+          "semanticRelationId": "rel-p1-p3",
+          "segmentRole": "CONFLICT",
+          "directionality": "UNDIRECTED",
+          "type": "conflict",
+          "logic": "necessity",
+          "meaning": "Insurance companies make final treatment decisions conflicts with Doctors make final treatment decisions.",
+          "verbalization": "Insurance companies make final treatment decisions conflicts with Doctors make final treatment decisions.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-p1-r1",
+          "sourceNodeId": "want-doctors",
+          "targetNodeId": "need-treatment",
+          "semanticRelationId": "rel-p1-r1",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Doctors make final treatment decisions, then Provide appropriate treatment.",
+          "verbalization": "If Doctors make final treatment decisions, then Provide appropriate treatment.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-p2-p3",
+          "sourceNodeId": "want-patients",
+          "targetNodeId": "want-insurers",
+          "semanticRelationId": "rel-p2-p3",
+          "segmentRole": "CONFLICT",
+          "directionality": "UNDIRECTED",
+          "type": "conflict",
+          "logic": "necessity",
+          "meaning": "Insurance companies make final treatment decisions conflicts with Patients make final treatment decisions.",
+          "verbalization": "Insurance companies make final treatment decisions conflicts with Patients make final treatment decisions.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-p2-r2",
+          "sourceNodeId": "want-patients",
+          "targetNodeId": "need-satisfaction",
+          "semanticRelationId": "rel-p2-r2",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Patients make final treatment decisions, then Keep patients satisfied.",
+          "verbalization": "If Patients make final treatment decisions, then Keep patients satisfied.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-p3-r3",
+          "sourceNodeId": "want-insurers",
+          "targetNodeId": "need-cost",
+          "semanticRelationId": "rel-p3-r3",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Insurance companies make final treatment decisions, then Control health care costs.",
+          "verbalization": "If Insurance companies make final treatment decisions, then Control health care costs.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-r1-a",
+          "sourceNodeId": "need-treatment",
+          "targetNodeId": "objective",
+          "semanticRelationId": "rel-r1-a",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Provide appropriate treatment, then Provide effective health care.",
+          "verbalization": "If Provide appropriate treatment, then Provide effective health care.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-r2-a",
+          "sourceNodeId": "need-satisfaction",
+          "targetNodeId": "objective",
+          "semanticRelationId": "rel-r2-a",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Keep patients satisfied, then Provide effective health care.",
+          "verbalization": "If Keep patients satisfied, then Provide effective health care.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        },
+        {
+          "id": "rel-r3-a",
+          "sourceNodeId": "need-cost",
+          "targetNodeId": "objective",
+          "semanticRelationId": "rel-r3-a",
+          "segmentRole": "DIRECT",
+          "type": "necessity",
+          "logic": "necessity",
+          "meaning": "If Control health care costs, then Provide effective health care.",
+          "verbalization": "If Control health care costs, then Provide effective health care.",
+          "treeId": "tree-ec-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        }
+      ],
+      "assumptions": [],
+      "semanticKernel": {
+        "kernelVersion": "0.1",
+        "contractVersion": "0.1",
+        "storageMode": "NATIVE",
+        "diagramType": "EC",
+        "logicMode": "NECESSITY",
+        "elements": [
+          {
+            "id": "objective",
+            "type": "OBJECTIVE",
+            "role": "A",
+            "statement": "Provide effective health care"
+          },
+          {
+            "id": "need-treatment",
+            "type": "NEED",
+            "role": "R1",
+            "branchId": "treatment",
+            "branchOrder": 0,
+            "statement": "Provide appropriate treatment"
+          },
+          {
+            "id": "need-satisfaction",
+            "type": "NEED",
+            "role": "R2",
+            "branchId": "satisfaction",
+            "branchOrder": 1,
+            "statement": "Keep patients satisfied"
+          },
+          {
+            "id": "need-cost",
+            "type": "NEED",
+            "role": "R3",
+            "branchId": "cost",
+            "branchOrder": 2,
+            "statement": "Control health care costs"
+          },
+          {
+            "id": "want-doctors",
+            "type": "WANT",
+            "role": "P1",
+            "branchId": "treatment",
+            "branchOrder": 0,
+            "statement": "Doctors make final treatment decisions"
+          },
+          {
+            "id": "want-patients",
+            "type": "WANT",
+            "role": "P2",
+            "branchId": "satisfaction",
+            "branchOrder": 1,
+            "statement": "Patients make final treatment decisions"
+          },
+          {
+            "id": "want-insurers",
+            "type": "WANT",
+            "role": "P3",
+            "branchId": "cost",
+            "branchOrder": 2,
+            "statement": "Insurance companies make final treatment decisions"
+          }
+        ],
+        "relations": [
+          {
+            "id": "rel-r1-a",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "need-treatment"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "objective"
+              }
+            ]
+          },
+          {
+            "id": "rel-r2-a",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "need-satisfaction"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "objective"
+              }
+            ]
+          },
+          {
+            "id": "rel-r3-a",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "need-cost"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "objective"
+              }
+            ]
+          },
+          {
+            "id": "rel-p1-r1",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "want-doctors"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "need-treatment"
+              }
+            ]
+          },
+          {
+            "id": "rel-p2-r2",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "want-patients"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "need-satisfaction"
+              }
+            ]
+          },
+          {
+            "id": "rel-p3-r3",
+            "type": "NECESSITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "want-insurers"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "need-cost"
+              }
+            ]
+          },
+          {
+            "id": "rel-p1-p2",
+            "type": "CONFLICT",
+            "combination": null,
+            "renderMode": "CONFLICT",
+            "inputs": [
+              {
+                "elementId": "want-doctors"
+              },
+              {
+                "elementId": "want-patients"
+              }
+            ],
+            "outputs": []
+          },
+          {
+            "id": "rel-p1-p3",
+            "type": "CONFLICT",
+            "combination": null,
+            "renderMode": "CONFLICT",
+            "inputs": [
+              {
+                "elementId": "want-doctors"
+              },
+              {
+                "elementId": "want-insurers"
+              }
+            ],
+            "outputs": []
+          },
+          {
+            "id": "rel-p2-p3",
+            "type": "CONFLICT",
+            "combination": null,
+            "renderMode": "CONFLICT",
+            "inputs": [
+              {
+                "elementId": "want-patients"
+              },
+              {
+                "elementId": "want-insurers"
+              }
+            ],
+            "outputs": []
+          }
+        ],
+        "assumptions": [
+          {
+            "id": "assumption-r1-a-1",
+            "statement": "Effective care requires treatment suited to the patient",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-r1-a"
+            }
+          },
+          {
+            "id": "assumption-r1-a-2",
+            "statement": "Inappropriate treatment can worsen outcomes",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-r1-a"
+            }
+          },
+          {
+            "id": "assumption-r1-a-3",
+            "statement": "Clinical effectiveness depends on treatment quality",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-r1-a"
+            }
+          },
+          {
+            "id": "assumption-r2-a-1",
+            "statement": "Patients must cooperate for care to be effective",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-r2-a"
+            }
+          },
+          {
+            "id": "assumption-r2-a-2",
+            "statement": "Satisfied patients are more likely to follow treatment",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-r2-a"
+            }
+          },
+          {
+            "id": "assumption-r2-a-3",
+            "statement": "Patient experience is part of effective care",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-r2-a"
+            }
+          },
+          {
+            "id": "assumption-r3-a-1",
+            "statement": "Care cannot remain effective if its cost is unsustainable",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-r3-a"
+            }
+          },
+          {
+            "id": "assumption-r3-a-2",
+            "statement": "Resources consumed here are unavailable for other patients",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-r3-a"
+            }
+          },
+          {
+            "id": "assumption-r3-a-3",
+            "statement": "Cost control preserves access to treatment",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-r3-a"
+            }
+          },
+          {
+            "id": "assumption-p1-r1-1",
+            "statement": "Doctors have the clinical expertise to choose treatment",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-p1-r1"
+            }
+          },
+          {
+            "id": "assumption-p1-r1-2",
+            "statement": "Clinical judgment must adapt treatment to each case",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-p1-r1"
+            }
+          },
+          {
+            "id": "assumption-p1-r1-3",
+            "statement": "Non-clinicians cannot fully assess medical tradeoffs",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-p1-r1"
+            }
+          },
+          {
+            "id": "assumption-p2-r2-1",
+            "statement": "Patients best understand their own preferences",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-p2-r2"
+            }
+          },
+          {
+            "id": "assumption-p2-r2-2",
+            "statement": "Patients resist treatment imposed without their agreement",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-p2-r2"
+            }
+          },
+          {
+            "id": "assumption-p2-r2-3",
+            "statement": "Final choice gives patients meaningful control",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-p2-r2"
+            }
+          },
+          {
+            "id": "assumption-p3-r3-1",
+            "statement": "Insurers have the data needed to compare treatment costs",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-p3-r3"
+            }
+          },
+          {
+            "id": "assumption-p3-r3-2",
+            "statement": "Insurers bear much of the financial consequence",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-p3-r3"
+            }
+          },
+          {
+            "id": "assumption-p3-r3-3",
+            "statement": "Unrestricted choices can make total cost uncontrollable",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-p3-r3"
+            }
+          },
+          {
+            "id": "assumption-p1-p2-1",
+            "statement": "Doctor and patient preferences can differ",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-p1-p2"
+            }
+          },
+          {
+            "id": "assumption-p1-p2-2",
+            "statement": "Only one party can hold final authority",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-p1-p2"
+            }
+          },
+          {
+            "id": "assumption-p1-p2-3",
+            "statement": "No shared decision rule reconciles both perspectives",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-p1-p2"
+            }
+          },
+          {
+            "id": "assumption-p1-p3-1",
+            "statement": "Clinically preferred treatment may exceed insurer limits",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-p1-p3"
+            }
+          },
+          {
+            "id": "assumption-p1-p3-2",
+            "statement": "Clinical and financial criteria use different measures",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-p1-p3"
+            }
+          },
+          {
+            "id": "assumption-p1-p3-3",
+            "statement": "No decision process protects both treatment quality and cost",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-p1-p3"
+            }
+          },
+          {
+            "id": "assumption-p2-p3-1",
+            "statement": "Patient preferences may require uncovered treatment",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-p2-p3"
+            }
+          },
+          {
+            "id": "assumption-p2-p3-2",
+            "statement": "Patient benefit and insurer affordability are judged separately",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-p2-p3"
+            }
+          },
+          {
+            "id": "assumption-p2-p3-3",
+            "statement": "No transparent rule reconciles preference with coverage",
+            "subject": {
+              "kind": "CONFLICT",
+              "relationId": "rel-p2-p3"
+            }
+          }
+        ],
+        "derivations": [],
+        "annotations": []
+      },
+      "layout": {
+        "engine": "elk",
+        "direction": "RL",
+        "routingStyle": "CURVED",
+        "lastRunAt": null,
+        "settings": {
+          "spacingNodeNode": 72,
+          "spacingLayer": 126,
+          "respectPinned": true,
+          "minimizeCrossings": true
+        },
+        "nodes": {
+          "need-cost": {
+            "x": 80,
+            "y": 80,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "need-satisfaction": {
+            "x": 380,
+            "y": 80,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "need-treatment": {
+            "x": 680,
+            "y": 80,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "objective": {
+            "x": 80,
+            "y": 230,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "want-doctors": {
+            "x": 380,
+            "y": 230,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "want-insurers": {
+            "x": 680,
+            "y": 230,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "want-patients": {
+            "x": 80,
+            "y": 380,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          }
+        },
+        "links": {
+          "rel-p1-p2": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-p1-p3": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-p1-r1": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-p2-p3": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-p2-r2": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-p3-r3": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-r1-a": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-r2-a": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-r3-a": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      "canvasId": "canvas-ec-oracle",
+      "hostFrameId": "frame-ec-diagram",
+      "renderProjection": {
+        "kind": "SEMANTIC_NATIVE",
+        "sourceFingerprint": "a5a3bea360595c784d8ed837b9986254680f63795f52cedd67294debc854ec0f",
+        "nodeIds": [
+          "need-cost",
+          "need-satisfaction",
+          "need-treatment",
+          "objective",
+          "want-doctors",
+          "want-insurers",
+          "want-patients"
+        ],
+        "linkIds": [
+          "rel-p1-p2",
+          "rel-p1-p3",
+          "rel-p1-r1",
+          "rel-p2-p3",
+          "rel-p2-r2",
+          "rel-p3-r3",
+          "rel-r1-a",
+          "rel-r2-a",
+          "rel-r3-a"
+        ],
+        "frameByNodeId": {
+          "need-cost": "frame-ec-diagram",
+          "need-satisfaction": "frame-ec-diagram",
+          "need-treatment": "frame-ec-diagram",
+          "objective": "frame-ec-diagram",
+          "want-doctors": "frame-ec-diagram",
+          "want-insurers": "frame-ec-diagram",
+          "want-patients": "frame-ec-diagram"
+        }
+      }
+    }
+  ],
+  "exports": [],
+  "canvases": [
+    {
+      "schemaVersion": "0.2",
+      "id": "canvas-ec-oracle",
+      "systemId": "sys-ec-oracle",
+      "name": "EC Tripartite Oracle canvas",
+      "rootFrameId": "frame-ec-root",
+      "frames": [
+        {
+          "id": "frame-ec-root",
+          "canvasId": "canvas-ec-oracle",
+          "treeId": null,
+          "kind": "root",
+          "parentFrameId": null,
+          "name": "Root",
+          "semanticType": "workspaceRoot",
+          "collapsed": false,
+          "childFrameIds": [
+            "frame-ec-diagram"
+          ],
+          "nodeIds": [],
+          "notes": "Infinite workspace root"
+        },
+        {
+          "id": "frame-ec-diagram",
+          "canvasId": "canvas-ec-oracle",
+          "treeId": "tree-ec-oracle",
+          "kind": "diagram",
+          "parentFrameId": "frame-ec-root",
+          "name": "Evaporating Cloud",
+          "semanticType": "ec",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "need-cost",
+            "need-satisfaction",
+            "need-treatment",
+            "objective",
+            "want-doctors",
+            "want-insurers",
+            "want-patients"
+          ],
+          "notes": "Native semantic EC projection",
+          "createdAt": "2026-07-17T16:00:00+02:00",
+          "updatedAt": "2026-07-17T16:00:00+02:00"
+        }
+      ],
+      "layout": {
+        "frames": {
+          "frame-ec-diagram": {
+            "x": 48,
+            "y": 40,
+            "width": 1180,
+            "height": 600,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          }
+        }
+      },
+      "viewState": {
+        "activeFrameId": "frame-ec-diagram",
+        "selectedElementId": "objective",
+        "selectionRootIds": [
+          "objective"
+        ],
+        "mode": "navigation",
+        "zoom": 0.9,
+        "pan": {
+          "x": 0,
+          "y": 0
+        },
+        "panels": {
+          "leftOpen": true,
+          "rightOpen": true
+        },
+        "breadcrumb": [
+          "EC Tripartite Oracle",
+          "Evaporating Cloud"
+        ]
+      },
+      "createdAt": "2026-07-17T16:00:00+02:00",
+      "updatedAt": "2026-07-17T16:00:00+02:00"
+    }
+  ]
+}

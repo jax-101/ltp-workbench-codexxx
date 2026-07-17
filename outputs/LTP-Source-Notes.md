@@ -81,7 +81,10 @@ Implicacion para la app:
 - las injections deben poder convertirse en entradas de un FRT para validacion.
 - cada flecha y el conflicto deben abrir un inspector propio de assumptions;
 - una EC aceptada no debe ocultar ningun break point sin revisar;
-- el layout debe fijar roles, columnas y paralelismo, no inferirlos solo por Type.
+- el layout debe compilar columnas y paralelismo desde ramas semanticas, no
+  inferirlos solo por Type ni limitarse a los roles del caso bipolar;
+- una EC puede tener tres o mas prerequisites en conflicto; cada pareja conserva
+  su propia relacion y assumptions, y se resuelve antes de reevaluar las demas.
 
 ### 5. Rutas no lineales
 
