@@ -804,3 +804,35 @@ indicadores de links, dentro del viewport actual y en pixeles de pantalla.
 Razon: con zoom, una separacion suficiente en coordenadas logicas puede quedar
 por debajo del ancho fijo de una etiqueta. Resolver colisiones en espacio de
 pantalla garantiza legibilidad sin alterar el diagrama ni el modelo de input.
+
+### D-108: LTP Workbench adopta un monolito modular estricto
+
+Decision: los modulos se ejecutan normalmente en un repositorio y proceso, pero
+solo se comunican mediante contratos publicos, versionados y verificables. No se
+introducen microservicios para obtener aislamiento de desarrollo.
+
+Razon: el aislamiento necesario es semantico y de pruebas, no operativo. Un
+monolito modular conserva transacciones locales y simplicidad de despliegue sin
+permitir dependencias invisibles.
+
+### D-109: CONTEXT es el punto de recuperacion; ARCHITECTURE es normativo
+
+Decision: `CONTEXT.md` resume lo necesario para reiniciar una sesion larga y
+apunta a las fuentes completas. `ARCHITECTURE.md` gobierna modulos,
+dependencias, tamanos y pruebas. README y el plan los enlazan, pero no duplican
+su autoridad.
+
+Razon: la informacion ya existia repartida en varios outputs, pero localizarla
+y reconciliarla dependia de memoria historica. Separar resumen y norma reduce
+la carga de contexto sin convertir el resumen en otro documento inabarcable.
+
+### D-110: La deuda de archivos gigantes se reduce mediante ratchet
+
+Decision: los archivos heredados por encima del limite reciben su presupuesto
+actual como maximo de no crecimiento. Los nuevos archivos de produccion no
+superan 300 lineas y apuntan a 50-200. Cada capacidad que toque un monolito debe
+extraer una responsabilidad cuando sea seguro.
+
+Razon: una reescritura general pondria en riesgo comportamiento ya validado;
+permitir crecimiento perpetuaria el problema. El ratchet permite modularizar
+con micro-pasos verdes y evidencia antes/despues.

@@ -1075,3 +1075,32 @@ Criterios de aceptacion:
 - Se conserva el orden lateral previo para proteger el mapa mental.
 - El frame crece hasta contener completamente la fila.
 - Los elementos realmente desconectados mantienen su cuadricula compacta.
+
+### F-082: Diseno Modular Estricto y contexto recuperable
+
+Feedback: el proyecto debe poder desarrollarse modulo a modulo mediante
+contratos explicitos y UAT automaticas por modulo. Una nueva sesion de IA debe
+recuperar arquitectura, tecnologias, reglas y estado desde un `CONTEXT.md`
+breve en la raiz.
+
+Estado: base implementada en `3C.14d`: `CONTEXT.md`, `ARCHITECTURE.md` y gate
+automatico inicial. Quedan pendientes el inventario exhaustivo de contratos y
+los UAT de caja negra para cada modulo.
+
+Criterios de aceptacion:
+
+- Cada modulo posee datos, invariantes y API publica claramente delimitados.
+- Las dependencias entre modulos tienen una direccion verificable.
+- Cada modulo puede probarse sin utilizar sus adaptadores externos.
+- El contexto de una sesion se recupera desde un unico punto breve y vigente.
+- Los documentos normativos y el build no pueden divergir silenciosamente.
+
+### F-083: Micro-pasos, pruebas y refactorizacion periodica
+
+Feedback: cada incremento anade una sola capacidad, con pruebas automaticas,
+y cada 3-4 iteraciones funcionales se detiene el desarrollo para refactorizar
+sin cambiar comportamiento. Los archivos deben permanecer pequenos y cumplir
+Single Responsibility Principle.
+
+Estado: incorporado como politica normativa y gate de no crecimiento. La
+extraccion de los archivos heredados gigantes se realizara incrementalmente.

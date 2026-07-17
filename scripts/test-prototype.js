@@ -7,6 +7,11 @@ const args = new Set(process.argv.slice(2));
 
 const steps = [
   {
+    name: "Enforce strict modular architecture",
+    command: "npm",
+    args: ["run", "test:architecture"]
+  },
+  {
     name: "Validate data model",
     command: "npm",
     args: ["run", "validate:model"]

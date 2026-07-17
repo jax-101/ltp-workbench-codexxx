@@ -2,6 +2,12 @@
 
 Aplicacion de escritorio standalone para trabajar problemas con la metodologia Logical Thinking Process de William Dettmer.
 
+## Contexto para nuevas sesiones
+
+Antes de una sesion larga de desarrollo o una nueva ventana de contexto, lee
+`CONTEXT.md`. Resume arquitectura, tecnologias, reglas, estado y verificaciones.
+`ARCHITECTURE.md` contiene las reglas normativas del Diseno Modular Estricto.
+
 ## Estado actual
 
 Esta es una primera base funcional en Electron:
@@ -44,6 +50,7 @@ Los aprendizajes reutilizables del desarrollo se mantienen en `outputs/Engineeri
 ## Pruebas del prototipo
 
 ```bash
+npm run test:architecture
 npm run test:prototype
 npm run test:visual
 npm run test:shortcuts

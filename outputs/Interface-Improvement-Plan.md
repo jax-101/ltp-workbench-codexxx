@@ -771,10 +771,40 @@ Criterios de aceptacion de `3C.14c.2`:
 - Crear, editar, invalidar, borrar y restaurar son transacciones atomicas con
   Undo/Redo y tienen equivalentes headless en la CLI.
 
+### 3C.14d: due diligence de Diseno Modular Estricto
+
+Estado: activo. La base normativa y el primer gate automatico estan
+implementados; quedan el inventario completo de contratos implicitos y los UAT
+de aceptacion por modulo antes de iniciar extracciones estructurales.
+
+Incluye:
+
+- `CONTEXT.md` como punto breve de recuperacion para nuevas sesiones.
+- `ARCHITECTURE.md` como constitucion tecnica del monolito modular.
+- Mapa de modulos, datos propios, APIs, dependencias y errores.
+- Ratchet de tamano: archivos heredados gigantes no pueden crecer y los nuevos
+  archivos de produccion no superan 300 lineas.
+- Gate que impide dependencias de Electron/DOM desde el core.
+- Pruebas unitarias, de contrato, aceptacion de modulo y UAT de sistema como
+  niveles distintos.
+- Micro-pasos funcionales y refactorizacion sin cambio de comportamiento cada
+  3-4 incrementos.
+
+Criterios de aceptacion:
+
+- Cada modulo tiene charter, API publica, invariantes y dependencias permitidas.
+- Cada comunicacion actual entre modulos esta inventariada como contrato o
+  deuda explicita.
+- Existe al menos un UAT de caja negra por modulo implementado.
+- CI ejecuta el gate arquitectonico antes de las pruebas funcionales.
+- Ningun archivo heredado crece y cada extraccion reduce su presupuesto.
+- El build permanece verde durante toda la modularizacion incremental.
+
 ### 3C.15: formato de definicion y herramientas headless
 
-Estado: desbloqueado tras completar `3C.14c.2`. Es el siguiente incremento y
-se publica antes del Diagram Studio visual.
+Estado: desbloqueado funcionalmente tras completar `3C.14c.2`, pero condicionado
+al cierre de los contratos base de `3C.14d`. Se publica antes del Diagram Studio
+visual.
 
 Incluye:
 

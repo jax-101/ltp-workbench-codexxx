@@ -1193,9 +1193,43 @@ Aplicacion futura: resolver tooltips, badges y handles en pixeles de pantalla;
 reservar controles interactivos; limitar al viewport; y probar densidad con
 zoom minimo y etiquetas de longitud variable.
 
+### L-102: Una regla arquitectonica debe ser ejecutable y precisa
+
+Fecha: 2026-07-17
+
+Evidencia: el primer gate intento detectar acceso DOM buscando el texto
+`document.` y rechazo una variable local legitima de `document-view.js`. Al
+limitar la regla a imports reales de Electron y renderer, el gate comprobo la
+frontera sin imponer vocabulario interno accidental.
+
+Aprendizaje: convertir arquitectura en tests evita regresiones, pero una regla
+textual imprecisa crea friccion y termina desactivada. Los gates deben medir la
+dependencia real que se quiere prohibir y tener casos que demuestren falsos
+positivos y negativos.
+
+Aplicacion futura: validar imports, contratos o grafos de dependencias en lugar
+de nombres sueltos; ejecutar el gate antes de la suite funcional; y tratar sus
+fallos como defectos del codigo o del propio gate, nunca como ruido aceptable.
+
+### L-103: Un ratchet permite pagar deuda sin una reescritura total
+
+Fecha: 2026-07-17
+
+Evidencia: el prototipo ya funciona, pero contiene archivos entre 585 y 6494
+lineas. Imponer de inmediato el limite objetivo obligaria a una extraccion
+masiva; ignorarlo permitiria que siguieran creciendo.
+
+Aprendizaje: congelar el maximo actual transforma una aspiracion de calidad en
+una restriccion incremental. Cada reduccion puede bajar el presupuesto y cada
+feature encuentra una oportunidad concreta de extraccion.
+
+Aplicacion futura: registrar excepciones heredadas con presupuesto exacto;
+prohibir nuevas excepciones sin decision; reducir el limite tras cada
+extraccion; y verificar comportamiento antes y despues con UAT de modulo.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-102`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-104`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 
