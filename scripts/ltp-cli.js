@@ -8,6 +8,13 @@ const { validateWorkspace } = require("../src/core/workspace-validator");
 const { migrateWorkspace } = require("../src/core/workspace-migrations");
 const { addSemanticKernel } = require("../src/core/semantic-migration");
 
+const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze({
+  entity: "ENTITY",
+  ude: "UDE",
+  rootCause: "ROOT_CAUSE",
+  criticalRootCause: "CRITICAL_ROOT_CAUSE"
+});
+
 const args = process.argv.slice(2);
 const positional = [];
 const flags = {};
@@ -98,13 +105,14 @@ const run = async () => {
       .filter((tree) => tree.semanticKernel)
       .map((tree) => ({
         id: tree.id,
-        profile: tree.semanticKernel.profile,
+        profile: tree.semanticKernel.diagramType || tree.semanticKernel.profile,
+        storageMode: tree.semanticKernel.storageMode || "LEGACY_PROJECTION",
         kernelVersion: tree.semanticKernel.kernelVersion,
         sourceFingerprint: tree.semanticKernel.sourceFingerprint,
         elements: tree.semanticKernel.elements.length,
         relations: tree.semanticKernel.relations.length,
         assumptions: tree.semanticKernel.assumptions.length,
-        annotations: tree.semanticKernel.annotations.length
+        annotations: (tree.semanticKernel.annotations || []).length
       }));
     output(
       { ok: true, changed: migration.changed, persisted: false, migratedTreeIds: migration.migratedTreeIds, trees },
@@ -113,19 +121,59 @@ const run = async () => {
     return;
   }
 
+  if (resource === "semantic" && action === "show") {
+    const workspace = await readWorkspace();
+    const treeId = requireFlag("tree");
+    const tree = workspace.trees.find((candidate) => candidate.id === treeId);
+    if (!tree) {
+      const error = new Error(`Tree ${treeId} was not found`);
+      error.code = "TREE_NOT_FOUND";
+      throw error;
+    }
+    if (!tree.semanticKernel) {
+      const error = new Error(`Tree ${treeId} has no semantic kernel`);
+      error.code = "SEMANTIC_KERNEL_MISSING";
+      throw error;
+    }
+    output(
+      {
+        ok: true,
+        revision: workspaceRevision(workspace),
+        treeId,
+        storageMode: tree.semanticKernel.storageMode || "LEGACY_PROJECTION",
+        graph: tree.semanticKernel,
+        renderProjection: tree.renderProjection || null
+      },
+      `${tree.semanticKernel.diagramType || tree.semanticKernel.profile}: ${tree.semanticKernel.elements.length} elements, ${tree.semanticKernel.relations.length} relations, ${tree.semanticKernel.assumptions.length} assumptions`
+    );
+    return;
+  }
+
   if (resource === "node" && action === "update") {
     const engine = await createEngine();
+    const treeId = requireFlag("tree");
+    const tree = engine.getSnapshot().trees.find((candidate) => candidate.id === treeId);
+    if (!tree) {
+      const error = new Error(`Tree ${treeId} was not found`);
+      error.code = "TREE_NOT_FOUND";
+      throw error;
+    }
+    const nativeSemantic = tree.semanticKernel?.storageMode === "NATIVE";
+    const field = requireFlag("field");
+    const rawValue = requireFlag("value");
     const command = {
       commandId: flags["command-id"] || randomUUID(),
-      type: "node.update",
+      type: nativeSemantic ? "semantic.element.update" : "node.update",
       label: "Update node from CLI",
       expectedRevision: parseExpectedRevision(),
-      payload: {
-        treeId: requireFlag("tree"),
-        nodeId: requireFlag("node"),
-        field: requireFlag("field"),
-        value: requireFlag("value")
-      }
+      payload: nativeSemantic
+        ? {
+            treeId,
+            elementId: requireFlag("node"),
+            field,
+            value: field === "type" ? SEMANTIC_TYPE_BY_NODE_TYPE[rawValue] || rawValue : rawValue
+          }
+        : { treeId, nodeId: requireFlag("node"), field, value: rawValue }
     };
     const result = await engine.execute(command, { dryRun: Boolean(flags["dry-run"]) });
     output({ ok: true, commandId: command.commandId, ...result }, `${result.dryRun ? "Previewed" : "Applied"} ${command.type} at revision ${result.revision}`);
@@ -140,7 +188,7 @@ const run = async () => {
     return;
   }
 
-  const error = new Error("Unknown command. Use validate, tree list, semantic preview, node update, or apply.");
+  const error = new Error("Unknown command. Use validate, tree list, semantic preview, semantic show, node update, or apply.");
   error.code = "COMMAND_UNKNOWN";
   throw error;
 };

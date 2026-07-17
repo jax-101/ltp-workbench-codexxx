@@ -8,6 +8,7 @@ const { listDocuments, resolveDocument } = require("./core/document-view");
 const { runComposedLayout, validateComposedGeometry } = require("./core/composed-layout");
 const { migrateWorkspace } = require("./core/workspace-migrations");
 const { generateRandomLayoutFixture } = require("./core/random-layout-fixture");
+const { buildMarkdownExport } = require("./core/markdown-export");
 const packageMetadata = require("../package.json");
 
 const workspaceManager = new WorkspaceManager();
@@ -28,11 +29,17 @@ const prototypeDataPath = () => {
   if (process.env.LTP_SMOKE_TEST === "1") fileName = "smoke-test-workspace.json";
   if (process.env.LTP_VISUAL_TEST === "1") fileName = "visual-test-workspace.json";
   if (process.env.LTP_SHORTCUT_TEST === "1") fileName = "shortcut-test-workspace.json";
+  if (process.env.LTP_CRT_TEST === "1") fileName = "crt-test-workspace.json";
   return path.join(app.getPath("userData"), fileName);
 };
 const sampleDataPath = () => path.join(app.getAppPath(), "outputs", "sample-workspace-v0.1.json");
 const complexFixturePath = () => path.join(app.getAppPath(), "outputs", "complex-goal-tree-workspace-v0.1.json");
-const exportPath = () => path.join(app.getAppPath(), "outputs", "prototype-goal-tree-export.md");
+const crtFixturePath = () => path.join(app.getAppPath(), "outputs", "crt-workspace-v0.1.json");
+const exportPath = (tree) => path.join(
+  app.getAppPath(),
+  "outputs",
+  tree.type === "goalTree" ? "prototype-goal-tree-export.md" : `prototype-${tree.type}-export.md`
+);
 
 const fallbackWorkspace = () => ({
   schemaVersion: "0.1",
@@ -108,6 +115,10 @@ const fallbackWorkspace = () => ({
 const readJson = async (filePath) => JSON.parse(await fs.readFile(filePath, "utf8"));
 
 const loadWorkspace = async () => {
+  if (process.env.LTP_CRT_TEST === "1") {
+    return readJson(crtFixturePath());
+  }
+
   if (process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1") {
     try {
       return await readJson(sampleDataPath());
@@ -168,7 +179,7 @@ const loadWorkspace = async () => {
 const getWorkspaceSession = () => workspaceManager.open({
   filePath: prototypeDataPath(),
   loadInitialWorkspace: loadWorkspace,
-  reset: process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1"
+  reset: process.env.LTP_SMOKE_TEST === "1" || process.env.LTP_VISUAL_TEST === "1" || process.env.LTP_SHORTCUT_TEST === "1" || process.env.LTP_CRT_TEST === "1"
 });
 
 const getWorkspaceEngine = async () => (await getWorkspaceSession()).engine;
@@ -210,70 +221,11 @@ const exportMarkdown = async (workspace, treeId) => {
   const tree = resolveDocument(workspace, treeId);
   const system = workspace.systems.find((candidate) => candidate.id === tree.systemId);
   if (!system) throw new Error(`System ${tree.systemId} was not found for tree ${tree.id}`);
-  const nodeById = Object.fromEntries(tree.nodes.map((node) => [node.id, node]));
-  const assumptionsByLink = Object.groupBy
-    ? Object.groupBy(tree.assumptions, (assumption) => assumption.linkId)
-    : tree.assumptions.reduce((acc, assumption) => {
-        acc[assumption.linkId] = acc[assumption.linkId] || [];
-        acc[assumption.linkId].push(assumption);
-        return acc;
-      }, {});
-
-  const goal = tree.nodes.find((node) => node.type === "goal");
-  const linksTo = (targetId) => tree.links.filter((link) => link.targetNodeId === targetId);
-  const lines = [
-    `# ${tree.name}`,
-    "",
-    `System: ${system.name}`,
-    "",
-    "## System Profile",
-    "",
-    `- Owner: ${system.profile.owner?.name || "Unknown"}`,
-    `- Purpose: ${system.profile.purpose || ""}`,
-    `- Boundary: ${system.profile.boundary?.summary || ""}`,
-    "",
-    "## Goal",
-    "",
-    `- ${goal?.statement || "No goal defined"}`,
-    "",
-    "## Critical Success Factors",
-    ""
-  ];
-
-  for (const csfLink of linksTo(goal?.id)) {
-    const csf = nodeById[csfLink.sourceNodeId];
-    if (!csf) continue;
-    lines.push(`### ${csf.shortLabel || csf.statement}`);
-    lines.push("");
-    lines.push(csf.statement);
-    lines.push("");
-    lines.push(`Link: ${csfLink.verbalization}`);
-    lines.push("");
-
-    const assumptions = assumptionsByLink[csfLink.id] || [];
-    if (assumptions.length) {
-      lines.push("Assumptions:");
-      for (const assumption of assumptions) {
-        lines.push(`- ${assumption.statement}`);
-      }
-      lines.push("");
-    }
-
-    const ncLinks = linksTo(csf.id);
-    if (ncLinks.length) {
-      lines.push("Necessary Conditions:");
-      for (const ncLink of ncLinks) {
-        const nc = nodeById[ncLink.sourceNodeId];
-        if (!nc) continue;
-        lines.push(`- ${nc.statement}`);
-      }
-      lines.push("");
-    }
-  }
-
-  await fs.mkdir(path.dirname(exportPath()), { recursive: true });
-  await fs.writeFile(exportPath(), lines.join("\n"));
-  return { path: exportPath(), markdown: lines.join("\n") };
+  const markdown = buildMarkdownExport(tree, system);
+  const targetPath = exportPath(tree);
+  await fs.mkdir(path.dirname(targetPath), { recursive: true });
+  await fs.writeFile(targetPath, markdown);
+  return { path: targetPath, markdown };
 };
 
 const runVisualTest = async (mainWindow) => {
@@ -357,6 +309,27 @@ const runVisualTest = async (mainWindow) => {
   await fs.writeFile(path.join(evidenceDirectory, "report.json"), `${JSON.stringify(report, null, 2)}\n`);
   await fs.writeFile(path.join(evidenceDirectory, "report.md"), markdown);
   console.log(JSON.stringify({ ok: report.ok, evidenceDirectory, results }));
+  return report;
+};
+
+const runCrtVisualTest = async (mainWindow) => {
+  const evidenceDirectory = path.join(app.getAppPath(), "outputs", "test-evidence", buildInfo.id, "crt");
+  await fs.rm(evidenceDirectory, { recursive: true, force: true });
+  await fs.mkdir(evidenceDirectory, { recursive: true });
+  mainWindow.setIgnoreMouseEvents(true);
+  const result = await mainWindow.webContents.executeJavaScript(
+    "window.__ltpCrtVisualTest && window.__ltpCrtVisualTest()"
+  );
+  const image = await mainWindow.webContents.capturePage();
+  const screenshot = "crt-oracle-layout.png";
+  await fs.writeFile(path.join(evidenceDirectory, screenshot), image.toPNG());
+  const report = { build: buildInfo, generatedAt: new Date().toISOString(), ...result, screenshot };
+  await fs.writeFile(path.join(evidenceDirectory, "report.json"), `${JSON.stringify(report, null, 2)}\n`);
+  await fs.writeFile(
+    path.join(evidenceDirectory, "report.md"),
+    `# CRT visual test - build ${buildInfo.id}\n\nResult: ${report.ok ? "PASS" : "FAIL"}\n\n${report.detail}\n\n![CRT oracle](${screenshot})\n`
+  );
+  console.log(JSON.stringify({ ok: report.ok, evidenceDirectory, detail: report.detail }));
   return report;
 };
 
@@ -446,7 +419,7 @@ const createWindow = () => {
     height: 900,
     minWidth: 1120,
     minHeight: 720,
-    title: `LTP Workbench - ${buildLabel()}${process.env.LTP_MANUAL_TEST === "1" ? " - Manual Test" : ""}${process.env.LTP_COMPLEX_TEST === "1" ? " - Complex Goal Tree Test" : ""}`,
+    title: `LTP Workbench - ${buildLabel()}${process.env.LTP_MANUAL_TEST === "1" ? " - Manual Test" : ""}${process.env.LTP_COMPLEX_TEST === "1" ? " - Complex Goal Tree Test" : ""}${process.env.LTP_CRT_TEST === "1" ? " - CRT Test" : ""}`,
     backgroundColor: "#f7f5ef",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -497,6 +470,18 @@ const createWindow = () => {
       }
     });
   }
+
+  if (process.env.LTP_CRT_TEST === "1") {
+    mainWindow.webContents.once("did-finish-load", async () => {
+      try {
+        const result = await runCrtVisualTest(mainWindow);
+        app.exit(result.ok ? 0 : 1);
+      } catch (error) {
+        console.error(error);
+        app.exit(1);
+      }
+    });
+  }
 };
 
 ipcMain.handle("workspace:load", async () => (await getWorkspaceEngine()).getSnapshot());
@@ -507,6 +492,7 @@ ipcMain.handle("workspace:session-info", async () => {
 });
 ipcMain.handle("fixture:sample-workspace", async () => migrateWorkspace(await readJson(sampleDataPath())).workspace);
 ipcMain.handle("fixture:complex-goal-tree", async () => migrateWorkspace(await readJson(complexFixturePath())).workspace);
+ipcMain.handle("fixture:crt", async () => migrateWorkspace(await readJson(crtFixturePath())).workspace);
 ipcMain.handle("fixture:random-layout", async (_event, options) =>
   generateRandomLayoutFixture(migrateWorkspace(await readJson(complexFixturePath())).workspace, options)
 );

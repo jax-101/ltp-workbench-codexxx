@@ -625,3 +625,23 @@ mismo documento podra tener varias vistas simultaneas sin duplicar datos.
 Razon: pestanas, multimonitor y foco de frames son composiciones de vistas, no
 copias del arbol. Mezclar estado visual con identidad documental provoca
 sobrescrituras, Undo espacial inesperado y documentos duplicados.
+
+### D-093: CRT usa semantica nativa y una proyeccion visual regenerable
+
+Decision: los nuevos diagramas nacen con semanticKernel.storageMode = NATIVE.
+Nodos, enlaces y junctions del canvas son una proyeccion con huella de frescura.
+Goal Tree conserva temporalmente LEGACY_PROJECTION hasta completar su migracion.
+
+Razon: una relacion n-aria no puede reconstruirse con garantias desde segmentos
+visuales. Declarar la autoridad evita escrituras en ambos sentidos y permite que
+layout, renderer y formatos futuros cambien sin modificar el razonamiento.
+
+### D-094: Los junctions pertenecen a la relacion que proyectan
+
+Decision: un junction se identifica como junction:<relationId>, y sus tramos
+como <relationId>:input:<elementId> y <relationId>:output:<elementId>.
+Seleccionar o borrar el junction opera sobre la relacion; el junction no
+participa en Type ni en el inventario semantico.
+
+Razon: el simbolo debe tener identidad estable para layout, seleccion, rutas y
+pruebas, pero no representa una afirmacion independiente del usuario.

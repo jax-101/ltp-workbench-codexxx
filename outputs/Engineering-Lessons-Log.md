@@ -898,9 +898,59 @@ ventanas del proyecto; IDs explicitos en comandos; estado visual por vista; y
 pruebas con dos proyectos y dos vistas del mismo documento antes de construir
 la interfaz final.
 
+### L-085: Una proyeccion derivada debe declarar la direccion de autoridad
+
+Fecha: 2026-07-17
+
+Evidencia: Goal Tree partia de nodos legacy y generaba semantica; CRT partia del
+kernel semantico y generaba nodos, links y junctions. Aplicar la misma huella y
+el mismo refresco en ambos sentidos habria permitido que una vista antigua
+sobrescribiera relaciones n-arias.
+
+Aprendizaje: cuando conviven modelos de transicion, cada instancia debe declarar
+que representacion es canonica. La sincronizacion bidireccional implicita no es
+una arquitectura: es una fuente de conflictos silenciosos.
+
+Aplicacion futura: etiquetar el modo de almacenamiento; calcular frescura desde
+la fuente declarada; regenerar solo la proyeccion; impedir downgrade destructivo
+de fuentes nativas; y probar mutacion, refresco, Undo y layout en ambos modos.
+
+### L-086: Los sinteticos visuales necesitan identidad estable, no persistencia semantica
+
+Fecha: 2026-07-17
+
+Evidencia: el AND de CRT debia ser seleccionable, posicionable y enrutable, pero
+convertirlo en una entidad habria alterado el significado del arbol. Derivarlo
+como junction:<relationId> permitio layout y seleccion sin crear una segunda
+fuente de verdad.
+
+Aprendizaje: un artefacto visual puede necesitar identidad operativa sin ser un
+objeto de dominio. Persistirlo como contenido mezcla presentacion y semantica;
+no darle ID vuelve inestables layout, hints y pruebas.
+
+Aplicacion futura: derivar IDs de la relacion; excluir sinteticos de Type y CRUD
+de entidades; mapear sus acciones a la relacion propietaria; y comprobar que
+serializacion y export no los presentan como afirmaciones del usuario.
+
+### L-087: La evidencia visual automatica debe aislar entradas externas
+
+Fecha: 2026-07-17
+
+Evidencia: una captura Electron pasaba todas las aserciones y, durante la espera
+posterior, la ventana recibio una accion tardia que borro la seleccion antes del
+pantallazo. El informe y la imagen describian estados distintos.
+
+Aprendizaje: la captura forma parte de la transaccion de prueba. Esperas
+arbitrarias y ventanas interactivas introducen carreras que pueden invalidar la
+evidencia aunque el test logico sea correcto.
+
+Aplicacion futura: esperar una condicion interna explicita; bloquear entrada
+durante la ejecucion; capturar inmediatamente despues del resultado; y hacer que
+el informe incluya los mismos invariantes observados en la imagen.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-085`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-088`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

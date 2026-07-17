@@ -639,6 +639,45 @@ kbd {
   border-color: var(--gold);
 }
 
+.node-entity {
+  border-color: #587b61;
+}
+
+.node-ude {
+  border-color: #a84f49;
+  background: #fff7f5;
+}
+
+.node-rootCause {
+  border-color: #8a6f33;
+  background: #fffaf0;
+}
+
+.node-criticalRootCause {
+  border-color: #793f36;
+  background: #fff2ef;
+}
+
+.tree-node.node-junction {
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  border: 3px solid #35564f;
+  border-radius: 999px;
+  padding: 0;
+  background: #f0f7f3;
+  cursor: pointer;
+}
+
+.tree-node.node-junction strong {
+  color: #23443d;
+  font-size: 9px;
+}
+
+.tree-node.node-junction span {
+  display: none;
+}
+
 .link-target {
   z-index: 10;
   display: grid;
@@ -756,6 +795,20 @@ kbd {
 
 .minimap-node-assumption {
   background: var(--gold);
+}
+
+.minimap-node-ude {
+  background: #a84f49;
+}
+
+.minimap-node-rootCause,
+.minimap-node-criticalRootCause {
+  background: #8a6f33;
+}
+
+.minimap-node-junction {
+  border-radius: 999px;
+  background: #35564f;
 }
 
 .minimap-viewport {

@@ -944,3 +944,22 @@ Criterios de aceptacion:
   viewports.
 - Cerrar la ultima vista no borra el documento.
 - El estado de ventanas se guarda fuera del dominio semantico.
+
+### F-075: Primera vertical nativa de Current Reality Tree
+
+Feedback: avanzar todo lo posible con CRT usando el contrato metodologico,
+relaciones n-arias, junctions, ciclos, assumptions y comprobaciones autonomas.
+
+Estado: implementado y validado en `3C.14b.1`.
+
+Criterios de aceptacion:
+
+- El oracle CRT es la fuente semantica nativa.
+- Un AND se muestra mediante un junction derivado con tres tramos estables.
+- Las causas independientes conservan flechas separadas y agregacion OR
+  implicita en el destino.
+- El bucle negativo se rompe solo para ordenar capas y se restaura al renderizar.
+- CRUD, cascadas, Undo/Redo, CLI y export operan sobre la misma fuente.
+- `N`, `Shift+Tab` y `Ctrl+D` funcionan sobre CRT sin editar la proyeccion.
+- Una prueba Electron guarda captura e informe y verifica flechas, geometria,
+  direccion, junction y atajos.

@@ -18,6 +18,27 @@ const DIAGRAM_DEFINITIONS = Object.freeze({
       Object.freeze({ id: "necessaryCondition", label: "Necessary Condition", shortLabel: "NC" }),
       Object.freeze({ id: "assumption", label: "Assumption", shortLabel: "Assumption" })
     ])
+  }),
+  crt: Object.freeze({
+    id: "crt",
+    label: "Current Reality Tree",
+    defaultDirection: "BT",
+    layering: "distanceToSink",
+    cycleBreaking: Object.freeze({ strategy: "greedyFeedbackArc", restoreSemanticEdges: true }),
+    directions: Object.freeze(["BT", "TB", "LR", "RL"]),
+    defaultRoutingStyle: "CURVED",
+    routingStyles: Object.freeze([
+      Object.freeze({ id: "CURVED", label: "Curved" }),
+      Object.freeze({ id: "ORTHOGONAL", label: "Orthogonal" })
+    ]),
+    defaultNodeType: "entity",
+    nodeTypes: Object.freeze([
+      Object.freeze({ id: "entity", label: "Entity", shortLabel: "Entity" }),
+      Object.freeze({ id: "ude", label: "Undesirable Effect", shortLabel: "UDE" }),
+      Object.freeze({ id: "rootCause", label: "Root Cause", shortLabel: "RC" }),
+      Object.freeze({ id: "criticalRootCause", label: "Critical Root Cause", shortLabel: "CRC" }),
+      Object.freeze({ id: "junction", label: "Junction", shortLabel: "J", synthetic: true })
+    ])
   })
 });
 

@@ -1,6 +1,7 @@
 const { LtpError } = require("./errors");
 const { semanticFingerprint } = require("./semantic-migration");
 const { validateSemanticGraph } = require("./semantic-validator");
+const { NATIVE_STORAGE_MODE, semanticGraphFingerprint } = require("./semantic-render-projection");
 
 const validateWorkspace = (workspace) => {
   const issues = [];
@@ -122,12 +123,18 @@ const validateWorkspace = (workspace) => {
           semanticIssue.message
         );
       }
-      const currentFingerprint = semanticFingerprint(tree);
-      if (tree.semanticKernel.sourceFingerprint !== currentFingerprint) {
+      const nativeSemantic = tree.semanticKernel.storageMode === NATIVE_STORAGE_MODE;
+      const currentFingerprint = nativeSemantic
+        ? semanticGraphFingerprint(tree.semanticKernel)
+        : semanticFingerprint(tree);
+      const projectedFingerprint = nativeSemantic
+        ? tree.renderProjection?.sourceFingerprint
+        : tree.semanticKernel.sourceFingerprint;
+      if (projectedFingerprint !== currentFingerprint) {
         add(
           "SEMANTIC_MIGRATION_STALE",
-          `${treePath}.semanticKernel.sourceFingerprint`,
-          "Semantic projection is older than its legacy source"
+          nativeSemantic ? `${treePath}.renderProjection.sourceFingerprint` : `${treePath}.semanticKernel.sourceFingerprint`,
+          nativeSemantic ? "Visual projection is older than its semantic source" : "Semantic projection is older than its legacy source"
         );
       }
     }

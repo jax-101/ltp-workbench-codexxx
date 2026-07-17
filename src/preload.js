@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld("ltpPrototype", {
   getWorkspaceSessionInfo: () => ipcRenderer.invoke("workspace:session-info"),
   loadSampleWorkspaceFixture: () => ipcRenderer.invoke("fixture:sample-workspace"),
   loadComplexGoalTreeFixture: () => ipcRenderer.invoke("fixture:complex-goal-tree"),
+  loadCrtFixture: () => ipcRenderer.invoke("fixture:crt"),
   loadRandomLayoutFixture: (options) => ipcRenderer.invoke("fixture:random-layout", options),
   saveWorkspace: (workspace, options) => ipcRenderer.invoke("workspace:save", workspace, options),
   saveViewState: (canvasId, viewState) => ipcRenderer.invoke("workspace:save-view", canvasId, viewState),

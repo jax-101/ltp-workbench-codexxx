@@ -668,9 +668,8 @@ Evidencia Gate B:
 
 ### 3C.14: kernel semantico y prueba vertical CRT
 
-Estado: en curso. La base metodologica esta aprobada y `3C.14a` esta cerrado en
-PASS. El siguiente subgate es `3C.14b`, la vertical CRT con relaciones n-arias
-y junctions.
+Estado: en curso. `3C.14a`, `3C.14b.0` y `3C.14b.1` estan en PASS. El
+siguiente subgate es `3C.14c`, el spike de EC sobre el mismo kernel.
 
 Incluye:
 
@@ -696,7 +695,10 @@ Subgates:
   independientes del mismo arbol y `treeId` explicito en layout y exportacion.
   La UI de carpetas, pestanas y ventanas queda deliberadamente para sus
   incrementos posteriores. Evidencia en `outputs/Multi-Project-Architecture.md`.
-- `3C.14b`: CRT vertical en core, CLI, renderer, teclado y layout.
+- `3C.14b.1`: CRT vertical en PASS. Kernel nativo, proyeccion determinista de
+  junctions, CRUD n-ario, cascadas, Undo/Redo, ELK layered `BT` con ciclo
+  restaurado, renderer, atajos `N`/`Shift+Tab`/`Ctrl+D`, CLI, export y
+  captura Electron. Evidencia en `outputs/CRT-Vertical-3C.14b.md`.
 - `3C.14c`: spike de EC para validar topologia, roles y assumptions antes de
   publicar el formato. Si exige cambiar el kernel, se repiten las pruebas de
   Goal Tree y CRT.

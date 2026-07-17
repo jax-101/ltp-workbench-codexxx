@@ -1,9 +1,11 @@
 const { createHash } = require("node:crypto");
 const { LtpError } = require("./errors");
 const { assertSemanticGraph } = require("./semantic-validator");
+const { NATIVE_STORAGE_MODE, applyNativeSemanticProjection } = require("./semantic-render-projection");
 
 const KERNEL_VERSION = "0.1";
 const CONTRACT_VERSION = "0.1";
+const LEGACY_PROJECTION_STORAGE_MODE = "LEGACY_PROJECTION";
 
 const PROFILE_BY_TREE_TYPE = Object.freeze({ goalTree: "GOAL_TREE" });
 const LOGIC_MODE = Object.freeze({ necessity: "NECESSITY", sufficiency: "SUFFICIENCY" });
@@ -146,6 +148,7 @@ const projectGoalTree = (tree) => {
     contractVersion: CONTRACT_VERSION,
     profile,
     logicMode: LOGIC_MODE[tree.logicMode],
+    storageMode: LEGACY_PROJECTION_STORAGE_MODE,
     sourceFingerprint: semanticFingerprint(tree),
     elements: elements.sort(byId),
     relations,
@@ -164,8 +167,34 @@ const addSemanticKernel = (source) => {
   const migratedTreeIds = [];
 
   for (const tree of workspace.trees || []) {
-    if (!PROFILE_BY_TREE_TYPE[tree.type]) continue;
+    if (!PROFILE_BY_TREE_TYPE[tree.type] && tree.semanticKernel?.storageMode !== NATIVE_STORAGE_MODE) continue;
     if (tree.semanticKernel) {
+      if (tree.semanticKernel.storageMode === NATIVE_STORAGE_MODE) {
+        assertSemanticGraph(tree.semanticKernel);
+        const beforeProjection = JSON.stringify({
+          nodes: tree.nodes,
+          links: tree.links,
+          nodeLayout: tree.layout?.nodes,
+          linkLayout: tree.layout?.links,
+          renderProjection: tree.renderProjection,
+          frameMemberships: (workspace.canvases || [])
+            .find((canvas) => canvas.id === tree.canvasId)
+            ?.frames.map((frame) => ({ id: frame.id, nodeIds: frame.nodeIds }))
+        });
+        applyNativeSemanticProjection(workspace, tree);
+        const afterProjection = JSON.stringify({
+          nodes: tree.nodes,
+          links: tree.links,
+          nodeLayout: tree.layout?.nodes,
+          linkLayout: tree.layout?.links,
+          renderProjection: tree.renderProjection,
+          frameMemberships: (workspace.canvases || [])
+            .find((canvas) => canvas.id === tree.canvasId)
+            ?.frames.map((frame) => ({ id: frame.id, nodeIds: frame.nodeIds }))
+        });
+        if (beforeProjection !== afterProjection) migratedTreeIds.push(tree.id);
+        continue;
+      }
       const currentFingerprint = semanticFingerprint(tree);
       if (tree.semanticKernel.sourceFingerprint !== currentFingerprint) {
         throw new LtpError("SEMANTIC_MIGRATION_STALE", `Tree ${tree.id} changed after its semantic projection was created`, {
@@ -188,6 +217,7 @@ const removeSemanticKernel = (source) => {
   const migratedTreeIds = [];
   for (const tree of workspace.trees || []) {
     if (!tree.semanticKernel) continue;
+    if (tree.semanticKernel.storageMode === NATIVE_STORAGE_MODE) continue;
     delete tree.semanticKernel;
     migratedTreeIds.push(tree.id);
   }
@@ -203,6 +233,11 @@ const refreshSemanticProjections = (workspace) => {
       refreshedTreeIds.push(tree.id);
       continue;
     }
+    if (tree.semanticKernel.storageMode === NATIVE_STORAGE_MODE) {
+      applyNativeSemanticProjection(workspace, tree);
+      refreshedTreeIds.push(tree.id);
+      continue;
+    }
     if (tree.semanticKernel.sourceFingerprint === semanticFingerprint(tree)) continue;
     tree.semanticKernel = projectTreeToSemantic(tree);
     refreshedTreeIds.push(tree.id);
@@ -213,6 +248,7 @@ const refreshSemanticProjections = (workspace) => {
 module.exports = {
   KERNEL_VERSION,
   CONTRACT_VERSION,
+  LEGACY_PROJECTION_STORAGE_MODE,
   addSemanticKernel,
   projectTreeToSemantic,
   refreshSemanticProjections,

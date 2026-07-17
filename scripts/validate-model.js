@@ -2,7 +2,11 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { validateWorkspace } = require("../src/core/workspace-validator");
 
-const fixtureNames = ["sample-workspace-v0.1.json", "complex-goal-tree-workspace-v0.1.json"];
+const fixtureNames = [
+  "sample-workspace-v0.1.json",
+  "complex-goal-tree-workspace-v0.1.json",
+  "crt-workspace-v0.1.json"
+];
 
 for (const fixtureName of fixtureNames) {
   const filePath = path.join(__dirname, "..", "outputs", fixtureName);

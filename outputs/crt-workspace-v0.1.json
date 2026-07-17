@@ -1,0 +1,1099 @@
+{
+  "schemaVersion": "0.2",
+  "fixtureType": "crt-native-semantic-vertical",
+  "createdAt": "2026-07-17T12:00:00+02:00",
+  "updatedAt": "2026-07-17T12:00:00+02:00",
+  "workspace": {
+    "id": "ws-crt-oracle",
+    "name": "CRT Semantic Oracle",
+    "activeSystemId": "sys-crt-oracle",
+    "settings": {
+      "keyboardFirst": true,
+      "defaultLayoutEngine": "elk",
+      "defaultExportFormat": "markdown"
+    },
+    "systems": [
+      {
+        "id": "sys-crt-oracle",
+        "name": "CRT Oracle",
+        "path": "systems/sys-crt-oracle/system.json",
+        "updatedAt": "2026-07-17T12:00:00+02:00"
+      }
+    ]
+  },
+  "systems": [
+    {
+      "schemaVersion": "0.1",
+      "id": "sys-crt-oracle",
+      "name": "CRT Oracle",
+      "createdAt": "2026-07-17T12:00:00+02:00",
+      "updatedAt": "2026-07-17T12:00:00+02:00",
+      "profile": {
+        "description": "Native semantic CRT fixture.",
+        "purpose": "Exercise causal layering, n-ary junctions and cycles.",
+        "owner": {
+          "name": "LTP Workbench",
+          "role": "Regression fixture"
+        },
+        "boundary": {
+          "summary": "Canonical CRT oracle.",
+          "inside": [],
+          "outside": []
+        },
+        "spanOfControl": [],
+        "sphereOfInfluence": [],
+        "externalEnvironment": [],
+        "stakeholders": [],
+        "constraints": [],
+        "initialSymptoms": [],
+        "sourceIds": [],
+        "completeness": "minimumComplete"
+      },
+      "relationships": {
+        "parentSystemIds": [],
+        "childSystemIds": []
+      },
+      "sources": [],
+      "benchmarks": [
+        {
+          "id": "benchmark-crt-oracle",
+          "type": "crt",
+          "treeId": "tree-crt-oracle",
+          "status": "draft",
+          "isPrimary": true,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        }
+      ],
+      "perspectives": [
+        {
+          "id": "perspective-crt",
+          "name": "Current Reality",
+          "type": "currentReality",
+          "treeIds": [
+            "tree-crt-oracle"
+          ],
+          "status": "active",
+          "origin": null
+        }
+      ]
+    }
+  ],
+  "trees": [
+    {
+      "schemaVersion": "0.2",
+      "id": "tree-crt-oracle",
+      "systemId": "sys-crt-oracle",
+      "perspectiveId": "perspective-crt",
+      "type": "crt",
+      "name": "Current Reality Tree - Semantic Oracle",
+      "status": "draft",
+      "logicMode": "sufficiency",
+      "createdAt": "2026-07-17T12:00:00+02:00",
+      "updatedAt": "2026-07-17T12:00:00+02:00",
+      "nodes": [
+        {
+          "id": "capacity",
+          "type": "entity",
+          "semanticType": "ENTITY",
+          "statement": "Large batches occupy scarce capacity",
+          "shortLabel": "Large batches occupy scarce capacity",
+          "synthetic": null,
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 0
+        },
+        {
+          "id": "delivery",
+          "type": "ude",
+          "semanticType": "UDE",
+          "statement": "Customer deliveries are late",
+          "shortLabel": "Customer deliveries are late",
+          "synthetic": null,
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 1
+        },
+        {
+          "id": "equipment",
+          "type": "rootCause",
+          "semanticType": "ROOT_CAUSE",
+          "statement": "Critical equipment is unreliable",
+          "shortLabel": "Critical equipment is unreliable",
+          "synthetic": null,
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 2
+        },
+        {
+          "id": "expense",
+          "type": "ude",
+          "semanticType": "UDE",
+          "statement": "Operating expense increases",
+          "shortLabel": "Operating expense increases",
+          "synthetic": null,
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 3
+        },
+        {
+          "id": "feedback",
+          "type": "entity",
+          "semanticType": "ENTITY",
+          "statement": "Production feedback arrives late",
+          "shortLabel": "Production feedback arrives late",
+          "synthetic": null,
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 4
+        },
+        {
+          "id": "instability",
+          "type": "entity",
+          "semanticType": "ENTITY",
+          "statement": "The production schedule becomes unstable",
+          "shortLabel": "The production schedule becomes unstable",
+          "synthetic": null,
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 5
+        },
+        {
+          "id": "junction:rel-and-rework",
+          "type": "junction",
+          "semanticType": null,
+          "statement": "AND",
+          "shortLabel": "AND",
+          "synthetic": {
+            "kind": "JUNCTION",
+            "relationId": "rel-and-rework",
+            "combination": "AND"
+          },
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 6
+        },
+        {
+          "id": "policy",
+          "type": "criticalRootCause",
+          "semanticType": "CRITICAL_ROOT_CAUSE",
+          "statement": "Production is scheduled in large batches",
+          "shortLabel": "Production is scheduled in large batches",
+          "synthetic": null,
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 7
+        },
+        {
+          "id": "pressure",
+          "type": "entity",
+          "semanticType": "ENTITY",
+          "statement": "Expediting pressure increases",
+          "shortLabel": "Expediting pressure increases",
+          "synthetic": null,
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 8
+        },
+        {
+          "id": "rework",
+          "type": "entity",
+          "semanticType": "ENTITY",
+          "statement": "Rework accumulates",
+          "shortLabel": "Rework accumulates",
+          "synthetic": null,
+          "treeId": "tree-crt-oracle",
+          "frameId": "frame-crt-diagram",
+          "status": "draft",
+          "tags": [],
+          "sourceIds": [],
+          "validation": {},
+          "promotedFrom": null,
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00",
+          "projectionOrder": 9
+        }
+      ],
+      "links": [
+        {
+          "id": "rel-and-rework:input:capacity",
+          "sourceNodeId": "capacity",
+          "targetNodeId": "junction:rel-and-rework",
+          "semanticRelationId": "rel-and-rework",
+          "segmentRole": "INPUT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Large batches occupy scarce capacity and Production feedback arrives late, then Rework accumulates.",
+          "verbalization": "If Large batches occupy scarce capacity and Production feedback arrives late, then Rework accumulates.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-and-rework:input:feedback",
+          "sourceNodeId": "feedback",
+          "targetNodeId": "junction:rel-and-rework",
+          "semanticRelationId": "rel-and-rework",
+          "segmentRole": "INPUT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Large batches occupy scarce capacity and Production feedback arrives late, then Rework accumulates.",
+          "verbalization": "If Large batches occupy scarce capacity and Production feedback arrives late, then Rework accumulates.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-and-rework:output:rework",
+          "sourceNodeId": "junction:rel-and-rework",
+          "targetNodeId": "rework",
+          "semanticRelationId": "rel-and-rework",
+          "segmentRole": "OUTPUT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Large batches occupy scarce capacity and Production feedback arrives late, then Rework accumulates.",
+          "verbalization": "If Large batches occupy scarce capacity and Production feedback arrives late, then Rework accumulates.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-delivery-pressure",
+          "sourceNodeId": "delivery",
+          "targetNodeId": "pressure",
+          "semanticRelationId": "rel-delivery-pressure",
+          "segmentRole": "DIRECT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Customer deliveries are late, then Expediting pressure increases.",
+          "verbalization": "If Customer deliveries are late, then Expediting pressure increases.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-equipment-rework",
+          "sourceNodeId": "equipment",
+          "targetNodeId": "rework",
+          "semanticRelationId": "rel-equipment-rework",
+          "segmentRole": "DIRECT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Critical equipment is unreliable, then Rework accumulates.",
+          "verbalization": "If Critical equipment is unreliable, then Rework accumulates.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-instability-rework",
+          "sourceNodeId": "instability",
+          "targetNodeId": "rework",
+          "semanticRelationId": "rel-instability-rework",
+          "segmentRole": "DIRECT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If The production schedule becomes unstable, then Rework accumulates.",
+          "verbalization": "If The production schedule becomes unstable, then Rework accumulates.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-policy-capacity",
+          "sourceNodeId": "policy",
+          "targetNodeId": "capacity",
+          "semanticRelationId": "rel-policy-capacity",
+          "segmentRole": "DIRECT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Production is scheduled in large batches, then Large batches occupy scarce capacity.",
+          "verbalization": "If Production is scheduled in large batches, then Large batches occupy scarce capacity.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-policy-feedback",
+          "sourceNodeId": "policy",
+          "targetNodeId": "feedback",
+          "semanticRelationId": "rel-policy-feedback",
+          "segmentRole": "DIRECT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Production is scheduled in large batches, then Production feedback arrives late.",
+          "verbalization": "If Production is scheduled in large batches, then Production feedback arrives late.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-pressure-expense",
+          "sourceNodeId": "pressure",
+          "targetNodeId": "expense",
+          "semanticRelationId": "rel-pressure-expense",
+          "segmentRole": "DIRECT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Expediting pressure increases, then Operating expense increases.",
+          "verbalization": "If Expediting pressure increases, then Operating expense increases.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-pressure-instability",
+          "sourceNodeId": "pressure",
+          "targetNodeId": "instability",
+          "semanticRelationId": "rel-pressure-instability",
+          "segmentRole": "DIRECT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Expediting pressure increases, then The production schedule becomes unstable.",
+          "verbalization": "If Expediting pressure increases, then The production schedule becomes unstable.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        },
+        {
+          "id": "rel-rework-delivery",
+          "sourceNodeId": "rework",
+          "targetNodeId": "delivery",
+          "semanticRelationId": "rel-rework-delivery",
+          "segmentRole": "DIRECT",
+          "type": "causality",
+          "logic": "sufficiency",
+          "meaning": "If Rework accumulates, then Customer deliveries are late.",
+          "verbalization": "If Rework accumulates, then Customer deliveries are late.",
+          "treeId": "tree-crt-oracle",
+          "assumptionIds": [],
+          "sourceIds": [],
+          "validation": {},
+          "visual": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        }
+      ],
+      "assumptions": [],
+      "semanticKernel": {
+        "kernelVersion": "0.1",
+        "contractVersion": "0.1",
+        "storageMode": "NATIVE",
+        "diagramType": "CRT",
+        "logicMode": "SUFFICIENCY",
+        "elements": [
+          {
+            "id": "policy",
+            "type": "CRITICAL_ROOT_CAUSE",
+            "statement": "Production is scheduled in large batches"
+          },
+          {
+            "id": "equipment",
+            "type": "ROOT_CAUSE",
+            "statement": "Critical equipment is unreliable"
+          },
+          {
+            "id": "capacity",
+            "type": "ENTITY",
+            "statement": "Large batches occupy scarce capacity"
+          },
+          {
+            "id": "feedback",
+            "type": "ENTITY",
+            "statement": "Production feedback arrives late"
+          },
+          {
+            "id": "rework",
+            "type": "ENTITY",
+            "statement": "Rework accumulates"
+          },
+          {
+            "id": "delivery",
+            "type": "UDE",
+            "statement": "Customer deliveries are late"
+          },
+          {
+            "id": "pressure",
+            "type": "ENTITY",
+            "statement": "Expediting pressure increases"
+          },
+          {
+            "id": "instability",
+            "type": "ENTITY",
+            "statement": "The production schedule becomes unstable"
+          },
+          {
+            "id": "expense",
+            "type": "UDE",
+            "statement": "Operating expense increases"
+          }
+        ],
+        "relations": [
+          {
+            "id": "rel-policy-capacity",
+            "type": "CAUSALITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "policy"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "capacity"
+              }
+            ]
+          },
+          {
+            "id": "rel-policy-feedback",
+            "type": "CAUSALITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "policy"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "feedback"
+              }
+            ]
+          },
+          {
+            "id": "rel-and-rework",
+            "type": "CAUSALITY",
+            "combination": "AND",
+            "renderMode": "JUNCTION",
+            "inputs": [
+              {
+                "elementId": "capacity"
+              },
+              {
+                "elementId": "feedback"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "rework"
+              }
+            ]
+          },
+          {
+            "id": "rel-equipment-rework",
+            "type": "CAUSALITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "equipment"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "rework"
+              }
+            ]
+          },
+          {
+            "id": "rel-rework-delivery",
+            "type": "CAUSALITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "rework"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "delivery"
+              }
+            ]
+          },
+          {
+            "id": "rel-delivery-pressure",
+            "type": "CAUSALITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "delivery"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "pressure"
+              }
+            ]
+          },
+          {
+            "id": "rel-pressure-instability",
+            "type": "CAUSALITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "pressure"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "instability"
+              }
+            ]
+          },
+          {
+            "id": "rel-instability-rework",
+            "type": "CAUSALITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "instability"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "rework"
+              }
+            ]
+          },
+          {
+            "id": "rel-pressure-expense",
+            "type": "CAUSALITY",
+            "combination": "SIMPLE",
+            "renderMode": "IMPLICIT",
+            "inputs": [
+              {
+                "elementId": "pressure"
+              }
+            ],
+            "outputs": [
+              {
+                "elementId": "expense"
+              }
+            ]
+          }
+        ],
+        "assumptions": [
+          {
+            "id": "assumption-and",
+            "statement": "Capacity occupation and delayed feedback together generate work that must be repeated",
+            "subject": {
+              "kind": "RELATION",
+              "relationId": "rel-and-rework"
+            }
+          },
+          {
+            "id": "assumption-capacity",
+            "statement": "Scarce capacity prevents unfinished work from being absorbed elsewhere",
+            "subject": {
+              "kind": "INPUT",
+              "relationId": "rel-and-rework",
+              "elementId": "capacity"
+            }
+          }
+        ],
+        "derivations": [],
+        "annotations": []
+      },
+      "layout": {
+        "engine": "elk",
+        "direction": "BT",
+        "routingStyle": "CURVED",
+        "lastRunAt": null,
+        "settings": {
+          "spacingNodeNode": 64,
+          "spacingLayer": 112,
+          "respectPinned": true,
+          "minimizeCrossings": true
+        },
+        "nodes": {
+          "capacity": {
+            "x": 80,
+            "y": 80,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "delivery": {
+            "x": 380,
+            "y": 80,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "equipment": {
+            "x": 680,
+            "y": 80,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "expense": {
+            "x": 80,
+            "y": 230,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "feedback": {
+            "x": 380,
+            "y": 230,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "instability": {
+            "x": 680,
+            "y": 230,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "junction:rel-and-rework": {
+            "x": 80,
+            "y": 380,
+            "width": 32,
+            "height": 32,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "policy": {
+            "x": 380,
+            "y": 380,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "pressure": {
+            "x": 680,
+            "y": 380,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          },
+          "rework": {
+            "x": 80,
+            "y": 530,
+            "width": 250,
+            "height": 72,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          }
+        },
+        "links": {
+          "rel-and-rework:input:capacity": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-and-rework:input:feedback": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-and-rework:output:rework": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-delivery-pressure": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-equipment-rework": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-instability-rework": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-policy-capacity": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-policy-feedback": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-pressure-expense": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-pressure-instability": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          "rel-rework-delivery": {
+            "route": [],
+            "routeSource": "auto",
+            "labelPosition": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      "canvasId": "canvas-crt-oracle",
+      "hostFrameId": "frame-crt-diagram",
+      "renderProjection": {
+        "kind": "SEMANTIC_NATIVE",
+        "sourceFingerprint": "24d2a62204fcdacfb3ef1bb3c2925f8c934fd316ea19b041080717698add14cb",
+        "nodeIds": [
+          "capacity",
+          "delivery",
+          "equipment",
+          "expense",
+          "feedback",
+          "instability",
+          "junction:rel-and-rework",
+          "policy",
+          "pressure",
+          "rework"
+        ],
+        "linkIds": [
+          "rel-and-rework:input:capacity",
+          "rel-and-rework:input:feedback",
+          "rel-and-rework:output:rework",
+          "rel-delivery-pressure",
+          "rel-equipment-rework",
+          "rel-instability-rework",
+          "rel-policy-capacity",
+          "rel-policy-feedback",
+          "rel-pressure-expense",
+          "rel-pressure-instability",
+          "rel-rework-delivery"
+        ],
+        "frameByNodeId": {
+          "capacity": "frame-crt-diagram",
+          "delivery": "frame-crt-diagram",
+          "equipment": "frame-crt-diagram",
+          "expense": "frame-crt-diagram",
+          "feedback": "frame-crt-diagram",
+          "instability": "frame-crt-diagram",
+          "junction:rel-and-rework": "frame-crt-diagram",
+          "policy": "frame-crt-diagram",
+          "pressure": "frame-crt-diagram",
+          "rework": "frame-crt-diagram"
+        }
+      }
+    }
+  ],
+  "exports": [],
+  "canvases": [
+    {
+      "schemaVersion": "0.2",
+      "id": "canvas-crt-oracle",
+      "systemId": "sys-crt-oracle",
+      "name": "CRT Oracle canvas",
+      "rootFrameId": "frame-crt-root",
+      "frames": [
+        {
+          "id": "frame-crt-root",
+          "canvasId": "canvas-crt-oracle",
+          "treeId": null,
+          "kind": "root",
+          "parentFrameId": null,
+          "name": "Root",
+          "semanticType": "workspaceRoot",
+          "collapsed": false,
+          "childFrameIds": [
+            "frame-crt-diagram"
+          ],
+          "nodeIds": [],
+          "notes": "Infinite workspace root"
+        },
+        {
+          "id": "frame-crt-diagram",
+          "canvasId": "canvas-crt-oracle",
+          "treeId": "tree-crt-oracle",
+          "kind": "diagram",
+          "parentFrameId": "frame-crt-root",
+          "name": "Current Reality Tree",
+          "semanticType": "crt",
+          "collapsed": false,
+          "childFrameIds": [],
+          "nodeIds": [
+            "capacity",
+            "delivery",
+            "equipment",
+            "expense",
+            "feedback",
+            "instability",
+            "junction:rel-and-rework",
+            "policy",
+            "pressure",
+            "rework"
+          ],
+          "notes": "Native semantic CRT projection",
+          "createdAt": "2026-07-17T12:00:00+02:00",
+          "updatedAt": "2026-07-17T12:00:00+02:00"
+        }
+      ],
+      "layout": {
+        "frames": {
+          "frame-crt-diagram": {
+            "x": 48,
+            "y": 40,
+            "width": 1100,
+            "height": 900,
+            "pinned": false,
+            "layoutSource": "semanticProjection"
+          }
+        }
+      },
+      "viewState": {
+        "activeFrameId": "frame-crt-diagram",
+        "selectedElementId": "delivery",
+        "selectionRootIds": [
+          "delivery"
+        ],
+        "mode": "navigation",
+        "zoom": 0.8,
+        "pan": {
+          "x": 0,
+          "y": 0
+        },
+        "panels": {
+          "leftOpen": true,
+          "rightOpen": true
+        },
+        "breadcrumb": [
+          "CRT Oracle",
+          "Current Reality Tree"
+        ]
+      },
+      "createdAt": "2026-07-17T12:00:00+02:00",
+      "updatedAt": "2026-07-17T12:00:00+02:00"
+    }
+  ]
+}

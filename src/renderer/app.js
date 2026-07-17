@@ -45,6 +45,12 @@ const FRAME_CONTENT_PADDING = 28;
 const commandBindings = window.LTP_COMMAND_BINDINGS || {};
 const commandLabels = window.LTP_COMMAND_LABELS || {};
 const diagramDefinitions = window.LTP_DIAGRAM_REGISTRY.DIAGRAM_DEFINITIONS;
+const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze({
+  entity: "ENTITY",
+  ude: "UDE",
+  rootCause: "ROOT_CAUSE",
+  criticalRootCause: "CRITICAL_ROOT_CAUSE"
+});
 
 const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 const now = () => new Date().toISOString();
@@ -63,6 +69,7 @@ const initialDocumentIdFor = (workspace, preferredId = null) => {
   return workspace?.trees?.find(() => true)?.id || null;
 };
 const tree = () => workspaceData?.trees?.find((candidate) => candidate.id === activeDocumentId);
+const nativeSemanticTree = () => tree()?.semanticKernel?.storageMode === "NATIVE";
 const canvas = () => workspaceData?.canvases?.find((candidate) => candidate.id === tree()?.canvasId);
 const rootFrameId = () => canvas()?.rootFrameId;
 const system = () => workspaceData?.systems?.find((candidate) => candidate.id === tree()?.systemId);
@@ -72,13 +79,21 @@ const linkById = () => Object.fromEntries((tree()?.links || []).map((link) => [l
 const selectedNode = () => nodeById()[selectedElementId];
 const selectedFrame = () => frameById()[selectedElementId];
 const selectedLink = () => linkById()[selectedElementId];
-const assumptionsForLink = (linkId) => (tree()?.assumptions || []).filter((assumption) => assumption.linkId === linkId);
+const assumptionsForLink = (linkId) => {
+  const link = linkById()[linkId];
+  if (nativeSemanticTree()) {
+    const relationId = link?.semanticRelationId || linkId;
+    return (tree()?.semanticKernel?.assumptions || []).filter((assumption) => assumption.subject?.relationId === relationId);
+  }
+  return (tree()?.assumptions || []).filter((assumption) => assumption.linkId === linkId);
+};
 const selectedSourceNodeIds = () => [...connectionSourceIds].filter((id) => Boolean(nodeById()[id]));
 const diagramDefinition = () => diagramDefinitions[tree()?.type] || diagramDefinitions.goalTree;
 const diagramNodeTypes = () => diagramDefinition()?.nodeTypes || [];
 const compatibleNodeTypes = (nodeIds) => {
   const selectedIds = new Set(nodeIds);
   return diagramNodeTypes().filter((typeDefinition) => {
+    if (typeDefinition.synthetic) return false;
     if (
       typeDefinition.id === "assumption" &&
       nodeIds.some((nodeId) => tree().links.some((link) => link.sourceNodeId === nodeId || link.targetNodeId === nodeId))
@@ -351,7 +366,7 @@ const persist = async (label = "Update workspace", category = "content") => {
     try {
       pendingWorkspace.revision = workspaceData.revision || 0;
       pendingWorkspace.updatedAt = now();
-      const activeTree = pendingWorkspace.trees?.[0];
+      const activeTree = pendingWorkspace.trees?.find((candidate) => candidate.id === activeDocumentId);
       if (activeTree) activeTree.updatedAt = now();
       workspaceData = await window.ltpPrototype.saveWorkspace(pendingWorkspace, {
         recordHistory: true,
@@ -674,6 +689,25 @@ const handleHintKey = (key) => {
 
 const updateNode = async (id, field, value) => {
   if (field === "type") resetTypeCycle();
+  const node = nodeById()[id];
+  if (nativeSemanticTree()) {
+    if (node?.synthetic) {
+      setStatus("Junctions are derived from their semantic relation");
+      return;
+    }
+    await executeDomainCommand(
+      "semantic.element.update",
+      {
+        treeId: tree().id,
+        elementId: id,
+        field,
+        value: field === "type" ? SEMANTIC_TYPE_BY_NODE_TYPE[value] : value
+      },
+      `Edit ${nodeTypeLabel(node?.type || "node")}`
+    );
+    render();
+    return;
+  }
   await executeDomainCommand(
     "node.update",
     { treeId: tree().id, nodeId: id, field, value },
@@ -683,7 +717,7 @@ const updateNode = async (id, field, value) => {
 };
 
 const cycleSelectedNodeTypes = async () => {
-  const nodeIds = [...selectionRootIds].filter((id) => Boolean(nodeById()[id]));
+  const nodeIds = [...selectionRootIds].filter((id) => Boolean(nodeById()[id]) && !nodeById()[id].synthetic);
   if (!nodeIds.length) {
     setStatus("Select one or more entities before cycling Type");
     return;
@@ -710,8 +744,10 @@ const cycleSelectedNodeTypes = async () => {
 
   const nextType = availableTypes[nextIndex];
   await executeDomainCommand(
-    "nodes.update-type",
-    { treeId: tree().id, nodeIds, value: nextType.id },
+    nativeSemanticTree() ? "semantic.elements.update-type" : "nodes.update-type",
+    nativeSemanticTree()
+      ? { treeId: tree().id, elementIds: nodeIds, value: SEMANTIC_TYPE_BY_NODE_TYPE[nextType.id] }
+      : { treeId: tree().id, nodeIds, value: nextType.id },
     nodeIds.length === 1 ? "Cycle entity Type" : "Cycle selected entity Types"
   );
   setStatus(
@@ -732,6 +768,10 @@ const updateFrame = async (id, field, value) => {
 };
 
 const updateLink = async (id, field, value) => {
+  if (nativeSemanticTree()) {
+    setStatus("Link wording is derived from the semantic relation");
+    return;
+  }
   const link = linkById()[id];
   link[field] = value;
   link.updatedAt = now();
@@ -740,6 +780,15 @@ const updateLink = async (id, field, value) => {
 };
 
 const updateAssumption = async (id, value) => {
+  if (nativeSemanticTree()) {
+    await executeDomainCommand(
+      "semantic.assumption.update",
+      { treeId: tree().id, assumptionId: id, field: "statement", value },
+      "Edit assumption"
+    );
+    render();
+    return;
+  }
   const assumption = tree().assumptions.find((item) => item.id === id);
   assumption.statement = value;
   assumption.updatedAt = now();
@@ -845,6 +894,25 @@ const createNode = async (
     : options.placement === "viewport"
       ? viewportNodePosition(frame)
       : { x: frameBox.x + 48 + offset, y: frameBox.y + 80 + offset, width: 250, height: 72 };
+  if (nativeSemanticTree()) {
+    const semanticType = SEMANTIC_TYPE_BY_NODE_TYPE[type] || "ENTITY";
+    await executeDomainCommand(
+      "semantic.element.create",
+      {
+        treeId: activeTree.id,
+        frameId: frame.id,
+        element: { id, type: semanticType, statement, shortLabel: statement },
+        layout: { ...position, pinned: false, layoutSource: "manual" }
+      },
+      "Create CRT entity"
+    );
+    expandFrameHierarchyToContain(frame.id, tree().layout.nodes[id]);
+    replaceSelection(id);
+    connectionSourceIds.clear();
+    multiSelectionMode = false;
+    render();
+    return id;
+  }
   const node = {
     id,
     treeId: activeTree.id,
@@ -888,7 +956,7 @@ const createNodeInViewport = () =>
   createNode(
     activeFrameId,
     diagramDefinition()?.defaultNodeType || "necessaryCondition",
-    "New necessary condition",
+    nativeSemanticTree() ? "New entity" : "New necessary condition",
     { placement: "viewport" }
   );
 
@@ -1428,6 +1496,26 @@ const createLink = async (sourceNodeId, targetNodeId, options = {}) => {
   }
 
   const id = uid("link");
+  if (nativeSemanticTree()) {
+    await executeDomainCommand(
+      "semantic.relation.create",
+      {
+        treeId: activeTree.id,
+        relation: {
+          id,
+          type: "CAUSALITY",
+          combination: "SIMPLE",
+          renderMode: "IMPLICIT",
+          inputs: [{ elementId: sourceNodeId }],
+          outputs: [{ elementId: targetNodeId }]
+        }
+      },
+      "Create CRT causal relation"
+    );
+    if (selectCreated) replaceSelection(id);
+    if (renderAfter) render();
+    return id;
+  }
   const sourceBox = layoutNode(sourceNodeId);
   const targetBox = layoutNode(targetNodeId);
   const link = {
@@ -1487,6 +1575,22 @@ const addAssumptionToSelectedLink = async () => {
   const link = selectedLink();
   if (!link) return;
   const id = uid("assumption");
+  if (nativeSemanticTree()) {
+    await executeDomainCommand(
+      "semantic.assumption.create",
+      {
+        treeId: tree().id,
+        assumption: {
+          id,
+          statement: "New assumption behind this relation.",
+          subject: { kind: "RELATION", relationId: link.semanticRelationId || link.id }
+        }
+      },
+      "Add CRT assumption"
+    );
+    render();
+    return;
+  }
   const assumption = {
     id,
     treeId: tree().id,
@@ -2112,7 +2216,7 @@ const renderNodes = () =>
         <button class="tree-node ${selected} ${included} ${multiSelected} node-${node.type}" data-element-id="${node.id}" data-element-type="node"
           style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;"
           title="${escapeHtml(node.statement)}">
-          <strong>${escapeHtml(nodeTypeLabel(node.type))}</strong>
+          <strong>${escapeHtml(node.synthetic?.combination || nodeTypeLabel(node.type))}</strong>
           <span>${escapeHtml(node.statement)}</span>
           ${box.pinned ? "<em>Pinned</em>" : ""}
         </button>
@@ -2499,6 +2603,45 @@ const requestDeleteSelection = async (id = selectedElementId) => {
     setStatus(id === rootFrameId() ? "The root frame cannot be deleted" : "The tree frame cannot be deleted separately from its tree");
     return;
   }
+  if (nativeSemanticTree() && (type === "node" || type === "link")) {
+    const node = nodeById()[id];
+    if (type === "node" && !node?.synthetic) {
+      await executeDomainCommand(
+        "semantic.element.delete",
+        { treeId: tree().id, elementId: id },
+        "Delete CRT element"
+      );
+    } else {
+      const relationId = node?.synthetic?.relationId || linkById()[id]?.semanticRelationId || id;
+      await executeDomainCommand(
+        "semantic.relation.delete",
+        { treeId: tree().id, relationId },
+        "Delete CRT relation"
+      );
+    }
+    replaceSelection(null);
+    connectionSourceIds.clear();
+    mode = "navigation";
+    setStatus("Selection deleted");
+    render();
+    focusCanvas();
+    return;
+  }
+  if (nativeSemanticTree() && type === "frame") {
+    await executeDomainCommand(
+      "semantic.frame.delete",
+      { treeId: tree().id, frameId: id },
+      "Delete CRT frame"
+    );
+    if (!frameById()[activeFrameId]) activeFrameId = tree().hostFrameId;
+    replaceSelection(null);
+    connectionSourceIds.clear();
+    mode = "navigation";
+    setStatus("Frame and its semantic contents deleted");
+    render();
+    focusCanvas();
+    return;
+  }
   previewNodeId = null;
   const activeTree = tree();
   const activeCanvas = canvas();
@@ -2669,6 +2812,16 @@ const renderInspector = () => {
   const link = selectedLink();
 
   if (node) {
+    if (node.synthetic?.kind === "JUNCTION") {
+      return `
+        <aside class="inspector">
+          <button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button>
+          <h2>${escapeHtml(node.statement)} junction</h2>
+          <p>Derived from relation ${escapeHtml(node.synthetic.relationId)}.</p>
+          <button class="danger-action" data-action="delete-selection">Delete relation</button>
+        </aside>
+      `;
+    }
     return `
       <aside class="inspector">
         <button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button>
@@ -2679,7 +2832,7 @@ const renderInspector = () => {
         <input data-node-field="shortLabel" data-id="${node.id}" value="${escapeHtml(node.shortLabel || "")}" />
         <label>Type</label>
         <select data-node-field="type" data-id="${node.id}">
-          ${diagramNodeTypes().map((type) => `<option value="${type.id}" ${node.type === type.id ? "selected" : ""}>${escapeHtml(type.label)}</option>`).join("")}
+          ${diagramNodeTypes().filter((type) => !type.synthetic).map((type) => `<option value="${type.id}" ${node.type === type.id ? "selected" : ""}>${escapeHtml(type.label)}</option>`).join("")}
         </select>
         <label>Frame</label>
         <select data-node-frame data-id="${node.id}">
@@ -4046,6 +4199,98 @@ window.__ltpSmokeTest = async () => {
     multiSelectionIsProminent,
     linkSelectionIsProminent,
     exportPath: exportResult.path
+  };
+};
+
+window.__ltpCrtVisualTest = async () => {
+  await bootPromise;
+  const waitFor = async (predicate, timeoutMs = 2000) => {
+    const startedAt = Date.now();
+    while (!predicate() && Date.now() - startedAt < timeoutMs) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    return predicate();
+  };
+  const pressKey = (key, options = {}) => {
+    document.dispatchEvent(new KeyboardEvent("keydown", {
+      key,
+      bubbles: true,
+      cancelable: true,
+      ...options
+    }));
+  };
+  const originalNodeCount = tree().nodes.length;
+  pressKey("n");
+  const createShortcutWorks = await waitFor(() => tree().nodes.length === originalNodeCount + 1);
+  const createdNodeId = selectedElementId;
+  const createIsNative = tree().semanticKernel.elements.some((element) => element.id === createdNodeId);
+  await moveHistory("undo");
+  const createUndoWorks = !nodeById()[createdNodeId] && !tree().semanticKernel.elements.some((element) => element.id === createdNodeId);
+
+  replaceSelection("capacity");
+  const originalCapacityType = nodeById().capacity.type;
+  pressKey("Tab", { shiftKey: true });
+  const typeShortcutWorks = await waitFor(() => nodeById().capacity?.type !== originalCapacityType);
+  const typeChangedSemantically =
+    tree().semanticKernel.elements.find((element) => element.id === "capacity")?.type ===
+    SEMANTIC_TYPE_BY_NODE_TYPE[nodeById().capacity?.type];
+  await moveHistory("undo");
+  const typeUndoWorks = nodeById().capacity?.type === originalCapacityType;
+
+  replaceSelection("feedback");
+  pressKey("d", { ctrlKey: true });
+  const deleteShortcutWorks = await waitFor(() => !nodeById().feedback);
+  const deleteCascadesRelation =
+    !tree().semanticKernel.relations.some((relation) => relation.id === "rel-and-rework") &&
+    !nodeById()["junction:rel-and-rework"];
+  await moveHistory("undo");
+  const deleteUndoWorks =
+    Boolean(nodeById().feedback) &&
+    Boolean(nodeById()["junction:rel-and-rework"]) &&
+    tree().semanticKernel.relations.some((relation) => relation.id === "rel-and-rework");
+
+  workspaceData = await window.ltpPrototype.runLayout(workspaceData, { treeId: activeDocumentId });
+  replaceSelection("delivery");
+  render();
+  fitView();
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  const activeTree = tree();
+  const geometryIssues = await window.ltpPrototype.validateLayout(workspaceData);
+  const junction = activeTree.nodes.find((node) => node.id === "junction:rel-and-rework");
+  const junctionElement = document.querySelector('[data-element-id="junction:rel-and-rework"]');
+  const junctionStyle = junctionElement ? getComputedStyle(junctionElement) : null;
+  const curvedPaths = [...document.querySelectorAll("path.link-curved")];
+  const allArrowsVisible = activeTree.links.every(
+    (link) => document.querySelector(`[data-link-id="${link.id}"]`)?.getAttribute("marker-end") === "url(#arrow)"
+  );
+  const semanticJunctionAbsent = !activeTree.semanticKernel.elements.some((element) => element.id.startsWith("junction:"));
+  const andSegments = activeTree.links.filter((link) => link.semanticRelationId === "rel-and-rework");
+  const ok =
+    activeTree.type === "crt" &&
+    activeTree.layout.direction === "BT" &&
+    activeTree.nodes.length === 10 &&
+    activeTree.links.length === 11 &&
+    Boolean(junction) &&
+    semanticJunctionAbsent &&
+    andSegments.length === 3 &&
+    activeTree.layout.quality?.cycleBreaks >= 1 &&
+    geometryIssues.length === 0 &&
+    curvedPaths.length === activeTree.links.length &&
+    allArrowsVisible &&
+    junctionStyle?.borderRadius === "999px" &&
+    junctionElement?.querySelector("strong")?.textContent.trim() === "AND" &&
+    createShortcutWorks &&
+    createIsNative &&
+    createUndoWorks &&
+    typeShortcutWorks &&
+    typeChangedSemantically &&
+    typeUndoWorks &&
+    deleteShortcutWorks &&
+    deleteCascadesRelation &&
+    deleteUndoWorks;
+  return {
+    ok,
+    detail: `type=${activeTree.type}; nodes=${activeTree.nodes.length}; links=${activeTree.links.length}; AND segments=${andSegments.length}; direction=${activeTree.layout.direction}; cycle breaks=${activeTree.layout.quality?.cycleBreaks}; geometry issues=${geometryIssues.length}; curved paths=${curvedPaths.length}; arrows=${allArrowsVisible}; junction=${junctionElement?.querySelector("strong")?.textContent.trim()}/${junctionStyle?.borderRadius}; shortcuts N/type/delete=${createShortcutWorks && createIsNative && createUndoWorks}/${typeShortcutWorks && typeChangedSemantically && typeUndoWorks}/${deleteShortcutWorks && deleteCascadesRelation && deleteUndoWorks}.`
   };
 };
 
