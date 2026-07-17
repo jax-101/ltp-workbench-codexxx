@@ -1014,9 +1014,12 @@ Estado: incorporado al diseno de `3C.14c.2`; implementacion pendiente.
 
 Criterios de aceptacion:
 
-- `ArrowUp`/`ArrowDown` recorre assumptions dentro de la linea actual.
-- `ArrowLeft`/`ArrowRight` cambia de linea dentro de un orden logico visible y
-  determinista; fuera de este scope vuelven a desplazar el canvas.
+- `ArrowUp`/`Ctrl+P` y `ArrowDown`/`Ctrl+N` recorren assumptions dentro de la
+  linea actual.
+- `ArrowLeft`/`Ctrl+B` y `ArrowRight`/`Ctrl+F` cambian de linea dentro de un
+  orden logico visible y determinista; fuera del scope desplazan el canvas.
+- Con foco en un campo de texto, `Ctrl+P/N/B/F` conserva el movimiento nativo
+  del cursor y no cambia de assumption ni de linea.
 - `H` asigna hints a indicadores y assumptions visibles.
 - Seleccionar con hint un indicador abre la linea y conserva el modo de hints
   para elegir inmediatamente una assumption.

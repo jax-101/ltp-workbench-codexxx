@@ -710,10 +710,14 @@ reflejara el comportamiento real.
 
 Decision: `ArrowUp` y `ArrowDown` recorreran assumptions de la linea activa;
 `ArrowLeft` y `ArrowRight` cambiaran a la linea logica anterior o siguiente.
-Fuera del contexto conservaran su funcion de pan. `H` y `M` usaran el mismo
-motor de hints existente, pero limitaran sus targets al scope activo.
+`Ctrl+P/N/B/F` seran aliases en las mismas cuatro direcciones. Fuera del
+contexto conservaran su funcion de pan; dentro de un editor mantendran el
+movimiento nativo del cursor. `H` y `M` usaran el mismo motor de hints
+existente, pero limitaran sus targets al scope activo.
 
 Razon: las flechas son mas accesibles que corchetes en distintas distribuciones
 de teclado y expresan naturalmente las dos dimensiones del Workbench. Un motor
 de hints compartido mantiene seleccion simple y multiple coherentes, incluida
-la prioridad contextual de letras que formen parte de una etiqueta.
+la prioridad contextual de letras que formen parte de una etiqueta. La
+precedencia `editor > assumptions > canvas` evita capturar comandos de edicion
+o confundir `Ctrl+F` con `Cmd+F`.
