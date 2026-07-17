@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "diagram-studio",
+  "status": "planned",
+  "purpose": "Edit and test the same declarative definition packages consumed by Definition Runtime and CLI.",
+  "owns": ["definition editing session", "preview state", "draft diagnostics", "fork and publish workflow"],
+  "doesNotOwn": ["definition runtime", "privileged source generation", "diagram instances", "workspace persistence policy"],
+  "invariants": ["Studio output passes the standard loader.", "Preview is deterministic and isolated.", "Publishing creates an immutable version."],
+  "allowedDependencies": ["definition-runtime", "application", "view"],
+  "forbiddenDependencies": ["workspace", "layout", "adapters"],
+  "contracts": [
+    {
+      "id": "diagram-studio.editor.v1",
+      "version": 1,
+      "status": "planned",
+      "operations": ["createDraft", "editDraft", "validateDraft", "previewDraft", "forkVersion", "publishVersion"],
+      "inputs": ["definition draft", "base version", "editing intent"],
+      "outputs": ["draft state", "diagnostics", "preview", "published package reference"],
+      "errors": ["STUDIO_DRAFT_INVALID", "STUDIO_BASE_VERSION_MISSING", "STUDIO_PUBLISH_CONFLICT"]
+    }
+  ],
+  "acceptance": { "status": "planned", "command": null }
+}

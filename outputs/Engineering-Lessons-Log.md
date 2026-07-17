@@ -1298,9 +1298,25 @@ Aplicacion futura: medir desde el inicio; registrar duracion y fuente; comparar
 por clase de paquete; revisar primero el siguiente comparable; y esperar varias
 muestras antes de aplicar un multiplicador global.
 
+### L-108: Los UAT deterministas descubren dependencias ambientales invisibles
+
+Fecha: 2026-07-18
+
+Evidencia: el primer UAT de caja negra de Layout fallo aunque las posiciones y
+rutas eran iguales. La unica diferencia era que el coordinador consultaba el
+reloj del sistema al escribir varios `lastRunAt`.
+
+Aprendizaje: comparar el resultado completo de dos ejecuciones identicas
+detecta dependencias ocultas que una prueba geometrica no observa. Tiempo,
+azar, directorio actual y orden de carga son entradas reales aunque no aparezcan
+en la firma.
+
+Aplicacion futura: inyectar esas entradas en el limite publico, fijarlas en los
+fixtures y mantener al menos una prueba de repeticion exacta por modulo.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-108`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-109`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

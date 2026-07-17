@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "workspace",
+  "status": "transitional",
+  "purpose": "Own isolated project sessions, persistence, migrations, locking and recovery.",
+  "owns": ["canonical locator", "session identity", "repository port", "workspace revision", "migrations", "atomic persistence", "rescue mode"],
+  "doesNotOwn": ["semantic policy", "application transactions", "layout", "view interaction", "Electron dialogs"],
+  "invariants": ["One canonical locator maps to one open session.", "Commits are revision-aware and atomic.", "Projects remain isolated."],
+  "allowedDependencies": ["semantic-kernel"],
+  "forbiddenDependencies": ["application", "layout", "view", "adapters", "diagram-studio"],
+  "contracts": [
+    {
+      "id": "workspace.sessions.v1",
+      "version": 1,
+      "status": "provisional",
+      "operations": ["open", "get", "list", "close"],
+      "inputs": ["canonical locator", "initial snapshot or loader"],
+      "outputs": ["session handle", "immutable snapshot", "document summaries"],
+      "errors": ["WORKSPACE_LOCATOR_REQUIRED", "WORKSPACE_INITIAL_STATE_REQUIRED", "WORKSPACE_OPEN_IN_PROGRESS"]
+    },
+    {
+      "id": "workspace.repository.v1",
+      "version": 1,
+      "status": "target",
+      "operations": ["load", "commit", "migrate", "recover"],
+      "inputs": ["locator", "snapshot", "expected revision", "commit metadata"],
+      "outputs": ["snapshot", "new revision", "migration diagnostics"],
+      "errors": ["WORKSPACE_NOT_FOUND", "WORKSPACE_INVALID", "WORKSPACE_REVISION_CONFLICT", "WORKSPACE_LOCK_FAILED"]
+    }
+  ],
+  "acceptance": { "status": "implemented", "command": "node scripts/module-acceptance/workspace.js" }
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "view",
+  "status": "transitional",
+  "purpose": "Own document-view state, interaction scopes and UI-ready projections without semantic mutation.",
+  "owns": ["view identity", "focus", "zoom", "pan", "selection", "keyboard scopes", "hints", "panel state", "interaction intents"],
+  "doesNotOwn": ["semantic graph", "content Undo and Redo", "workspace files", "layout engines", "DOM transport"],
+  "invariants": ["View changes do not mutate semantic content.", "Two views of one document are independent.", "Selection closure is deterministic."],
+  "allowedDependencies": ["application"],
+  "forbiddenDependencies": ["workspace", "layout", "adapters", "diagram-studio"],
+  "contracts": [
+    {
+      "id": "view.documents.v1",
+      "version": 1,
+      "status": "provisional",
+      "operations": ["listDocuments", "resolveDocument", "createView", "duplicateView"],
+      "inputs": ["immutable workspace read model", "document ID", "view options"],
+      "outputs": ["document summary", "independent view state"],
+      "errors": ["DOCUMENT_NOT_FOUND", "CANVAS_NOT_FOUND", "VIEW_FOCUS_INVALID"]
+    },
+    {
+      "id": "view.interactions.v1",
+      "version": 1,
+      "status": "target",
+      "operations": ["transitionView", "selectionClosure", "resolveShortcut", "toApplicationIntent", "projectCanvas"],
+      "inputs": ["view state", "interaction event", "canvas read model"],
+      "outputs": ["next view state", "selection", "application intent", "canvas projection"],
+      "errors": ["VIEW_EVENT_INVALID", "SHORTCUT_COLLISION", "INTERACTION_SCOPE_INVALID"]
+    }
+  ],
+  "acceptance": { "status": "implemented", "command": "node scripts/module-acceptance/view.js" }
+}

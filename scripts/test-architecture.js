@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 require("./test-contract-inventory");
+require("./test-module-contracts");
 const { loadRegister, summarize } = require("./scope-status");
 
 const root = path.join(__dirname, "..");
@@ -90,7 +91,11 @@ assert(scopeReport.includes(`| Total estimated scope | ${scope.estimatedTokens.t
   "Scope effort report total is stale");
 assert(scopeReport.includes(`| Earned effort | ${scope.earnedTokens.toLocaleString("en-US")} tokens |`),
   "Scope effort report earned value is stale");
-assert(scopeReport.includes(`Current register: ten unknowns`), "Scope effort report unknown summary is stale");
+const unknownCount = JSON.parse(read("planning/unknowns.json")).unknowns.length;
+assert(
+  scopeReport.includes(`Current register: ${unknownCount} unknowns`),
+  "Scope effort report unknown summary is stale"
+);
 for (const item of loadRegister().packages) {
   const status = item.status[0].toUpperCase() + item.status.slice(1);
   const estimate = item.revisedEstimateTokens

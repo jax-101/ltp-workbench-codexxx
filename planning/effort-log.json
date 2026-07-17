@@ -92,6 +92,24 @@
       "actualTokens": 237419,
       "source": "codex-goal",
       "note": "Final goal usage; elapsed runtime 743 seconds."
+    },
+    {
+      "id": "E0005",
+      "packageId": "P46",
+      "recordedAt": "2026-07-17T22:54:45.804Z",
+      "status": "tracking",
+      "actualTokens": null,
+      "source": "codex-goal",
+      "note": "Goal-backed measurement started for module charters, contracts and acceptance suites."
+    },
+    {
+      "id": "E0006",
+      "packageId": "P46",
+      "recordedAt": "2026-07-17T23:04:03.818Z",
+      "status": "measured",
+      "actualTokens": 233658,
+      "source": "codex-goal",
+      "note": "Final goal usage; elapsed runtime 549 seconds."
     }
   ],
   "estimateRevisions": [
@@ -105,6 +123,17 @@
       "evidenceEvents": [
         "E0003",
         "E0004"
+      ]
+    },
+    {
+      "id": "R0002",
+      "packageId": "P47",
+      "recordedAt": "2026-07-18",
+      "previousTokens": 25000,
+      "revisedTokens": 75000,
+      "reason": "P46 reported 233658 tokens against an 80k baseline (2.92x) and landed within 6.5% of its revised 250k forecast. P47 is the nearest package in the same architecture-governance class, so its forecast is rounded to 75k without changing unrelated packages.",
+      "evidenceEvents": [
+        "E0006"
       ]
     }
   ]

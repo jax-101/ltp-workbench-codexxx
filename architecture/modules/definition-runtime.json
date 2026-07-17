@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "definition-runtime",
+  "status": "transitional",
+  "purpose": "Load, validate, version and compile declarative diagram packages through one safe runtime.",
+  "owns": ["definition schema", "canonical serialization", "definition hash", "capability compilation", "definition diagnostics"],
+  "doesNotOwn": ["diagram instances", "workspace files", "semantic mutations", "layout execution", "Studio UI"],
+  "invariants": ["Definitions contain no executable code.", "Official and user packages use the same loader.", "Published versions are immutable."],
+  "allowedDependencies": [],
+  "forbiddenDependencies": ["application", "workspace", "layout", "view", "adapters", "diagram-studio"],
+  "contracts": [
+    {
+      "id": "definition.capabilities.v1",
+      "version": 1,
+      "status": "target",
+      "operations": ["loadDefinition", "validateDefinition", "compileDefinition", "resolvePinnedDefinition"],
+      "inputs": ["declarative package source", "capability requirements", "version pin"],
+      "outputs": ["loaded definition", "diagnostics", "compiled immutable capabilities"],
+      "errors": ["DEFINITION_INVALID", "DEFINITION_VERSION_MISSING", "DEFINITION_CAPABILITY_UNSUPPORTED", "DEFINITION_RESOURCE_LIMIT"]
+    }
+  ],
+  "acceptance": { "status": "transitional", "command": "node scripts/module-acceptance/definition-runtime.js" }
+}

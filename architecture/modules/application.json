@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "application",
+  "status": "transitional",
+  "purpose": "Coordinate use cases through commands, queries and atomic transaction boundaries.",
+  "owns": ["command envelope", "query facade", "transaction boundary", "idempotency", "Undo and Redo", "authorization context"],
+  "doesNotOwn": ["semantic rules", "filesystem implementation", "coordinates", "DOM state", "adapter protocols"],
+  "invariants": ["Commands are atomic.", "Expected revisions are enforced.", "Repeated command IDs are idempotent.", "Queries return immutable values."],
+  "allowedDependencies": ["semantic-kernel", "definition-runtime", "workspace", "layout"],
+  "forbiddenDependencies": ["view", "adapters", "diagram-studio"],
+  "contracts": [
+    {
+      "id": "application.commands.v1",
+      "version": 1,
+      "status": "provisional",
+      "operations": ["execute", "undo", "redo", "getHistoryState", "getSnapshot"],
+      "inputs": ["versioned command envelope", "actor context", "execution options"],
+      "outputs": ["transaction result", "revision", "immutable snapshot", "history state"],
+      "errors": ["COMMAND_INVALID", "COMMAND_ID_REQUIRED", "COMMAND_TYPE_REQUIRED", "COMMAND_UNKNOWN", "REVISION_CONFLICT"]
+    },
+    {
+      "id": "application.queries.v1",
+      "version": 1,
+      "status": "target",
+      "operations": ["query", "getDocument", "listDocuments", "previewCommand"],
+      "inputs": ["query envelope", "actor context"],
+      "outputs": ["immutable read model", "revision metadata"],
+      "errors": ["QUERY_INVALID", "QUERY_UNKNOWN", "DOCUMENT_NOT_FOUND", "PERMISSION_DENIED"]
+    }
+  ],
+  "acceptance": { "status": "implemented", "command": "node scripts/module-acceptance/application.js" }
+}

@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.14c.2e",
-    "name": "Collision-free Hints and Boundary Layers",
+    "id": "3C.14d.2",
+    "name": "Module Contracts and Acceptance",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -16,6 +16,8 @@
     "test:manual": "LTP_MANUAL_TEST=1 LTP_USE_SAMPLE=1 electron .",
     "test:architecture": "node scripts/test-architecture.js",
     "test:contracts": "node scripts/test-contract-inventory.js",
+    "test:module-contracts": "node scripts/test-module-contracts.js",
+    "test:modules": "node scripts/test-module-acceptance.js",
     "scope:status": "node scripts/scope-status.js",
     "scope:record-effort": "node scripts/record-effort.js",
     "test:complex": "LTP_COMPLEX_TEST=1 electron .",

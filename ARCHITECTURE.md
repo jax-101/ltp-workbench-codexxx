@@ -193,6 +193,21 @@ contains the assessment and P46 handoff.
 cross-module dependency cannot enter silently: it requires a contract decision,
 owner, data/error description and formalization package.
 
+## Module Charters and Public Contracts
+
+`architecture/modules/` is the machine-readable catalog of the eight target
+modules. Each charter declares purpose, ownership, exclusions, invariants,
+allowed and forbidden dependencies, public contract versions and its
+independent acceptance command. `architecture/contracts/result-envelope.v1.json`
+defines the neutral success/failure envelope; each provider continues to own
+its stable error codes.
+
+Every interaction in `architecture/interaction-inventory.json` references one
+of these public contracts. Transitional interactions remain visible as debt,
+but cannot masquerade as an approved private dependency. The completeness gate
+is `npm run test:module-contracts`; the independent black-box suites are run by
+`npm run test:modules`.
+
 ## Module Test Contract
 
 Each module has four test layers:
@@ -251,7 +266,8 @@ contract at a time, preserving behavior and keeping the application runnable.
 1. Context, normative architecture and automatic architecture gate.
 2. Inventory every public and implicit cross-module interaction. Complete in
    P45 and guarded by `test:contracts`.
-3. Define module charters, ports, schemas and acceptance fixtures.
+3. Define module charters, ports, schemas and acceptance fixtures. Complete in
+   P46 and guarded by `test:module-contracts` and `test:modules`.
 4. Complete Definition Runtime (`3C.15`) behind a versioned contract.
 5. Introduce an Application facade and remove direct renderer writes.
 6. Extract neutral LayoutGraph compilation and engine contracts.

@@ -1,7 +1,7 @@
 # Scope and Effort Baseline
 
 Updated: 2026-07-18  
-Baseline build: `3C.14c.2e`  
+Baseline build: `3C.14d.2`
 Machine-readable register: `planning/work-packages.json`
 Actual-effort ledger: `planning/effort-log.json`  
 Unknown register: `planning/unknowns.json`
@@ -55,18 +55,18 @@ its calibration class.
 | Measure | Value |
 | --- | ---: |
 | Known packages | 78 |
-| Completed packages | 47 |
+| Completed packages | 48 |
 | Partially completed packages | 1 |
-| Planned packages | 30 |
-| Total estimated scope | 4,006,000 tokens |
-| Earned effort | 1,887,750 tokens |
-| Remaining effort | 2,118,250 tokens |
-| **Weighted scope complete** | **47.1%** |
+| Planned packages | 29 |
+| Total estimated scope | 4,056,000 tokens |
+| Earned effort | 2,137,750 tokens |
+| Remaining effort | 1,918,250 tokens |
+| **Weighted scope complete** | **52.7%** |
 
 `P18` is credited at 85%; its remaining nested-frame optimization is represented
 again only where it becomes distinct advanced layout work, avoiding double
-counting. The next active package is `P45`, the interaction and contract
-inventory for strict modular due diligence.
+counting. The next active package is `P47`, plan normalization and CI gates for
+strict modular due diligence.
 
 ## Portfolio View
 
@@ -76,7 +76,7 @@ inventory for strict modular due diligence.
 | Iterations 1 through 3A | P01-P11 | 378k | 378k |
 | Layout builds 3B | P12-P18 | 323k | 314.75k |
 | Builds 3C through modular foundation | P19-P44 | 990k | 990k |
-| Remaining modular due diligence | P45-P47 | 310k | 35k |
+| Modular due diligence | P45-P47 | 360k | 285k |
 | Definition Runtime | P48-P51 | 245k | 0 |
 | Interaction backlog | P52-P54 | 82k | 0 |
 | Frame focus | P55-P57 | 148k | 0 |
@@ -97,10 +97,14 @@ reconstructed values. P45 is the first package with goal-backed measurement;
 the current coverage and actual total are calculated by `scope:status`.
 
 P45 closed at `237,419` actual tokens and 743 seconds against a `35,000`
-baseline: `+202,419`, or `+578.3%` (`6.78x`). Measurement coverage is now
-`1/48` started packages. This single observation revised only the nearest
-comparable package, P46, from `80k` to `250k`; global recalibration waits for
-more measured packages.
+baseline: `+202,419`, or `+578.3%` (`6.78x`). P46 closed at `233,658` tokens and
+549 seconds against its `80,000` baseline: `+153,658`, or `+192.1%` (`2.92x`).
+It landed 6.5% below its revised `250k` forecast. Measurement coverage is now
+`2/49` started packages, with `471,077` actual tokens recorded.
+
+The two architecture-governance observations revise only their nearest
+comparables: P46 from `80k` to `250k`, and P47 from `25k` to `75k`. Unrelated
+packages wait for measurements from their own implementation class.
 
 For every subsequent package, cumulative runtime usage is recorded as an
 append-only snapshot:
@@ -141,10 +145,11 @@ the denominator from that point onward.
 | U007 | Missing historical token telemetry | Mitigated | Actual-effort ledger and explicit unavailable state |
 | U008 | Stable error ownership and adapter serialization | Assessed | Covered by P46 and P58 without adding scope |
 | U009 | Browser globals and script-order dependencies | Assessed | Covered by P46, P61 and P62 without adding scope |
-| U010 | Long-thread context overhead | Mitigated | P46 revised from 80k to 250k; broader recalibration deferred |
+| U010 | Long-thread context overhead | Mitigated | P46 revised to 250k and P47 to 75k; broader recalibration deferred |
+| U011 | Layout output depended on implicit wall clock | Resolved | Layout requests accept an explicit timestamp for deterministic acceptance |
 
-Current register: ten unknowns; five converted, two assessed, two mitigated and
-one resolved. There are no untriaged open unknowns today. This does not
+Current register: 11 unknowns; five converted, two assessed, two mitigated and
+two resolved. There are no untriaged open unknowns today. This does not
 imply that future unknowns do not exist; it states only what has been
 discovered.
 
@@ -201,8 +206,8 @@ completion percentage, and `Planned` packages receive no credit.
 | P43 | Boundary peer layout and collision-free hints | Done | 100% | 32k |
 | P44 | Strict modular architecture, context and gate foundation | Done | 100% | 28k |
 | P45 | Interaction and contract inventory | Done | 100% | 35k |
-| P46 | Module charters and module acceptance suites | Planned | 0% | 80k -> 250k |
-| P47 | Plan normalization and CI architecture gates | Planned | 0% | 25k |
+| P46 | Module charters and module acceptance suites | Done | 100% | 80k -> 250k |
+| P47 | Plan normalization and CI architecture gates | Planned | 0% | 25k -> 75k |
 | P48 | Definition schema, canonical serialization and hash | Planned | 0% | 55k |
 | P49 | Definition loader, security and rescue mode | Planned | 0% | 65k |
 | P50 | Goal Tree, CRT and EC declarative packages | Planned | 0% | 70k |

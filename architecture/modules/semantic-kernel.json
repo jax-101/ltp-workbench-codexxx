@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "semantic-kernel",
+  "status": "transitional",
+  "purpose": "Own LTP meaning and reject semantically invalid graphs independently of UI, files and layout.",
+  "owns": ["semantic graph", "element and relation identities", "assumptions", "derivations", "logic invariants", "semantic error codes"],
+  "doesNotOwn": ["workspace persistence", "diagram package loading", "coordinates", "view state", "Electron"],
+  "invariants": ["Validation is deterministic.", "Junctions are projections, not assertions.", "Migration and projection preserve semantic IDs."],
+  "allowedDependencies": [],
+  "forbiddenDependencies": ["application", "workspace", "layout", "view", "adapters", "diagram-studio"],
+  "contracts": [
+    {
+      "id": "semantic.graph.v1",
+      "version": 1,
+      "status": "provisional",
+      "operations": ["validateGraph", "assertGraph", "addSemanticKernel", "removeSemanticKernel", "projectForRender"],
+      "inputs": ["semantic graph or migration snapshot", "contract vocabulary"],
+      "outputs": ["diagnostics", "migrated graph", "deterministic render projection"],
+      "errors": ["SEMANTIC_GRAPH_INVALID", "SEMANTIC_PROJECTION_STALE", "ASSUMPTION_STATUS_INVALID"]
+    }
+  ],
+  "acceptance": { "status": "implemented", "command": "node scripts/module-acceptance/semantic-kernel.js" }
+}

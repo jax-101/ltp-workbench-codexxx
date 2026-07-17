@@ -780,9 +780,9 @@ Criterios de aceptacion de `3C.14c.2`:
 
 ### 3C.14d: due diligence de Diseno Modular Estricto
 
-Estado: activo. La base normativa y el inventario ejecutable de interacciones
-estan en PASS. Quedan los charters, contratos publicos y UAT de aceptacion por
-modulo antes de iniciar extracciones estructurales.
+Estado: activo. La base normativa, el inventario ejecutable y `P46` estan en
+PASS. Queda `P47`, normalizacion del plan y gates de CI, antes de iniciar las
+extracciones estructurales.
 
 Incluye:
 
@@ -800,6 +800,10 @@ Incluye:
   dependencias browser-global, 17 metodos IPC y 21 interacciones inventariadas.
   El gate `test:contracts` detecta cualquier desviacion. Evidencia en
   `outputs/Module-Interaction-Inventory.md`.
+- `P46` en PASS: ocho charters, 14 contratos publicos versionados y las 21
+  interacciones asignadas a un contrato. Siete modulos implementados se prueban
+  como procesos independientes; Diagram Studio conserva un contrato planificado.
+  Evidencia en `outputs/Module-Contracts-and-Acceptance-P46.md`.
 
 Criterios de aceptacion:
 

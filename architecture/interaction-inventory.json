@@ -47,6 +47,7 @@
       "name": "Command, history and revision API",
       "mechanism": "direct CommonJS API and Electron IPC",
       "status": "implicit",
+      "targetContract": "application.commands.v1",
       "data": ["command envelope", "expected revision", "workspace snapshot", "history state"],
       "errors": ["COMMAND_ID_REQUIRED", "COMMAND_UNKNOWN", "REVISION_CONFLICT", "WORKSPACE_INVALID"],
       "formalizationPackages": ["P46", "P58"]
@@ -58,6 +59,7 @@
       "name": "Workspace session and persistence API",
       "mechanism": "direct CommonJS API and Electron IPC",
       "status": "implicit",
+      "targetContract": "workspace.sessions.v1",
       "data": ["canonical locator", "session identity", "workspace snapshot", "document summaries"],
       "errors": ["WORKSPACE_LOCATOR_REQUIRED", "WORKSPACE_REVISION_CONFLICT"],
       "formalizationPackages": ["P46", "P63"]
@@ -69,6 +71,7 @@
       "name": "Semantic mutation and projection API",
       "mechanism": "direct CommonJS API and command handlers",
       "status": "implicit",
+      "targetContract": "semantic.graph.v1",
       "data": ["semantic graph", "assumption lifecycle", "legacy render projection"],
       "errors": ["SEMANTIC_GRAPH_INVALID", "ASSUMPTION_STATUS_INVALID"],
       "formalizationPackages": ["P46", "P48", "P58"]
@@ -80,6 +83,7 @@
       "name": "Diagram capability lookup",
       "mechanism": "direct hardcoded registry lookup",
       "status": "debt",
+      "targetContract": "definition.capabilities.v1",
       "data": ["entity types", "cycle order", "relation and layout capabilities"],
       "errors": ["DIAGRAM_TYPE_UNKNOWN"],
       "formalizationPackages": ["P48", "P49", "P50"]
@@ -91,6 +95,7 @@
       "name": "Workspace validation and persistence port",
       "mechanism": "direct validator import and injected persist callback",
       "status": "implicit",
+      "targetContract": "workspace.repository.v1",
       "data": ["candidate workspace", "validation issues", "commit metadata"],
       "errors": ["WORKSPACE_INVALID", "WORKSPACE_REVISION_CONFLICT"],
       "formalizationPackages": ["P46", "P58"]
@@ -102,6 +107,7 @@
       "name": "Semantic migration and validation port",
       "mechanism": "direct CommonJS imports",
       "status": "implicit",
+      "targetContract": "semantic.graph.v1",
       "data": ["workspace migration candidate", "semantic diagnostics", "projection fingerprint"],
       "errors": ["SEMANTIC_GRAPH_INVALID", "SEMANTIC_PROJECTION_STALE"],
       "formalizationPackages": ["P46", "P48", "P49"]
@@ -113,6 +119,7 @@
       "name": "Document and view resolution API",
       "mechanism": "direct CommonJS helper API",
       "status": "implicit",
+      "targetContract": "view.documents.v1",
       "data": ["document identity", "view identity", "canvas identity", "document summary"],
       "errors": ["DOCUMENT_NOT_FOUND", "CANVAS_NOT_FOUND"],
       "formalizationPackages": ["P46", "P61"]
@@ -124,6 +131,7 @@
       "name": "Layout execution and geometry validation API",
       "mechanism": "direct CommonJS API and Electron IPC",
       "status": "implicit",
+      "targetContract": "layout.service.v1",
       "data": ["workspace snapshot", "tree ID", "layout options", "geometry diagnostics"],
       "errors": ["LAYOUT_TREE_REQUIRED", "LAYOUT_GEOMETRY_INVALID"],
       "formalizationPackages": ["P46", "P59", "P60"]
@@ -135,6 +143,7 @@
       "name": "Layout capability and presentation constraints",
       "mechanism": "direct hardcoded registry lookup",
       "status": "debt",
+      "targetContract": "definition.capabilities.v1",
       "data": ["preferred direction", "routing", "cycle strategy", "presentation rules"],
       "errors": ["DIAGRAM_TYPE_UNKNOWN"],
       "formalizationPackages": ["P48", "P50", "P59"]
@@ -146,6 +155,7 @@
       "name": "Electron renderer bridge",
       "mechanism": "contextBridge and request-response IPC",
       "status": "explicit",
+      "targetContract": "adapters.electron-bridge.v1",
       "data": ["IPC requests and structured-clone responses"],
       "errors": ["unversioned serialized LtpError or generic Error"],
       "formalizationPackages": ["P46", "P58"]
@@ -157,6 +167,7 @@
       "name": "Renderer consumes browser-global diagram registry",
       "mechanism": "ordered HTML script loading and globalThis",
       "status": "debt",
+      "targetContract": "definition.capabilities.v1",
       "data": ["diagram registry API", "hardcoded definitions"],
       "errors": ["load order and global name are implicit"],
       "formalizationPackages": ["P46", "P48", "P61", "P62"]
@@ -168,6 +179,7 @@
       "name": "Renderer consumes browser-global View helpers",
       "mechanism": "ordered HTML script loading and globalThis",
       "status": "implicit",
+      "targetContract": "view.interactions.v1",
       "data": ["selection model API", "command configuration API"],
       "errors": ["load order and global names are implicit"],
       "formalizationPackages": ["P46", "P61", "P62"]
@@ -179,6 +191,7 @@
       "name": "Layout imports document-selection helpers",
       "mechanism": "direct CommonJS import",
       "status": "debt",
+      "targetContract": "layout.service.v1",
       "data": ["initial document ID"],
       "errors": [],
       "formalizationPackages": ["P59", "P61"]
@@ -190,6 +203,7 @@
       "name": "Workspace Manager constructs the transaction engine",
       "mechanism": "direct CommonJS import and construction",
       "status": "debt",
+      "targetContract": "application.commands.v1",
       "data": ["workspace snapshot", "engine factory", "persist callback"],
       "errors": ["application errors leak through workspace API"],
       "formalizationPackages": ["P46", "P58"]
@@ -201,6 +215,7 @@
       "name": "Repository imports application revision helper",
       "mechanism": "direct CommonJS import",
       "status": "debt",
+      "targetContract": "workspace.repository.v1",
       "data": ["workspace revision number"],
       "errors": [],
       "formalizationPackages": ["P46", "P58"]
@@ -213,6 +228,7 @@
       "name": "Inner modules share Application-owned LtpError",
       "mechanism": "direct CommonJS imports from semantic, workspace and view",
       "status": "debt",
+      "targetContract": "ltp.contract-result.v1",
       "data": ["error code", "message", "details"],
       "errors": ["module ownership is ambiguous"],
       "formalizationPackages": ["P46", "P58"]
@@ -224,6 +240,7 @@
       "name": "CLI imports semantic migration directly",
       "mechanism": "direct CommonJS import",
       "status": "debt",
+      "targetContract": "application.commands.v1",
       "data": ["workspace snapshot", "semantic migration result"],
       "errors": ["semantic implementation details leak into the adapter"],
       "formalizationPackages": ["P48", "P51", "P58"]
@@ -235,6 +252,7 @@
       "name": "CLI bypasses the Application facade",
       "mechanism": "direct repository, validator and migration imports",
       "status": "debt",
+      "targetContract": "application.commands.v1",
       "data": ["workspace file", "migration result", "validation result"],
       "errors": ["adapter-specific Error objects and core LtpError are mixed"],
       "formalizationPackages": ["P46", "P58"]
@@ -246,6 +264,7 @@
       "name": "Renderer compatibility mutations bypass typed intents",
       "mechanism": "local workspace cloning followed by workspace.replace",
       "status": "debt",
+      "targetContract": "application.commands.v1",
       "data": ["entire mutable workspace", "compatibility label"],
       "errors": ["mutation ownership and validation boundary are implicit"],
       "formalizationPackages": ["P58", "P61"]
@@ -257,6 +276,7 @@
       "name": "Layout returns an entire workspace instead of VisualLayout",
       "mechanism": "full-workspace input and cloned-workspace output",
       "status": "debt",
+      "targetContract": "layout.service.v1",
       "data": ["semantic state", "persisted geometry", "view-adjacent geometry"],
       "errors": ["layout ownership is wider than the target contract"],
       "formalizationPackages": ["P59", "P60"]
@@ -268,6 +288,7 @@
       "name": "Electron main owns fixture and visual-test orchestration",
       "mechanism": "environment branches and direct fixture generation",
       "status": "debt",
+      "targetContract": "adapters.test-harness.v1",
       "data": ["fixtures", "screenshots", "test reports"],
       "errors": ["production composition root changes with test scenarios"],
       "formalizationPackages": ["P47", "P58", "P62"]

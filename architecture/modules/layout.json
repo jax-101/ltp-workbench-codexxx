@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "layout",
+  "status": "transitional",
+  "purpose": "Compile neutral layout graphs, invoke engines, route links and validate deterministic geometry.",
+  "owns": ["LayoutGraph", "LayoutRequest", "VisualLayout", "engine ports", "routing", "quality metrics", "geometry diagnostics"],
+  "doesNotOwn": ["semantic mutation", "workspace persistence", "document selection", "view state", "diagram package loading"],
+  "invariants": ["Engine adapters receive only neutral graphs.", "Inputs are not mutated.", "Same request and seed produce the same result."],
+  "allowedDependencies": ["definition-runtime"],
+  "forbiddenDependencies": ["application", "workspace", "view", "adapters", "diagram-studio"],
+  "contracts": [
+    {
+      "id": "layout.service.v1",
+      "version": 1,
+      "status": "target",
+      "operations": ["compileLayoutGraph", "runLayout", "routeEdges", "validateGeometry", "scoreLayout"],
+      "inputs": ["diagram snapshot", "compiled definition", "layout request with explicit clock", "previous positions"],
+      "outputs": ["neutral LayoutGraph", "VisualLayout", "quality metrics", "diagnostics"],
+      "errors": ["LAYOUT_REQUEST_INVALID", "LAYOUT_ENGINE_FAILED", "LAYOUT_GEOMETRY_INVALID", "LAYOUT_RESOURCE_LIMIT"]
+    },
+    {
+      "id": "layout.engine.v1",
+      "version": 1,
+      "status": "provisional",
+      "operations": ["layout"],
+      "inputs": ["neutral LayoutGraph", "engine options"],
+      "outputs": ["engine geometry"],
+      "errors": ["LAYOUT_ENGINE_FAILED", "LAYOUT_ENGINE_UNSUPPORTED_OPTION"]
+    }
+  ],
+  "acceptance": { "status": "implemented", "command": "node scripts/module-acceptance/layout.js" }
+}

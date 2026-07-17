@@ -1,9 +1,9 @@
 # LTP Workbench - Session Context
 
 Updated: 2026-07-18
-Current build: `3C.14c.2e` - Collision-free Hints and Boundary Layers
+Current build: `3C.14d.2` - Module Contracts and Acceptance
 Architecture: strict modular monolith with a headless core
-Current scope progress: `47.1%` estimated weighted scope
+Current scope progress: `52.7%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;
@@ -49,6 +49,8 @@ Goal Tree, CRT, FRT and EC are definition packages, not independent code paths.
 
 - `src/core/`: headless domain, application, workspace and layout code.
 - `semantic-contract/v0.1/`: executable semantic vocabulary and oracle fixtures.
+- `architecture/modules/`: machine-readable charters and public contract catalog.
+- `architecture/contracts/`: shared versioned contract schemas.
 - `src/main.js` and `src/preload.js`: Electron adapter and IPC composition.
 - `src/renderer/`: current UI and interaction layer.
 - `scripts/ltp-cli.js`: headless CLI adapter.
@@ -142,10 +144,12 @@ Working:
 - Keyboard-first navigation, hints, multi-selection and Assumption Workbench.
 - Automated core, semantic, layout, randomized, visual and shortcut suites.
 - Executable ownership, cross-module import, browser-global and IPC inventory.
+- Eight machine-readable module charters and 14 versioned public contracts.
+- Seven independent black-box module acceptance suites; Diagram Studio remains planned.
 
 Next architectural work:
 
-- Define P46 module charters, public ports and black-box acceptance suites.
+- Complete P47 plan normalization and CI architecture gates.
 - Implement `3C.15` Definition Runtime and headless definition tooling.
 - Extract a neutral layout compiler from `composed-layout.js`.
 - Move remaining renderer mutations behind application commands.
@@ -160,6 +164,8 @@ Run before publishing a change:
 ```bash
 npm run test:architecture
 npm run test:contracts
+npm run test:module-contracts
+npm run test:modules
 npm run scope:status
 npm run test:prototype -- --no-smoke
 npm run smoke
@@ -176,5 +182,6 @@ Relevant references:
 - `outputs/Interface-Improvement-Plan.md`
 - `outputs/Scope-Effort-Baseline.md`
 - `outputs/Module-Interaction-Inventory.md`
+- `outputs/Module-Contracts-and-Acceptance-P46.md`
 - `outputs/Decision-Log.md`
 - `outputs/Engineering-Lessons-Log.md`

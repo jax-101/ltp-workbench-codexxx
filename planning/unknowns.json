@@ -98,9 +98,19 @@
       "discoveredDuring": "P45",
       "status": "mitigated",
       "impact": "high",
+      "resultingPackages": ["P46", "P47"],
+      "scopeAddedTokens": 220000,
+      "note": "P45 finished at 237419 tokens versus a 35k baseline. P46 finished at 233658 versus an 80k baseline and within 6.5% of its revised 250k forecast. P47 was revised from 25k to 75k; unrelated packages still await comparable measurements."
+    },
+    {
+      "id": "U011",
+      "title": "Layout output depended on an implicit wall clock",
+      "discoveredDuring": "P46",
+      "status": "resolved",
+      "impact": "medium",
       "resultingPackages": ["P46"],
-      "scopeAddedTokens": 170000,
-      "note": "P45 finished at 237419 tokens versus a 35k baseline. P46 was revised from 80k to 250k; broader recalibration waits for more measured packages."
+      "scopeAddedTokens": 0,
+      "note": "runComposedLayout now accepts an explicit timestamp while retaining the default runtime clock."
     }
   ]
 }

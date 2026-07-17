@@ -888,3 +888,14 @@ Razon: ignorar P45, con un actual 6,78 veces superior al estimate, mantendria un
 forecast que ya sabemos defectuoso. Aplicar ese factor a layout, UI, semantica y
 release supondria que todos comparten el mismo coste fijo y distribucion. La
 revision local aprende pronto sin fabricar una precision global.
+
+### D-115: El tiempo es una entrada de contrato cuando afecta a la salida
+
+Decision: toda operacion que deba ser determinista recibe explicitamente el
+timestamp o reloj que incorpora a su resultado. El adaptador puede aportar la
+hora real por defecto, pero el modulo no debe leerla repetidamente durante una
+misma operacion.
+
+Razon: el UAT de Layout produjo geometria identica pero snapshots distintos por
+`lastRunAt`. Hacer explicita la entrada temporal permite reproducir, comparar y
+firmar resultados sin eliminar la metadata util en ejecucion normal.

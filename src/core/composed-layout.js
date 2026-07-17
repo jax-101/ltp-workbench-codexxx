@@ -871,7 +871,7 @@ const routedLayoutQuality = (links, nodeLayouts, linkLayouts, direction) => {
 };
 
 const runComposedLayout = async (workspace, options = {}) => {
-  const nextWorkspace = structuredClone(workspace);
+  const nextWorkspace = structuredClone(workspace), now = options.now || new Date().toISOString();
   const activeDocumentId = initialDocumentId(nextWorkspace, options.treeId);
   const activeTree = nextWorkspace.trees.find((tree) => tree.id === activeDocumentId);
   if (!activeTree) return nextWorkspace;
@@ -1159,7 +1159,7 @@ const runComposedLayout = async (workspace, options = {}) => {
 
   const result = await layoutContainer(canvas.rootFrameId, true);
   canvas.layout = { ...(canvas.layout || {}), frames: result.frameLayouts };
-  canvas.updatedAt = new Date().toISOString();
+  canvas.updatedAt = now;
 
   const visibleEndpointId = (nodeId) => {
     const owner = nodeOwners.get(nodeId);
@@ -1238,15 +1238,15 @@ const runComposedLayout = async (workspace, options = {}) => {
       ...(tree.layout || {}),
       engine: `${layoutEngine.id}-composed`,
       direction,
-      lastRunAt: new Date().toISOString(),
+      lastRunAt: now,
       optimization: result.optimization,
       quality,
       nodes: nextNodeLayout,
       links: nextLinkLayout
     };
-    tree.updatedAt = new Date().toISOString();
+    tree.updatedAt = now;
   }
-  nextWorkspace.updatedAt = new Date().toISOString();
+  nextWorkspace.updatedAt = now;
   return nextWorkspace;
 };
 

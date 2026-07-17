@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "adapters",
+  "status": "transitional",
+  "purpose": "Translate Electron, CLI and export protocols into public inward-facing contracts.",
+  "owns": ["protocol parsing", "IPC schemas", "CLI arguments", "error serialization", "composition root", "import and export formats"],
+  "doesNotOwn": ["semantic rules", "transactions", "workspace policy", "layout algorithms", "view transitions"],
+  "invariants": ["Adapters do not mutate domain state directly.", "Equivalent protocols produce equivalent commands and errors.", "Serialized errors preserve provider codes."],
+  "allowedDependencies": ["semantic-kernel", "definition-runtime", "application", "workspace", "layout", "view"],
+  "forbiddenDependencies": ["diagram-studio"],
+  "contracts": [
+    {
+      "id": "adapters.electron-bridge.v1",
+      "version": 1,
+      "status": "provisional",
+      "operations": ["invokeApplication", "invokeWorkspace", "invokeLayout", "exportDocument"],
+      "inputs": ["versioned structured-clone request"],
+      "outputs": ["ltp.contract-result.v1"],
+      "errors": ["ADAPTER_REQUEST_INVALID", "ADAPTER_RESPONSE_INVALID", "ADAPTER_PROTOCOL_UNSUPPORTED"]
+    },
+    {
+      "id": "adapters.test-harness.v1",
+      "version": 1,
+      "status": "target",
+      "operations": ["loadFixture", "runScenario", "captureEvidence"],
+      "inputs": ["fixture ID", "scenario options"],
+      "outputs": ["deterministic result", "evidence manifest"],
+      "errors": ["FIXTURE_NOT_FOUND", "SCENARIO_FAILED"]
+    }
+  ],
+  "acceptance": { "status": "implemented", "command": "node scripts/module-acceptance/adapters.js" }
+}

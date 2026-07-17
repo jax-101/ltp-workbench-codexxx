@@ -1,0 +1,30 @@
+{
+  "id": "ltp.contract-result.v1",
+  "version": 1,
+  "status": "target",
+  "owner": "architecture-protocol",
+  "description": "Code-free serialization vocabulary shared at module and adapter boundaries.",
+  "success": {
+    "required": ["ok", "value"],
+    "shape": { "ok": true, "value": "provider-defined immutable value", "metadata": "optional object" }
+  },
+  "failure": {
+    "required": ["ok", "error"],
+    "shape": {
+      "ok": false,
+      "error": {
+        "module": "provider module ID",
+        "code": "stable provider-owned code",
+        "message": "human-readable diagnostic",
+        "details": "structured object",
+        "retryable": "boolean"
+      }
+    }
+  },
+  "invariants": [
+    "Exactly one of value or error is present.",
+    "Consumers branch on code, never parse message.",
+    "Details are structured-clone and JSON safe.",
+    "Inner modules do not import an adapter error class."
+  ]
+}
