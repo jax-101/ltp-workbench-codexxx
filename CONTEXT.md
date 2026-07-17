@@ -117,6 +117,8 @@ not declared project dependencies and are not part of the active architecture.
 At the end of each development step, update `planning/work-packages.json`, run
 `npm run scope:status` and report the weighted scope percentage. New accepted
 scope must be added explicitly so changes to the denominator remain visible.
+Every stopping update also reports the current build, active or completed work
+package, package state and next package in the general roadmap.
 Record runtime-reported usage in `planning/effort-log.json`; never substitute
 an estimate for an unavailable actual. Register discoveries in
 `planning/unknowns.json` before converting them into work packages.

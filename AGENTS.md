@@ -24,6 +24,8 @@ in their logs.
 At the end of every development step, update the affected work package, run
 `npm run scope:status`, synchronize the percentage in `CONTEXT.md` and
 `outputs/Scope-Effort-Baseline.md`, and report that percentage to the user.
+Every stopping update must also name the current build, the completed or active
+work package, its state, and the next package in the general roadmap.
 Represent newly accepted scope as a new package instead of silently expanding
 an existing package.
 
