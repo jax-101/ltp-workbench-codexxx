@@ -1347,9 +1347,44 @@ Aplicacion futura: usar RFC 8785 o un estandar equivalente, fijar el algoritmo
 en el artefacto, hashear bytes UTF-8 y probar numeros, Unicode, orden de claves y
 manipulacion del contenido.
 
+### L-111: La seguridad declarativa empieza antes del schema
+
+Fecha: 2026-07-18
+
+Evidencia: el schema rechazaba JavaScript como valor, pero una fuente embebida
+podia ejecutar un getter durante la medicion previa. La lectura inicial tambien
+necesitaba distinguir UTF-8 invalido y limitar el archivo mediante su handle,
+no confiar solo en una comprobacion de tamano anterior.
+
+Aprendizaje: validar la forma de los datos no protege las operaciones que se
+realizan para obtener esos datos. Descriptores, encoding, symlinks, carreras de
+archivo y presupuestos deben controlarse antes de entregar el objeto al
+validador semantico.
+
+Aplicacion futura: dividir materializacion y validacion; inspeccionar
+descriptores sin invocar accesores; leer con limites efectivos; confinar rutas
+reales; y probar entradas hostiles contra la API publica.
+
+### L-112: Recuperar no significa habilitar
+
+Fecha: 2026-07-18
+
+Evidencia: una definicion valida y fijada por hash puede requerir capacidades
+que el runtime actual no soporta. Rechazarla por completo impediria inspeccionar
+el proyecto; aceptarla como editable ejecutaria una semantica desconocida.
+
+Aprendizaje: los sistemas versionados necesitan un estado de recuperacion
+tipado entre exito y fallo fatal. El contenido seguro puede conservarse para
+lectura, mientras las operaciones que dependen de su interpretacion permanecen
+bloqueadas.
+
+Aplicacion futura: resolver por identidad exacta; devolver `ready` o `rescue`
+con permisos explicitos; conservar diagnosticos seguros; y hacer que los
+adaptadores consuman la decision en vez de reinterpretar errores.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-111`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-113`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

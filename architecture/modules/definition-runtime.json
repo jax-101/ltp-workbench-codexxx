@@ -3,7 +3,7 @@
   "id": "definition-runtime",
   "status": "transitional",
   "purpose": "Load, validate, version and compile declarative diagram packages through one safe runtime.",
-  "owns": ["definition schema", "canonical serialization", "definition hash", "capability compilation", "definition diagnostics"],
+  "owns": ["definition schema", "canonical serialization", "definition hash", "package loading", "resource policy", "version resolution", "capability compilation", "definition diagnostics"],
   "doesNotOwn": ["diagram instances", "workspace files", "semantic mutations", "layout execution", "Studio UI"],
   "invariants": ["Definitions contain no executable code.", "Official and user packages use the same loader.", "Published versions are immutable."],
   "allowedDependencies": [],
@@ -19,13 +19,22 @@
       "errors": ["DEFINITION_INVALID", "DEFINITION_VALUE_NOT_JSON"]
     },
     {
+      "id": "definition.loading.v1",
+      "version": 1,
+      "status": "implemented",
+      "operations": ["loadDefinition", "createDefinitionPin", "validatePin", "resolvePinnedDefinition"],
+      "inputs": ["directory or embedded package source", "supported capabilities", "exact definition pin", "bounded resource policy"],
+      "outputs": ["immutable loaded package", "exact content pin", "ready or read-only rescue outcome", "safe diagnostics"],
+      "errors": ["DEFINITION_SOURCE_INVALID", "DEFINITION_PACKAGE_MISSING", "DEFINITION_PATH_FORBIDDEN", "DEFINITION_JSON_INVALID", "DEFINITION_RESOURCE_LIMIT", "DEFINITION_PIN_INVALID", "DEFINITION_VERSION_MISSING", "DEFINITION_HASH_MISMATCH", "DEFINITION_CAPABILITY_UNSUPPORTED"]
+    },
+    {
       "id": "definition.capabilities.v1",
       "version": 1,
       "status": "target",
-      "operations": ["loadDefinition", "validateDefinition", "compileDefinition", "resolvePinnedDefinition"],
-      "inputs": ["declarative package source", "capability requirements", "version pin"],
-      "outputs": ["loaded definition", "diagnostics", "compiled immutable capabilities"],
-      "errors": ["DEFINITION_INVALID", "DEFINITION_VERSION_MISSING", "DEFINITION_CAPABILITY_UNSUPPORTED", "DEFINITION_RESOURCE_LIMIT"]
+      "operations": ["compileDefinition"],
+      "inputs": ["validated definition artifact", "known capability registry"],
+      "outputs": ["compiled immutable capabilities"],
+      "errors": ["DEFINITION_CAPABILITY_UNSUPPORTED", "DEFINITION_COMPILE_INVALID"]
     }
   ],
   "acceptance": { "status": "transitional", "command": "node scripts/module-acceptance/definition-runtime.js" }

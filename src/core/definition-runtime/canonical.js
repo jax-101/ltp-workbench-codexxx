@@ -35,7 +35,12 @@ function canonicalize(value, path = "$", ancestors = new Set()) {
   ancestors.add(value);
   let result;
   if (Array.isArray(value)) {
-    if (Object.keys(value).length !== value.length) {
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const ownKeys = Reflect.ownKeys(value);
+    const arrayKeys = Object.keys(value);
+    const hasAccessors = arrayKeys.some((key) => descriptors[key].get || descriptors[key].set);
+    const isDense = arrayKeys.every((key, index) => key === String(index));
+    if (arrayKeys.length !== value.length || ownKeys.length !== value.length + 1 || hasAccessors || !isDense) {
       throw new DefinitionRuntimeError("DEFINITION_VALUE_NOT_JSON", `${path} is not a dense JSON array`, { path });
     }
     result = value.map((item, index) => canonicalize(item, `${path}[${index}]`, ancestors));
@@ -44,13 +49,18 @@ function canonicalize(value, path = "$", ancestors = new Set()) {
     if (prototype !== Object.prototype && prototype !== null) {
       throw new DefinitionRuntimeError("DEFINITION_VALUE_NOT_JSON", `${path} is not a plain JSON object`, { path });
     }
-    if (Reflect.ownKeys(value).length !== Object.keys(value).length) {
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const keys = Object.keys(value);
+    if (
+      Reflect.ownKeys(value).length !== keys.length ||
+      keys.some((key) => descriptors[key].get || descriptors[key].set)
+    ) {
       throw new DefinitionRuntimeError("DEFINITION_VALUE_NOT_JSON", `${path} has non-JSON properties`, { path });
     }
-    Object.keys(value).forEach((key) => assertUnicode(key, `${path} property name`));
+    keys.forEach((key) => assertUnicode(key, `${path} property name`));
     // RFC 8785 sorts raw property names by unsigned UTF-16 code units.
     result = Object.fromEntries(
-      Object.keys(value).sort().map((key) => [key, canonicalize(value[key], `${path}.${key}`, ancestors)])
+      keys.sort().map((key) => [key, canonicalize(descriptors[key].value, `${path}.${key}`, ancestors)])
     );
   }
   ancestors.delete(value);

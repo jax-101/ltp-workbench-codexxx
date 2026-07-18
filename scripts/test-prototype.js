@@ -27,6 +27,11 @@ const steps = [
     args: ["run", "test:definition"]
   },
   {
+    name: "Test secure definition loading",
+    command: "npm",
+    args: ["run", "test:definition-loader"]
+  },
+  {
     name: "Test additive semantic migration",
     command: "npm",
     args: ["run", "test:semantic-migration"]

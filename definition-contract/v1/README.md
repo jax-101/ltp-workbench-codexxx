@@ -5,9 +5,8 @@ Status: implemented artifact contract; official-package parity remains tracked b
 ## Boundary
 
 This contract defines the data shape and content identity of a diagram
-definition. It does not locate files, enforce package path security, resolve a
-version pin or compile runtime capabilities. Those responsibilities belong to
-P49 and P50.
+definition. `PACKAGE.md` defines the implemented secure loading, resource,
+pinning and read-only rescue contract. Capability compilation belongs to P50.
 
 The root schema is `diagram-definition.schema.json`. Supporting schemas divide
 common JSON values, semantic vocabulary and layout/presentation data. AJV
@@ -39,5 +38,6 @@ golden compatibility pair. Run:
 
 ```bash
 npm run test:definition
+npm run test:definition-loader
 npm run test:modules
 ```

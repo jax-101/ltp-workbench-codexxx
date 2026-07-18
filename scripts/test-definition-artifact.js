@@ -63,6 +63,16 @@ assert.equal(
 assert.equal(CANONICALIZATION, "RFC8785");
 assert.throws(() => canonicalSerialize({ bad: "\ud800" }), /invalid Unicode/);
 assert.throws(() => canonicalSerialize({ "\udc00": "bad key" }), /invalid Unicode/);
+const accessor = {};
+Object.defineProperty(accessor, "run", { enumerable: true, get: () => { throw new Error("must not run"); } });
+assert.throws(() => canonicalSerialize(accessor), (error) => error.code === "DEFINITION_VALUE_NOT_JSON");
+const decoratedArray = [1];
+Object.defineProperty(decoratedArray, "hidden", { value: true });
+assert.throws(() => canonicalSerialize(decoratedArray), (error) => error.code === "DEFINITION_VALUE_NOT_JSON");
+const disguisedSparseArray = [];
+disguisedSparseArray.length = 1;
+disguisedSparseArray.extra = true;
+assert.throws(() => canonicalSerialize(disguisedSparseArray), (error) => error.code === "DEFINITION_VALUE_NOT_JSON");
 
 assert.throws(
   () => createDefinitionArtifact({ ...fixture, formatVersion: "2" }),

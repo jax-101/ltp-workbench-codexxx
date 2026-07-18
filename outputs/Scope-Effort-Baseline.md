@@ -1,7 +1,7 @@
 # Scope and Effort Baseline
 
 Updated: 2026-07-18  
-Baseline build: `3C.15a`
+Baseline build: `3C.15b`
 Machine-readable register: `planning/work-packages.json`
 Actual-effort ledger: `planning/effort-log.json`  
 Unknown register: `planning/unknowns.json`
@@ -55,18 +55,18 @@ its calibration class.
 | Measure | Value |
 | --- | ---: |
 | Known packages | 78 |
-| Completed packages | 50 |
+| Completed packages | 51 |
 | Partially completed packages | 1 |
-| Planned packages | 27 |
+| Planned packages | 26 |
 | Total estimated scope | 4,441,000 tokens |
-| Earned effort | 2,267,750 tokens |
-| Remaining effort | 2,173,250 tokens |
-| **Weighted scope complete** | **51.1%** |
+| Earned effort | 2,717,750 tokens |
+| Remaining effort | 1,723,250 tokens |
+| **Weighted scope complete** | **61.2%** |
 
 `P18` is credited at 85%; its remaining nested-frame optimization is represented
 again only where it becomes distinct advanced layout work, avoiding double
-counting. The next active package is `P49`, the secure definition loader,
-version resolution and read-only rescue mode.
+counting. The next active package is `P50`, conversion of Goal Tree, CRT and EC
+into declarative packages through the same runtime.
 
 ## Portfolio View
 
@@ -77,7 +77,7 @@ version resolution and read-only rescue mode.
 | Layout builds 3B | P12-P18 | 323k | 314.75k |
 | Builds 3C through modular foundation | P19-P44 | 990k | 990k |
 | Modular due diligence | P45-P47 | 360k | 360k |
-| Definition Runtime | P48-P51 | 630k | 55k |
+| Definition Runtime | P48-P51 | 630k | 505k |
 | Interaction backlog | P52-P54 | 82k | 0 |
 | Frame focus | P55-P57 | 148k | 0 |
 | Modular extraction | P58-P62 | 380k | 0 |
@@ -120,6 +120,12 @@ Definition Runtime package and carries greater security risk, so its forecast
 is revised from `65k` to `450k`. This adds `385k` to known scope and moves the
 weighted percentage from `55.9%` to `51.1%`; unrelated package classes remain
 unchanged.
+
+P49 completed with its `450k` revised estimate fully earned, moving weighted
+scope to `61.2%`. This task did not expose package-scoped token telemetry after
+the preceding goal closed, so event `E0011` records the actual as unavailable
+rather than manufacturing a measurement. Actual coverage is therefore `4/52`
+started packages (`7.7%`) and the measured total remains `1,089,591` tokens.
 
 For every subsequent package, cumulative runtime usage is recorded as an
 append-only snapshot:
@@ -226,7 +232,7 @@ completion percentage, and `Planned` packages receive no credit.
 | P46 | Module charters and module acceptance suites | Done | 100% | 80k -> 250k |
 | P47 | Plan normalization and CI architecture gates | Done | 100% | 25k -> 75k |
 | P48 | Definition schema, canonical serialization and hash | Done | 100% | 55k |
-| P49 | Definition loader, security and rescue mode | Planned | 0% | 65k -> 450k |
+| P49 | Definition loader, security and rescue mode | Done | 100% | 65k -> 450k |
 | P50 | Goal Tree, CRT and EC declarative packages | Planned | 0% | 70k |
 | P51 | Definition CLI, migrations and package tooling | Planned | 0% | 55k |
 | P52 | Copy and paste n-ary subgraphs | Planned | 0% | 32k |

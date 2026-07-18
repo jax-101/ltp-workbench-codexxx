@@ -821,9 +821,10 @@ Criterios de aceptacion:
 
 ### 3C.15: formato de definicion y herramientas headless
 
-Estado: activo. `P48 / 3C.15a` esta en PASS con esquema ejecutable, JSON
-canonico RFC 8785, hash SHA-256 y artefacto inmutable. Sigue `P49`, loader,
-seguridad y modo de rescate, antes de convertir los paquetes oficiales en P50.
+Estado: activo. `P48 / 3C.15a` y `P49 / 3C.15b` estan en PASS. El runtime ya
+dispone de esquema ejecutable, identidad canonica, loader unico, rutas
+confinadas, limites de recursos, pins exactos y modo de rescate read-only.
+Sigue P50, conversion de Goal Tree, CRT y EC en paquetes declarativos reales.
 
 Incluye:
 
@@ -838,7 +839,8 @@ Incluye:
 - Limites de recursos, confinamiento de rutas y diagnosticos seguros para
   paquetes importados.
 
-Evidencia P48: `outputs/Definition-Artifact-P48.md`.
+Evidencia: `outputs/Definition-Artifact-P48.md` y
+`outputs/Secure-Definition-Loader-P49.md`.
 
 Criterios de aceptacion:
 

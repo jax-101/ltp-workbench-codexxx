@@ -146,6 +146,15 @@
       "actualTokens": 410421,
       "source": "codex-goal",
       "note": "Final goal usage; elapsed runtime 805 seconds."
+    },
+    {
+      "id": "E0011",
+      "packageId": "P49",
+      "recordedAt": "2026-07-18T00:21:11.206Z",
+      "status": "unavailable",
+      "actualTokens": null,
+      "source": "runtime-no-telemetry",
+      "note": "P49 ran after the prior goal had closed; this Codex task exposed no package-scoped token counter, so no actual was fabricated."
     }
   ],
   "estimateRevisions": [

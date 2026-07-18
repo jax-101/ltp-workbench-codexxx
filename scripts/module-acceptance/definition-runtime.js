@@ -4,7 +4,10 @@ const expectedHashes = require("../../definition-contract/v1/fixtures/expected-h
 const {
   validateDefinition,
   createDefinitionArtifact,
-  verifyDefinitionHash
+  verifyDefinitionHash,
+  createDefinitionPin,
+  loadDefinition,
+  resolvePinnedDefinition
 } = require("../../src/core/definition-runtime");
 const {
   DIAGRAM_DEFINITIONS,
@@ -40,4 +43,25 @@ const rejection = validateDefinition(invalid);
 assert.equal(rejection.valid, false);
 assert(rejection.diagnostics.some((item) => item.code === "DEFAULT_ELEMENT_TYPE_UNKNOWN"));
 
-console.log("Definition Runtime acceptance passed: legacy lookup plus v1 schema, canonical identity and stable rejection.");
+async function verifyPublicLoadingContract() {
+  const supportedCapabilities = ["semantic.graph.v1"];
+  const source = { kind: "embedded", definition: fixture };
+  const loaded = await loadDefinition(source, { supportedCapabilities });
+  const pin = createDefinitionPin(loaded);
+  const ready = await resolvePinnedDefinition({ pin, sources: [source] }, { supportedCapabilities });
+  assert.equal(ready.status, "ready");
+  assert.equal(ready.access, "read-write");
+  assert.equal(ready.package.artifact.hash, pin.hash);
+
+  const rescue = await resolvePinnedDefinition({ pin, sources: [source] }, { supportedCapabilities: [] });
+  assert.equal(rescue.status, "rescue");
+  assert.equal(rescue.access, "read-only");
+  assert(rescue.diagnostics.some((item) => item.code === "DEFINITION_CAPABILITY_UNSUPPORTED"));
+
+  console.log("Definition Runtime acceptance passed: artifacts, unified loading, exact pins and read-only rescue.");
+}
+
+verifyPublicLoadingContract().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

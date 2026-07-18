@@ -1104,3 +1104,20 @@ Single Responsibility Principle.
 
 Estado: incorporado como politica normativa y gate de no crecimiento. La
 extraccion de los archivos heredados gigantes se realizara incrementalmente.
+
+### F-084: Carga segura y reproducible de definiciones
+
+Feedback: las definiciones oficiales, personales y futuras definiciones creadas
+por el usuario no deben abrir caminos privilegiados ni impedir recuperar un
+proyecto cuando falte una version o capacidad.
+
+Estado: implementado en `3C.15b`.
+
+Criterios de aceptacion:
+
+- Disco y snapshot embebido producen el mismo artefacto canonico.
+- Ninguna ruta declarada puede escapar del paquete ni atravesar symlinks.
+- Bytes, profundidad, nodos, fixtures y candidatos tienen limites duros.
+- El pin incluye formato, identidad, version y hash exactos.
+- Una incompatibilidad devuelve rescate read-only con diagnosticos seguros.
+- El paquete invalido no se ejecuta ni impide que el adaptador abra el resto.

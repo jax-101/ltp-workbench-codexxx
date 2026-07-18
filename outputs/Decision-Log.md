@@ -922,3 +922,16 @@ Razon: un JSON semanticamente igual puede escribirse con distinto whitespace u
 orden de propiedades. Adoptar JCS evita un algoritmo local ambiguo y permite
 que aplicacion, CLI y futuros agentes en otros lenguajes verifiquen exactamente
 el mismo contenido.
+
+### D-118: Resolver una definicion es una decision explicita de acceso
+
+Decision: definiciones oficiales, personales y embebidas pasan por un unico
+loader con la misma validacion, limites y politica de capacidades. Una instancia
+solo es editable si `formatVersion`, `id`, version y hash coinciden exactamente
+con su pin. Cualquier ausencia, alteracion o incompatibilidad produce un
+resultado `rescue` read-only, no una carga parcial ni un cierre del proyecto.
+
+Razon: separar "puede inspeccionarse" de "puede ejecutarse y modificarse" evita
+que la recuperacion de un workspace dependa de confiar en contenido desconocido.
+El resultado tipado tambien permite que Electron, CLI y futuros agentes adopten
+la misma politica sin reproducir ramas de seguridad en cada adaptador.
