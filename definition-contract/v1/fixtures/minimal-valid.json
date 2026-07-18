@@ -1,0 +1,62 @@
+{
+  "$schema": "https://ltp-workbench.dev/schemas/definition/v1/diagram-definition.schema.json",
+  "formatVersion": "1",
+  "id": "example.minimal-necessity",
+  "version": "1.0.0",
+  "label": "Minimal necessity diagram",
+  "description": "Small deterministic fixture for the Definition Runtime contract.",
+  "requiredKernelCapabilities": ["semantic.graph.v1"],
+  "logicMode": "NECESSITY",
+  "defaultInputCombination": "AND",
+  "cyclePolicy": "FORBIDDEN",
+  "defaultElementType": "ENTITY",
+  "elementTypes": [
+    {
+      "id": "ENTITY",
+      "label": "Entity",
+      "shortLabel": "Entity",
+      "unique": false,
+      "synthetic": false,
+      "attributes": []
+    }
+  ],
+  "relationTypes": [
+    {
+      "id": "NECESSITY",
+      "label": "Necessity",
+      "logicModes": ["NECESSITY"],
+      "inputCardinality": { "min": 1, "max": 1 },
+      "outputCardinality": { "min": 1, "max": 1 },
+      "combinations": ["SIMPLE"],
+      "renderModes": ["IMPLICIT"],
+      "assumptionPolicy": {
+        "minimum": 0,
+        "recommended": 1,
+        "scopes": ["RELATION"]
+      }
+    }
+  ],
+  "topology": { "kind": "FREE" },
+  "validationRules": [],
+  "creationRecipes": [],
+  "layoutProfile": {
+    "directions": ["BT", "TB"],
+    "defaultDirection": "BT",
+    "layering": "DISTANCE_TO_SINK",
+    "cycleBreaking": {
+      "strategy": "FORBIDDEN",
+      "restoreSemanticEdges": true
+    },
+    "routingStyles": ["CURVED", "ORTHOGONAL"],
+    "defaultRoutingStyle": "CURVED"
+  },
+  "presentation": {
+    "elementStyles": [
+      { "typeId": "ENTITY", "shape": "RECTANGLE", "colorToken": "entity" }
+    ],
+    "relationStyles": [
+      { "typeId": "NECESSITY", "lineStyle": "SOLID", "arrowHead": "STANDARD" }
+    ]
+  },
+  "fixtures": []
+}

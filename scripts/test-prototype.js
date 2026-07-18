@@ -22,6 +22,11 @@ const steps = [
     args: ["run", "test:semantic"]
   },
   {
+    name: "Test definition artifact contract",
+    command: "npm",
+    args: ["run", "test:definition"]
+  },
+  {
     name: "Test additive semantic migration",
     command: "npm",
     args: ["run", "test:semantic-migration"]

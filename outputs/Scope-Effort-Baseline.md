@@ -1,7 +1,7 @@
 # Scope and Effort Baseline
 
 Updated: 2026-07-18  
-Baseline build: `3C.14d.3`
+Baseline build: `3C.15a`
 Machine-readable register: `planning/work-packages.json`
 Actual-effort ledger: `planning/effort-log.json`  
 Unknown register: `planning/unknowns.json`
@@ -55,18 +55,18 @@ its calibration class.
 | Measure | Value |
 | --- | ---: |
 | Known packages | 78 |
-| Completed packages | 49 |
+| Completed packages | 50 |
 | Partially completed packages | 1 |
-| Planned packages | 28 |
+| Planned packages | 27 |
 | Total estimated scope | 4,056,000 tokens |
-| Earned effort | 2,212,750 tokens |
-| Remaining effort | 1,843,250 tokens |
-| **Weighted scope complete** | **54.6%** |
+| Earned effort | 2,267,750 tokens |
+| Remaining effort | 1,788,250 tokens |
+| **Weighted scope complete** | **55.9%** |
 
 `P18` is credited at 85%; its remaining nested-frame optimization is represented
 again only where it becomes distinct advanced layout work, avoiding double
-counting. The next active package is `P48`, the definition schema, canonical
-serialization and hash foundation for Definition Runtime.
+counting. The next active package is `P49`, the secure definition loader,
+version resolution and read-only rescue mode.
 
 ## Portfolio View
 
@@ -77,7 +77,7 @@ serialization and hash foundation for Definition Runtime.
 | Layout builds 3B | P12-P18 | 323k | 314.75k |
 | Builds 3C through modular foundation | P19-P44 | 990k | 990k |
 | Modular due diligence | P45-P47 | 360k | 360k |
-| Definition Runtime | P48-P51 | 245k | 0 |
+| Definition Runtime | P48-P51 | 245k | 55k |
 | Interaction backlog | P52-P54 | 82k | 0 |
 | Frame focus | P55-P57 | 148k | 0 |
 | Modular extraction | P58-P62 | 380k | 0 |
@@ -155,8 +155,9 @@ the denominator from that point onward.
 | U010 | Long-thread context overhead | Mitigated | P46 revised to 250k and P47 to 75k; broader recalibration deferred |
 | U011 | Layout output depended on implicit wall clock | Resolved | Layout requests accept an explicit timestamp for deterministic acceptance |
 | U012 | First hosted CI execution | Resolved | Two hosted Quality Gate runs passed with functional regression gated by architecture |
+| U013 | Definition v1 official-package expressiveness | Assessed | P50 must prove Goal Tree, CRT and multipartite EC without privileged paths |
 
-Current register: 12 unknowns; five converted, two assessed, two mitigated and
+Current register: 13 unknowns; five converted, three assessed, two mitigated and
 three resolved. There are no untriaged open unknowns today. This does not
 imply that future unknowns do not exist; it states only what has been
 discovered.
@@ -216,7 +217,7 @@ completion percentage, and `Planned` packages receive no credit.
 | P45 | Interaction and contract inventory | Done | 100% | 35k |
 | P46 | Module charters and module acceptance suites | Done | 100% | 80k -> 250k |
 | P47 | Plan normalization and CI architecture gates | Done | 100% | 25k -> 75k |
-| P48 | Definition schema, canonical serialization and hash | Planned | 0% | 55k |
+| P48 | Definition schema, canonical serialization and hash | Done | 100% | 55k |
 | P49 | Definition loader, security and rescue mode | Planned | 0% | 65k |
 | P50 | Goal Tree, CRT and EC declarative packages | Planned | 0% | 70k |
 | P51 | Definition CLI, migrations and package tooling | Planned | 0% | 55k |

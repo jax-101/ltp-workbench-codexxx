@@ -128,6 +128,15 @@
       "actualTokens": 208093,
       "source": "codex-goal",
       "note": "Final goal usage; elapsed runtime 560 seconds."
+    },
+    {
+      "id": "E0009",
+      "packageId": "P48",
+      "recordedAt": "2026-07-17T23:51:25.397Z",
+      "status": "tracking",
+      "actualTokens": null,
+      "source": "codex-goal",
+      "note": "Goal-backed measurement started for definition schema, canonical serialization and hashing."
     }
   ],
   "estimateRevisions": [

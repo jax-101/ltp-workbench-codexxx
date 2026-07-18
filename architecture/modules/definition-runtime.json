@@ -10,6 +10,15 @@
   "forbiddenDependencies": ["application", "workspace", "layout", "view", "adapters", "diagram-studio"],
   "contracts": [
     {
+      "id": "definition.artifact.v1",
+      "version": 1,
+      "status": "implemented",
+      "operations": ["validateDefinition", "canonicalSerialize", "hashDefinition", "verifyDefinitionHash", "createDefinitionArtifact"],
+      "inputs": ["declarative diagram definition v1"],
+      "outputs": ["stable diagnostics", "RFC 8785 canonical UTF-8 JSON", "SHA-256 content identity", "immutable definition artifact"],
+      "errors": ["DEFINITION_INVALID", "DEFINITION_VALUE_NOT_JSON"]
+    },
+    {
       "id": "definition.capabilities.v1",
       "version": 1,
       "status": "target",

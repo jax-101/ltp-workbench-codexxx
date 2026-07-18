@@ -121,6 +121,16 @@
       "resultingPackages": ["P47"],
       "scopeAddedTokens": 0,
       "note": "Hosted Quality Gate runs 29620978658 and 29621101076 passed. The latest run confirmed architecture and module contracts complete before the dependent headless functional regression."
+    },
+    {
+      "id": "U013",
+      "title": "Definition v1 expressiveness against all current official verticals is not yet proven",
+      "discoveredDuring": "P48",
+      "status": "assessed",
+      "impact": "high",
+      "resultingPackages": ["P50"],
+      "scopeAddedTokens": 0,
+      "note": "P48 proves the artifact contract and minimal fixture. P50 must express Goal Tree, CRT and multipartite EC through the same schema without privileged code paths."
     }
   ]
 }

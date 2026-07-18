@@ -821,9 +821,9 @@ Criterios de aceptacion:
 
 ### 3C.15: formato de definicion y herramientas headless
 
-Estado: desbloqueado funcionalmente tras completar `3C.14c.2`, pero condicionado
-al cierre de los contratos base de `3C.14d`. Se publica antes del Diagram Studio
-visual.
+Estado: activo. `P48 / 3C.15a` esta en PASS con esquema ejecutable, JSON
+canonico RFC 8785, hash SHA-256 y artefacto inmutable. Sigue `P49`, loader,
+seguridad y modo de rescate, antes de convertir los paquetes oficiales en P50.
 
 Incluye:
 
@@ -837,6 +837,8 @@ Incluye:
 - Apertura read-only de rescate cuando una definicion falta o es incompatible.
 - Limites de recursos, confinamiento de rutas y diagnosticos seguros para
   paquetes importados.
+
+Evidencia P48: `outputs/Definition-Artifact-P48.md`.
 
 Criterios de aceptacion:
 

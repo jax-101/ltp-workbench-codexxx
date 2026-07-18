@@ -45,6 +45,11 @@ Public contract:
 It accepts declarative data only. Official and user definitions use this exact
 runtime. The current hardcoded `diagram-registry.js` is transitional.
 
+P48 implements `definition.artifact.v1`: Draft 2020-12 schemas, stable
+diagnostics, RFC 8785 canonical JSON, SHA-256 content identity and immutable
+artifacts. File discovery, version resolution and rescue behavior remain outside
+this boundary until P49. Official package parity is an explicit P50 gate.
+
 ### 3. Application
 
 Owns commands, queries, transaction boundaries, optimistic concurrency,

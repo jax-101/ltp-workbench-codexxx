@@ -1,4 +1,11 @@
 const assert = require("node:assert/strict");
+const fixture = require("../../definition-contract/v1/fixtures/minimal-valid.json");
+const expectedHashes = require("../../definition-contract/v1/fixtures/expected-hashes.json");
+const {
+  validateDefinition,
+  createDefinitionArtifact,
+  verifyDefinitionHash
+} = require("../../src/core/definition-runtime");
 const {
   DIAGRAM_DEFINITIONS,
   getDiagramDefinition,
@@ -17,4 +24,20 @@ assert.equal(getDiagramDefinition("missing"), null);
 assert.equal(getNodeTypeDefinition("goalTree", "criticalSuccessFactor").shortLabel, "CSF");
 assert.equal(getNodeTypeDefinition("goalTree", "missing"), null);
 
-console.log("Definition Runtime transitional acceptance passed: immutable Goal Tree, CRT and EC capability lookup.");
+assert.equal(validateDefinition(fixture).valid, true);
+const first = createDefinitionArtifact(fixture);
+const reordered = Object.fromEntries(Object.entries(fixture).reverse());
+const second = createDefinitionArtifact(reordered);
+assert.equal(first.hash, expectedHashes[`${fixture.id}@${fixture.version}`]);
+assert.equal(first.hash, second.hash);
+assert.equal(first.canonicalJson, second.canonicalJson);
+assert(verifyDefinitionHash(first.definition, first.hash));
+assert(Object.isFrozen(first.definition));
+
+const invalid = structuredClone(fixture);
+invalid.defaultElementType = "UNKNOWN";
+const rejection = validateDefinition(invalid);
+assert.equal(rejection.valid, false);
+assert(rejection.diagnostics.some((item) => item.code === "DEFAULT_ELEMENT_TYPE_UNKNOWN"));
+
+console.log("Definition Runtime acceptance passed: legacy lookup plus v1 schema, canonical identity and stable rejection.");

@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ltp-workbench.dev/schemas/definition/v1/semantic.schema.json",
+  "$defs": {
+    "attribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "valueType", "required"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/memberId" },
+        "label": { "$ref": "common.schema.json#/$defs/nonEmptyString" },
+        "valueType": { "enum": ["STRING", "NUMBER", "BOOLEAN", "ENUM"] },
+        "required": { "type": "boolean" },
+        "enumValues": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/nonEmptyString" }
+        },
+        "default": { "$ref": "common.schema.json#/$defs/jsonValue" }
+      }
+    },
+    "elementType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "shortLabel", "unique", "synthetic", "attributes"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/typeId" },
+        "label": { "$ref": "common.schema.json#/$defs/nonEmptyString" },
+        "shortLabel": { "$ref": "common.schema.json#/$defs/nonEmptyString" },
+        "description": { "$ref": "common.schema.json#/$defs/description" },
+        "unique": { "type": "boolean" },
+        "synthetic": { "type": "boolean" },
+        "semanticRole": { "$ref": "common.schema.json#/$defs/typeId" },
+        "attributes": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/attribute" }
+        }
+      }
+    },
+    "assumptionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum", "recommended", "scopes"],
+      "properties": {
+        "minimum": { "type": "integer", "minimum": 0 },
+        "recommended": { "type": "integer", "minimum": 0 },
+        "scopes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["RELATION", "INPUT", "OUTPUT", "CONFLICT"] }
+        },
+        "prompt": { "$ref": "common.schema.json#/$defs/description" }
+      }
+    },
+    "relationType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "logicModes", "inputCardinality", "outputCardinality", "combinations", "renderModes", "assumptionPolicy"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/typeId" },
+        "label": { "$ref": "common.schema.json#/$defs/nonEmptyString" },
+        "description": { "$ref": "common.schema.json#/$defs/description" },
+        "logicModes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["SUFFICIENCY", "NECESSITY"] }
+        },
+        "inputCardinality": { "$ref": "common.schema.json#/$defs/cardinality" },
+        "outputCardinality": { "$ref": "common.schema.json#/$defs/cardinality" },
+        "combinations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["SIMPLE", "AND", "OR", "MAG", "XOR"] }
+        },
+        "renderModes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["IMPLICIT", "JUNCTION", "CONFLICT"] }
+        },
+        "assumptionPolicy": { "$ref": "#/$defs/assumptionPolicy" }
+      }
+    },
+    "topology": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "FREE" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "branchField", "minimumBranches", "pathTypes", "sharedRole"],
+          "properties": {
+            "kind": { "const": "ROLE_TEMPLATE" },
+            "branchField": { "$ref": "common.schema.json#/$defs/memberId" },
+            "minimumBranches": { "type": "integer", "minimum": 2 },
+            "pathTypes": {
+              "type": "array",
+              "minItems": 2,
+              "items": { "$ref": "common.schema.json#/$defs/typeId" }
+            },
+            "sharedRole": { "$ref": "common.schema.json#/$defs/typeId" }
+          }
+        }
+      ]
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "capability", "parameters"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/memberId" },
+        "severity": { "enum": ["ERROR", "WARNING", "INFO"] },
+        "capability": { "$ref": "common.schema.json#/$defs/capabilityId" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": { "$ref": "common.schema.json#/$defs/jsonValue" }
+        }
+      }
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "capability", "parameters"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/memberId" },
+        "label": { "$ref": "common.schema.json#/$defs/nonEmptyString" },
+        "capability": { "$ref": "common.schema.json#/$defs/capabilityId" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": { "$ref": "common.schema.json#/$defs/jsonValue" }
+        }
+      }
+    }
+  }
+}

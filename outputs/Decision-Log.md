@@ -910,3 +910,15 @@ estado operativo.
 Razon: mantener manualmente las mismas cifras y estados en varios Markdown crea
 drift inevitable. Separar ownership por concepto y generar la vista humana
 permite explicacion rica sin sacrificar consistencia automatica.
+
+### D-117: La identidad de una definicion es contenido canonico estandar
+
+Decision: una definicion se identifica por `id`, version semantica y SHA-256 de
+su representacion RFC 8785 en UTF-8. El artefacto resultante es profundamente
+inmutable; ubicacion, fecha de carga y orden original de claves no forman parte
+de la identidad.
+
+Razon: un JSON semanticamente igual puede escribirse con distinto whitespace u
+orden de propiedades. Adoptar JCS evita un algoritmo local ambiguo y permite
+que aplicacion, CLI y futuros agentes en otros lenguajes verifiquen exactamente
+el mismo contenido.

@@ -32,7 +32,7 @@ for (const charter of charters) {
   for (const contract of charter.contracts) {
     assert(!contractIds.has(contract.id), `Duplicate contract ID ${contract.id}`);
     assert.equal(contract.version, 1, `Unsupported contract version ${contract.id}`);
-    assert(["provisional", "target", "planned"].includes(contract.status), `Invalid contract status ${contract.id}`);
+    assert(["implemented", "provisional", "target", "planned"].includes(contract.status), `Invalid contract status ${contract.id}`);
     for (const field of ["operations", "inputs", "outputs", "errors"]) {
       assert(Array.isArray(contract[field]) && contract[field].length > 0, `${contract.id} is missing ${field}`);
     }

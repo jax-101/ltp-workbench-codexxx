@@ -1331,9 +1331,25 @@ Aplicacion futura: asignar ownership por dato, generar vistas para personas,
 fallar ante drift y hacer que CI ejecute esa comprobacion antes de las pruebas
 de comportamiento.
 
+### L-110: Un hash reproducible necesita especificar los bytes, no solo el JSON
+
+Fecha: 2026-07-18
+
+Evidencia: ordenar claves y llamar a `JSON.stringify` producia un hash estable
+en los fixtures ASCII, pero dejaba sin contrato explicito el orden Unicode, los
+surrogates aislados, la serializacion numerica y la codificacion final.
+
+Aprendizaje: decir "JSON canonico" no basta para interoperabilidad. La identidad
+de contenido debe nombrar un algoritmo publico, rechazar entradas fuera de su
+dominio y conservar vectores golden independientes de la implementacion.
+
+Aplicacion futura: usar RFC 8785 o un estandar equivalente, fijar el algoritmo
+en el artefacto, hashear bytes UTF-8 y probar numeros, Unicode, orden de claves y
+manipulacion del contenido.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-110`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-111`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

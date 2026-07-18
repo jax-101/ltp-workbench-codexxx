@@ -55,6 +55,7 @@ Los aprendizajes reutilizables del desarrollo se mantienen en `outputs/Engineeri
 ```bash
 npm run test:architecture
 npm run test:modules
+npm run test:definition
 npm run test:prototype
 npm run test:visual
 npm run test:shortcuts

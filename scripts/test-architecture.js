@@ -61,7 +61,7 @@ const lock = JSON.parse(read("package-lock.json"));
 assert(context.includes(packageMetadata.ltpBuild.id), "CONTEXT.md build identity is stale");
 assert(packageMetadata.scripts["scope:status"], "package.json is missing scope:status");
 assert(packageMetadata.scripts["scope:record-effort"], "package.json is missing scope:record-effort");
-for (const dependency of ["electron", "electron-builder", "elkjs", "immer", "proper-lockfile"]) {
+for (const dependency of ["electron", "electron-builder", "elkjs", "immer", "proper-lockfile", "ajv"]) {
   const version = lock.packages[`node_modules/${dependency}`]?.version;
   assert(
     version && context.toLowerCase().includes(`${dependency}: \`${version}\``),

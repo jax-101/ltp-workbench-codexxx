@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.14d.3",
-    "name": "Plan Normalization and CI Gates",
+    "id": "3C.15a",
+    "name": "Definition Artifact Contract",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -31,6 +31,7 @@
     "test:core": "node scripts/test-core.js",
     "test:workspace-manager": "node scripts/test-workspace-manager.js",
     "test:semantic": "node scripts/test-semantic-contract.js",
+    "test:definition": "node scripts/test-definition-artifact.js",
     "test:semantic-migration": "node scripts/test-semantic-migration.js",
     "test:crt": "node scripts/test-crt-vertical.js",
     "test:crt:visual": "LTP_CRT_TEST=1 electron .",
@@ -68,6 +69,7 @@
       "src/**/*",
       "scripts/ltp-cli.js",
       "semantic-contract/**/*",
+      "definition-contract/**/*",
       "outputs/sample-workspace-v0.1.json",
       "outputs/complex-goal-tree-workspace-v0.1.json",
       "outputs/crt-workspace-v0.1.json",
@@ -80,6 +82,7 @@
     }
   },
   "dependencies": {
+    "ajv": "8.20.0",
     "elkjs": "^0.11.1",
     "immer": "^10.2.0",
     "proper-lockfile": "^4.1.2"
