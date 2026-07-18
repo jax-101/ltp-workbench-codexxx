@@ -2,6 +2,10 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("ltpPrototype", {
   getBuildInfo: () => ipcRenderer.invoke("app:build-info"),
+  loadKeymap: () => ipcRenderer.invoke("keymap:load"),
+  saveKeymap: (keymap) => ipcRenderer.invoke("keymap:save", keymap),
+  resetKeymap: () => ipcRenderer.invoke("keymap:reset"),
+  revealKeymap: () => ipcRenderer.invoke("keymap:reveal"),
   loadWorkspace: () => ipcRenderer.invoke("workspace:load"),
   getWorkspaceSessionInfo: () => ipcRenderer.invoke("workspace:session-info"),
   loadSampleWorkspaceFixture: () => ipcRenderer.invoke("fixture:sample-workspace"),

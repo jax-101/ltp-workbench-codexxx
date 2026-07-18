@@ -4,6 +4,7 @@ let activeDocumentId = null;
 let activeViewId = null;
 let focusFrameId = null;
 let buildInfo = { version: "0.0.0", id: "loading", name: "Loading build" };
+let keymapState = { status: "loading", issues: [] };
 let selectedElementId = null;
 let selectedElementType = "node";
 let selectionRootIds = new Set();
@@ -45,20 +46,19 @@ let assumptionWorkbenchOpen = false;
 let assumptionWorkbenchQuery = "";
 let assumptionWorkbenchCoverage = "ALL";
 let assumptionWorkbenchStatus = "ALL";
-
 const app = document.querySelector("#app");
 const hintAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace("H", "");
 const NODE_INSERTION_GAP = 44;
 const FRAME_CONTENT_PADDING = 28;
 const commandBindings = window.LTP_COMMAND_BINDINGS || {};
 const commandLabels = window.LTP_COMMAND_LABELS || {};
-const { commandForEvent, contextualCommandLabel: resolveContextualCommandLabel, formatShortcutBinding } = window.LTP_COMMAND_CONFIG;
+const { applyKeymap, commandEntries, commandForEvent, contextualCommandLabel: resolveContextualCommandLabel, formatShortcutBinding, setScopeProvider } = window.LTP_COMMAND_CONFIG;
+setScopeProvider(() => assumptionContextLinkId || assumptionWorkbenchOpen ? "assumptions" : "canvas");
 const diagramDefinitions = window.LTP_DIAGRAM_REGISTRY.DIAGRAM_DEFINITIONS;
 const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze(Object.fromEntries(
   Object.values(diagramDefinitions).flatMap((definition) =>
     definition.nodeTypes.filter((type) => type.semanticType).map((type) => [type.id, type.semanticType]))
 ));
-
 const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 const now = () => new Date().toISOString();
 const escapeHtml = (value = "") =>
@@ -67,7 +67,6 @@ const escapeHtml = (value = "") =>
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
-
 const initialDocumentIdFor = (workspace, preferredId = null) => {
   const candidates = [preferredId, workspace?.workspace?.activeTreeId].filter(Boolean);
   for (const candidate of candidates) {
@@ -139,7 +138,6 @@ const compatibleNodeTypes = (nodeIds) => {
 const resetTypeCycle = () => {
   multiTypeCycleState = { signature: null, index: -1 };
 };
-
 const elementType = (id) => {
   if (assumptionById()[id]) return "assumption";
   if (nodeById()[id]) return "node";
@@ -2313,30 +2311,17 @@ const contextualCommandLabel = (command) => {
   });
 };
 
-const renderShortcutList = () =>
-  Object.entries(commandBindings)
-    .map(
-      ([command, bindings]) => `
-        <div class="shortcut-item" data-shortcut-command="${command}">
-          <span class="shortcut-keys">
-            ${bindings.map((binding) => `<kbd>${escapeHtml(formatShortcutBinding(binding))}</kbd>`).join("")}
-          </span>
-          <span>${escapeHtml(contextualCommandLabel(command))}</span>
-        </div>
-      `
-    )
-    .join("");
+const keymapEditor = window.LTP_KEYMAP_EDITOR.create({
+  bridge: window.ltpPrototype,
+  commandConfig: window.LTP_COMMAND_CONFIG,
+  catalog: window.LTP_KEYMAP_DEFAULTS.COMMAND_CATALOG,
+  labels: commandLabels,
+  onApplied: (state) => { keymapState = state; render(); }
+});
+const renderShortcutList = () => keymapEditor.shortcutListHtml(contextualCommandLabel);
 
 const commandPaletteEntries = () => {
-  const query = commandPaletteQuery.trim().toLowerCase();
-  return Object.entries(commandBindings)
-    .filter(([command]) => command !== "commandPalette")
-    .map(([command, bindings]) => ({
-      command,
-      label: contextualCommandLabel(command),
-      shortcuts: bindings.map(formatShortcutBinding)
-    }))
-    .filter((entry) => !query || `${entry.label} ${entry.shortcuts.join(" ")}`.toLowerCase().includes(query));
+  return commandEntries(commandPaletteQuery, contextualCommandLabel).filter((entry) => entry.command !== "commandPalette");
 };
 
 const focusCommandPaletteSearch = () => {
@@ -2454,6 +2439,8 @@ const renderSidebar = () => {
 
       <section class="side-section shortcuts">
         <h2>Keyboard</h2>
+        <button class="secondary-action" data-keymap-open>Keyboard settings</button>
+        ${keymapState.issues?.length ? '<p class="keymap-warning">Recovered last valid shortcuts</p>' : ""}
         <details class="shortcut-details" open>
           <summary>All shortcuts</summary>
           <div class="shortcut-list">
@@ -3805,6 +3792,7 @@ const executeCommand = (command) => {
   }
   const commands = {
     commandPalette: toggleCommandPalette,
+    editKeymap: keymapEditor.open,
     openAssumptionWorkbench,
     showHints: toggleHints,
     toggleMultiSelect,
@@ -3973,12 +3961,15 @@ const handleKeydown = async (event) => {
 document.addEventListener("keydown", handleKeydown);
 
 const bootPromise = (async () => {
-  [workspaceData, workspaceSessionInfo, historyState, buildInfo] = await Promise.all([
+  [workspaceData, workspaceSessionInfo, historyState, buildInfo, keymapState] = await Promise.all([
     window.ltpPrototype.loadWorkspace(),
     window.ltpPrototype.getWorkspaceSessionInfo(),
     window.ltpPrototype.getHistoryState(),
-    window.ltpPrototype.getBuildInfo()
+    window.ltpPrototype.getBuildInfo(),
+    window.ltpPrototype.loadKeymap()
   ]);
+  applyKeymap(keymapState.keymap);
+  keymapEditor.setState(keymapState);
   activeDocumentId = initialDocumentIdFor(workspaceData);
   activeViewId = uid("view");
   const activeTree = tree();
@@ -5383,7 +5374,13 @@ window.__ltpShortcutAuditStep = async (command, bindingIndex) => {
     const usable = opensFocused && filters && executes && reopens;
     return result(usable, `Opened with ${Object.keys(commandBindings).length - 1} commands=${opensFocused}; filtered Toggle hints=${filters}; Enter executed hints=${executes}; reopened focused=${reopens}.`);
   }
-
+  if (command === "editKeymap") {
+    await press();
+    const rows = document.querySelectorAll("[data-keymap-command]").length;
+    const usable = Boolean(document.querySelector(".keymap-editor")) && rows === Object.keys(commandBindings).length;
+    keymapEditor.close();
+    return result(usable, `Editor open=${usable}; commands=${rows}/${Object.keys(commandBindings).length}.`);
+  }
   if (command === "openAssumptionWorkbench") {
     await press();
     const lines = document.querySelectorAll("[data-workbench-line-row]").length;
@@ -5780,6 +5777,11 @@ window.__ltpVisualTestStep = async (step) => {
   if (step === "rectangle-selection") {
     const audit = window.LTP_RECTANGLE_SELECTION.runDomAcceptance();
     return result("Select entities with a pointer rectangle", audit.ok, `Expected roots=${audit.expected.join(",")}; selected roots=${audit.selected.join(",")}.`);
+  }
+
+  if (step === "keymap-editor") {
+    const audit = await keymapEditor.runDomAcceptance();
+    return result("Edit shortcuts with collision recovery", audit.ok, `Collision issues=${audit.issues.length}; defaults restored before capture.`);
   }
 
   if (step === "frame-summary") {

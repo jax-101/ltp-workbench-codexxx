@@ -1468,9 +1468,41 @@ Aplicacion futura: separar hit-testing y normalizacion, definir containment de
 forma determinista, probar todas las direcciones de arrastre y volver a
 normalizar al combinar selecciones previas con modificadores.
 
+### L-118: Una colision de teclado es fisica, contextual y multiplataforma
+
+Fecha: 2026-07-18
+
+Evidencia: `Cmd` y `Ctrl` son distintos en macOS, mientras un binding `primary`
+y otro `control` pueden convertirse ambos en Ctrl en Windows o Linux. Ademas,
+dos comandos pueden compartir tecla si sus ambitos son realmente excluyentes.
+
+Aprendizaje: comparar cadenas mostradas no basta para validar un keymap. Hay que
+expandir cada binding a sus firmas fisicas por plataforma y cruzarlas con el
+solapamiento de ambitos de ejecucion.
+
+Aplicacion futura: separar representacion, captura, formato y resolucion;
+probar todas las plataformas objetivo; deduplicar incidencias equivalentes para
+el usuario; y no guardar una configuracion mientras exista una colision activa.
+
+### L-119: La configuracion editable necesita una ruta de rescate independiente
+
+Fecha: 2026-07-18
+
+Evidencia: un JSON manualmente editable puede quedar truncado, exceder limites
+o contener comandos y bindings invalidos. Cargar parcialmente ese archivo haria
+que la propia herramienta de reparacion pudiera quedar inaccesible.
+
+Aprendizaje: las preferencias que controlan la navegacion deben conservar una
+ultima version valida y un default embebido. El archivo roto se mantiene para
+diagnostico, pero nunca se mezcla con el estado ejecutable.
+
+Aplicacion futura: escribir de forma atomica, validar antes de promover, mantener
+`last-known-good`, devolver estado de recuperacion a la UI y ofrecer un reset
+que no dependa de los bindings personalizados.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-118`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-120`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

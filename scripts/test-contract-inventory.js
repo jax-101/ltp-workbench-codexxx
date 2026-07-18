@@ -127,9 +127,9 @@ const preloadMethods = new Map(
   [...read("src/preload.js").matchAll(/^\s*(\w+):.*ipcRenderer\.invoke\("([^"]+)"/gm)]
     .map((match) => [match[1], match[2]])
 );
-const mainChannels = new Set(
-  [...read("src/main.js").matchAll(/ipcMain\.handle\("([^"]+)"/g)].map((match) => match[1])
-);
+const mainChannels = new Set([...ownership]
+  .filter(([filePath, owner]) => owner === "adapters" && filePath.endsWith(".js"))
+  .flatMap(([filePath]) => [...read(filePath).matchAll(/ipcMain\.handle\("([^"]+)"/g)].map((match) => match[1])));
 const inventoryMethods = new Map();
 for (const channel of inventory.ipcChannels) {
   assert(!inventoryMethods.has(channel.method), `Duplicate IPC method: ${channel.method}`);

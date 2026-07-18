@@ -972,3 +972,15 @@ Razon: una lista plana de intersecciones representa dos veces un subarbol cuando
 incluye su frame. Las raices jerarquicas mantienen una unica interpretacion para
 borrar, copiar, mover, conectar y futuros comandos de foco, con independencia
 de la direccion del gesto o del orden de seleccion.
+
+### D-122: El keymap es un artefacto de View recuperable
+
+Decision: los bindings se almacenan en `keymap.v1.json` fuera del workspace del
+proyecto. View posee su schema, ambitos, resolucion y colisiones; el adaptador
+Electron solo persiste atomicamente, conserva `last-known-good` y expone el
+archivo. Un artefacto invalido nunca se aplica ni se fusiona parcialmente.
+
+Razon: los atajos son preferencias personales de interaccion, no semantica del
+sistema analizado. Mantenerlos fuera del workspace evita diffs y conflictos
+entre colaboradores, mientras el contrato puro permite que UI, tests y futuros
+adaptadores resuelvan exactamente las mismas teclas.

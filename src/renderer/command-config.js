@@ -1,124 +1,31 @@
-window.LTP_COMMAND_BINDINGS = Object.freeze({
-  commandPalette: [{ key: "k", primary: true }],
-  openAssumptionWorkbench: [{ key: "a", primary: true, shift: true }],
-  showHints: [{ key: "h" }],
-  toggleMultiSelect: [{ key: "m" }],
-  moveSelectionToParent: [{ key: "p", command: true }],
-  chooseSelectionFrame: [{ key: "f", command: true }],
-  createNode: [{ key: "n" }],
-  createParentNode: [{ key: "a", shift: true }],
-  createSupportingNode: [{ key: "a", shift: false }],
-  focusInspector: [{ key: "Enter" }],
-  beginConnection: [{ key: "l" }],
-  createFrame: [{ key: "f" }],
-  selectParentFrame: [{ key: "[" }],
-  enterSelectedFrame: [{ key: "]" }],
-  focusSearch: [{ key: "/" }],
-  togglePin: [{ key: "p" }],
-  toggleFrameCollapsed: [{ key: "x", primary: true }, { key: "-" }],
-  previewNode: [{ key: " " }],
-  cancelContext: [{ key: "g", control: true }],
-  undo: [{ key: "z", primary: true, shift: false }],
-  redo: [{ key: "z", primary: true, shift: true }, { key: "y", primary: true }],
-  copySelection: [{ key: "c", primary: true }],
-  pasteSelection: [{ key: "v", primary: true }],
-  deleteSelection: [{ key: "Delete" }, { key: "Backspace" }, { key: "d", control: true }],
-  cycleNodeTypes: [{ key: "Tab", shift: true }],
-  panUp: [{ key: "ArrowUp" }, { key: "p", control: true }],
-  panDown: [{ key: "ArrowDown" }, { key: "n", control: true }],
-  panLeft: [{ key: "ArrowLeft" }, { key: "b", control: true }],
-  panRight: [{ key: "ArrowRight" }, { key: "f", control: true }],
-  centerSelection: [{ key: "c" }],
-  zoomIn: [{ key: "=", primary: true }, { key: "+", primary: true }],
-  zoomOut: [{ key: "-", primary: true }],
-  resetZoom: [{ key: "0", primary: true }],
-  fitView: [{ key: "1", primary: true }],
-  toggleLeftPanel: [{ key: "[", alt: true }],
-  toggleRightPanel: [{ key: "]", alt: true }],
-  runAutoLayout: [{ key: "l", primary: true, shift: true }]
-});
+(function configureCommands() {
+const keymapEngine = window.LTP_KEYMAP;
+const { COMMAND_CATALOG, DEFAULT_KEYMAP } = window.LTP_KEYMAP_DEFAULTS;
+const commandBindings = keymapEngine.clone(DEFAULT_KEYMAP.bindings);
+let currentKeymap = keymapEngine.clone(DEFAULT_KEYMAP);
+let scopeProvider = () => "canvas";
 
-window.LTP_COMMAND_LABELS = Object.freeze({
-  commandPalette: "Command palette",
-  openAssumptionWorkbench: "Open Assumption Workbench",
-  showHints: "Toggle hints",
-  toggleMultiSelect: "Start multiple selection",
-  moveSelectionToParent: "Move selection to parent frame",
-  chooseSelectionFrame: "Move selection to a frame",
-  createNode: "Create node",
-  createParentNode: "Create parent condition",
-  createSupportingNode: "Create supporting condition",
-  focusInspector: "Edit selected element",
-  beginConnection: "Create link",
-  createFrame: "Create frame",
-  selectParentFrame: "Select parent frame",
-  enterSelectedFrame: "Enter selected frame",
-  focusSearch: "Search",
-  togglePin: "Toggle pin",
-  toggleFrameCollapsed: "Minimize or expand selected frame",
-  previewNode: "View full statement",
-  cancelContext: "Cancel or clear selection",
-  undo: "Undo last change",
-  redo: "Redo last change",
-  copySelection: "Copy selected subgraph",
-  pasteSelection: "Paste copied subgraph",
-  deleteSelection: "Delete selection",
-  cycleNodeTypes: "Cycle selected entity types",
-  panUp: "Move view up",
-  panDown: "Move view down",
-  panLeft: "Move view left",
-  panRight: "Move view right",
-  centerSelection: "Center selection",
-  zoomIn: "Zoom in",
-  zoomOut: "Zoom out",
-  resetZoom: "Reset zoom",
-  fitView: "Fit diagram",
-  toggleLeftPanel: "Toggle left panel",
-  toggleRightPanel: "Toggle right panel",
-  runAutoLayout: "Run automatic layout"
-});
+window.LTP_COMMAND_BINDINGS = commandBindings;
+window.LTP_COMMAND_LABELS = Object.freeze(Object.fromEntries(
+  Object.entries(COMMAND_CATALOG).map(([command, entry]) => [command, entry.label])
+));
 
-const displayShortcutKey = (key) => ({
-  " ": "Space",
-  ArrowUp: "Up",
-  ArrowDown: "Down",
-  ArrowLeft: "Left",
-  ArrowRight: "Right",
-  Backspace: "Backspace",
-  Delete: "Delete",
-  Enter: "Enter"
-})[key] || key.toUpperCase();
-
-const formatConfiguredShortcut = (binding) => {
-  const parts = [];
-  if (binding.command) parts.push("Cmd");
-  else if (binding.primary) parts.push("Cmd/Ctrl");
-  if (binding.control) parts.push("Ctrl");
-  if (binding.alt) parts.push("Alt");
-  if (binding.shift) parts.push("Shift");
-  parts.push(displayShortcutKey(binding.key));
-  return parts.join("+");
+const applyKeymap = (candidate) => {
+  const validation = keymapEngine.validateKeymap(candidate, COMMAND_CATALOG);
+  if (!validation.ok) return validation;
+  for (const command of Object.keys(commandBindings)) delete commandBindings[command];
+  Object.assign(commandBindings, keymapEngine.clone(validation.keymap.bindings));
+  currentKeymap = keymapEngine.clone(validation.keymap);
+  return { ok: true, issues: [], keymap: keymapEngine.clone(currentKeymap) };
 };
 
-const bindingMatchesEvent = (binding, event) => {
-  const primaryPressed = event.metaKey || event.ctrlKey;
-  if (binding.command) {
-    if (!event.metaKey || event.ctrlKey) return false;
-  } else if (binding.primary) {
-    if (!primaryPressed) return false;
-  } else if (binding.control) {
-    if (!event.ctrlKey || event.metaKey) return false;
-  } else if (primaryPressed) return false;
-  if (Boolean(binding.alt) !== event.altKey) return false;
-  if (Object.hasOwn(binding, "shift") && binding.shift !== event.shiftKey) return false;
-  const expectedKey = binding.key.length === 1 ? binding.key.toLowerCase() : binding.key;
-  const eventKey = event.key.length === 1 ? event.key.toLowerCase() : event.key;
-  return expectedKey === eventKey;
-};
+const resolveConfiguredCommand = (event, bindings = commandBindings, scope = scopeProvider()) =>
+  keymapEngine.resolveCommand(event, bindings, scope);
 
-const resolveConfiguredCommand = (event, bindings = window.LTP_COMMAND_BINDINGS) =>
-  Object.entries(bindings).find(([, candidates]) =>
-    candidates.some((binding) => bindingMatchesEvent(binding, event)))?.[0] || null;
+const commandEntries = (query = "", labelFor = (command) => window.LTP_COMMAND_LABELS[command]) =>
+  Object.entries(commandBindings)
+    .map(([command, bindings]) => ({ command, label: labelFor(command), shortcuts: bindings.map(keymapEngine.formatBinding) }))
+    .filter((entry) => !query || `${entry.label} ${entry.shortcuts.join(" ")}`.toLowerCase().includes(query.trim().toLowerCase()));
 
 const resolveContextualLabel = (command, labels, context = {}) => {
   if (!context.assumptionContext) return labels[command] || command;
@@ -141,7 +48,12 @@ const resolveContextualLabel = (command, labels, context = {}) => {
 };
 
 window.LTP_COMMAND_CONFIG = Object.freeze({
+  applyKeymap,
+  commandEntries,
   commandForEvent: resolveConfiguredCommand,
   contextualCommandLabel: resolveContextualLabel,
-  formatShortcutBinding: formatConfiguredShortcut
+  currentKeymap: () => keymapEngine.clone(currentKeymap),
+  formatShortcutBinding: keymapEngine.formatBinding,
+  setScopeProvider: (provider) => { scopeProvider = provider; }
 });
+})();

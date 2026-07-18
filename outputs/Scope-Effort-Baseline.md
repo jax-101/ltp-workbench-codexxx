@@ -1,7 +1,7 @@
 # Scope and Effort Baseline
 
 Updated: 2026-07-18  
-Baseline build: `3C.16b`
+Baseline build: `3C.16c`
 Machine-readable register: `planning/work-packages.json`
 Actual-effort ledger: `planning/effort-log.json`  
 Unknown register: `planning/unknowns.json`
@@ -55,17 +55,17 @@ its calibration class.
 | Measure | Value |
 | --- | ---: |
 | Known packages | 78 |
-| Completed packages | 55 |
+| Completed packages | 56 |
 | Partially completed packages | 1 |
-| Planned packages | 22 |
-| Total estimated scope | 5,436,000 tokens |
-| Earned effort | 3,419,750 tokens |
-| Remaining effort | 2,016,250 tokens |
-| **Weighted scope complete** | **62.9%** |
+| Planned packages | 21 |
+| Total estimated scope | 5,981,000 tokens |
+| Earned effort | 3,919,750 tokens |
+| Remaining effort | 2,061,250 tokens |
+| **Weighted scope complete** | **65.5%** |
 
 `P18` is credited at 85%; its remaining nested-frame optimization is represented
 again only where it becomes distinct advanced layout work, avoiding double
-counting. The next active package is `P54`, editable keymap and collision detection.
+counting. The next active package is `P55`, full-screen frame focus.
 
 ## Portfolio View
 
@@ -77,8 +77,8 @@ counting. The next active package is `P54`, editable keymap and collision detect
 | Builds 3C through modular foundation | P19-P44 | 990k | 990k |
 | Modular due diligence | P45-P47 | 360k | 360k |
 | Definition Runtime | P48-P51 | 975k | 975k |
-| Interaction backlog | P52-P54 | 732k | 232k |
-| Frame focus | P55-P57 | 148k | 0 |
+| Interaction backlog | P52-P54 | 732k | 732k |
+| Frame focus | P55-P57 | 693k | 0 |
 | Modular extraction | P58-P62 | 380k | 0 |
 | Workspace UX | P63-P65 | 200k | 0 |
 | Layout maturity | P66 | 75k | 0 |
@@ -161,6 +161,16 @@ configuration, keyboard scopes, validation, UI and persistence, so its forecast
 is revised locally from `32k` to `500k`. Known scope rises by `468k`; after P53
 completion, weighted progress is `62.9%`. Actual coverage is `8/56` started
 packages (`14.3%`) with `2,784,410` runtime-reported tokens recorded.
+
+P54 closed at `506,237` incremental actual tokens and 1,181 incremental seconds.
+That is `+474,237`, or `+1,482.0%` (`15.82x`), against its original `32k`
+baseline, but only `+6,237`, or `+1.2%`, against its revised `500k` forecast.
+The local interaction calibration is therefore strongly supported. P55 adds
+focused projection, independent view restoration and frame hierarchy risk, so
+its forecast is revised from `55k` to `600k` without changing P56 or P57 yet.
+Known scope rises by `545k`; after completing P54, weighted progress is `65.5%`.
+Actual coverage is `9/57` started packages (`15.8%`) with `3,290,647`
+runtime-reported tokens recorded.
 
 For every subsequent package, cumulative runtime usage is recorded as an
 append-only snapshot:
@@ -274,8 +284,8 @@ completion percentage, and `Planned` packages receive no credit.
 | P51 | Definition CLI, migrations and package tooling | Done | 100% | 55k -> 400k |
 | P52 | Copy and paste n-ary subgraphs | Done | 100% | 32k |
 | P53 | Rectangle selection | Done | 100% | 18k -> 200k |
-| P54 | Editable keymap and collision detection | Planned | 0% | 32k -> 500k |
-| P55 | Full-screen frame focus | Planned | 0% | 55k |
+| P54 | Editable keymap and collision detection | Done | 100% | 32k -> 500k |
+| P55 | Full-screen frame focus | Planned | 0% | 55k -> 600k |
 | P56 | Portal grouping and inspection | Planned | 0% | 45k |
 | P57 | External search, preview and connection while focused | Planned | 0% | 48k |
 | P58 | Application facade and removal of direct renderer writes | Planned | 0% | 85k |

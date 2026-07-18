@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.16b",
-    "name": "Deterministic Rectangle Selection",
+    "id": "3C.16c",
+    "name": "Editable Scoped Keymap",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -41,6 +41,7 @@
     "test:semantic-migration": "node scripts/test-semantic-migration.js",
     "test:subgraph-transfer": "node scripts/test-subgraph-transfer.js",
     "test:rectangle-selection": "node scripts/test-rectangle-selection.js",
+    "test:keymap": "node scripts/test-keymap.js",
     "test:crt": "node scripts/test-crt-vertical.js",
     "test:crt:visual": "LTP_CRT_TEST=1 electron .",
     "test:ec": "node scripts/test-ec-cloud.js",

@@ -29,4 +29,8 @@ const definition = invoke([
 assert.equal(definition.status, 0, definition.stderr);
 assert.equal(JSON.parse(definition.stdout).definition.semanticDiagramType, "EC");
 
-console.log("Adapters acceptance passed: workspace and definition CLI boundaries, JSON success and stable errors.");
+const keymap = spawnSync(process.execPath, [path.join(root, "scripts", "test-keymap.js")], { cwd: root, encoding: "utf8" });
+assert.equal(keymap.status, 0, keymap.stderr);
+assert.match(keymap.stdout, /last-known-good recovery/);
+
+console.log("Adapters acceptance passed: workspace, definition CLI and recoverable keymap boundaries.");

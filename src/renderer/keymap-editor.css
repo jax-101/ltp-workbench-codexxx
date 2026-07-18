@@ -1,0 +1,145 @@
+.keymap-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(24 28 28 / 42%);
+}
+
+.keymap-editor {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  width: min(900px, calc(100vw - 48px));
+  height: min(760px, calc(100vh - 48px));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 20px 60px rgb(20 30 30 / 22%);
+}
+
+.keymap-editor-header,
+.keymap-editor-footer,
+.keymap-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.keymap-editor-header {
+  justify-content: space-between;
+}
+
+.keymap-editor-header span,
+.keymap-file {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.keymap-editor-header h2 {
+  margin: 2px 0 0;
+  font-size: 22px;
+}
+
+.keymap-toolbar input {
+  flex: 1;
+  min-width: 0;
+}
+
+.keymap-capture,
+.keymap-issues {
+  margin: 10px 18px 0;
+  border: 1px solid #b66a4a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #fff4ed;
+  color: #78351e;
+}
+
+.keymap-issues p {
+  margin: 2px 0;
+}
+
+.keymap-list {
+  overflow: auto;
+  padding: 8px 18px 18px;
+}
+
+.keymap-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(300px, 1.8fr);
+  gap: 18px;
+  align-items: center;
+  min-height: 52px;
+  border-bottom: 1px solid var(--line);
+}
+
+.keymap-row > span {
+  font-weight: 700;
+}
+
+.keymap-bindings,
+.keymap-binding {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.keymap-binding {
+  flex-wrap: nowrap;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--wash);
+}
+
+.keymap-binding button,
+.keymap-binding select,
+.keymap-editor .icon-action {
+  min-height: 30px;
+  border: 0;
+  background: transparent;
+}
+
+.keymap-binding select {
+  max-width: 120px;
+  font-size: 11px;
+}
+
+.keymap-editor .icon-action {
+  width: 32px;
+  padding: 4px;
+  font-weight: 900;
+}
+
+.keymap-editor-footer {
+  justify-content: flex-end;
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+}
+
+.keymap-file {
+  margin-right: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.keymap-editor-footer .primary-action {
+  width: auto;
+  min-width: 90px;
+}
+
+@media (max-width: 720px) {
+  .keymap-editor-backdrop { padding: 8px; }
+  .keymap-editor { width: calc(100vw - 16px); height: calc(100vh - 16px); }
+  .keymap-row { grid-template-columns: 1fr; gap: 6px; padding: 10px 0; }
+  .keymap-bindings { align-items: flex-start; }
+  .keymap-binding { max-width: 100%; }
+}

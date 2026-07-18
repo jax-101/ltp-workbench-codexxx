@@ -227,6 +227,24 @@
       "actualTokens": null,
       "source": "codex-goal-delta",
       "note": "P54 starts at cumulative goal checkpoint 1694819 tokens; final actual will be measured as the later goal total minus this checkpoint."
+    },
+    {
+      "id": "E0020",
+      "packageId": "P54",
+      "recordedAt": "2026-07-18T02:06:33.303Z",
+      "status": "measured",
+      "actualTokens": 506237,
+      "source": "codex-goal-delta",
+      "note": "Goal usage delta: 2201056 cumulative at P54 close minus the 1694819 P53 checkpoint; elapsed goal time advanced from 4167 to 5348 seconds."
+    },
+    {
+      "id": "E0021",
+      "packageId": "P55",
+      "recordedAt": "2026-07-18T02:06:33.497Z",
+      "status": "tracking",
+      "actualTokens": null,
+      "source": "codex-goal-delta",
+      "note": "P55 starts at cumulative goal checkpoint 2201056 tokens; final actual will be measured as the later goal total minus this checkpoint."
     }
   ],
   "estimateRevisions": [
@@ -296,6 +314,18 @@
       "evidenceEvents": [
         "E0016",
         "E0018"
+      ]
+    },
+    {
+      "id": "R0007",
+      "packageId": "P55",
+      "recordedAt": "2026-07-18",
+      "previousTokens": 55000,
+      "revisedTokens": 600000,
+      "reason": "P54 closed at 506237 tokens, within 1.3% of its revised 500k forecast, while P53 closed at 513490. P55 is the next interaction package and adds focused projection, independent view restoration and frame hierarchy risk, so it is rounded to 600k without revising later frame packages yet.",
+      "evidenceEvents": [
+        "E0018",
+        "E0020"
       ]
     }
   ]

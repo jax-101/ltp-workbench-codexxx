@@ -62,6 +62,11 @@ const steps = [
     args: ["run", "test:rectangle-selection"]
   },
   {
+    name: "Test editable keymap and collision recovery",
+    command: "npm",
+    args: ["run", "test:keymap"]
+  },
+  {
     name: "Test native CRT vertical",
     command: "npm",
     args: ["run", "test:crt"]

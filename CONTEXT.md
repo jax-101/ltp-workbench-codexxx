@@ -1,9 +1,9 @@
 # LTP Workbench - Session Context
 
 Updated: 2026-07-18
-Current build: `3C.16b` - Deterministic Rectangle Selection
+Current build: `3C.16c` - Editable Scoped Keymap
 Architecture: strict modular monolith with a headless core
-Current scope progress: `62.9%` estimated weighted scope
+Current scope progress: `65.5%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;
@@ -60,6 +60,9 @@ Goal Tree, CRT, FRT and EC are definition packages, not independent code paths.
 - `src/core/subgraph-transfer.js`: atomic closed-subgraph paste validation and mutation.
 - `src/renderer/subgraph-clipboard.js`: immutable semantic clipboard and keyboard intent controller.
 - `src/renderer/rectangle-selection.js`: hierarchical pointer selection and DOM interaction controller.
+- `src/core/keymap.js`: scoped shortcut validation, collision detection and event resolution.
+- `src/adapters/keymap-store.js`: atomic user keymap persistence and last-known-good recovery.
+- `src/renderer/keymap-editor.js`: keyboard-accessible shortcut editor and capture workflow.
 - `src/main.js` and `src/preload.js`: Electron adapter and IPC composition.
 - `src/renderer/`: current UI and interaction layer.
 - `scripts/ltp-cli.js`: headless CLI adapter.
@@ -167,10 +170,11 @@ Working:
 - The CLI inspects, verifies, pins, lists and compares packages without mutating workspaces.
 - Cmd/Ctrl+C and Cmd/Ctrl+V copy and paste closed semantic subgraphs atomically, preserving n-ary relations, assumptions and relative geometry.
 - Pointer rectangles select only fully enclosed entities, normalize nested frames to semantic roots and support additive Command/Shift selection.
+- A versioned user keymap can be edited in-app or as JSON, uses explicit scopes, blocks physical shortcut collisions and recovers the last valid artifact.
 
 Next architectural work:
 
-- Implement editable key bindings with deterministic collision detection in P54.
+- Implement full-screen frame focus with independent temporary view state in P55.
 - Extract a neutral layout compiler from `composed-layout.js`.
 - Move remaining renderer mutations behind application commands.
 - Split renderer state, interaction, projection and rendering.
@@ -218,6 +222,7 @@ Relevant references:
 - `outputs/Definition-Tooling-P51.md`
 - `outputs/Atomic-Subgraph-Clipboard-P52.md`
 - `outputs/Rectangle-Selection-P53.md`
+- `outputs/Editable-Keymap-P54.md`
 - `outputs/Plan-Status.md`
 - `outputs/Decision-Log.md`
 - `outputs/Engineering-Lessons-Log.md`

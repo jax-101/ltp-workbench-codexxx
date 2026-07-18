@@ -9,6 +9,7 @@ const { runComposedLayout, validateComposedGeometry } = require("./core/composed
 const { migrateWorkspace } = require("./core/workspace-migrations");
 const { generateRandomLayoutFixture } = require("./core/random-layout-fixture");
 const { buildMarkdownExport } = require("./core/markdown-export");
+const { registerKeymapIpc } = require("./adapters/keymap-ipc");
 const packageMetadata = require("../package.json");
 const workspaceManager = new WorkspaceManager();
 
@@ -265,6 +266,7 @@ const runVisualTest = async (mainWindow) => {
     "group-redo",
     "multi-connect",
     "rectangle-selection",
+    "keymap-editor",
     "readable-routing",
     "hint-collision-avoidance",
     "internal-frame-layout",
@@ -567,14 +569,12 @@ ipcMain.handle("history:state", async () => (await getWorkspaceEngine()).getHist
 ipcMain.handle("layout:run", async (_event, workspace, options) => runComposedLayout(workspace, options));
 ipcMain.handle("layout:validate", async (_event, workspace) => validateComposedGeometry(workspace));
 ipcMain.handle("export:markdown", async (_event, workspace, treeId) => exportMarkdown(workspace, treeId));
+registerKeymapIpc({ app, ipcMain });
 
 app.whenReady().then(() => {
   createWindow();
-
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 

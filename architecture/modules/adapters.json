@@ -13,7 +13,7 @@
       "id": "adapters.electron-bridge.v1",
       "version": 1,
       "status": "provisional",
-      "operations": ["invokeApplication", "invokeWorkspace", "invokeLayout", "exportDocument"],
+      "operations": ["invokeApplication", "invokeWorkspace", "invokeLayout", "loadKeymap", "saveKeymap", "resetKeymap", "revealKeymap", "exportDocument"],
       "inputs": ["versioned structured-clone request"],
       "outputs": ["ltp.contract-result.v1"],
       "errors": ["ADAPTER_REQUEST_INVALID", "ADAPTER_RESPONSE_INVALID", "ADAPTER_PROTOCOL_UNSUPPORTED"]

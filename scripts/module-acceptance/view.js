@@ -3,6 +3,8 @@ const { createView, duplicateView, listDocuments, resolveDocument } = require(".
 const { selectionClosure } = require("../../src/core/selection-model");
 const { capture } = require("../../src/renderer/subgraph-clipboard");
 const { selectContained } = require("../../src/renderer/rectangle-selection");
+const { resolveCommand, validateKeymap } = require("../../src/core/keymap");
+const { COMMAND_CATALOG, DEFAULT_KEYMAP } = require("../../src/core/keymap-defaults");
 const { expectCode, loadMigratedFixture } = require("./helpers");
 
 const run = async () => {
@@ -29,6 +31,9 @@ const run = async () => {
     { left: 0, top: 0, right: 100, bottom: 100 },
     [{ id: "inside", type: "node", frameId: null, rectangle: { left: 10, top: 10, right: 90, bottom: 90 } }]
   ), ["inside"]);
+  const keymap = validateKeymap(DEFAULT_KEYMAP, COMMAND_CATALOG);
+  assert.equal(keymap.ok, true);
+  assert.equal(resolveCommand({ key: "h", metaKey: false, ctrlKey: false, altKey: false, shiftKey: false }, keymap.keymap.bindings), "showHints");
   await expectCode(() => Promise.resolve(resolveDocument(workspace, "missing")), "DOCUMENT_NOT_FOUND");
 };
 
