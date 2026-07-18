@@ -1,0 +1,16 @@
+.rectangle-selection {
+  position: fixed;
+  z-index: 100;
+  box-sizing: border-box;
+  border: 2px solid #0969a8;
+  border-radius: 2px;
+  background: rgba(9, 105, 168, 0.14);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.88) inset;
+  pointer-events: none;
+}
+
+.rectangle-selecting,
+.rectangle-selecting * {
+  cursor: crosshair !important;
+  user-select: none !important;
+}

@@ -10,7 +10,6 @@ const { migrateWorkspace } = require("./core/workspace-migrations");
 const { generateRandomLayoutFixture } = require("./core/random-layout-fixture");
 const { buildMarkdownExport } = require("./core/markdown-export");
 const packageMetadata = require("../package.json");
-
 const workspaceManager = new WorkspaceManager();
 
 const buildInfo = Object.freeze({
@@ -265,6 +264,7 @@ const runVisualTest = async (mainWindow) => {
     "group-undo",
     "group-redo",
     "multi-connect",
+    "rectangle-selection",
     "readable-routing",
     "hint-collision-avoidance",
     "internal-frame-layout",

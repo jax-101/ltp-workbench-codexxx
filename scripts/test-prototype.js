@@ -57,6 +57,11 @@ const steps = [
     args: ["run", "test:subgraph-transfer"]
   },
   {
+    name: "Test deterministic rectangle selection",
+    command: "npm",
+    args: ["run", "test:rectangle-selection"]
+  },
+  {
     name: "Test native CRT vertical",
     command: "npm",
     args: ["run", "test:crt"]

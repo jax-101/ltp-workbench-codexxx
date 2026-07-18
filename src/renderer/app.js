@@ -52,7 +52,7 @@ const NODE_INSERTION_GAP = 44;
 const FRAME_CONTENT_PADDING = 28;
 const commandBindings = window.LTP_COMMAND_BINDINGS || {};
 const commandLabels = window.LTP_COMMAND_LABELS || {};
-const { commandForEvent, formatShortcutBinding } = window.LTP_COMMAND_CONFIG;
+const { commandForEvent, contextualCommandLabel: resolveContextualCommandLabel, formatShortcutBinding } = window.LTP_COMMAND_CONFIG;
 const diagramDefinitions = window.LTP_DIAGRAM_REGISTRY.DIAGRAM_DEFINITIONS;
 const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze(Object.fromEntries(
   Object.values(diagramDefinitions).flatMap((definition) =>
@@ -2307,23 +2307,10 @@ const beginFrameTargetMode = () => {
 };
 
 const contextualCommandLabel = (command) => {
-  if (!assumptionContextLinkId) return commandLabels[command] || command;
-  const assumptionLabels = {
-    openAssumptionWorkbench: assumptionWorkbenchOpen ? "Close Assumption Workbench" : "Open Assumption Workbench",
-    showHints: "Toggle assumption hints",
-    toggleMultiSelect: "Select multiple assumptions",
-    createNode: "Create assumption",
-    focusInspector: "Edit active assumption",
-    deleteSelection: "Delete selected assumptions",
-    cycleNodeTypes: "Cycle selected assumption statuses",
-    panUp: "Previous assumption",
-    panDown: "Next assumption",
-    panLeft: "Previous logical line",
-    panRight: "Next logical line",
-    focusSearch: assumptionWorkbenchOpen ? "Search Assumption Workbench" : "Search",
-    cancelContext: assumptionWorkbenchOpen ? "Close Assumption Workbench" : "Close assumption context"
-  };
-  return assumptionLabels[command] || commandLabels[command] || command;
+  return resolveContextualCommandLabel(command, commandLabels, {
+    assumptionContext: Boolean(assumptionContextLinkId),
+    workbenchOpen: assumptionWorkbenchOpen
+  });
 };
 
 const renderShortcutList = () =>
@@ -2493,7 +2480,7 @@ const renderFrames = () => {
       const inventory = frame.collapsed ? frameInventory(frame.id) : null;
       const entityCount = inventory ? inventory.types.reduce((total, [, count]) => total + count, 0) : 0;
       return `
-        <button class="tree-frame ${active} ${selected} ${included} ${collapsed}" data-element-id="${frame.id}" data-element-type="frame"
+        <button class="tree-frame ${active} ${selected} ${included} ${collapsed}" data-element-id="${frame.id}" data-element-type="frame" data-parent-frame-id="${frame.parentFrameId || ""}"
           style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;">
           <span>${escapeHtml(frame.name)}</span>
           <small>${frame.collapsed ? `Minimized - ${entityCount} entities` : escapeHtml(frame.semanticType || "visual frame")}</small>
@@ -2564,7 +2551,7 @@ const renderNodes = () =>
       const included = selectionIds.has(node.id) && !selectionRootIds.has(node.id) ? "selection-included" : "";
       const multiSelected = connectionSourceIds.has(node.id) ? "multi-selected" : "";
       return `
-        <button class="tree-node ${selected} ${included} ${multiSelected} node-${node.type}" data-element-id="${node.id}" data-element-type="node"
+        <button class="tree-node ${selected} ${included} ${multiSelected} node-${node.type}" data-element-id="${node.id}" data-element-type="node" data-frame-id="${node.frameId}"
           style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;"
           title="${escapeHtml(node.statement)}">
           <strong>${escapeHtml(node.synthetic?.combination || semanticRoleLabel(node.semanticRole) || nodeTypeLabel(node.type))}</strong>
@@ -3600,6 +3587,20 @@ const bindEvents = () => {
       });
     }
   });
+
+  const rectangleCanvas = app.querySelector(".canvas");
+  rectangleCanvas?.addEventListener("ltp:rectangle-selection", (event) => {
+    const ids = event.detail.additive ? [...new Set([...selectionRootIds, ...event.detail.ids])] : event.detail.ids;
+    const roots = window.LTP_RECTANGLE_SELECTION.normalizeSelectionIds(ids, event.detail.candidates);
+    selectionRootIds = new Set(roots);
+    selectedElementId = roots.at(-1) || null;
+    multiSelectionMode = false;
+    mode = "navigation";
+    rebuildSelection();
+    setStatus(`${roots.length} element${roots.length === 1 ? "" : "s"} selected by rectangle`);
+    render();
+  });
+  window.LTP_RECTANGLE_SELECTION.bind(rectangleCanvas);
 
   app.querySelectorAll("[data-node-field]").forEach((field) => {
     field.addEventListener("change", () => updateNode(field.dataset.id, field.dataset.nodeField, field.value));
@@ -5774,6 +5775,11 @@ window.__ltpVisualTestStep = async (step) => {
     const rootHidden = !document.querySelector(`[data-element-id="${activeCanvas.rootFrameId}"]`);
     const buildVisible = document.querySelector(".build-identity")?.textContent.includes(`build ${buildInfo.id}`);
     return result("Build identity and composed canvas", buildVisible && hostVisible && rootHidden, `Build ${buildInfo.id} is visible; Goal Tree is finite and Root remains conceptual.`);
+  }
+
+  if (step === "rectangle-selection") {
+    const audit = window.LTP_RECTANGLE_SELECTION.runDomAcceptance();
+    return result("Select entities with a pointer rectangle", audit.ok, `Expected roots=${audit.expected.join(",")}; selected roots=${audit.selected.join(",")}.`);
   }
 
   if (step === "frame-summary") {

@@ -46,6 +46,8 @@
     { "path": "src/core/selection-model.js", "owner": "view", "condition": "owned" },
     { "path": "src/renderer/command-config.js", "owner": "view", "condition": "transitional" },
     { "path": "src/renderer/subgraph-clipboard.js", "owner": "view", "condition": "owned", "note": "Captures immutable closed subgraphs and translates copy/paste gestures into one application intent." },
+    { "path": "src/renderer/rectangle-selection.js", "owner": "view", "condition": "owned", "note": "Resolves pointer rectangles into deterministic hierarchical selection roots." },
+    { "path": "src/renderer/rectangle-selection.css", "owner": "view", "condition": "owned" },
     { "path": "src/core/markdown-export.js", "owner": "adapters", "condition": "owned" },
     { "path": "src/main.js", "owner": "adapters", "condition": "debt", "note": "Composition root, IPC, fixtures and visual test harness are combined." },
     { "path": "src/preload.js", "owner": "adapters", "condition": "owned" },
@@ -375,7 +377,8 @@
     { "from": "src/renderer/index.html", "to": "src/core/diagram-registry.js", "interaction": "C011" },
     { "from": "src/renderer/index.html", "to": "src/core/selection-model.js", "interaction": "C012" },
     { "from": "src/renderer/index.html", "to": "src/renderer/command-config.js", "interaction": "C012" },
-    { "from": "src/renderer/index.html", "to": "src/renderer/subgraph-clipboard.js", "interaction": "C012" }
+    { "from": "src/renderer/index.html", "to": "src/renderer/subgraph-clipboard.js", "interaction": "C012" },
+    { "from": "src/renderer/index.html", "to": "src/renderer/rectangle-selection.js", "interaction": "C012" }
   ],
   "ipcChannels": [
     { "method": "getBuildInfo", "channel": "app:build-info", "interaction": "C010" },

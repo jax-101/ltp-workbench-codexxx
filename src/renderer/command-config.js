@@ -120,7 +120,28 @@ const resolveConfiguredCommand = (event, bindings = window.LTP_COMMAND_BINDINGS)
   Object.entries(bindings).find(([, candidates]) =>
     candidates.some((binding) => bindingMatchesEvent(binding, event)))?.[0] || null;
 
+const resolveContextualLabel = (command, labels, context = {}) => {
+  if (!context.assumptionContext) return labels[command] || command;
+  const assumptionLabels = {
+    openAssumptionWorkbench: context.workbenchOpen ? "Close Assumption Workbench" : "Open Assumption Workbench",
+    showHints: "Toggle assumption hints",
+    toggleMultiSelect: "Select multiple assumptions",
+    createNode: "Create assumption",
+    focusInspector: "Edit active assumption",
+    deleteSelection: "Delete selected assumptions",
+    cycleNodeTypes: "Cycle selected assumption statuses",
+    panUp: "Previous assumption",
+    panDown: "Next assumption",
+    panLeft: "Previous logical line",
+    panRight: "Next logical line",
+    focusSearch: context.workbenchOpen ? "Search Assumption Workbench" : "Search",
+    cancelContext: context.workbenchOpen ? "Close Assumption Workbench" : "Close assumption context"
+  };
+  return assumptionLabels[command] || labels[command] || command;
+};
+
 window.LTP_COMMAND_CONFIG = Object.freeze({
   commandForEvent: resolveConfiguredCommand,
+  contextualCommandLabel: resolveContextualLabel,
   formatShortcutBinding: formatConfiguredShortcut
 });

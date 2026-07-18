@@ -200,6 +200,33 @@
       "actualTokens": 453031,
       "source": "codex-goal-delta",
       "note": "Goal usage delta: 1181329 cumulative at P52 close minus the 728298 P51 checkpoint; elapsed goal time advanced from 1911 to 2894 seconds."
+    },
+    {
+      "id": "E0017",
+      "packageId": "P53",
+      "recordedAt": "2026-07-18T01:32:19.666Z",
+      "status": "tracking",
+      "actualTokens": null,
+      "source": "codex-goal-delta",
+      "note": "P53 starts at cumulative goal checkpoint 1181329 tokens; final actual will be measured as the later goal total minus this checkpoint."
+    },
+    {
+      "id": "E0018",
+      "packageId": "P53",
+      "recordedAt": "2026-07-18T01:46:38.858Z",
+      "status": "measured",
+      "actualTokens": 513490,
+      "source": "codex-goal-delta",
+      "note": "Goal usage delta: 1694819 cumulative at P53 close minus the 1181329 P52 checkpoint; elapsed goal time advanced from 2894 to 4167 seconds."
+    },
+    {
+      "id": "E0019",
+      "packageId": "P54",
+      "recordedAt": "2026-07-18T01:46:39.061Z",
+      "status": "tracking",
+      "actualTokens": null,
+      "source": "codex-goal-delta",
+      "note": "P54 starts at cumulative goal checkpoint 1694819 tokens; final actual will be measured as the later goal total minus this checkpoint."
     }
   ],
   "estimateRevisions": [
@@ -257,6 +284,18 @@
       "reason": "P52 reported 453031 tokens against a 32k baseline (14.16x). P53 is the nearest interaction package but has a narrower semantic blast radius, so its forecast is conservatively raised to 200k without revising later packages before another comparable actual is available.",
       "evidenceEvents": [
         "E0016"
+      ]
+    },
+    {
+      "id": "R0006",
+      "packageId": "P54",
+      "recordedAt": "2026-07-18",
+      "previousTokens": 32000,
+      "revisedTokens": 500000,
+      "reason": "P52 and P53 reported 453031 and 513490 tokens for adjacent interaction packages. P54 crosses configuration, keyboard scopes, validation, UI and persistence, so its forecast is rounded to 500k while unrelated later packages remain unchanged.",
+      "evidenceEvents": [
+        "E0016",
+        "E0018"
       ]
     }
   ]

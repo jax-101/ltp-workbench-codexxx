@@ -960,3 +960,15 @@ Razon: permitir scripts de migracion dentro del paquete reintroduciria codigo no
 confiable y mezclaria dominio, persistencia y tooling. Una transicion declarada
 puede auditarse, repetirse y ser aplicada mas adelante por Workspace dentro de
 su propia transaccion optimista.
+
+### D-121: La seleccion rectangular devuelve raices jerarquicas
+
+Decision: un elemento entra en la seleccion rectangular solo cuando su caja
+esta completamente contenida. Si se selecciona un frame, sus descendientes no
+se conservan como raices explicitas. Command, Control o Shift combinan con la
+seleccion anterior y vuelven a normalizar el conjunto completo.
+
+Razon: una lista plana de intersecciones representa dos veces un subarbol cuando
+incluye su frame. Las raices jerarquicas mantienen una unica interpretacion para
+borrar, copiar, mover, conectar y futuros comandos de foco, con independencia
+de la direccion del gesto o del orden de seleccion.

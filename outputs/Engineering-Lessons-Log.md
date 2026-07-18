@@ -1452,9 +1452,25 @@ snapshot inmutable; separar captura y aplicacion; validar el mapa de IDs antes
 de escribir; y probar relaciones n-arias, metadatos dependientes, Undo/Redo y
 compatibilidad de versiones.
 
+### L-117: Una seleccion geometrica necesita una semantica estructural
+
+Fecha: 2026-07-18
+
+Evidencia: un rectangulo podia encerrar a la vez un frame, sus frames anidados
+y sus entidades. Tratar cada caja como una seleccion independiente duplicaba
+el mismo subgrafo y volvia ambiguas las operaciones posteriores.
+
+Aprendizaje: la deteccion geometrica solo produce candidatos. Antes de exponer
+la seleccion hay que normalizarla con las reglas estructurales del dominio; un
+ancestro seleccionado sustituye a sus descendientes como raiz explicita.
+
+Aplicacion futura: separar hit-testing y normalizacion, definir containment de
+forma determinista, probar todas las direcciones de arrastre y volver a
+normalizar al combinar selecciones previas con modificadores.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-117`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-118`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

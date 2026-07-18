@@ -1,9 +1,9 @@
 # LTP Workbench - Session Context
 
 Updated: 2026-07-18
-Current build: `3C.16a` - Atomic Subgraph Clipboard
+Current build: `3C.16b` - Deterministic Rectangle Selection
 Architecture: strict modular monolith with a headless core
-Current scope progress: `64.8%` estimated weighted scope
+Current scope progress: `62.9%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;
@@ -59,6 +59,7 @@ Goal Tree, CRT, FRT and EC are definition packages, not independent code paths.
 - `scripts/definition-cli.js`: headless package inspection and exact pin-migration adapter.
 - `src/core/subgraph-transfer.js`: atomic closed-subgraph paste validation and mutation.
 - `src/renderer/subgraph-clipboard.js`: immutable semantic clipboard and keyboard intent controller.
+- `src/renderer/rectangle-selection.js`: hierarchical pointer selection and DOM interaction controller.
 - `src/main.js` and `src/preload.js`: Electron adapter and IPC composition.
 - `src/renderer/`: current UI and interaction layer.
 - `scripts/ltp-cli.js`: headless CLI adapter.
@@ -165,10 +166,11 @@ Working:
 - Definition migrations provide deterministic preview/apply/rollback pin transitions with semver and breaking-change guards.
 - The CLI inspects, verifies, pins, lists and compares packages without mutating workspaces.
 - Cmd/Ctrl+C and Cmd/Ctrl+V copy and paste closed semantic subgraphs atomically, preserving n-ary relations, assumptions and relative geometry.
+- Pointer rectangles select only fully enclosed entities, normalize nested frames to semantic roots and support additive Command/Shift selection.
 
 Next architectural work:
 
-- Implement pointer rectangle selection with deterministic containment rules in P53.
+- Implement editable key bindings with deterministic collision detection in P54.
 - Extract a neutral layout compiler from `composed-layout.js`.
 - Move remaining renderer mutations behind application commands.
 - Split renderer state, interaction, projection and rendering.
@@ -215,6 +217,7 @@ Relevant references:
 - `outputs/Official-Definitions-P50.md`
 - `outputs/Definition-Tooling-P51.md`
 - `outputs/Atomic-Subgraph-Clipboard-P52.md`
+- `outputs/Rectangle-Selection-P53.md`
 - `outputs/Plan-Status.md`
 - `outputs/Decision-Log.md`
 - `outputs/Engineering-Lessons-Log.md`

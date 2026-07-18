@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { createView, duplicateView, listDocuments, resolveDocument } = require("../../src/core/document-view");
 const { selectionClosure } = require("../../src/core/selection-model");
 const { capture } = require("../../src/renderer/subgraph-clipboard");
+const { selectContained } = require("../../src/renderer/rectangle-selection");
 const { expectCode, loadMigratedFixture } = require("./helpers");
 
 const run = async () => {
@@ -24,6 +25,10 @@ const run = async () => {
   assert.equal(clipboard.elements.length, document.semanticKernel.elements.length);
   assert.equal(clipboard.relations.length, document.semanticKernel.relations.length);
   assert(Object.isFrozen(clipboard), "clipboard snapshots are immutable view read models");
+  assert.deepEqual(selectContained(
+    { left: 0, top: 0, right: 100, bottom: 100 },
+    [{ id: "inside", type: "node", frameId: null, rectangle: { left: 10, top: 10, right: 90, bottom: 90 } }]
+  ), ["inside"]);
   await expectCode(() => Promise.resolve(resolveDocument(workspace, "missing")), "DOCUMENT_NOT_FOUND");
 };
 
