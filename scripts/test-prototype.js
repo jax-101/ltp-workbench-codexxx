@@ -37,6 +37,16 @@ const steps = [
     args: ["run", "test:official-definitions"]
   },
   {
+    name: "Test definition migration contracts",
+    command: "npm",
+    args: ["run", "test:definition-migrations"]
+  },
+  {
+    name: "Test headless definition tooling",
+    command: "npm",
+    args: ["run", "test:definition-cli"]
+  },
+  {
     name: "Test additive semantic migration",
     command: "npm",
     args: ["run", "test:semantic-migration"]

@@ -7,6 +7,9 @@ const {
   verifyDefinitionHash,
   createDefinitionPin,
   compileDefinition,
+  createDefinitionMigrationPlan,
+  applyDefinitionMigration,
+  rollbackDefinitionMigration,
   loadDefinition,
   resolvePinnedDefinition
 } = require("../../src/core/definition-runtime");
@@ -52,6 +55,19 @@ async function verifyPublicLoadingContract() {
   const compiled = compileDefinition(loaded);
   assert.equal(compiled.pin.hash, pin.hash);
   assert(Object.isFrozen(compiled));
+  const nextDefinition = structuredClone(fixture);
+  nextDefinition.version = "1.1.0";
+  nextDefinition.description = "Compatible package metadata revision";
+  const next = await loadDefinition({ kind: "embedded", definition: nextDefinition }, { supportedCapabilities });
+  const plan = createDefinitionMigrationPlan(loaded, next);
+  const transition = applyDefinitionMigration({
+    plan, currentPin: pin, sourcePackage: loaded, targetPackage: next
+  });
+  assert.equal(plan.classification, "compatible");
+  assert.equal(transition.pin.version, "1.1.0");
+  assert.deepEqual(rollbackDefinitionMigration({
+    receipt: transition.receipt, currentPin: transition.pin
+  }).pin, pin);
   const ready = await resolvePinnedDefinition({ pin, sources: [source] }, { supportedCapabilities });
   assert.equal(ready.status, "ready");
   assert.equal(ready.access, "read-write");
@@ -62,7 +78,7 @@ async function verifyPublicLoadingContract() {
   assert.equal(rescue.access, "read-only");
   assert(rescue.diagnostics.some((item) => item.code === "DEFINITION_CAPABILITY_UNSUPPORTED"));
 
-  console.log("Definition Runtime acceptance passed: artifacts, unified loading, exact pins and read-only rescue.");
+  console.log("Definition Runtime acceptance passed: artifacts, loading, capabilities, exact migrations and rescue.");
 }
 
 verifyPublicLoadingContract().catch((error) => {

@@ -53,6 +53,10 @@ this boundary until P49. P50 implements `definition.capabilities.v1` and proves
 official Goal Tree, CRT and multipartite EC parity without privileged compiler
 branches.
 
+P51 implements deterministic `definition.migrations.v1` pin transitions and
+headless `definition.tooling.v1`. Preview, apply and rollback are pure contract
+operations; the CLI does not mutate workspace or package files.
+
 ### 3. Application
 
 Owns commands, queries, transaction boundaries, optimistic concurrency,

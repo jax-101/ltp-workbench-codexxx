@@ -40,7 +40,8 @@ const discoveredSources = new Set([
   ...walk(path.join(root, "src"))
     .filter((file) => /\.(js|css|html)$/.test(file))
     .map((file) => normalize(path.relative(root, file))),
-  "scripts/ltp-cli.js"
+  "scripts/ltp-cli.js",
+  "scripts/definition-cli.js"
 ]);
 assertSameSet(new Set(ownership.keys()), discoveredSources, "Source ownership inventory is stale");
 

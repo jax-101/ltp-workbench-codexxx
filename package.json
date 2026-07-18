@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.15c",
-    "name": "Official Declarative Definitions",
+    "id": "3C.15d",
+    "name": "Definition Tooling and Migrations",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -34,6 +34,8 @@
     "test:definition": "node scripts/test-definition-artifact.js",
     "test:definition-loader": "node scripts/test-definition-loader.js",
     "test:official-definitions": "node scripts/test-official-definitions.js",
+    "test:definition-migrations": "node scripts/test-definition-migrations.js",
+    "test:definition-cli": "node scripts/test-definition-cli.js",
     "definitions:build": "node scripts/build-official-definition-registry.js",
     "definitions:check": "node scripts/build-official-definition-registry.js --check",
     "test:semantic-migration": "node scripts/test-semantic-migration.js",
@@ -72,6 +74,7 @@
     "files": [
       "src/**/*",
       "scripts/ltp-cli.js",
+      "scripts/definition-cli.js",
       "semantic-contract/**/*",
       "definition-contract/**/*",
       "diagram-definitions/**/*",

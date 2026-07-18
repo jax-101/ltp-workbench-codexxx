@@ -1,9 +1,9 @@
 # LTP Workbench - Session Context
 
 Updated: 2026-07-18
-Current build: `3C.15c` - Official Declarative Definitions
+Current build: `3C.15d` - Definition Tooling and Migrations
 Architecture: strict modular monolith with a headless core
-Current scope progress: `58.2%` estimated weighted scope
+Current scope progress: `66.6%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;
@@ -56,6 +56,7 @@ Goal Tree, CRT, FRT and EC are definition packages, not independent code paths.
 - `src/core/definition-runtime/`: artifact identity, confined package loading, resource policy, pins and rescue resolution.
 - `diagram-definitions/official/`: securely loaded Goal Tree, CRT and multipartite EC packages and semantic oracles.
 - `src/generated/official-diagram-registry.js`: deterministic compatibility projection compiled from official packages.
+- `scripts/definition-cli.js`: headless package inspection and exact pin-migration adapter.
 - `src/main.js` and `src/preload.js`: Electron adapter and IPC composition.
 - `src/renderer/`: current UI and interaction layer.
 - `scripts/ltp-cli.js`: headless CLI adapter.
@@ -159,10 +160,12 @@ Working:
 - Definition artifact v1 rejects executable/non-JSON values and produces immutable content-addressed definitions.
 - Directory and embedded definitions use one confined, resource-bounded loader with exact pins and read-only rescue.
 - Goal Tree, CRT and multipartite EC compile from v1 packages with exact semantic and legacy behavior parity.
+- Definition migrations provide deterministic preview/apply/rollback pin transitions with semver and breaking-change guards.
+- The CLI inspects, verifies, pins, lists and compares packages without mutating workspaces.
 
 Next architectural work:
 
-- Add Definition CLI inspection, package verification and migration tooling in P51.
+- Implement atomic copy/paste of complete n-ary subgraphs in P52.
 - Extract a neutral layout compiler from `composed-layout.js`.
 - Move remaining renderer mutations behind application commands.
 - Split renderer state, interaction, projection and rendering.
@@ -181,6 +184,8 @@ npm run test:modules
 npm run test:definition
 npm run test:definition-loader
 npm run test:official-definitions
+npm run test:definition-migrations
+npm run test:definition-cli
 npm run test:plan
 npm run test:ci
 npm run scope:status
@@ -204,6 +209,7 @@ Relevant references:
 - `outputs/Definition-Artifact-P48.md`
 - `outputs/Secure-Definition-Loader-P49.md`
 - `outputs/Official-Definitions-P50.md`
+- `outputs/Definition-Tooling-P51.md`
 - `outputs/Plan-Status.md`
 - `outputs/Decision-Log.md`
 - `outputs/Engineering-Lessons-Log.md`

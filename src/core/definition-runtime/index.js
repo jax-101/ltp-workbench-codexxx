@@ -3,9 +3,17 @@ const { canonicalize, canonicalSerialize, hashDefinition, verifyDefinitionHash }
 const { compileDefinition } = require("./capability-compiler");
 const { DefinitionRuntimeError } = require("./errors");
 const { loadDefinition } = require("./loader");
+const {
+  applyDefinitionMigration,
+  compareDefinitions,
+  createDefinitionMigrationPlan,
+  rollbackDefinitionMigration,
+  validatePlan
+} = require("./migrations");
 const { createDefinitionPin, resolvePinnedDefinition, validatePin } = require("./pins");
 const { DEFAULT_RESOURCE_LIMITS } = require("./resource-limits");
 const { validateDefinition } = require("./validation");
+const { inspectDefinitionPackage } = require("./tooling");
 
 module.exports = {
   CONTRACT_VERSION,
@@ -23,5 +31,11 @@ module.exports = {
   createDefinitionPin,
   validatePin,
   resolvePinnedDefinition,
-  compileDefinition
+  compileDefinition,
+  inspectDefinitionPackage,
+  compareDefinitions,
+  createDefinitionMigrationPlan,
+  validateDefinitionMigrationPlan: validatePlan,
+  applyDefinitionMigration,
+  rollbackDefinitionMigration
 };

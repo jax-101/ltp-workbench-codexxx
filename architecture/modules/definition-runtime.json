@@ -35,6 +35,24 @@
       "inputs": ["securely loaded definition package", "known declarative capabilities"],
       "outputs": ["immutable semantic profile", "immutable compatibility registry projection", "exact definition pin"],
       "errors": ["DEFINITION_CAPABILITY_UNSUPPORTED", "DEFINITION_COMPILE_INVALID"]
+    },
+    {
+      "id": "definition.migrations.v1",
+      "version": 1,
+      "status": "implemented",
+      "operations": ["compareDefinitions", "createDefinitionMigrationPlan", "applyDefinitionMigration", "rollbackDefinitionMigration"],
+      "inputs": ["secure source and target packages", "exact current pin", "explicit breaking-change approval"],
+      "outputs": ["deterministic migration plan", "exact pin transition", "verifiable rollback receipt"],
+      "errors": ["DEFINITION_MIGRATION_INVALID", "DEFINITION_MIGRATION_ID_MISMATCH", "DEFINITION_MIGRATION_VERSION_INVALID", "DEFINITION_MIGRATION_STALE", "DEFINITION_MIGRATION_BREAKING_APPROVAL_REQUIRED", "DEFINITION_MIGRATION_RECEIPT_INVALID"]
+    },
+    {
+      "id": "definition.tooling.v1",
+      "version": 1,
+      "status": "implemented",
+      "operations": ["inspectDefinitionPackage", "verify package", "list package library", "preview/apply/rollback migration"],
+      "inputs": ["confined directory package", "package library", "pin or receipt JSON"],
+      "outputs": ["immutable package summary", "verification result", "migration contract values"],
+      "errors": ["definition loading, compilation and migration error codes"]
     }
   ],
   "acceptance": { "status": "transitional", "command": "node scripts/module-acceptance/definition-runtime.js" }

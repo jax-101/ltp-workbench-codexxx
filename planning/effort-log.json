@@ -164,6 +164,24 @@
       "actualTokens": 394280,
       "source": "codex-goal-checkpoint",
       "note": "Cumulative goal usage at the P50 package boundary; elapsed runtime 1023 seconds. The same continuing goal will use checkpoint deltas for later packages."
+    },
+    {
+      "id": "E0013",
+      "packageId": "P51",
+      "recordedAt": "2026-07-18T01:01:30.743Z",
+      "status": "tracking",
+      "actualTokens": null,
+      "source": "codex-goal-delta",
+      "note": "P51 starts at cumulative goal checkpoint 394280 tokens; final actual will be the later goal total minus this checkpoint."
+    },
+    {
+      "id": "E0014",
+      "packageId": "P51",
+      "recordedAt": "2026-07-18T01:09:03.187Z",
+      "status": "measured",
+      "actualTokens": 334018,
+      "source": "codex-goal-delta",
+      "note": "Goal usage delta: 728298 cumulative at P51 close minus the 394280 P50 checkpoint; elapsed goal time advanced from 1023 to 1911 seconds."
     }
   ],
   "estimateRevisions": [

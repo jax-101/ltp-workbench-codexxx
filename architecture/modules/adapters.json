@@ -26,6 +26,15 @@
       "inputs": ["fixture ID", "scenario options"],
       "outputs": ["deterministic result", "evidence manifest"],
       "errors": ["FIXTURE_NOT_FOUND", "SCENARIO_FAILED"]
+    },
+    {
+      "id": "adapters.definition-cli.v1",
+      "version": 1,
+      "status": "implemented",
+      "operations": ["inspect", "verify", "pin", "list", "compare", "migration preview/apply/rollback"],
+      "inputs": ["CLI arguments", "directory locators", "JSON pin and receipt files"],
+      "outputs": ["machine-readable JSON", "concise human status", "stable process exit codes"],
+      "errors": ["ARGUMENT_REQUIRED", "COMMAND_UNKNOWN", "DEFINITION_CLI_JSON_INVALID", "provider-owned Definition Runtime codes"]
     }
   ],
   "acceptance": { "status": "implemented", "command": "node scripts/module-acceptance/adapters.js" }

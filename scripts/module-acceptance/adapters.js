@@ -23,4 +23,10 @@ const invalidPayload = JSON.parse(invalid.stderr);
 assert.equal(invalidPayload.ok, false);
 assert.equal(invalidPayload.error.code, "ARGUMENT_REQUIRED");
 
-console.log("Adapters acceptance passed: CLI process boundary, JSON success and stable serialized error code.");
+const definition = invoke([
+  "definition", "inspect", "--package", path.join(root, "diagram-definitions", "official", "ec"), "--json"
+]);
+assert.equal(definition.status, 0, definition.stderr);
+assert.equal(JSON.parse(definition.stdout).definition.semanticDiagramType, "EC");
+
+console.log("Adapters acceptance passed: workspace and definition CLI boundaries, JSON success and stable errors.");

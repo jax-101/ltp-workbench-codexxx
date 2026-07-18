@@ -1,12 +1,13 @@
 # Diagram Definition Contract v1
 
-Status: implemented artifact contract; official-package parity remains tracked by `U013` until P50.
+Status: implemented artifact, package, capability and migration contracts.
 
 ## Boundary
 
 This contract defines the data shape and content identity of a diagram
-definition. `PACKAGE.md` defines the implemented secure loading, resource,
-pinning and read-only rescue contract. Capability compilation belongs to P50.
+definition. `PACKAGE.md` defines secure loading, resource, pinning and read-only
+rescue behavior. `TOOLING.md` defines the headless package and pin-migration
+contract. P50 proves Goal Tree, CRT and multipartite EC capability parity.
 
 The root schema is `diagram-definition.schema.json`. Supporting schemas divide
 common JSON values, semantic vocabulary and layout/presentation data. AJV
@@ -39,5 +40,8 @@ golden compatibility pair. Run:
 ```bash
 npm run test:definition
 npm run test:definition-loader
+npm run test:official-definitions
+npm run test:definition-migrations
+npm run test:definition-cli
 npm run test:modules
 ```

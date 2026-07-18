@@ -23,9 +23,11 @@
     { "path": "src/core/definition-runtime/errors.js", "owner": "definition-runtime", "condition": "owned" },
     { "path": "src/core/definition-runtime/index.js", "owner": "definition-runtime", "condition": "owned" },
     { "path": "src/core/definition-runtime/loader.js", "owner": "definition-runtime", "condition": "owned" },
+    { "path": "src/core/definition-runtime/migrations.js", "owner": "definition-runtime", "condition": "owned" },
     { "path": "src/core/definition-runtime/package-reader.js", "owner": "definition-runtime", "condition": "owned" },
     { "path": "src/core/definition-runtime/pins.js", "owner": "definition-runtime", "condition": "owned" },
     { "path": "src/core/definition-runtime/resource-limits.js", "owner": "definition-runtime", "condition": "owned" },
+    { "path": "src/core/definition-runtime/tooling.js", "owner": "definition-runtime", "condition": "owned" },
     { "path": "src/core/definition-runtime/validation.js", "owner": "definition-runtime", "condition": "owned" },
     { "path": "src/generated/official-diagram-registry.js", "owner": "definition-runtime", "condition": "generated", "note": "Deterministic projection of securely loaded official packages for Node and browser consumers." },
     { "path": "src/core/transaction-engine.js", "owner": "application", "condition": "owned" },
@@ -48,7 +50,8 @@
     { "path": "src/renderer/app.js", "owner": "adapters", "condition": "debt", "targetOwners": ["view", "adapters"], "note": "View state, interactions, rendering and adapter calls are combined." },
     { "path": "src/renderer/styles.css", "owner": "adapters", "condition": "debt", "targetOwners": ["view", "adapters"] },
     { "path": "src/renderer/index.html", "owner": "adapters", "condition": "owned" },
-    { "path": "scripts/ltp-cli.js", "owner": "adapters", "condition": "debt", "note": "CLI reaches several inner implementations instead of one Application facade." }
+    { "path": "scripts/ltp-cli.js", "owner": "adapters", "condition": "debt", "note": "Workspace CLI reaches several inner implementations instead of one Application facade." },
+    { "path": "scripts/definition-cli.js", "owner": "adapters", "condition": "owned", "note": "Headless adapter over public Definition Runtime tooling and migration contracts." }
   ],
   "interactions": [
     {
@@ -208,6 +211,18 @@
       "formalizationPackages": ["P50"]
     },
     {
+      "id": "C014",
+      "consumer": "adapters",
+      "provider": "definition-runtime",
+      "name": "Headless definition package tooling",
+      "mechanism": "direct CommonJS public API",
+      "status": "explicit",
+      "targetContract": "definition.tooling.v1",
+      "data": ["package locator", "definition summary", "exact pins", "migration plan and receipt"],
+      "errors": ["definition runtime stable error codes", "ARGUMENT_REQUIRED", "DEFINITION_CLI_JSON_INVALID"],
+      "formalizationPackages": ["P51"]
+    },
+    {
       "id": "D001",
       "consumer": "layout",
       "provider": "view",
@@ -350,7 +365,8 @@
     { "from": "scripts/ltp-cli.js", "to": "src/core/workspace-repository.js", "interaction": "D005" },
     { "from": "scripts/ltp-cli.js", "to": "src/core/workspace-validator.js", "interaction": "D005" },
     { "from": "scripts/ltp-cli.js", "to": "src/core/workspace-migrations.js", "interaction": "D005" },
-    { "from": "scripts/ltp-cli.js", "to": "src/core/semantic-migration.js", "interaction": "D009" }
+    { "from": "scripts/ltp-cli.js", "to": "src/core/semantic-migration.js", "interaction": "D009" },
+    { "from": "scripts/definition-cli.js", "to": "src/core/definition-runtime/index.js", "interaction": "C014" }
   ],
   "scriptDependencies": [
     { "from": "src/renderer/index.html", "to": "src/generated/official-diagram-registry.js", "interaction": "C011" },

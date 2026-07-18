@@ -7,6 +7,7 @@ const { WorkspaceRepository } = require("../src/core/workspace-repository");
 const { validateWorkspace } = require("../src/core/workspace-validator");
 const { migrateWorkspace } = require("../src/core/workspace-migrations");
 const { addSemanticKernel } = require("../src/core/semantic-migration");
+const { runDefinitionCommand } = require("./definition-cli");
 
 const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze({
   entity: "ENTITY",
@@ -85,6 +86,13 @@ const executeAndOutput = async (engine, command) => {
 
 const run = async () => {
   const [resource, action] = positional;
+
+  if (resource === "definition") {
+    const result = await runDefinitionCommand(positional.slice(1), flags);
+    output(result.payload, result.humanText);
+    if (result.exitCode) process.exitCode = result.exitCode;
+    return;
+  }
 
   if (resource === "validate") {
     const workspace = await readWorkspace();
@@ -305,7 +313,7 @@ const run = async () => {
     return;
   }
 
-  const error = new Error("Unknown command. Use validate, tree list, semantic preview/show, assumption list/create/update/status/delete, node update, or apply.");
+  const error = new Error("Unknown command. Use definition, validate, tree list, semantic preview/show, assumption list/create/update/status/delete, node update, or apply.");
   error.code = "COMMAND_UNKNOWN";
   throw error;
 };

@@ -1416,9 +1416,26 @@ Aplicacion futura: probar altas directas, actualizaciones acumulativas y datos
 fuera de orden; expresar precondiciones en el schema y evitar optional chaining
 en comparaciones donde `undefined` y `null` tienen significado distinto.
 
+### L-115: Preview y apply deben compartir la misma evidencia exacta
+
+Fecha: 2026-07-18
+
+Evidencia: un plan de migracion correcto podia quedar obsoleto si el paquete
+target cambiaba entre preview y apply. P51 hace que apply reconstruya el plan a
+partir de ambos paquetes, compare el valor completo y exija que el pin actual
+siga siendo el source.
+
+Aprendizaje: separar preview de ejecucion crea una ventana de concurrencia. Un
+hash del plan no demuestra por si solo que sus entradas actuales sean las que
+se revisaron; apply debe volver a resolver y comparar las identidades.
+
+Aplicacion futura: incluir precondiciones exactas en todo plan, revalidar los
+recursos al aplicar, rechazar estado stale y emitir un recibo que permita un
+rollback condicionado en vez de una compensacion ciega.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-115`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-116`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

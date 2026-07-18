@@ -947,3 +947,16 @@ Razon: sustituir un registro hardcodeado por un compilador que reconoce nombres
 de diagramas solo moveria el acoplamiento. Una misma tuberia de carga,
 validacion, compilacion y pin permite probar definiciones personales con las
 mismas garantias y hace que la extensibilidad sea una propiedad real.
+
+### D-120: Migrar una definicion es transicionar identidad, no ejecutar codigo
+
+Decision: una migracion compara dos paquetes seguros y produce un plan puro
+entre pins exactos. `apply` devuelve un nuevo pin y recibo; `rollback` devuelve
+el anterior si el estado sigue siendo el esperado. Definition Runtime y CLI no
+escriben el workspace. Los cambios breaking requieren major version y permiso
+explicito.
+
+Razon: permitir scripts de migracion dentro del paquete reintroduciria codigo no
+confiable y mezclaria dominio, persistencia y tooling. Una transicion declarada
+puede auditarse, repetirse y ser aplicada mas adelante por Workspace dentro de
+su propia transaccion optimista.

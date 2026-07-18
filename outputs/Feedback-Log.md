@@ -1138,3 +1138,21 @@ Criterios de aceptacion:
 - La semantica y el comportamiento consumido por la aplicacion conservan paridad exacta.
 - Los fixtures oficiales siguen siendo los oraculos semanticos originales.
 - Cambiar un paquete exige regenerar y verificar deterministicamente su proyeccion.
+
+### F-086: Tooling headless para definiciones y agentes
+
+Feedback: la tecnologia debe poder inspeccionarse y operarse desde terminal para
+que personas y futuros agentes trabajen headless con las mismas garantias que la
+aplicacion.
+
+Estado: tooling de paquetes y migraciones de pin implementado en `3C.15d`; la
+edicion semantica de diagramas ya usa el CLI existente y el futuro MCP se
+mantiene en P72.
+
+Criterios de aceptacion:
+
+- Inspectar, verificar, fijar y listar paquetes produce JSON estable.
+- Preview, apply y rollback son deterministas y verifican pins exactos.
+- Los cambios breaking exigen version mayor y aprobacion explicita.
+- Ningun comando de definicion muta silenciosamente un workspace o paquete.
+- Errores y codigos de salida permiten automatizacion sin analizar mensajes.
