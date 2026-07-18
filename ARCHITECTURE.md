@@ -43,12 +43,15 @@ Public contract:
 - migration preview, apply and rollback contracts.
 
 It accepts declarative data only. Official and user definitions use this exact
-runtime. The current hardcoded `diagram-registry.js` is transitional.
+runtime. `diagram-registry.js` is now a transitional compatibility facade over
+the deterministic registry compiled from the official packages.
 
 P48 implements `definition.artifact.v1`: Draft 2020-12 schemas, stable
 diagnostics, RFC 8785 canonical JSON, SHA-256 content identity and immutable
 artifacts. File discovery, version resolution and rescue behavior remain outside
-this boundary until P49. Official package parity is an explicit P50 gate.
+this boundary until P49. P50 implements `definition.capabilities.v1` and proves
+official Goal Tree, CRT and multipartite EC parity without privileged compiler
+branches.
 
 ### 3. Application
 
@@ -274,7 +277,7 @@ The repository is functional but not yet compliant with the target structure:
 - renderer receives Definition and View helpers through browser globals;
 - stable error ownership and IPC serialization are not yet defined;
 - repository imports revision logic from the transaction engine;
-- official definitions remain hardcoded;
+- browser consumers still receive compiled definitions through ordered globals;
 - Electron main includes test and fixture responsibilities.
 
 These are migration inputs, not reasons for a rewrite. Extraction proceeds one

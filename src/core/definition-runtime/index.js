@@ -1,5 +1,6 @@
 const { CANONICALIZATION, CONTRACT_VERSION, SCHEMA_ID, createDefinitionArtifact } = require("./artifact");
 const { canonicalize, canonicalSerialize, hashDefinition, verifyDefinitionHash } = require("./canonical");
+const { compileDefinition } = require("./capability-compiler");
 const { DefinitionRuntimeError } = require("./errors");
 const { loadDefinition } = require("./loader");
 const { createDefinitionPin, resolvePinnedDefinition, validatePin } = require("./pins");
@@ -21,5 +22,6 @@ module.exports = {
   loadDefinition,
   createDefinitionPin,
   validatePin,
-  resolvePinnedDefinition
+  resolvePinnedDefinition,
+  compileDefinition
 };

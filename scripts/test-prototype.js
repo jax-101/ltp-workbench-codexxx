@@ -32,6 +32,11 @@ const steps = [
     args: ["run", "test:definition-loader"]
   },
   {
+    name: "Test official declarative definitions",
+    command: "npm",
+    args: ["run", "test:official-definitions"]
+  },
+  {
     name: "Test additive semantic migration",
     command: "npm",
     args: ["run", "test:semantic-migration"]

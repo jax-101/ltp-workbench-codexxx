@@ -1,5 +1,5 @@
-const path = require("node:path");
-const { LtpError } = require("./errors");
+const path = require("node:path"), { LtpError } = require("./errors");
+const { getSemanticProfile } = require("./diagram-registry");
 
 const defaultContract = require(path.join(__dirname, "..", "..", "semantic-contract", "v0.1", "contract.json"));
 
@@ -124,7 +124,7 @@ const validateBranchTopology = ({ add, elements, relations, profile }) => {
 const validateSemanticGraph = (graph, contract = defaultContract) => {
   const issues = [];
   const diagramType = graph.diagramType || graph.profile;
-  const profile = contract.profiles[diagramType];
+  const profile = contract === defaultContract ? getSemanticProfile(diagramType) || contract.profiles[diagramType] : contract.profiles[diagramType];
   if (!profile) {
     addIssue(issues, "ERROR", "UNKNOWN_DIAGRAM_TYPE", "diagramType", `Unknown diagram type ${diagramType}`);
     return issues;

@@ -30,10 +30,10 @@
     {
       "id": "definition.capabilities.v1",
       "version": 1,
-      "status": "target",
+      "status": "implemented",
       "operations": ["compileDefinition"],
-      "inputs": ["validated definition artifact", "known capability registry"],
-      "outputs": ["compiled immutable capabilities"],
+      "inputs": ["securely loaded definition package", "known declarative capabilities"],
+      "outputs": ["immutable semantic profile", "immutable compatibility registry projection", "exact definition pin"],
       "errors": ["DEFINITION_CAPABILITY_UNSUPPORTED", "DEFINITION_COMPILE_INVALID"]
     }
   ],

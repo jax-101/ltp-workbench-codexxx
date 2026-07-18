@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.15b",
-    "name": "Secure Definition Loader",
+    "id": "3C.15c",
+    "name": "Official Declarative Definitions",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -33,6 +33,9 @@
     "test:semantic": "node scripts/test-semantic-contract.js",
     "test:definition": "node scripts/test-definition-artifact.js",
     "test:definition-loader": "node scripts/test-definition-loader.js",
+    "test:official-definitions": "node scripts/test-official-definitions.js",
+    "definitions:build": "node scripts/build-official-definition-registry.js",
+    "definitions:check": "node scripts/build-official-definition-registry.js --check",
     "test:semantic-migration": "node scripts/test-semantic-migration.js",
     "test:crt": "node scripts/test-crt-vertical.js",
     "test:crt:visual": "LTP_CRT_TEST=1 electron .",
@@ -71,6 +74,7 @@
       "scripts/ltp-cli.js",
       "semantic-contract/**/*",
       "definition-contract/**/*",
+      "diagram-definitions/**/*",
       "outputs/sample-workspace-v0.1.json",
       "outputs/complex-goal-tree-workspace-v0.1.json",
       "outputs/crt-workspace-v0.1.json",

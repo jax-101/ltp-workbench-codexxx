@@ -1,0 +1,56 @@
+{
+  "$schema": "https://ltp-workbench.dev/schemas/definition/v1/diagram-definition.schema.json",
+  "formatVersion": "1",
+  "id": "ltp.goal-tree",
+  "version": "1.0.0",
+  "label": "Goal Tree",
+  "description": "Official Logical Thinking Process Goal Tree definition.",
+  "requiredKernelCapabilities": ["semantic.graph.v1"],
+  "logicMode": "NECESSITY",
+  "defaultInputCombination": "AND",
+  "cyclePolicy": "FORBIDDEN",
+  "defaultElementType": "NC",
+  "elementTypes": [
+    { "id": "GOAL", "label": "Goal", "shortLabel": "Goal", "unique": true, "synthetic": false, "attributes": [] },
+    { "id": "CSF", "label": "Critical Success Factor", "shortLabel": "CSF", "unique": false, "synthetic": false, "attributes": [] },
+    { "id": "NC", "label": "Necessary Condition", "shortLabel": "NC", "unique": false, "synthetic": false, "attributes": [] },
+    { "id": "ASSUMPTION", "label": "Assumption", "shortLabel": "Assumption", "unique": false, "synthetic": false, "attributes": [] }
+  ],
+  "relationTypes": [
+    {
+      "id": "NECESSITY", "label": "Necessity", "logicModes": ["NECESSITY"],
+      "inputCardinality": { "min": 1, "max": 1 }, "outputCardinality": { "min": 1, "max": 1 },
+      "combinations": ["SIMPLE"], "renderModes": ["IMPLICIT"],
+      "assumptionPolicy": { "minimum": 0, "recommended": 0, "scopes": ["RELATION", "INPUT", "OUTPUT"] }
+    }
+  ],
+  "topology": { "kind": "FREE" },
+  "validationRules": [
+    { "id": "graphTypes", "severity": "ERROR", "capability": "semantic.graph-element-types.v1", "parameters": { "types": ["GOAL", "CSF", "NC"] } },
+    { "id": "goalCount", "severity": "ERROR", "capability": "semantic.element-count.v1", "parameters": { "type": "GOAL", "required": { "min": 1, "max": 1 } } },
+    { "id": "csfCount", "severity": "ERROR", "capability": "semantic.element-count.v1", "parameters": { "type": "CSF", "required": { "min": 1, "max": null }, "recommended": { "min": 3, "max": 5 } } }
+  ],
+  "creationRecipes": [],
+  "layoutProfile": {
+    "directions": ["TB", "BT", "LR", "RL"], "defaultDirection": "TB", "layering": "DISTANCE_TO_SINK",
+    "cycleBreaking": { "strategy": "FORBIDDEN", "restoreSemanticEdges": true },
+    "routingStyles": ["CURVED", "ORTHOGONAL"], "defaultRoutingStyle": "CURVED"
+  },
+  "presentation": {
+    "elementStyles": [
+      { "typeId": "GOAL", "shape": "ROUNDED_RECTANGLE", "colorToken": "goal" },
+      { "typeId": "CSF", "shape": "ROUNDED_RECTANGLE", "colorToken": "criticalSuccessFactor" },
+      { "typeId": "NC", "shape": "ROUNDED_RECTANGLE", "colorToken": "necessaryCondition" },
+      { "typeId": "ASSUMPTION", "shape": "ROUNDED_RECTANGLE", "colorToken": "assumption" }
+    ],
+    "relationStyles": [{ "typeId": "NECESSITY", "lineStyle": "SOLID", "arrowHead": "STANDARD" }],
+    "constraints": [{
+      "capability": "compatibility.legacy-registry.v1",
+      "parameters": {
+        "runtimeId": "goalTree", "semanticDiagramType": "GOAL_TREE", "cycleBreakingStrategy": "greedyFeedbackArc",
+        "elementTypeAliases": { "GOAL": "goal", "CSF": "criticalSuccessFactor", "NC": "necessaryCondition", "ASSUMPTION": "assumption" }
+      }
+    }]
+  },
+  "fixtures": [{ "id": "oracle", "path": "fixtures/goal-tree.json" }]
+}

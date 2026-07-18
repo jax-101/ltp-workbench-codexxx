@@ -1,0 +1,46 @@
+{
+  "id": "oracle-crt",
+  "title": "CRT with independent cause, conceptual AND and negative loop",
+  "diagramType": "CRT",
+  "logicMode": "SUFFICIENCY",
+  "elements": [
+    { "id": "policy", "type": "CRITICAL_ROOT_CAUSE", "statement": "Production is scheduled in large batches" },
+    { "id": "equipment", "type": "ROOT_CAUSE", "statement": "Critical equipment is unreliable" },
+    { "id": "capacity", "type": "ENTITY", "statement": "Large batches occupy scarce capacity" },
+    { "id": "feedback", "type": "ENTITY", "statement": "Production feedback arrives late" },
+    { "id": "rework", "type": "ENTITY", "statement": "Rework accumulates" },
+    { "id": "delivery", "type": "UDE", "statement": "Customer deliveries are late" },
+    { "id": "pressure", "type": "ENTITY", "statement": "Expediting pressure increases" },
+    { "id": "instability", "type": "ENTITY", "statement": "The production schedule becomes unstable" },
+    { "id": "expense", "type": "UDE", "statement": "Operating expense increases" }
+  ],
+  "relations": [
+    { "id": "rel-policy-capacity", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "policy" }], "outputs": [{ "elementId": "capacity" }] },
+    { "id": "rel-policy-feedback", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "policy" }], "outputs": [{ "elementId": "feedback" }] },
+    { "id": "rel-and-rework", "type": "CAUSALITY", "combination": "AND", "renderMode": "JUNCTION", "inputs": [{ "elementId": "capacity" }, { "elementId": "feedback" }], "outputs": [{ "elementId": "rework" }] },
+    { "id": "rel-equipment-rework", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "equipment" }], "outputs": [{ "elementId": "rework" }] },
+    { "id": "rel-rework-delivery", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "rework" }], "outputs": [{ "elementId": "delivery" }] },
+    { "id": "rel-delivery-pressure", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "delivery" }], "outputs": [{ "elementId": "pressure" }] },
+    { "id": "rel-pressure-instability", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "pressure" }], "outputs": [{ "elementId": "instability" }] },
+    { "id": "rel-instability-rework", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "instability" }], "outputs": [{ "elementId": "rework" }] },
+    { "id": "rel-pressure-expense", "type": "CAUSALITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "pressure" }], "outputs": [{ "elementId": "expense" }] }
+  ],
+  "assumptions": [
+    { "id": "assumption-and", "statement": "Capacity occupation and delayed feedback together generate work that must be repeated", "subject": { "kind": "RELATION", "relationId": "rel-and-rework" } },
+    { "id": "assumption-capacity", "statement": "Scarce capacity prevents unfinished work from being absorbed elsewhere", "subject": { "kind": "INPUT", "relationId": "rel-and-rework", "elementId": "capacity" } }
+  ],
+  "derivations": [],
+  "expected": {
+    "errorCodes": [],
+    "warningCodes": [],
+    "junctionIds": ["junction:rel-and-rework"],
+    "targetExpressions": {
+      "rework": "(Large batches occupy scarce capacity AND Production feedback arrives late) OR Critical equipment is unreliable OR The production schedule becomes unstable"
+    },
+    "verbalizations": {
+      "rel-and-rework": "If Large batches occupy scarce capacity and Production feedback arrives late, then Rework accumulates.",
+      "rel-equipment-rework": "If Critical equipment is unreliable, then Rework accumulates."
+    },
+    "hasCycle": true
+  }
+}

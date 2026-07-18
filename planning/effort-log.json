@@ -155,6 +155,15 @@
       "actualTokens": null,
       "source": "runtime-no-telemetry",
       "note": "P49 ran after the prior goal had closed; this Codex task exposed no package-scoped token counter, so no actual was fabricated."
+    },
+    {
+      "id": "E0012",
+      "packageId": "P50",
+      "recordedAt": "2026-07-18T00:54:19.258Z",
+      "status": "measured",
+      "actualTokens": 394280,
+      "source": "codex-goal-checkpoint",
+      "note": "Cumulative goal usage at the P50 package boundary; elapsed runtime 1023 seconds. The same continuing goal will use checkpoint deltas for later packages."
     }
   ],
   "estimateRevisions": [
@@ -190,6 +199,17 @@
       "reason": "P48 reported 410421 tokens against a 55k baseline (7.46x). P49 is the nearest package in the same Definition Runtime class and adds filesystem, security and rescue-mode risk, so its forecast is rounded to 450k without revising unrelated packages.",
       "evidenceEvents": [
         "E0010"
+      ]
+    },
+    {
+      "id": "R0004",
+      "packageId": "P51",
+      "recordedAt": "2026-07-18",
+      "previousTokens": 55000,
+      "revisedTokens": 400000,
+      "reason": "P50 reported 394280 tokens against a 70k baseline (5.63x). P51 is the nearest package in the same Definition Runtime class and spans CLI, migration and packaging contracts, so its forecast is rounded to 400k without revising unrelated packages.",
+      "evidenceEvents": [
+        "E0012"
       ]
     }
   ]

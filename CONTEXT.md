@@ -1,9 +1,9 @@
 # LTP Workbench - Session Context
 
 Updated: 2026-07-18
-Current build: `3C.15b` - Secure Definition Loader
+Current build: `3C.15c` - Official Declarative Definitions
 Architecture: strict modular monolith with a headless core
-Current scope progress: `61.2%` estimated weighted scope
+Current scope progress: `58.2%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;
@@ -54,6 +54,8 @@ Goal Tree, CRT, FRT and EC are definition packages, not independent code paths.
 - `architecture/contracts/`: shared versioned contract schemas.
 - `definition-contract/v1/`: executable diagram-definition schema and golden identity fixture.
 - `src/core/definition-runtime/`: artifact identity, confined package loading, resource policy, pins and rescue resolution.
+- `diagram-definitions/official/`: securely loaded Goal Tree, CRT and multipartite EC packages and semantic oracles.
+- `src/generated/official-diagram-registry.js`: deterministic compatibility projection compiled from official packages.
 - `src/main.js` and `src/preload.js`: Electron adapter and IPC composition.
 - `src/renderer/`: current UI and interaction layer.
 - `scripts/ltp-cli.js`: headless CLI adapter.
@@ -66,7 +68,7 @@ Known modularity debt:
 - `src/core/composed-layout.js` mixes compilation, placement, routing and score.
 - `src/core/command-registry.js` contains handlers for several capabilities.
 - `src/main.js` mixes composition, fixture support and visual test orchestration.
-- `src/core/diagram-registry.js` still hardcodes official diagram definitions.
+- Browser consumers still receive compiled definitions through ordered global scripts.
 
 These legacy files are under a no-growth architecture ratchet. Do not extend
 them casually; extract the touched responsibility behind a small public API.
@@ -156,10 +158,11 @@ Working:
 - GitHub CI blocks functional regression until architecture and module UAT pass.
 - Definition artifact v1 rejects executable/non-JSON values and produces immutable content-addressed definitions.
 - Directory and embedded definitions use one confined, resource-bounded loader with exact pins and read-only rescue.
+- Goal Tree, CRT and multipartite EC compile from v1 packages with exact semantic and legacy behavior parity.
 
 Next architectural work:
 
-- Convert Goal Tree, CRT and EC to declarative packages in P50 to resolve U013.
+- Add Definition CLI inspection, package verification and migration tooling in P51.
 - Extract a neutral layout compiler from `composed-layout.js`.
 - Move remaining renderer mutations behind application commands.
 - Split renderer state, interaction, projection and rendering.
@@ -177,6 +180,7 @@ npm run test:module-contracts
 npm run test:modules
 npm run test:definition
 npm run test:definition-loader
+npm run test:official-definitions
 npm run test:plan
 npm run test:ci
 npm run scope:status
@@ -199,6 +203,7 @@ Relevant references:
 - `outputs/Plan-Normalization-and-CI-P47.md`
 - `outputs/Definition-Artifact-P48.md`
 - `outputs/Secure-Definition-Loader-P49.md`
+- `outputs/Official-Definitions-P50.md`
 - `outputs/Plan-Status.md`
 - `outputs/Decision-Log.md`
 - `outputs/Engineering-Lessons-Log.md`

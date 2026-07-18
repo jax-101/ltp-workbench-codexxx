@@ -28,7 +28,8 @@ const legacyBudgets = Object.freeze({
   "src/core/command-registry.js": 677,
   "src/main.js": 585,
   "src/core/semantic-validator.js": 362,
-  "src/core/random-layout-fixture.js": 302
+  "src/core/random-layout-fixture.js": 302,
+  "src/generated/official-diagram-registry.js": 500
 });
 
 for (const file of productionFiles) {

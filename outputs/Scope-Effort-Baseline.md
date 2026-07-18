@@ -1,7 +1,7 @@
 # Scope and Effort Baseline
 
 Updated: 2026-07-18  
-Baseline build: `3C.15b`
+Baseline build: `3C.15c`
 Machine-readable register: `planning/work-packages.json`
 Actual-effort ledger: `planning/effort-log.json`  
 Unknown register: `planning/unknowns.json`
@@ -55,18 +55,18 @@ its calibration class.
 | Measure | Value |
 | --- | ---: |
 | Known packages | 78 |
-| Completed packages | 51 |
+| Completed packages | 52 |
 | Partially completed packages | 1 |
-| Planned packages | 26 |
-| Total estimated scope | 4,441,000 tokens |
-| Earned effort | 2,717,750 tokens |
-| Remaining effort | 1,723,250 tokens |
-| **Weighted scope complete** | **61.2%** |
+| Planned packages | 25 |
+| Total estimated scope | 4,786,000 tokens |
+| Earned effort | 2,787,750 tokens |
+| Remaining effort | 1,998,250 tokens |
+| **Weighted scope complete** | **58.2%** |
 
 `P18` is credited at 85%; its remaining nested-frame optimization is represented
 again only where it becomes distinct advanced layout work, avoiding double
-counting. The next active package is `P50`, conversion of Goal Tree, CRT and EC
-into declarative packages through the same runtime.
+counting. The next active package is `P51`, CLI inspection, migration and
+package tooling over the same Definition Runtime contracts.
 
 ## Portfolio View
 
@@ -77,7 +77,7 @@ into declarative packages through the same runtime.
 | Layout builds 3B | P12-P18 | 323k | 314.75k |
 | Builds 3C through modular foundation | P19-P44 | 990k | 990k |
 | Modular due diligence | P45-P47 | 360k | 360k |
-| Definition Runtime | P48-P51 | 630k | 505k |
+| Definition Runtime | P48-P51 | 975k | 575k |
 | Interaction backlog | P52-P54 | 82k | 0 |
 | Frame focus | P55-P57 | 148k | 0 |
 | Modular extraction | P58-P62 | 380k | 0 |
@@ -127,6 +127,14 @@ the preceding goal closed, so event `E0011` records the actual as unavailable
 rather than manufacturing a measurement. Actual coverage is therefore `4/52`
 started packages (`7.7%`) and the measured total remains `1,089,591` tokens.
 
+P50 closed at `394,280` actual tokens and 1,023 seconds against its `70k`
+baseline: `+324,280`, or `+463.3%` (`5.63x`). Its black-box parity work resolved
+U013. P51 is the nearest remaining Definition Runtime package, so its forecast
+is revised from `55k` to `400k`; the original remains visible. This adds `345k`
+to known scope and, despite earning all `70k` of P50, moves weighted progress to
+`58.2%`. Actual coverage is `5/53` started packages (`9.4%`), with `1,483,871`
+runtime-reported tokens recorded.
+
 For every subsequent package, cumulative runtime usage is recorded as an
 append-only snapshot:
 
@@ -137,8 +145,9 @@ npm run scope:record-effort -- \
 ```
 
 Allowed states are `tracking`, `partial`, `measured` and `unavailable`. A new
-package cannot become partial or done without a tracking event or an explicit
-unavailable event. `npm run scope:status -- --json` exposes the baseline,
+package cannot become partial or done without a measured, partial or explicitly
+unavailable effort event; a measured event may be its first snapshot.
+`npm run scope:status -- --json` exposes the baseline,
 current estimate, actual, absolute variance and percentage variance for every
 package. Once measured packages exist, their actual-to-estimate ratio becomes
 the calibration evidence for revising comparable future packages.
@@ -169,11 +178,11 @@ the denominator from that point onward.
 | U010 | Long-thread context overhead | Mitigated | P46 revised to 250k, P47 to 75k and comparable P49 to 450k |
 | U011 | Layout output depended on implicit wall clock | Resolved | Layout requests accept an explicit timestamp for deterministic acceptance |
 | U012 | First hosted CI execution | Resolved | Two hosted Quality Gate runs passed with functional regression gated by architecture |
-| U013 | Definition v1 official-package expressiveness | Assessed | P50 must prove Goal Tree, CRT and multipartite EC without privileged paths |
+| U013 | Definition v1 official-package expressiveness | Resolved | P50 proves exact semantic, compatibility and fixture parity without privileged paths |
 | U014 | GitHub Actions v4 Node 20 runtime deprecation | Assessed | Upgrade actions and reverify within existing P75 hardening scope |
 
-Current register: 14 unknowns; five converted, four assessed, two mitigated and
-three resolved. There are no untriaged open unknowns today. This does not
+Current register: 14 unknowns; five converted, three assessed, two mitigated and
+four resolved. There are no untriaged open unknowns today. This does not
 imply that future unknowns do not exist; it states only what has been
 discovered.
 
@@ -234,8 +243,8 @@ completion percentage, and `Planned` packages receive no credit.
 | P47 | Plan normalization and CI architecture gates | Done | 100% | 25k -> 75k |
 | P48 | Definition schema, canonical serialization and hash | Done | 100% | 55k |
 | P49 | Definition loader, security and rescue mode | Done | 100% | 65k -> 450k |
-| P50 | Goal Tree, CRT and EC declarative packages | Planned | 0% | 70k |
-| P51 | Definition CLI, migrations and package tooling | Planned | 0% | 55k |
+| P50 | Goal Tree, CRT and EC declarative packages | Done | 100% | 70k |
+| P51 | Definition CLI, migrations and package tooling | Planned | 0% | 55k -> 400k |
 | P52 | Copy and paste n-ary subgraphs | Planned | 0% | 32k |
 | P53 | Rectangle selection | Planned | 0% | 18k |
 | P54 | Editable keymap and collision detection | Planned | 0% | 32k |

@@ -53,16 +53,10 @@ const FRAME_CONTENT_PADDING = 28;
 const commandBindings = window.LTP_COMMAND_BINDINGS || {};
 const commandLabels = window.LTP_COMMAND_LABELS || {};
 const diagramDefinitions = window.LTP_DIAGRAM_REGISTRY.DIAGRAM_DEFINITIONS;
-const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze({
-  entity: "ENTITY",
-  ude: "UDE",
-  rootCause: "ROOT_CAUSE",
-  criticalRootCause: "CRITICAL_ROOT_CAUSE",
-  objective: "OBJECTIVE",
-  need: "NEED",
-  want: "WANT",
-  injection: "INJECTION"
-});
+const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze(Object.fromEntries(
+  Object.values(diagramDefinitions).flatMap((definition) =>
+    definition.nodeTypes.filter((type) => type.semanticType).map((type) => [type.id, type.semanticType]))
+));
 
 const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 const now = () => new Date().toISOString();

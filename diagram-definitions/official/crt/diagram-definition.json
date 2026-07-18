@@ -1,0 +1,52 @@
+{
+  "$schema": "https://ltp-workbench.dev/schemas/definition/v1/diagram-definition.schema.json",
+  "formatVersion": "1",
+  "id": "ltp.crt",
+  "version": "1.0.0",
+  "label": "Current Reality Tree",
+  "description": "Official Logical Thinking Process Current Reality Tree definition.",
+  "requiredKernelCapabilities": ["semantic.graph.v1"],
+  "logicMode": "SUFFICIENCY",
+  "defaultInputCombination": "OR",
+  "cyclePolicy": "ALLOWED",
+  "defaultElementType": "ENTITY",
+  "elementTypes": [
+    { "id": "ENTITY", "label": "Entity", "shortLabel": "Entity", "unique": false, "synthetic": false, "attributes": [] },
+    { "id": "UDE", "label": "Undesirable Effect", "shortLabel": "UDE", "unique": false, "synthetic": false, "attributes": [] },
+    { "id": "ROOT_CAUSE", "label": "Root Cause", "shortLabel": "RC", "unique": false, "synthetic": false, "attributes": [] },
+    { "id": "CRITICAL_ROOT_CAUSE", "label": "Critical Root Cause", "shortLabel": "CRC", "unique": false, "synthetic": false, "attributes": [] },
+    { "id": "JUNCTION", "label": "Junction", "shortLabel": "J", "unique": false, "synthetic": true, "attributes": [] }
+  ],
+  "relationTypes": [{
+    "id": "CAUSALITY", "label": "Causality", "logicModes": ["SUFFICIENCY"],
+    "inputCardinality": { "min": 1, "max": null }, "outputCardinality": { "min": 1, "max": null },
+    "combinations": ["SIMPLE", "AND", "MAG", "XOR"], "renderModes": ["IMPLICIT", "JUNCTION"],
+    "assumptionPolicy": { "minimum": 0, "recommended": 0, "scopes": ["RELATION", "INPUT", "OUTPUT"] }
+  }],
+  "topology": { "kind": "FREE" },
+  "validationRules": [
+    { "id": "graphTypes", "severity": "ERROR", "capability": "semantic.graph-element-types.v1", "parameters": { "types": ["ENTITY", "UDE", "ROOT_CAUSE", "CRITICAL_ROOT_CAUSE"] } },
+    { "id": "udeCount", "severity": "ERROR", "capability": "semantic.element-count.v1", "parameters": { "type": "UDE", "required": { "min": 1, "max": null }, "recommended": { "min": 2, "max": null } } }
+  ],
+  "creationRecipes": [],
+  "layoutProfile": {
+    "directions": ["BT", "TB", "LR", "RL"], "defaultDirection": "BT", "layering": "DISTANCE_TO_SINK",
+    "cycleBreaking": { "strategy": "GREEDY_FEEDBACK_ARC", "restoreSemanticEdges": true },
+    "routingStyles": ["CURVED", "ORTHOGONAL"], "defaultRoutingStyle": "CURVED"
+  },
+  "presentation": {
+    "elementStyles": [
+      { "typeId": "ENTITY", "shape": "ROUNDED_RECTANGLE", "colorToken": "entity" },
+      { "typeId": "UDE", "shape": "ROUNDED_RECTANGLE", "colorToken": "ude" },
+      { "typeId": "ROOT_CAUSE", "shape": "ROUNDED_RECTANGLE", "colorToken": "rootCause" },
+      { "typeId": "CRITICAL_ROOT_CAUSE", "shape": "ROUNDED_RECTANGLE", "colorToken": "criticalRootCause" },
+      { "typeId": "JUNCTION", "shape": "CIRCLE", "colorToken": "junction" }
+    ],
+    "relationStyles": [{ "typeId": "CAUSALITY", "lineStyle": "SOLID", "arrowHead": "STANDARD" }],
+    "constraints": [{
+      "capability": "compatibility.legacy-registry.v1",
+      "parameters": { "runtimeId": "crt", "semanticDiagramType": "CRT", "elementTypeAliases": {} }
+    }]
+  },
+  "fixtures": [{ "id": "oracle", "path": "fixtures/crt.json" }]
+}

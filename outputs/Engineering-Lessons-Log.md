@@ -1382,9 +1382,43 @@ Aplicacion futura: resolver por identidad exacta; devolver `ready` o `rescue`
 con permisos explicitos; conservar diagnosticos seguros; y hacer que los
 adaptadores consuman la decision en vez de reinterpretar errores.
 
+### L-113: La paridad necesita un oraculo independiente de la proyeccion nueva
+
+Fecha: 2026-07-18
+
+Evidencia: el registro generado podia compararse consigo mismo y dar una falsa
+sensacion de compatibilidad. P50 fijo por separado el perfil semantico, la forma
+del registro heredado y los fixtures originales; despues comprobo que el
+compilador generico produce exactamente los tres.
+
+Aprendizaje: una prueba de migracion no debe derivar su expected de la misma
+ruta que verifica. La equivalencia exige oraculos independientes para cada
+contrato observable, ademas de una prueba negativa contra atajos privilegiados.
+
+Aplicacion futura: conservar el comportamiento anterior como fixture, comparar
+salidas canonicas, probar los consumidores reales y borrar el oraculo heredado
+solo cuando el contrato de compatibilidad deje de estar soportado.
+
+### L-114: Una medicion valida no necesita un evento previo de tracking
+
+Fecha: 2026-07-18
+
+Evidencia: el ledger fallo al registrar P50 directamente como `measured` porque
+su validador desreferenciaba una medicion anterior inexistente. La politica
+permitia esa primera medicion, pero la implementacion asumio una secuencia mas
+estrecha sin declararla.
+
+Aprendizaje: un registro append-only debe validar las transiciones que declara,
+no un ritual operativo accidental. Los estados terminales con evidencia
+completa pueden ser la primera observacion si su contrato lo permite.
+
+Aplicacion futura: probar altas directas, actualizaciones acumulativas y datos
+fuera de orden; expresar precondiciones en el schema y evitar optional chaining
+en comparaciones donde `undefined` y `null` tienen significado distinto.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-113`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-115`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

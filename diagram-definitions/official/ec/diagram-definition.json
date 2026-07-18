@@ -1,0 +1,114 @@
+{
+  "$schema": "https://ltp-workbench.dev/schemas/definition/v1/diagram-definition.schema.json",
+  "formatVersion": "1",
+  "id": "ltp.ec",
+  "version": "1.0.0",
+  "label": "Evaporating Cloud",
+  "description": "Official multipartite Logical Thinking Process Evaporating Cloud definition.",
+  "requiredKernelCapabilities": ["semantic.graph.v1"],
+  "logicMode": "NECESSITY",
+  "defaultInputCombination": "AND",
+  "cyclePolicy": "FORBIDDEN",
+  "defaultElementType": "INJECTION",
+  "elementTypes": [
+    { "id": "OBJECTIVE", "label": "Objective", "shortLabel": "A", "unique": true, "synthetic": false, "semanticRole": "A", "attributes": [] },
+    {
+      "id": "NEED", "label": "Need", "shortLabel": "Need", "unique": false, "synthetic": false,
+      "attributes": [
+        { "id": "role", "label": "Role", "valueType": "STRING", "required": true },
+        { "id": "branchId", "label": "Branch", "valueType": "STRING", "required": true },
+        { "id": "branchOrder", "label": "Branch order", "valueType": "NUMBER", "required": true }
+      ]
+    },
+    {
+      "id": "WANT", "label": "Want", "shortLabel": "Want", "unique": false, "synthetic": false,
+      "attributes": [
+        { "id": "role", "label": "Role", "valueType": "STRING", "required": true },
+        { "id": "branchId", "label": "Branch", "valueType": "STRING", "required": true },
+        { "id": "branchOrder", "label": "Branch order", "valueType": "NUMBER", "required": true }
+      ]
+    },
+    { "id": "INJECTION", "label": "Injection", "shortLabel": "INJ", "unique": false, "synthetic": false, "attributes": [] }
+  ],
+  "relationTypes": [
+    {
+      "id": "NECESSITY", "label": "Necessity", "logicModes": ["NECESSITY"],
+      "inputCardinality": { "min": 1, "max": 1 }, "outputCardinality": { "min": 1, "max": 1 },
+      "combinations": ["SIMPLE", "OR"], "renderModes": ["IMPLICIT"],
+      "assumptionPolicy": {
+        "minimum": 1, "recommended": 3, "scopes": ["RELATION", "INPUT", "OUTPUT"],
+        "prompt": "In order to {output}, we must have {input} because..."
+      }
+    },
+    {
+      "id": "CONFLICT", "label": "Conflict", "logicModes": ["NECESSITY"],
+      "inputCardinality": { "min": 2, "max": 2 }, "outputCardinality": { "min": 0, "max": 0 },
+      "combinations": ["SIMPLE"], "renderModes": ["CONFLICT"],
+      "assumptionPolicy": {
+        "minimum": 1, "recommended": 3, "scopes": ["CONFLICT"],
+        "prompt": "{input1} and {input2} are in conflict because... What is missing that prevents us from having both?"
+      }
+    }
+  ],
+  "topology": {
+    "kind": "ROLE_TEMPLATE", "branchField": "branchId", "minimumBranches": 2,
+    "pathTypes": ["WANT", "NEED", "OBJECTIVE"], "sharedRole": "A"
+  },
+  "validationRules": [
+    { "id": "graphTypes", "severity": "ERROR", "capability": "semantic.graph-element-types.v1", "parameters": { "types": ["OBJECTIVE", "NEED", "WANT", "INJECTION"] } },
+    { "id": "objectiveCount", "severity": "ERROR", "capability": "semantic.element-count.v1", "parameters": { "type": "OBJECTIVE", "required": { "min": 1, "max": 1 } } },
+    { "id": "needCount", "severity": "ERROR", "capability": "semantic.element-count.v1", "parameters": { "type": "NEED", "required": { "min": 2, "max": null } } },
+    { "id": "wantCount", "severity": "ERROR", "capability": "semantic.element-count.v1", "parameters": { "type": "WANT", "required": { "min": 2, "max": null } } },
+    { "id": "rolePolicy", "severity": "ERROR", "capability": "semantic.role-policy.v1", "parameters": { "requiredRoles": { "A": "OBJECTIVE" }, "allowAdditionalRoles": true, "uniqueRoles": true } },
+    {
+      "id": "branchTopology", "severity": "ERROR", "capability": "semantic.branch-topology.v1",
+      "parameters": {
+        "branchField": "branchId", "minimumBranches": 2, "needType": "NEED", "wantType": "WANT",
+        "objectiveRole": "A", "relationType": "NECESSITY", "conflictType": "CONFLICT", "conflictGraph": "CONNECTED"
+      }
+    },
+    {
+      "id": "assumptionCoverage", "severity": "WARNING", "capability": "semantic.assumption-coverage.v1",
+      "parameters": {
+        "minimumPerRelation": 1, "recommendedPerRelation": 3,
+        "acceptedReviewRequiresCoverage": true, "conflictSubjectKind": "CONFLICT"
+      }
+    }
+  ],
+  "creationRecipes": [],
+  "layoutProfile": {
+    "directions": ["RL", "LR"], "defaultDirection": "RL", "layering": "CANONICAL_ROLES",
+    "cycleBreaking": { "strategy": "FORBIDDEN", "restoreSemanticEdges": true },
+    "routingStyles": ["CURVED", "ORTHOGONAL"], "defaultRoutingStyle": "CURVED"
+  },
+  "presentation": {
+    "elementStyles": [
+      { "typeId": "OBJECTIVE", "shape": "ROUNDED_RECTANGLE", "colorToken": "objective" },
+      { "typeId": "NEED", "shape": "ROUNDED_RECTANGLE", "colorToken": "need" },
+      { "typeId": "WANT", "shape": "ROUNDED_RECTANGLE", "colorToken": "want" },
+      { "typeId": "INJECTION", "shape": "ROUNDED_RECTANGLE", "colorToken": "injection" }
+    ],
+    "relationStyles": [
+      { "typeId": "NECESSITY", "lineStyle": "SOLID", "arrowHead": "STANDARD" },
+      { "typeId": "CONFLICT", "lineStyle": "DASHED", "arrowHead": "NONE" }
+    ],
+    "constraints": [
+      {
+        "capability": "compatibility.legacy-registry.v1",
+        "parameters": { "runtimeId": "ec", "semanticDiagramType": "EC", "elementTypeAliases": {}, "uniqueElementTypes": [] }
+      },
+      {
+        "capability": "layout.role-columns.v1",
+        "parameters": {
+          "columnTypes": ["OBJECTIVE", "NEED", "WANT"],
+          "branchField": "semanticBranchId", "branchOrderField": "semanticBranchOrder",
+          "branchPathTypes": ["WANT", "NEED", "OBJECTIVE"], "sharedRole": "A"
+        }
+      }
+    ]
+  },
+  "fixtures": [
+    { "id": "canonical", "path": "fixtures/ec.json" },
+    { "id": "tripartite", "path": "fixtures/ec-tripartite.json" }
+  ]
+}

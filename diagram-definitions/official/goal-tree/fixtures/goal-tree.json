@@ -1,0 +1,37 @@
+{
+  "id": "oracle-goal-tree",
+  "title": "Goal Tree compatibility oracle",
+  "diagramType": "GOAL_TREE",
+  "logicMode": "NECESSITY",
+  "elements": [
+    { "id": "goal", "type": "GOAL", "statement": "Make more money now and in the future" },
+    { "id": "csf-revenue", "type": "CSF", "statement": "Maximum revenues" },
+    { "id": "csf-cost", "type": "CSF", "statement": "Controlled costs" },
+    { "id": "csf-investment", "type": "CSF", "statement": "Optimized investment" },
+    { "id": "nc-demand", "type": "NC", "statement": "High market demand" },
+    { "id": "nc-efficiency", "type": "NC", "statement": "Efficient production operations" },
+    { "id": "nc-inventory", "type": "NC", "statement": "Optimized inventory management" }
+  ],
+  "relations": [
+    { "id": "rel-csf-revenue-goal", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "csf-revenue" }], "outputs": [{ "elementId": "goal" }] },
+    { "id": "rel-csf-cost-goal", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "csf-cost" }], "outputs": [{ "elementId": "goal" }] },
+    { "id": "rel-csf-investment-goal", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "csf-investment" }], "outputs": [{ "elementId": "goal" }] },
+    { "id": "rel-demand-revenue", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "nc-demand" }], "outputs": [{ "elementId": "csf-revenue" }] },
+    { "id": "rel-efficiency-cost", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "nc-efficiency" }], "outputs": [{ "elementId": "csf-cost" }] },
+    { "id": "rel-inventory-investment", "type": "NECESSITY", "combination": "SIMPLE", "renderMode": "IMPLICIT", "inputs": [{ "elementId": "nc-inventory" }], "outputs": [{ "elementId": "csf-investment" }] }
+  ],
+  "assumptions": [],
+  "derivations": [],
+  "expected": {
+    "errorCodes": [],
+    "warningCodes": [],
+    "junctionIds": [],
+    "targetExpressions": {
+      "goal": "Controlled costs AND Optimized investment AND Maximum revenues"
+    },
+    "verbalizations": {
+      "rel-csf-revenue-goal": "In order to achieve Make more money now and in the future, we must have Maximum revenues."
+    },
+    "hasCycle": false
+  }
+}

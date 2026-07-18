@@ -6,6 +6,7 @@ const {
   createDefinitionArtifact,
   verifyDefinitionHash,
   createDefinitionPin,
+  compileDefinition,
   loadDefinition,
   resolvePinnedDefinition
 } = require("../../src/core/definition-runtime");
@@ -48,6 +49,9 @@ async function verifyPublicLoadingContract() {
   const source = { kind: "embedded", definition: fixture };
   const loaded = await loadDefinition(source, { supportedCapabilities });
   const pin = createDefinitionPin(loaded);
+  const compiled = compileDefinition(loaded);
+  assert.equal(compiled.pin.hash, pin.hash);
+  assert(Object.isFrozen(compiled));
   const ready = await resolvePinnedDefinition({ pin, sources: [source] }, { supportedCapabilities });
   assert.equal(ready.status, "ready");
   assert.equal(ready.access, "read-write");

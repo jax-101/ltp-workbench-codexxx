@@ -77,7 +77,7 @@ function validateEffortLog(effortLog, register, packageIds) {
   const latestActualByPackage = new Map();
   for (const event of effortLog.measurements) {
     const previous = latestActualByPackage.get(event.packageId);
-    if (event.actualTokens !== null && previous?.actualTokens !== null &&
+    if (event.actualTokens !== null && previous && previous.actualTokens !== null &&
         event.actualTokens < previous.actualTokens) {
       throw new Error(`Actual effort decreases between snapshots for ${event.packageId}`);
     }

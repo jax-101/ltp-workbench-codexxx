@@ -935,3 +935,15 @@ Razon: separar "puede inspeccionarse" de "puede ejecutarse y modificarse" evita
 que la recuperacion de un workspace dependa de confiar en contenido desconocido.
 El resultado tipado tambien permite que Electron, CLI y futuros agentes adopten
 la misma politica sin reproducir ramas de seguridad en cada adaptador.
+
+### D-119: Las definiciones oficiales no tienen privilegios de compilacion
+
+Decision: Goal Tree, CRT y EC se expresan como paquetes v1 ordinarios. El
+compilador despacha capacidades declarativas conocidas y no contiene ramas por
+ID, etiqueta o ruta de un diagrama concreto. La compatibilidad temporal se
+declara como parametros y se proyecta en un registro generado determinista.
+
+Razon: sustituir un registro hardcodeado por un compilador que reconoce nombres
+de diagramas solo moveria el acoplamiento. Una misma tuberia de carga,
+validacion, compilacion y pin permite probar definiciones personales con las
+mismas garantias y hace que la extensibilidad sea una propiedad real.

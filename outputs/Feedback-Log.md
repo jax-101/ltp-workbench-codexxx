@@ -1121,3 +1121,20 @@ Criterios de aceptacion:
 - El pin incluye formato, identidad, version y hash exactos.
 - Una incompatibilidad devuelve rescate read-only con diagnosticos seguros.
 - El paquete invalido no se ejecuta ni impide que el adaptador abra el resto.
+
+### F-085: Definiciones oficiales declarativas sin caminos privilegiados
+
+Feedback: la aplicacion debe disponer de una arquitectura de diagramas en vez
+de hardcodear Goal Tree, CRT, EC y futuros tipos por separado. El trabajo ya
+realizado debe conservarse al migrar.
+
+Estado: Goal Tree, CRT y EC implementados y validados en `3C.15c`; FRT, PrT y
+TrT siguen en sus paquetes oficiales posteriores.
+
+Criterios de aceptacion:
+
+- Los tres paquetes pasan por el mismo loader seguro que una definicion personal.
+- Un unico compilador transforma capacidades declarativas sin reconocer IDs concretos.
+- La semantica y el comportamiento consumido por la aplicacion conservan paridad exacta.
+- Los fixtures oficiales siguen siendo los oraculos semanticos originales.
+- Cambiar un paquete exige regenerar y verificar deterministicamente su proyeccion.
