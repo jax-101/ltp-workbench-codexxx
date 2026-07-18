@@ -58,10 +58,10 @@ its calibration class.
 | Completed packages | 50 |
 | Partially completed packages | 1 |
 | Planned packages | 27 |
-| Total estimated scope | 4,056,000 tokens |
+| Total estimated scope | 4,441,000 tokens |
 | Earned effort | 2,267,750 tokens |
-| Remaining effort | 1,788,250 tokens |
-| **Weighted scope complete** | **55.9%** |
+| Remaining effort | 2,173,250 tokens |
+| **Weighted scope complete** | **51.1%** |
 
 `P18` is credited at 85%; its remaining nested-frame optimization is represented
 again only where it becomes distinct advanced layout work, avoiding double
@@ -77,7 +77,7 @@ version resolution and read-only rescue mode.
 | Layout builds 3B | P12-P18 | 323k | 314.75k |
 | Builds 3C through modular foundation | P19-P44 | 990k | 990k |
 | Modular due diligence | P45-P47 | 360k | 360k |
-| Definition Runtime | P48-P51 | 245k | 55k |
+| Definition Runtime | P48-P51 | 630k | 55k |
 | Interaction backlog | P52-P54 | 82k | 0 |
 | Frame focus | P55-P57 | 148k | 0 |
 | Modular extraction | P58-P62 | 380k | 0 |
@@ -112,6 +112,14 @@ or `+732.4%` (`8.32x`) against its original `25k` baseline, and `+133,093` or
 now `3/50` started packages, with `679,170` actual tokens recorded. P48 is a
 Definition Runtime implementation package rather than architecture governance,
 so this result does not revise it without comparable evidence.
+
+P48 closed at `410,421` tokens and 805 seconds against a `55k` baseline:
+`+355,421`, or `+646.2%` (`7.46x`). Measurement coverage is now `4/51`
+started packages, with `1,089,591` actual tokens recorded. P49 is the nearest
+Definition Runtime package and carries greater security risk, so its forecast
+is revised from `65k` to `450k`. This adds `385k` to known scope and moves the
+weighted percentage from `55.9%` to `51.1%`; unrelated package classes remain
+unchanged.
 
 For every subsequent package, cumulative runtime usage is recorded as an
 append-only snapshot:
@@ -152,7 +160,7 @@ the denominator from that point onward.
 | U007 | Missing historical token telemetry | Mitigated | Actual-effort ledger and explicit unavailable state |
 | U008 | Stable error ownership and adapter serialization | Assessed | Covered by P46 and P58 without adding scope |
 | U009 | Browser globals and script-order dependencies | Assessed | Covered by P46, P61 and P62 without adding scope |
-| U010 | Long-thread context overhead | Mitigated | P46 revised to 250k and P47 to 75k; broader recalibration deferred |
+| U010 | Long-thread context overhead | Mitigated | P46 revised to 250k, P47 to 75k and comparable P49 to 450k |
 | U011 | Layout output depended on implicit wall clock | Resolved | Layout requests accept an explicit timestamp for deterministic acceptance |
 | U012 | First hosted CI execution | Resolved | Two hosted Quality Gate runs passed with functional regression gated by architecture |
 | U013 | Definition v1 official-package expressiveness | Assessed | P50 must prove Goal Tree, CRT and multipartite EC without privileged paths |
@@ -218,7 +226,7 @@ completion percentage, and `Planned` packages receive no credit.
 | P46 | Module charters and module acceptance suites | Done | 100% | 80k -> 250k |
 | P47 | Plan normalization and CI architecture gates | Done | 100% | 25k -> 75k |
 | P48 | Definition schema, canonical serialization and hash | Done | 100% | 55k |
-| P49 | Definition loader, security and rescue mode | Planned | 0% | 65k |
+| P49 | Definition loader, security and rescue mode | Planned | 0% | 65k -> 450k |
 | P50 | Goal Tree, CRT and EC declarative packages | Planned | 0% | 70k |
 | P51 | Definition CLI, migrations and package tooling | Planned | 0% | 55k |
 | P52 | Copy and paste n-ary subgraphs | Planned | 0% | 32k |

@@ -46,6 +46,17 @@ golden hashing, exact round trips, deep immutability, tamper detection and
 hostile JavaScript values. The production dependency audit reports zero known
 vulnerabilities.
 
+Hosted [Quality Gate run 29622217532](https://github.com/jax-101/ltp-workbench/actions/runs/29622217532)
+passed on Node 22: architecture and module contracts completed before the
+dependent headless functional regression.
+
 `U013` remains assessed until P50 proves that Goal Tree, CRT and multipartite EC
 can use this exact format without hardcoded exceptions. P49 is next and owns
 file loading, resource limits, path confinement, version pins and rescue mode.
+
+## Delivery Metrics
+
+Final runtime effort was `410,421` tokens over 805 seconds, `7.46x` the original
+`55k` baseline. P49 is the nearest comparable Definition Runtime package and is
+revised from `65k` to `450k`; the larger known denominator places weighted
+project progress at `51.1%`.

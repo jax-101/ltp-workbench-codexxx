@@ -3,7 +3,7 @@
 Updated: 2026-07-18
 Current build: `3C.15a` - Definition Artifact Contract
 Architecture: strict modular monolith with a headless core
-Current scope progress: `55.9%` estimated weighted scope
+Current scope progress: `51.1%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;

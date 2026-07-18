@@ -137,6 +137,15 @@
       "actualTokens": null,
       "source": "codex-goal",
       "note": "Goal-backed measurement started for definition schema, canonical serialization and hashing."
+    },
+    {
+      "id": "E0010",
+      "packageId": "P48",
+      "recordedAt": "2026-07-18T00:04:53.608Z",
+      "status": "measured",
+      "actualTokens": 410421,
+      "source": "codex-goal",
+      "note": "Final goal usage; elapsed runtime 805 seconds."
     }
   ],
   "estimateRevisions": [
@@ -161,6 +170,17 @@
       "reason": "P46 reported 233658 tokens against an 80k baseline (2.92x) and landed within 6.5% of its revised 250k forecast. P47 is the nearest package in the same architecture-governance class, so its forecast is rounded to 75k without changing unrelated packages.",
       "evidenceEvents": [
         "E0006"
+      ]
+    },
+    {
+      "id": "R0003",
+      "packageId": "P49",
+      "recordedAt": "2026-07-18",
+      "previousTokens": 65000,
+      "revisedTokens": 450000,
+      "reason": "P48 reported 410421 tokens against a 55k baseline (7.46x). P49 is the nearest package in the same Definition Runtime class and adds filesystem, security and rescue-mode risk, so its forecast is rounded to 450k without revising unrelated packages.",
+      "evidenceEvents": [
+        "E0010"
       ]
     }
   ]

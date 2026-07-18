@@ -98,9 +98,9 @@
       "discoveredDuring": "P45",
       "status": "mitigated",
       "impact": "high",
-      "resultingPackages": ["P46", "P47"],
-      "scopeAddedTokens": 220000,
-      "note": "P45 finished at 237419 tokens versus 35k. P46 finished at 233658 versus 80k and within 6.5% of its revised 250k forecast. P47 finished at 208093 versus its revised 75k forecast. No unrelated package is recalibrated without a comparable implementation sample."
+      "resultingPackages": ["P46", "P47", "P49"],
+      "scopeAddedTokens": 605000,
+      "note": "P45-P47 established architecture-governance overhead. P48 then finished at 410421 versus a 55k Definition Runtime baseline. P49 is revised from 65k to 450k as the nearest comparable package; unrelated classes remain unchanged."
     },
     {
       "id": "U011",
