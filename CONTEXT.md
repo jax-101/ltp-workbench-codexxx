@@ -1,9 +1,9 @@
 # LTP Workbench - Session Context
 
 Updated: 2026-07-18
-Current build: `3C.15d` - Definition Tooling and Migrations
+Current build: `3C.16a` - Atomic Subgraph Clipboard
 Architecture: strict modular monolith with a headless core
-Current scope progress: `66.6%` estimated weighted scope
+Current scope progress: `64.8%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;
@@ -57,6 +57,8 @@ Goal Tree, CRT, FRT and EC are definition packages, not independent code paths.
 - `diagram-definitions/official/`: securely loaded Goal Tree, CRT and multipartite EC packages and semantic oracles.
 - `src/generated/official-diagram-registry.js`: deterministic compatibility projection compiled from official packages.
 - `scripts/definition-cli.js`: headless package inspection and exact pin-migration adapter.
+- `src/core/subgraph-transfer.js`: atomic closed-subgraph paste validation and mutation.
+- `src/renderer/subgraph-clipboard.js`: immutable semantic clipboard and keyboard intent controller.
 - `src/main.js` and `src/preload.js`: Electron adapter and IPC composition.
 - `src/renderer/`: current UI and interaction layer.
 - `scripts/ltp-cli.js`: headless CLI adapter.
@@ -162,10 +164,11 @@ Working:
 - Goal Tree, CRT and multipartite EC compile from v1 packages with exact semantic and legacy behavior parity.
 - Definition migrations provide deterministic preview/apply/rollback pin transitions with semver and breaking-change guards.
 - The CLI inspects, verifies, pins, lists and compares packages without mutating workspaces.
+- Cmd/Ctrl+C and Cmd/Ctrl+V copy and paste closed semantic subgraphs atomically, preserving n-ary relations, assumptions and relative geometry.
 
 Next architectural work:
 
-- Implement atomic copy/paste of complete n-ary subgraphs in P52.
+- Implement pointer rectangle selection with deterministic containment rules in P53.
 - Extract a neutral layout compiler from `composed-layout.js`.
 - Move remaining renderer mutations behind application commands.
 - Split renderer state, interaction, projection and rendering.
@@ -186,6 +189,7 @@ npm run test:definition-loader
 npm run test:official-definitions
 npm run test:definition-migrations
 npm run test:definition-cli
+npm run test:subgraph-transfer
 npm run test:plan
 npm run test:ci
 npm run scope:status
@@ -210,6 +214,7 @@ Relevant references:
 - `outputs/Secure-Definition-Loader-P49.md`
 - `outputs/Official-Definitions-P50.md`
 - `outputs/Definition-Tooling-P51.md`
+- `outputs/Atomic-Subgraph-Clipboard-P52.md`
 - `outputs/Plan-Status.md`
 - `outputs/Decision-Log.md`
 - `outputs/Engineering-Lessons-Log.md`

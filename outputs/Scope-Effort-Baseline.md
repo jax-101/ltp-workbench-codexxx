@@ -1,7 +1,7 @@
 # Scope and Effort Baseline
 
 Updated: 2026-07-18  
-Baseline build: `3C.15d`
+Baseline build: `3C.16a`
 Machine-readable register: `planning/work-packages.json`
 Actual-effort ledger: `planning/effort-log.json`  
 Unknown register: `planning/unknowns.json`
@@ -55,18 +55,17 @@ its calibration class.
 | Measure | Value |
 | --- | ---: |
 | Known packages | 78 |
-| Completed packages | 53 |
+| Completed packages | 54 |
 | Partially completed packages | 1 |
-| Planned packages | 24 |
-| Total estimated scope | 4,786,000 tokens |
-| Earned effort | 3,187,750 tokens |
-| Remaining effort | 1,598,250 tokens |
-| **Weighted scope complete** | **66.6%** |
+| Planned packages | 23 |
+| Total estimated scope | 4,968,000 tokens |
+| Earned effort | 3,219,750 tokens |
+| Remaining effort | 1,748,250 tokens |
+| **Weighted scope complete** | **64.8%** |
 
 `P18` is credited at 85%; its remaining nested-frame optimization is represented
 again only where it becomes distinct advanced layout work, avoiding double
-counting. The next active package is `P52`, atomic copy and paste of complete
-n-ary subgraphs.
+counting. The next active package is `P53`, deterministic rectangle selection.
 
 ## Portfolio View
 
@@ -78,7 +77,7 @@ n-ary subgraphs.
 | Builds 3C through modular foundation | P19-P44 | 990k | 990k |
 | Modular due diligence | P45-P47 | 360k | 360k |
 | Definition Runtime | P48-P51 | 975k | 975k |
-| Interaction backlog | P52-P54 | 82k | 0 |
+| Interaction backlog | P52-P54 | 264k | 32k |
 | Frame focus | P55-P57 | 148k | 0 |
 | Modular extraction | P58-P62 | 380k | 0 |
 | Workspace UX | P63-P65 | 200k | 0 |
@@ -142,6 +141,16 @@ Definition Runtime recalibration was therefore directionally useful. Completing
 P51 raises weighted progress to `66.6%`; actual coverage is `6/54` started
 packages (`11.1%`) with `1,817,889` tokens recorded. Interaction package P52 is
 not revised from this different implementation class.
+
+P52 closed at `453,031` incremental actual tokens and 983 incremental seconds.
+That is `+421,031` or `+1,315.7%` (`14.16x`) against its original `32k`
+baseline. The work included a closed-subgraph contract, native and legacy
+atomic mutation, keyboard integration, architectural extraction and complete
+visual shortcut evidence. P53 is the nearest interaction package but has a
+narrower semantic surface, so its forecast is revised from `18k` to `200k`.
+This transparent recalibration raises known scope by `182k`; despite completing
+P52, weighted progress becomes `64.8%`. Actual coverage is `7/55` started
+packages (`12.7%`) with `2,270,920` runtime-reported tokens recorded.
 
 For every subsequent package, cumulative runtime usage is recorded as an
 append-only snapshot:
@@ -253,8 +262,8 @@ completion percentage, and `Planned` packages receive no credit.
 | P49 | Definition loader, security and rescue mode | Done | 100% | 65k -> 450k |
 | P50 | Goal Tree, CRT and EC declarative packages | Done | 100% | 70k |
 | P51 | Definition CLI, migrations and package tooling | Done | 100% | 55k -> 400k |
-| P52 | Copy and paste n-ary subgraphs | Planned | 0% | 32k |
-| P53 | Rectangle selection | Planned | 0% | 18k |
+| P52 | Copy and paste n-ary subgraphs | Done | 100% | 32k |
+| P53 | Rectangle selection | Planned | 0% | 18k -> 200k |
 | P54 | Editable keymap and collision detection | Planned | 0% | 32k |
 | P55 | Full-screen frame focus | Planned | 0% | 55k |
 | P56 | Portal grouping and inspection | Planned | 0% | 45k |

@@ -1156,3 +1156,20 @@ Criterios de aceptacion:
 - Los cambios breaking exigen version mayor y aprobacion explicita.
 - Ningun comando de definicion muta silenciosamente un workspace o paquete.
 - Errores y codigos de salida permiten automatizacion sin analizar mensajes.
+
+### F-087: Copiar y pegar subgrafos semanticos completos
+
+Feedback: `Cmd/Ctrl+C` y `Cmd/Ctrl+V` deben operar sobre toda la seleccion,
+incluidos los links internos, sin romper relaciones n-arias ni perder las
+assumptions que explican cada linea.
+
+Estado: implementado y validado en `3C.16a`.
+
+Criterios de aceptacion:
+
+- Solo se copia una relacion cuando todos sus extremos forman parte de la seleccion.
+- Las assumptions y derivaciones cerradas viajan con su relacion y se remapean a IDs nuevos.
+- La geometria relativa se conserva dentro del frame activo y el frame crece si hace falta.
+- Todo el pegado es una unica transaccion con Undo/Redo atomico.
+- Copiar y pegar dentro de inputs de texto conserva el comportamiento nativo.
+- El auditor autonomo prueba ambos atajos y conserva capturas visuales.

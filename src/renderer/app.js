@@ -52,6 +52,7 @@ const NODE_INSERTION_GAP = 44;
 const FRAME_CONTENT_PADDING = 28;
 const commandBindings = window.LTP_COMMAND_BINDINGS || {};
 const commandLabels = window.LTP_COMMAND_LABELS || {};
+const { commandForEvent, formatShortcutBinding } = window.LTP_COMMAND_CONFIG;
 const diagramDefinitions = window.LTP_DIAGRAM_REGISTRY.DIAGRAM_DEFINITIONS;
 const SEMANTIC_TYPE_BY_NODE_TYPE = Object.freeze(Object.fromEntries(
   Object.values(diagramDefinitions).flatMap((definition) =>
@@ -520,6 +521,23 @@ const executeDomainCommand = async (type, payload, label) => {
     return result;
   });
 };
+
+const subgraphClipboardController = window.LTP_SUBGRAPH_CLIPBOARD.createController({
+  getTree: tree,
+  getSelectionIds: () => selectionIds,
+  getTargetFrameId: () => frameById()[activeFrameId]?.treeId === tree().id ? activeFrameId : tree().hostFrameId,
+  getOrigin: () => viewportNodePosition(frameById()[activeFrameId] || frameById()[tree().hostFrameId]),
+  idFactory: uid,
+  execute: (payload) => executeDomainCommand("semantic.subgraph.paste", payload, "Paste subgraph"),
+  selectElements: (ids) => {
+    selectionRootIds = new Set(ids);
+    selectedElementId = ids.at(-1) || null;
+    rebuildSelection();
+    mode = "navigation";
+    render();
+  },
+  setStatus
+});
 
 const reconcileUiAfterHistory = () => {
   const activeTree = tree();
@@ -2288,29 +2306,6 @@ const beginFrameTargetMode = () => {
   setStatus(`Choose a destination frame for ${roots.length} selected root${roots.length === 1 ? "" : "s"}`);
 };
 
-const displayShortcutKey = (key) =>
-  ({
-    " ": "Space",
-    ArrowUp: "Up",
-    ArrowDown: "Down",
-    ArrowLeft: "Left",
-    ArrowRight: "Right",
-    Backspace: "Backspace",
-    Delete: "Delete",
-    Enter: "Enter"
-  })[key] || key.toUpperCase();
-
-const formatShortcutBinding = (binding) => {
-  const parts = [];
-  if (binding.command) parts.push("Cmd");
-  else if (binding.primary) parts.push("Cmd/Ctrl");
-  if (binding.control) parts.push("Ctrl");
-  if (binding.alt) parts.push("Alt");
-  if (binding.shift) parts.push("Shift");
-  parts.push(displayShortcutKey(binding.key));
-  return parts.join("+");
-};
-
 const contextualCommandLabel = (command) => {
   if (!assumptionContextLinkId) return commandLabels[command] || command;
   const assumptionLabels = {
@@ -3784,31 +3779,6 @@ const bindEvents = () => {
   });
 };
 
-const bindingMatchesEvent = (binding, event) => {
-  const primaryPressed = event.metaKey || event.ctrlKey;
-  if (binding.command) {
-    if (!event.metaKey || event.ctrlKey) return false;
-  } else if (binding.primary) {
-    if (!primaryPressed) return false;
-  } else if (binding.control) {
-    if (!event.ctrlKey || event.metaKey) return false;
-  } else if (primaryPressed) {
-    return false;
-  }
-  if (Boolean(binding.alt) !== event.altKey) return false;
-  if (Object.hasOwn(binding, "shift") && binding.shift !== event.shiftKey) return false;
-  const expectedKey = binding.key.length === 1 ? binding.key.toLowerCase() : binding.key;
-  const eventKey = event.key.length === 1 ? event.key.toLowerCase() : event.key;
-  return expectedKey === eventKey;
-};
-
-const commandForEvent = (event) => {
-  for (const [command, bindings] of Object.entries(commandBindings)) {
-    if (bindings.some((binding) => bindingMatchesEvent(binding, event))) return command;
-  }
-  return null;
-};
-
 const executeCommand = (command) => {
   if (mode === "assumptions") {
     const assumptionCommands = {
@@ -3854,6 +3824,8 @@ const executeCommand = (command) => {
     cancelContext: () => cancelContext({ clearSelection: true }),
     undo: () => moveHistory("undo"),
     redo: () => moveHistory("redo"),
+    copySelection: subgraphClipboardController.copySelection,
+    pasteSelection: subgraphClipboardController.pasteSelection,
     deleteSelection: requestDeleteSelection,
     cycleNodeTypes: cycleSelectedNodeTypes,
     panUp: () => panViewport(0, -80),
@@ -4221,6 +4193,8 @@ window.__ltpSmokeTest = async () => {
     commandForEvent(new KeyboardEvent("keydown", { key: "p", ctrlKey: true })) === "panUp" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "f", ctrlKey: true })) === "panRight" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "x", metaKey: true })) === "toggleFrameCollapsed" &&
+    commandForEvent(new KeyboardEvent("keydown", { key: "c", metaKey: true })) === "copySelection" &&
+    commandForEvent(new KeyboardEvent("keydown", { key: "v", metaKey: true })) === "pasteSelection" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "d", ctrlKey: true })) === "deleteSelection" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "Delete" })) === "deleteSelection" &&
     commandForEvent(new KeyboardEvent("keydown", { key: "Backspace" })) === "deleteSelection";
@@ -4234,6 +4208,11 @@ window.__ltpSmokeTest = async () => {
   });
   nativeCutField.dispatchEvent(nativeCutEvent);
   const cmdXPreservesNativeCut = !nativeCutEvent.defaultPrevented;
+  const nativeClipboardPreserved = ["c", "v"].every((key) => {
+    const event = new KeyboardEvent("keydown", { key, metaKey: true, bubbles: true, cancelable: true });
+    nativeCutField.dispatchEvent(event);
+    return !event.defaultPrevented;
+  });
   nativeCutField.remove();
 
   const initialShell = document.querySelector(".canvas-shell");
@@ -4701,6 +4680,7 @@ window.__ltpSmokeTest = async () => {
       allShortcutsListed &&
       commandAndControlBindingsStayDistinct &&
       cmdXPreservesNativeCut &&
+      nativeClipboardPreserved &&
       viewportPreserved &&
       arrowEndsAtEdge &&
       routingStyleSelectorAvailable &&
@@ -4790,6 +4770,7 @@ window.__ltpSmokeTest = async () => {
     allShortcutsListed,
     commandAndControlBindingsStayDistinct,
     cmdXPreservesNativeCut,
+    nativeClipboardPreserved,
     viewportPreserved,
     arrowEndsAtEdge,
     routingStyleSelectorAvailable,
@@ -5568,6 +5549,23 @@ window.__ltpShortcutAuditStep = async (command, bindingIndex) => {
     await moveHistory("undo");
     await press();
     return result(tree().nodes.length === before + 1 && Boolean(nodeById()[createdId]), `Node ${createdId} restored=${Boolean(nodeById()[createdId])}; count=${tree().nodes.length}.`);
+  }
+
+  if (command === "copySelection" || command === "pasteSelection") {
+    const relation = tree().links.find((link) => nodeById()[link.targetNodeId]?.type !== "goal");
+    replaceSelection(relation.sourceNodeId);
+    toggleSelectionRoot(relation.targetNodeId);
+    if (command === "pasteSelection") subgraphClipboardController.copySelection();
+    const before = { nodes: tree().nodes.length, links: tree().links.length, revision: workspaceData.revision };
+    await press();
+    const clipboard = subgraphClipboardController.inspect();
+    if (command === "copySelection") {
+      return result(clipboard?.elements.length === 2 && clipboard.relations.length === 1 && workspaceData.revision === before.revision,
+        `Clipboard entities=${clipboard?.elements.length}; relations=${clipboard?.relations.length}; revision unchanged=${workspaceData.revision === before.revision}.`);
+    }
+    const atomic = tree().nodes.length === before.nodes + 2 && tree().links.length === before.links + 1 && workspaceData.revision === before.revision + 1;
+    return result(atomic && selectionRootIds.size === 2,
+      `Nodes ${before.nodes} -> ${tree().nodes.length}; links ${before.links} -> ${tree().links.length}; revision ${before.revision} -> ${workspaceData.revision}; selected=${selectionRootIds.size}.`);
   }
 
   if (command === "deleteSelection") {

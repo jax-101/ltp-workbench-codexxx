@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "activePackageId": "P52",
+  "activePackageId": "P53",
   "stages": [
     { "id": "S00", "name": "Foundation", "packageIds": ["P00"] },
     { "id": "S01", "name": "Core interaction iterations", "packageIds": ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10", "P11"] },

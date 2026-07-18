@@ -1433,9 +1433,28 @@ Aplicacion futura: incluir precondiciones exactas en todo plan, revalidar los
 recursos al aplicar, rechazar estado stale y emitir un recibo que permita un
 rollback condicionado en vez de una compensacion ciega.
 
+### L-116: Un portapapeles de grafos debe transportar un cierre, no una lista
+
+Fecha: 2026-07-18
+
+Evidencia: copiar dos extremos de una relacion simple parecia equivalente a
+copiar dos nodos y un link, pero una relacion AND podia tener varios inputs,
+assumptions por input y derivaciones hacia esas assumptions. Copiar solo la
+parte visible producia un grafo semanticamente distinto o invalido.
+
+Aprendizaje: en estructuras relacionales, la seleccion visual y la unidad
+transferible son contratos distintos. El portapapeles debe calcular un cierre
+explicito, versionarlo, rechazar referencias abiertas y materializar todos los
+IDs dentro de una unica transaccion.
+
+Aplicacion futura: definir reglas de cierre por tipo de artefacto; hacer el
+snapshot inmutable; separar captura y aplicacion; validar el mapa de IDs antes
+de escribir; y probar relaciones n-arias, metadatos dependientes, Undo/Redo y
+compatibilidad de versiones.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-116`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-117`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

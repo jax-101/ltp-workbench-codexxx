@@ -1,10 +1,11 @@
 const assert = require("node:assert/strict");
 const { createView, duplicateView, listDocuments, resolveDocument } = require("../../src/core/document-view");
 const { selectionClosure } = require("../../src/core/selection-model");
-const { expectCode, loadFixture } = require("./helpers");
+const { capture } = require("../../src/renderer/subgraph-clipboard");
+const { expectCode, loadMigratedFixture } = require("./helpers");
 
 const run = async () => {
-  const workspace = loadFixture();
+  const workspace = loadMigratedFixture();
   const documents = listDocuments(workspace);
   assert.equal(documents.length, workspace.trees.length);
   const document = resolveDocument(workspace, documents[0].id);
@@ -19,11 +20,15 @@ const run = async () => {
   const closure = new Set(selectionClosure(document, [document.hostFrameId], canvas.frames));
   assert(document.nodes.every((node) => closure.has(node.id)));
   assert(document.links.every((link) => closure.has(link.id)));
+  const clipboard = capture(document, closure);
+  assert.equal(clipboard.elements.length, document.semanticKernel.elements.length);
+  assert.equal(clipboard.relations.length, document.semanticKernel.relations.length);
+  assert(Object.isFrozen(clipboard), "clipboard snapshots are immutable view read models");
   await expectCode(() => Promise.resolve(resolveDocument(workspace, "missing")), "DOCUMENT_NOT_FOUND");
 };
 
 run().then(() => {
-  console.log("View acceptance passed: documents, independent views, deterministic selection and stable errors.");
+  console.log("View acceptance passed: documents, independent views, deterministic selection, closed clipboard and stable errors.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

@@ -52,6 +52,11 @@ const steps = [
     args: ["run", "test:semantic-migration"]
   },
   {
+    name: "Test atomic subgraph copy and paste",
+    command: "npm",
+    args: ["run", "test:subgraph-transfer"]
+  },
+  {
     name: "Test native CRT vertical",
     command: "npm",
     args: ["run", "test:crt"]

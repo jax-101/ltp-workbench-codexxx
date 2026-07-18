@@ -3,7 +3,7 @@ const { current, isDraft } = require("immer");
 const { getDiagramDefinition } = require("./diagram-registry");
 const { NATIVE_STORAGE_MODE } = require("./semantic-render-projection");
 const { normalizeAssumptionStatus } = require("./semantic-lifecycle");
-
+const { createSubgraphPasteHandler } = require("./subgraph-transfer");
 const cloneValue = (value) => structuredClone(isDraft(value) ? current(value) : value);
 
 const LEGACY_TYPE_BY_SEMANTIC_TYPE = Object.freeze({
@@ -133,7 +133,7 @@ const createCommandRegistry = () => {
     if (!handler) throw new LtpError("COMMAND_UNKNOWN", `Unknown command type: ${command.type}`, { type: command.type });
     return handler(draft, command.payload || {}, context);
   };
-
+  register("semantic.subgraph.paste", createSubgraphPasteHandler({ findTree, findCanvas, requireSemanticKernel, isNativeSemanticTree, requireUniqueSemanticId, requireSemanticElementType, refreshGoalTreeLinkText }));
   register("workspace.replace", (draft, payload) => {
     if (!payload.workspace) throw new LtpError("COMMAND_INVALID", "workspace.replace requires payload.workspace");
     const replacement = structuredClone(payload.workspace);

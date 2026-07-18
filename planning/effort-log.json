@@ -182,6 +182,24 @@
       "actualTokens": 334018,
       "source": "codex-goal-delta",
       "note": "Goal usage delta: 728298 cumulative at P51 close minus the 394280 P50 checkpoint; elapsed goal time advanced from 1023 to 1911 seconds."
+    },
+    {
+      "id": "E0015",
+      "packageId": "P52",
+      "recordedAt": "2026-07-18T01:13:11.828Z",
+      "status": "tracking",
+      "actualTokens": null,
+      "source": "codex-goal-delta",
+      "note": "P52 starts at cumulative goal checkpoint 728298 tokens; final actual will be measured as the later goal total minus this checkpoint."
+    },
+    {
+      "id": "E0016",
+      "packageId": "P52",
+      "recordedAt": "2026-07-18T01:25:38.655Z",
+      "status": "measured",
+      "actualTokens": 453031,
+      "source": "codex-goal-delta",
+      "note": "Goal usage delta: 1181329 cumulative at P52 close minus the 728298 P51 checkpoint; elapsed goal time advanced from 1911 to 2894 seconds."
     }
   ],
   "estimateRevisions": [
@@ -228,6 +246,17 @@
       "reason": "P50 reported 394280 tokens against a 70k baseline (5.63x). P51 is the nearest package in the same Definition Runtime class and spans CLI, migration and packaging contracts, so its forecast is rounded to 400k without revising unrelated packages.",
       "evidenceEvents": [
         "E0012"
+      ]
+    },
+    {
+      "id": "R0005",
+      "packageId": "P53",
+      "recordedAt": "2026-07-18",
+      "previousTokens": 18000,
+      "revisedTokens": 200000,
+      "reason": "P52 reported 453031 tokens against a 32k baseline (14.16x). P53 is the nearest interaction package but has a narrower semantic blast radius, so its forecast is conservatively raised to 200k without revising later packages before another comparable actual is available.",
+      "evidenceEvents": [
+        "E0016"
       ]
     }
   ]

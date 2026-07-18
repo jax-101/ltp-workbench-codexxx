@@ -20,6 +20,8 @@ window.LTP_COMMAND_BINDINGS = Object.freeze({
   cancelContext: [{ key: "g", control: true }],
   undo: [{ key: "z", primary: true, shift: false }],
   redo: [{ key: "z", primary: true, shift: true }, { key: "y", primary: true }],
+  copySelection: [{ key: "c", primary: true }],
+  pasteSelection: [{ key: "v", primary: true }],
   deleteSelection: [{ key: "Delete" }, { key: "Backspace" }, { key: "d", control: true }],
   cycleNodeTypes: [{ key: "Tab", shift: true }],
   panUp: [{ key: "ArrowUp" }, { key: "p", control: true }],
@@ -58,6 +60,8 @@ window.LTP_COMMAND_LABELS = Object.freeze({
   cancelContext: "Cancel or clear selection",
   undo: "Undo last change",
   redo: "Redo last change",
+  copySelection: "Copy selected subgraph",
+  pasteSelection: "Paste copied subgraph",
   deleteSelection: "Delete selection",
   cycleNodeTypes: "Cycle selected entity types",
   panUp: "Move view up",
@@ -72,4 +76,51 @@ window.LTP_COMMAND_LABELS = Object.freeze({
   toggleLeftPanel: "Toggle left panel",
   toggleRightPanel: "Toggle right panel",
   runAutoLayout: "Run automatic layout"
+});
+
+const displayShortcutKey = (key) => ({
+  " ": "Space",
+  ArrowUp: "Up",
+  ArrowDown: "Down",
+  ArrowLeft: "Left",
+  ArrowRight: "Right",
+  Backspace: "Backspace",
+  Delete: "Delete",
+  Enter: "Enter"
+})[key] || key.toUpperCase();
+
+const formatConfiguredShortcut = (binding) => {
+  const parts = [];
+  if (binding.command) parts.push("Cmd");
+  else if (binding.primary) parts.push("Cmd/Ctrl");
+  if (binding.control) parts.push("Ctrl");
+  if (binding.alt) parts.push("Alt");
+  if (binding.shift) parts.push("Shift");
+  parts.push(displayShortcutKey(binding.key));
+  return parts.join("+");
+};
+
+const bindingMatchesEvent = (binding, event) => {
+  const primaryPressed = event.metaKey || event.ctrlKey;
+  if (binding.command) {
+    if (!event.metaKey || event.ctrlKey) return false;
+  } else if (binding.primary) {
+    if (!primaryPressed) return false;
+  } else if (binding.control) {
+    if (!event.ctrlKey || event.metaKey) return false;
+  } else if (primaryPressed) return false;
+  if (Boolean(binding.alt) !== event.altKey) return false;
+  if (Object.hasOwn(binding, "shift") && binding.shift !== event.shiftKey) return false;
+  const expectedKey = binding.key.length === 1 ? binding.key.toLowerCase() : binding.key;
+  const eventKey = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  return expectedKey === eventKey;
+};
+
+const resolveConfiguredCommand = (event, bindings = window.LTP_COMMAND_BINDINGS) =>
+  Object.entries(bindings).find(([, candidates]) =>
+    candidates.some((binding) => bindingMatchesEvent(binding, event)))?.[0] || null;
+
+window.LTP_COMMAND_CONFIG = Object.freeze({
+  commandForEvent: resolveConfiguredCommand,
+  formatShortcutBinding: formatConfiguredShortcut
 });

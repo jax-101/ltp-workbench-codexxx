@@ -2,8 +2,8 @@
   "name": "ltp-workbench",
   "version": "0.1.0",
   "ltpBuild": {
-    "id": "3C.15d",
-    "name": "Definition Tooling and Migrations",
+    "id": "3C.16a",
+    "name": "Atomic Subgraph Clipboard",
     "channel": "prototype"
   },
   "description": "Standalone desktop app for working through problems with Dettmer's Logical Thinking Process.",
@@ -39,6 +39,7 @@
     "definitions:build": "node scripts/build-official-definition-registry.js",
     "definitions:check": "node scripts/build-official-definition-registry.js --check",
     "test:semantic-migration": "node scripts/test-semantic-migration.js",
+    "test:subgraph-transfer": "node scripts/test-subgraph-transfer.js",
     "test:crt": "node scripts/test-crt-vertical.js",
     "test:crt:visual": "LTP_CRT_TEST=1 electron .",
     "test:ec": "node scripts/test-ec-cloud.js",
