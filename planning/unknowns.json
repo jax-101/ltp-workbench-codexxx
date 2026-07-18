@@ -131,6 +131,16 @@
       "resultingPackages": ["P50"],
       "scopeAddedTokens": 0,
       "note": "P48 proves the artifact contract and minimal fixture. P50 must express Goal Tree, CRT and multipartite EC through the same schema without privileged code paths."
+    },
+    {
+      "id": "U014",
+      "title": "GitHub Actions v4 still declares the deprecated Node 20 action runtime",
+      "discoveredDuring": "P49",
+      "status": "assessed",
+      "impact": "low",
+      "resultingPackages": ["P75"],
+      "scopeAddedTokens": 0,
+      "note": "Hosted run 29623088953 passed because GitHub forced the actions onto Node 24, but checkout/setup-node should be upgraded and reverified during product hardening. Existing P75 scope covers this maintenance."
     }
   ]
 }

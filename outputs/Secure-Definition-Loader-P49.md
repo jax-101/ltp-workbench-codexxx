@@ -51,6 +51,7 @@ workspace adapters consume this result rather than duplicating its policy.
 - Full headless prototype regression including semantic, CRT, EC and layout: PASS.
 - Standalone macOS package: PASS in isolated output; all runtime, schema and AJV paths present.
 - Production dependency audit: zero reported vulnerabilities.
+- Hosted [Quality Gate run 29623088953](https://github.com/jax-101/ltp-workbench/actions/runs/29623088953): PASS.
 
 The default `outputs/dist` package target was occupied by an existing macOS
 application and could not be replaced. Verification used an isolated output
@@ -59,8 +60,10 @@ skipped because no Developer ID Application certificate is configured.
 
 ## Traceability
 
-No new scope unknown was discovered. `U013` remains assessed for P50, where
+`U013` remains assessed for P50, where
 Goal Tree, CRT and multipartite EC must prove the v1 schema and loader without
 privileged code paths. Runtime token telemetry was unavailable for this task;
 event `E0011` records that fact and does not substitute the 450k forecast as an
-actual. Weighted known-scope progress is `61.2%`.
+actual. Hosted CI exposed low-impact `U014`, assigned to existing P75 hardening
+scope without changing the denominator. Weighted known-scope progress is
+`61.2%`.

@@ -170,8 +170,9 @@ the denominator from that point onward.
 | U011 | Layout output depended on implicit wall clock | Resolved | Layout requests accept an explicit timestamp for deterministic acceptance |
 | U012 | First hosted CI execution | Resolved | Two hosted Quality Gate runs passed with functional regression gated by architecture |
 | U013 | Definition v1 official-package expressiveness | Assessed | P50 must prove Goal Tree, CRT and multipartite EC without privileged paths |
+| U014 | GitHub Actions v4 Node 20 runtime deprecation | Assessed | Upgrade actions and reverify within existing P75 hardening scope |
 
-Current register: 13 unknowns; five converted, three assessed, two mitigated and
+Current register: 14 unknowns; five converted, four assessed, two mitigated and
 three resolved. There are no untriaged open unknowns today. This does not
 imply that future unknowns do not exist; it states only what has been
 discovered.

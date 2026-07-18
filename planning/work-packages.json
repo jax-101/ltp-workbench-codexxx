@@ -79,7 +79,7 @@
     { "id": "P72", "phase": "AI integration", "name": "MCP and LLM adapter with permission scoping", "status": "planned", "completion": 0, "estimatedTokens": 70000, "originUnknownIds": ["U006"] },
     { "id": "P73", "phase": "AI integration", "name": "AI-assisted creation, editing and review UX", "status": "planned", "completion": 0, "estimatedTokens": 100000, "originUnknownIds": ["U006"] },
     { "id": "P74", "phase": "AI integration", "name": "LLM evaluations, audit and safety", "status": "planned", "completion": 0, "estimatedTokens": 65000, "originUnknownIds": ["U006"] },
-    { "id": "P75", "phase": "Product readiness", "name": "Hardening, accessibility, performance and release", "status": "planned", "completion": 0, "estimatedTokens": 100000 },
+    { "id": "P75", "phase": "Product readiness", "name": "Hardening, accessibility, performance and release", "status": "planned", "completion": 0, "estimatedTokens": 100000, "originUnknownIds": ["U014"] },
     { "id": "P76", "phase": "Scope governance", "name": "Weighted scope baseline and automated progress reporting", "status": "done", "completion": 100, "estimatedTokens": 15000 },
     { "id": "P77", "phase": "Scope governance", "name": "Actual effort ledger and unknown traceability", "status": "done", "completion": 100, "estimatedTokens": 25000, "originUnknownIds": ["U007"] }
   ]
