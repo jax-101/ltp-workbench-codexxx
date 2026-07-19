@@ -1500,9 +1500,27 @@ Aplicacion futura: escribir de forma atomica, validar antes de promover, mantene
 `last-known-good`, devolver estado de recuperacion a la UI y ofrecer un reset
 que no dependa de los bindings personalizados.
 
+### L-120: Restaurar estado exige controlar la siguiente captura del renderer
+
+Fecha: 2026-07-19
+
+Evidencia: el controlador de foco devolvia correctamente el pan general, pero
+la primera linea del render volvia a leer el scroll del DOM enfocado y lo
+sobrescribia antes de aplicarlo. La prueba pura pasaba mientras la integracion
+visual podia perder la posicion exterior.
+
+Aprendizaje: una restauracion no termina al asignar el modelo; debe definir si
+el siguiente ciclo de render lee estado saliente o proyecta el estado
+restaurado. Las fronteras read-before-write necesitan una opcion explicita y
+evidencia que cruce controlador, DOM y persistencia.
+
+Aplicacion futura: capturar una sola vez al entrar, suspender persistencia para
+vistas temporales, permitir render sin recaptura al restaurar y comprobar zoom,
+pan, seleccion y paneles despues del siguiente frame visual.
+
 ## Proximas entradas
 
-Las nuevas lecciones se anadiran cronologicamente a partir de `L-120`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
+Las nuevas lecciones se anadiran cronologicamente a partir de `L-121`. Si una experiencia refina una entrada existente, se actualizara esa entrada y se anotara la fecha de revision en lugar de duplicar el principio.
 
 ## Plantilla
 

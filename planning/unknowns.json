@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-07-18",
+  "updated": "2026-07-19",
   "unknowns": [
     {
       "id": "U001",
@@ -141,6 +141,16 @@
       "resultingPackages": ["P75"],
       "scopeAddedTokens": 0,
       "note": "Hosted run 29623088953 passed because GitHub forced the actions onto Node 24, but checkout/setup-node should be upgraded and reverified during product hardening. Existing P75 scope covers this maintenance."
+    },
+    {
+      "id": "U015",
+      "title": "Calibration ratio mixes partial actuals with a fully measured denominator",
+      "discoveredDuring": "P55",
+      "status": "open",
+      "impact": "low",
+      "resultingPackages": [],
+      "scopeAddedTokens": 0,
+      "note": "scope:status adds partial actual tokens to the ratio numerator while its estimate denominator includes only fully measured packages. No fix or new scope was accepted during P55."
     }
   ]
 }

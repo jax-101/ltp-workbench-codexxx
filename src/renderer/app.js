@@ -2,7 +2,6 @@ let workspaceData = null;
 let workspaceSessionInfo = { id: null, locator: null, documents: [] };
 let activeDocumentId = null;
 let activeViewId = null;
-let focusFrameId = null;
 let buildInfo = { version: "0.0.0", id: "loading", name: "Loading build" };
 let keymapState = { status: "loading", issues: [] };
 let selectedElementId = null;
@@ -292,6 +291,7 @@ const collapsedAncestorFrame = (frameId, includeSelf = true) => {
   let collapsedFrame = null;
   if (!includeSelf) frame = frames[frame?.parentFrameId];
   while (frame) {
+    if (frame.id === frameFocus.currentFrameId()) break;
     if (frame.collapsed) collapsedFrame = frame;
     frame = frames[frame.parentFrameId];
   }
@@ -299,15 +299,17 @@ const collapsedAncestorFrame = (frameId, includeSelf = true) => {
 };
 
 const frameIsVisible = (frame) =>
-  Boolean(frame && frame.id !== rootFrameId() && !collapsedAncestorFrame(frame.parentFrameId));
-const nodeIsVisible = (node) => Boolean(node && !collapsedAncestorFrame(node.frameId));
+  Boolean(frame && frame.id !== rootFrameId() && frameFocus.containsFrame(frame.id) &&
+    (frame.id === frameFocus.currentFrameId() || !collapsedAncestorFrame(frame.parentFrameId)));
+const nodeIsVisible = (node) => Boolean(node && frameFocus.containsNode(node) && !collapsedAncestorFrame(node.frameId));
 const visibleEndpointId = (nodeId) => collapsedAncestorFrame(nodeById()[nodeId]?.frameId)?.id || nodeId;
 const visibleEndpointBox = (nodeId) => {
   const endpointId = visibleEndpointId(nodeId);
   return frameById()[endpointId] ? layoutFrame(endpointId) : layoutNode(endpointId);
 };
 const linkIsVisible = (link) =>
-  Boolean(link && visibleEndpointId(link.sourceNodeId) !== visibleEndpointId(link.targetNodeId));
+  Boolean(link && (!frameFocus.currentFrameId() || (nodeIsVisible(nodeById()[link.sourceNodeId]) && nodeIsVisible(nodeById()[link.targetNodeId]))) &&
+    visibleEndpointId(link.sourceNodeId) !== visibleEndpointId(link.targetNodeId));
 
 const layoutLink = (linkId) => tree()?.layout?.links?.[linkId] || { labelPosition: { x: 0, y: 0 }, route: [], routeSource: "auto" };
 
@@ -346,7 +348,7 @@ const captureViewport = () => {
 
 const updateViewState = () => {
   const activeCanvas = canvas();
-  if (!activeCanvas) return;
+  if (!activeCanvas || frameFocus.currentFrameId()) return;
   activeCanvas.viewState = {
     ...(activeCanvas.viewState || {}),
     activeFrameId,
@@ -360,7 +362,7 @@ const updateViewState = () => {
 };
 
 const scheduleViewStatePersist = () => {
-  if (layoutAnimating) return;
+  if (layoutAnimating || frameFocus.currentFrameId()) return;
   window.clearTimeout(viewPersistTimer);
   viewPersistTimer = window.setTimeout(async () => {
     updateViewState();
@@ -423,6 +425,7 @@ const setZoom = (nextZoom, options = {}) => {
 const resetZoom = () => setZoom(1);
 
 const fitView = () => {
+  if (frameFocus.currentFrameId()) return fitFocusedFrame(frameFocus.currentFrameId());
   const shell = app.querySelector(".canvas-shell");
   if (!shell) return;
   const size = canvasSize();
@@ -433,6 +436,50 @@ const fitView = () => {
   setViewportPosition(0, 0);
   refreshHintsForViewport();
   setStatus(`Diagram fitted at ${Math.round(zoomLevel * 100)}%`);
+};
+
+const frameFocus = window.LTP_FRAME_FOCUS_VIEW.create({
+  getFrames: () => canvas()?.frames || [],
+  getRootFrameId: rootFrameId,
+  captureView: () => ({ zoom: zoomLevel, pan: { ...viewportState }, activeFrameId, selectedElementId,
+    selectionRootIds: [...selectionRootIds], mode, hintsVisible, panelState: { ...panelState } }),
+  activateView: (frameId) => { activeFrameId = frameId; replaceSelection(frameId); mode = "navigation"; hintsVisible = false; },
+  restoreView: (view) => {
+    zoomLevel = view.zoom; viewportState = { ...view.pan }; activeFrameId = view.activeFrameId;
+    selectedElementId = view.selectedElementId; selectionRootIds = new Set(view.selectionRootIds);
+    mode = view.mode; hintsVisible = view.hintsVisible; panelState = { ...view.panelState }; rebuildSelection();
+  }
+});
+
+const fitFocusedFrame = (frameId) => {
+  const shell = app.querySelector(".canvas-shell");
+  const box = layoutFrame(frameId);
+  zoomLevel = clamp(Math.min((shell.clientWidth - 72) / box.width, (shell.clientHeight - 110) / box.height), 0.35, 2.5);
+  render();
+  setViewportPosition(box.x * zoomLevel - 28, box.y * zoomLevel - 58, { persist: false });
+  refreshHintsForViewport();
+  setStatus(`Focused frame fitted at ${Math.round(zoomLevel * 100)}%`);
+};
+
+const enterFrameFocus = (frameId = selectedFrame()?.id) => {
+  const frame = frameById()[frameId];
+  if (!frame || frame.collapsed || collapsedAncestorFrame(frame.parentFrameId)) {
+    return setStatus("Expand the frame before focusing it");
+  }
+  captureViewport();
+  const result = frameFocus.enter(frameId);
+  if (!result.ok) return setStatus(result.error.message);
+  render();
+  requestAnimationFrame(() => fitFocusedFrame(frameId));
+  setStatus(`Focused frame: ${frameById()[frameId].name}`);
+};
+
+const exitFrameFocus = (targetFrameId) => {
+  const result = targetFrameId === undefined ? frameFocus.exit() : frameFocus.exitTo(targetFrameId || null);
+  if (!result?.ok) return setStatus(result?.error?.message || "Frame focus is not active");
+  render({ captureViewport: false });
+  requestAnimationFrame(() => setViewportPosition(viewportState.left, viewportState.top, { persist: false }));
+  setStatus(frameFocus.currentFrameId() ? `Focused frame: ${frameById()[frameFocus.currentFrameId()].name}` : "Frame focus closed");
 };
 
 const centerSelection = () => {
@@ -1355,7 +1402,7 @@ const validFrameTargetIds = () => {
     if (root.type !== "frame") continue;
     for (const frameId of frameDescendantIds(root.id, true)) invalid.add(frameId);
   }
-  return new Set(canvas().frames.filter((frame) => !invalid.has(frame.id)).map((frame) => frame.id));
+  return new Set(canvas().frames.filter((frame) => !invalid.has(frame.id) && frameFocus.containsFrame(frame.id)).map((frame) => frame.id));
 };
 
 const applyFrameMoves = async (moves, label) => {
@@ -1412,7 +1459,7 @@ const moveSelectionToParent = async () => {
       const currentParent = frameById()[frameById()[root.id]?.parentFrameId];
       return currentParent?.parentFrameId ? { ...root, targetFrameId: currentParent.parentFrameId } : null;
     })
-    .filter(Boolean);
+    .filter((move) => move && frameFocus.containsFrame(move.targetFrameId));
   if (!moves.length) {
     setStatus("The selected roots cannot move any higher");
     return;
@@ -2016,7 +2063,7 @@ const togglePin = async () => {
 
 const toggleFrameCollapsed = async () => {
   const frame = selectedFrame();
-  if (!frame || frame.id === rootFrameId()) {
+  if (!frame || frame.id === rootFrameId() || frame.id === frameFocus.currentFrameId()) {
     setStatus("Select a non-root frame to minimize or expand it");
     return;
   }
@@ -2180,6 +2227,7 @@ const exportMarkdown = async () => {
 };
 
 const selectParentFrame = () => {
+  if (frameFocus.currentFrameId()) return exitFrameFocus();
   const frame = frameById()[activeFrameId];
   if (frame?.parentFrameId) {
     activeFrameId = frame.parentFrameId;
@@ -2190,7 +2238,7 @@ const selectParentFrame = () => {
 
 const setActiveFrame = (frameId) => {
   const frame = frameById()[frameId];
-  if (!frame) return;
+  if (!frame || !frameFocus.containsFrame(frameId)) return;
   if (frame.collapsed || collapsedAncestorFrame(frame.parentFrameId)) {
     replaceSelection(collapsedAncestorFrame(frame.id)?.id || frame.id);
     setStatus("Expand the frame before using it as the creation frame");
@@ -2206,14 +2254,7 @@ const setActiveFrame = (frameId) => {
 
 const enterSelectedFrame = () => {
   const frame = selectedFrame();
-  if (frame) {
-    if (frame.collapsed) {
-      setStatus("Expand the frame before entering it");
-      return;
-    }
-    activeFrameId = frame.id;
-    render();
-  }
+  if (frame) enterFrameFocus(frame.id);
 };
 
 const beginConnection = () => {
@@ -2424,14 +2465,14 @@ const renderSidebar = () => {
           <dd>
             <div class="frame-context-row">
               <select class="frame-context-select" data-active-frame aria-label="Creation frame">
-                ${canvas().frames
+                ${canvas().frames.filter((frame) => frameFocus.containsFrame(frame.id))
                   .map(
                     (frame) =>
                       `<option value="${frame.id}" ${frame.id === activeFrameId ? "selected" : ""}>${escapeHtml(frame.name)}${frame.id === rootFrameId() ? " (root)" : ""}</option>`
                   )
                   .join("")}
               </select>
-              <button class="frame-root-action" data-action="activate-root-frame" title="Use root as creation frame">Root</button>
+              ${frameFocus.currentFrameId() ? "" : '<button class="frame-root-action" data-action="activate-root-frame" title="Use root as creation frame">Root</button>'}
             </div>
           </dd>
         </dl>
@@ -2464,10 +2505,11 @@ const renderFrames = () => {
       const selected = selectionRootIds.has(frame.id) ? "selected" : "";
       const included = selectionIds.has(frame.id) && !selectionRootIds.has(frame.id) ? "selection-included" : "";
       const collapsed = frame.collapsed ? "collapsed" : "";
+      const focused = frame.id === frameFocus.currentFrameId() ? "focus-root" : "";
       const inventory = frame.collapsed ? frameInventory(frame.id) : null;
       const entityCount = inventory ? inventory.types.reduce((total, [, count]) => total + count, 0) : 0;
       return `
-        <button class="tree-frame ${active} ${selected} ${included} ${collapsed}" data-element-id="${frame.id}" data-element-type="frame" data-parent-frame-id="${frame.parentFrameId || ""}"
+        <button class="tree-frame ${active} ${selected} ${included} ${collapsed} ${focused}" data-element-id="${frame.id}" data-element-type="frame" data-parent-frame-id="${frame.parentFrameId || ""}"
           style="left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;">
           <span>${escapeHtml(frame.name)}</span>
           <small>${frame.collapsed ? `Minimized - ${entityCount} entities` : escapeHtml(frame.semanticType || "visual frame")}</small>
@@ -2785,52 +2827,32 @@ const renderHints = () => {
     .join("");
 };
 
-const breadcrumb = () => {
-  const frames = frameById();
-  const parts = [];
-  let frame = frames[activeFrameId];
-  while (frame) {
-    parts.unshift(frame.name);
-    frame = frames[frame.parentFrameId];
-  }
-  return [system()?.name, tree()?.name, ...parts].filter(Boolean).join(" / ");
-};
+const renderBreadcrumbs = () => window.LTP_FRAME_FOCUS_BREADCRUMBS.render({
+  frames: canvas()?.frames, focusPath: frameFocus.path(), activeFrameId,
+  systemName: system()?.name, documentName: tree()?.name
+});
 
-const minimapMetrics = () => {
-  const size = canvasSize();
+const minimapProjection = () => {
   const shell = app.querySelector(".canvas-shell");
-  const maxWidth = 180;
-  const maxHeight = 120;
-  const clientWidth = shell?.clientWidth || viewportSize.width;
-  const clientHeight = shell?.clientHeight || viewportSize.height;
-  const domain = {
-    x: 0,
-    y: 0,
-    width: Math.max(size.width, clientWidth / zoomLevel),
-    height: Math.max(size.height, clientHeight / zoomLevel)
-  };
-  const scale = Math.min(maxWidth / domain.width, maxHeight / domain.height);
-  return {
-    scale,
-    domain,
-    width: Math.max(1, Math.round(domain.width * scale)),
-    height: Math.max(1, Math.round(domain.height * scale))
-  };
+  const focusedFrameId = frameFocus.currentFrameId();
+  const links = tree().links.filter(linkIsVisible).map((link) => ({
+    source: centerOf(visibleEndpointBox(link.sourceNodeId)),
+    target: centerOf(visibleEndpointBox(link.targetNodeId))
+  }));
+  return window.LTP_MINIMAP.project({
+    size: canvasSize(),
+    clientWidth: shell?.clientWidth || viewportSize.width,
+    clientHeight: shell?.clientHeight || viewportSize.height,
+    zoom: zoomLevel,
+    viewport: viewportState,
+    domain: focusedFrameId ? { ...layoutFrame(focusedFrameId) } : undefined,
+    frames: canvas().frames.filter(frameIsVisible).map((frame) => ({ box: layoutFrame(frame.id) })),
+    nodes: tree().nodes.filter(nodeIsVisible).map((node) => ({ box: layoutNode(node.id), type: node.type })),
+    links
+  });
 };
-
-const minimapViewportStyle = (metrics = minimapMetrics()) => {
-  const shell = app.querySelector(".canvas-shell");
-  const clientWidth = shell?.clientWidth || viewportSize.width;
-  const clientHeight = shell?.clientHeight || viewportSize.height;
-  const width = clamp((clientWidth / zoomLevel) * metrics.scale, 4, metrics.width);
-  const height = clamp((clientHeight / zoomLevel) * metrics.scale, 4, metrics.height);
-  return {
-    left: clamp((viewportState.left / zoomLevel - metrics.domain.x) * metrics.scale, 0, metrics.width - width),
-    top: clamp((viewportState.top / zoomLevel - metrics.domain.y) * metrics.scale, 0, metrics.height - height),
-    width,
-    height
-  };
-};
+const minimapMetrics = () => minimapProjection().metrics;
+const minimapViewportStyle = () => minimapProjection().viewport;
 
 const updateMinimapViewport = () => {
   const viewport = app.querySelector(".minimap-viewport");
@@ -2842,45 +2864,10 @@ const updateMinimapViewport = () => {
   viewport.style.height = `${style.height}px`;
 };
 
-const renderMinimapContents = (metrics) => {
-  const viewport = minimapViewportStyle(metrics);
-  const mapX = (value) => (value - metrics.domain.x) * metrics.scale;
-  const mapY = (value) => (value - metrics.domain.y) * metrics.scale;
-  const linkLines = tree()
-    .links.filter(linkIsVisible)
-    .map((link) => {
-      const source = centerOf(visibleEndpointBox(link.sourceNodeId));
-      const target = centerOf(visibleEndpointBox(link.targetNodeId));
-      return `<line x1="${mapX(source.x)}" y1="${mapY(source.y)}" x2="${mapX(target.x)}" y2="${mapY(target.y)}" />`;
-    })
-    .join("");
-  const frames = canvas()
-    .frames.filter(frameIsVisible)
-    .map((frame) => {
-      const box = layoutFrame(frame.id);
-      return `<div class="minimap-frame" style="left:${mapX(box.x)}px;top:${mapY(box.y)}px;width:${box.width * metrics.scale}px;height:${box.height * metrics.scale}px;"></div>`;
-    })
-    .join("");
-  const nodes = tree()
-    .nodes.filter(nodeIsVisible)
-    .map((node) => {
-      const box = layoutNode(node.id);
-      return `<div class="minimap-node minimap-node-${node.type}" style="left:${mapX(box.x)}px;top:${mapY(box.y)}px;width:${Math.max(3, box.width * metrics.scale)}px;height:${Math.max(2, box.height * metrics.scale)}px;"></div>`;
-    })
-    .join("");
-
-  return `
-    <svg viewBox="0 0 ${metrics.width} ${metrics.height}" width="${metrics.width}" height="${metrics.height}">${linkLines}</svg>
-    ${frames}
-    ${nodes}
-    <div class="minimap-viewport" style="left:${viewport.left}px;top:${viewport.top}px;width:${viewport.width}px;height:${viewport.height}px;"></div>
-  `;
-};
-
 const updateMinimapGeometry = () => {
   const map = app.querySelector("[data-minimap-map]");
   if (!map) return;
-  const metrics = minimapMetrics();
+  const { metrics, html } = minimapProjection();
   map.dataset.scale = metrics.scale;
   map.dataset.originX = metrics.domain.x;
   map.dataset.originY = metrics.domain.y;
@@ -2888,16 +2875,15 @@ const updateMinimapGeometry = () => {
   map.dataset.domainHeight = metrics.domain.height;
   map.style.width = `${metrics.width}px`;
   map.style.height = `${metrics.height}px`;
-  map.innerHTML = renderMinimapContents(metrics);
+  map.innerHTML = html;
 };
 
 const renderMinimap = () => {
-  const metrics = minimapMetrics();
-
+  const { metrics, html } = minimapProjection();
   return `
     <div class="minimap" aria-label="Diagram minimap">
       <div class="minimap-map" data-minimap-map data-scale="${metrics.scale}" data-origin-x="${metrics.domain.x}" data-origin-y="${metrics.domain.y}" data-domain-width="${metrics.domain.width}" data-domain-height="${metrics.domain.height}" style="width:${metrics.width}px;height:${metrics.height}px;">
-        ${renderMinimapContents(metrics)}
+        ${html}
       </div>
     </div>
   `;
@@ -3130,14 +3116,14 @@ const renderCanvas = () => {
   const scaledHeight = Math.round(size.height * zoomLevel);
   const inventory = selectedFrame() ? frameInventory(selectedElementId) : null;
   return `
-    <main class="prototype-main">
+    <main class="prototype-main ${frameFocus.currentFrameId() ? "frame-focus-active" : ""}">
       <header class="prototype-topbar">
         <div>
           <div class="topbar-title-row">
             <h2>${escapeHtml(tree()?.name)}</h2>
             <span class="build-identity" title="${escapeHtml(buildInfo.name)}">v${escapeHtml(buildInfo.version)} | build ${escapeHtml(buildInfo.id)}</span>
           </div>
-          <p>${escapeHtml(breadcrumb())}</p>
+          ${renderBreadcrumbs()}
         </div>
         <div class="topbar-actions">
           <input class="search-input" data-search value="${escapeHtml(searchText)}" placeholder="Search (/)" />
@@ -3179,6 +3165,7 @@ const renderCanvas = () => {
           ${inventory ? renderFrameInventoryItems(inventory) : `<span>Selected: <strong>${selectionRootIds.size}</strong></span>`}
           <span>Sources: <strong>${connectionSourceIds.size}</strong></span>
           <span>Frame: <strong>${escapeHtml(frameById()[activeFrameId]?.name || "none")}${activeFrameId === rootFrameId() ? " (root)" : ""}</strong></span>
+          <span>View: <strong>${frameFocus.currentFrameId() ? `Focused · ${escapeHtml(frameById()[frameFocus.currentFrameId()]?.name)}` : "General"}</strong></span>
           <span>Zoom: <strong>${Math.round(zoomLevel * 100)}%</strong></span>
           <span data-status>${escapeHtml(statusText)}</span>
         </div>
@@ -3254,7 +3241,7 @@ const renderInspector = () => {
         <label>Frame</label>
         <select data-node-frame data-id="${node.id}">
           ${canvas()
-            .frames.map(
+            .frames.filter((frame) => frameFocus.containsFrame(frame.id)).map(
               (frame) =>
                 `<option value="${frame.id}" ${node.frameId === frame.id ? "selected" : ""}>${escapeHtml(frame.name)}</option>`
             )
@@ -3270,6 +3257,7 @@ const renderInspector = () => {
 
   if (frame) {
     const inventory = frameInventory(frame.id);
+    const isFocusRoot = frame.id === frameFocus.currentFrameId();
     return `
       <aside class="inspector">
         <button class="panel-toggle" data-action="toggle-right-panel" title="Hide inspector" aria-label="Hide inspector">&gt;</button>
@@ -3282,10 +3270,10 @@ const renderInspector = () => {
         <textarea data-frame-field="notes" data-id="${frame.id}">${escapeHtml(frame.notes || "")}</textarea>
         <label>Contents</label>
         <div class="frame-inventory">${renderFrameInventoryItems(inventory)}</div>
-        <button data-action="enter-frame">Enter frame</button>
-        <button data-action="toggle-frame-collapsed">${frame.collapsed ? "Expand frame" : "Minimize frame"}</button>
+        <button data-action="${isFocusRoot ? "exit-frame-focus" : "enter-frame"}">${isFocusRoot ? "Exit frame focus" : "Focus frame"}</button>
+        ${isFocusRoot ? "" : `<button data-action="toggle-frame-collapsed">${frame.collapsed ? "Expand frame" : "Minimize frame"}</button>`}
         <button data-action="pin">Toggle pin</button>
-        ${frame.id === rootFrameId() || frame.id === tree().hostFrameId ? "" : '<button class="danger-action" data-action="delete-selection">Delete frame</button>'}
+        ${frame.id === rootFrameId() || frame.id === tree().hostFrameId || isFocusRoot ? "" : '<button class="danger-action" data-action="delete-selection">Delete frame</button>'}
       </aside>
     `;
   }
@@ -3436,8 +3424,8 @@ const renderAssumptionWorkbench = () => {
   `;
 };
 
-const render = () => {
-  captureViewport();
+const render = (options = {}) => {
+  if (options.captureViewport !== false) captureViewport();
   updateViewState();
   refreshMaps();
   app.innerHTML = `
@@ -3669,6 +3657,7 @@ const bindEvents = () => {
       if (action === "toggle-frame-collapsed") toggleFrameCollapsed();
       if (action === "add-assumption") addAssumptionToSelectedLink();
       if (action === "enter-frame") enterSelectedFrame();
+      if (action === "exit-frame-focus") exitFrameFocus();
       if (action === "open-node-preview") openNodePreview();
       if (action === "close-node-preview") closeNodePreview();
       if (action === "zoom-in") setZoom(zoomLevel + 0.1);
@@ -3682,6 +3671,9 @@ const bindEvents = () => {
     });
   });
 
+  app.querySelectorAll("[data-frame-focus-target]").forEach((button) =>
+    button.addEventListener("click", () => exitFrameFocus(button.dataset.frameFocusTarget || null)));
+
   const canvasShell = app.querySelector(".canvas-shell");
   canvasShell?.addEventListener("scroll", () => {
     viewportState = { left: canvasShell.scrollLeft, top: canvasShell.scrollTop };
@@ -3694,13 +3686,9 @@ const bindEvents = () => {
   const minimap = app.querySelector("[data-minimap-map]");
   const navigateFromMinimap = (event) => {
     const rect = minimap.getBoundingClientRect();
-    const scale = Number(minimap.dataset.scale);
-    const originX = Number(minimap.dataset.originX || 0);
-    const originY = Number(minimap.dataset.originY || 0);
-    const logicalPoint = {
-      x: originX + (event.clientX - rect.left) / scale,
-      y: originY + (event.clientY - rect.top) / scale
-    };
+    const logicalPoint = window.LTP_MINIMAP.logicalPoint({ x: event.clientX, y: event.clientY }, rect, {
+      scale: Number(minimap.dataset.scale), domain: { x: Number(minimap.dataset.originX || 0), y: Number(minimap.dataset.originY || 0) }
+    });
     const shell = app.querySelector(".canvas-shell");
     setViewportPosition(
       logicalPoint.x * zoomLevel - shell.clientWidth / 2,
@@ -5272,6 +5260,7 @@ const resetShortcutAuditWorkspace = async () => {
   activeAssumptionId = null;
   selectedAssumptionIds.clear();
   assumptionMultiSelectionMode = false;
+  frameFocus.reset();
   replaceSelection(tree().nodes.find((node) => node.type === "necessaryCondition")?.id || tree().nodes[0]?.id);
   setStatus("Keyboard shortcut audit ready");
   render();
@@ -5497,7 +5486,10 @@ window.__ltpShortcutAuditStep = async (command, bindingIndex) => {
     activeFrameId = tree().hostFrameId;
     const frame = selectAuditFrame();
     await press();
-    return result(activeFrameId === frame.id, `Creation frame=${activeFrameId}; expected=${frame.id}.`);
+    const outsideHidden = tree().nodes.filter((node) => !frameFocus.containsNode(node)).every((node) =>
+      !document.querySelector(`[data-element-id="${node.id}"]`));
+    const focused = activeFrameId === frame.id && frameFocus.currentFrameId() === frame.id && outsideHidden;
+    return result(focused, `Focused frame=${frameFocus.currentFrameId()}; outside entities hidden=${outsideHidden}.`);
   }
 
   if (command === "focusSearch") {
@@ -5773,26 +5765,34 @@ window.__ltpVisualTestStep = async (step) => {
     const buildVisible = document.querySelector(".build-identity")?.textContent.includes(`build ${buildInfo.id}`);
     return result("Build identity and composed canvas", buildVisible && hostVisible && rootHidden, `Build ${buildInfo.id} is visible; Goal Tree is finite and Root remains conceptual.`);
   }
-
   if (step === "rectangle-selection") {
     const audit = window.LTP_RECTANGLE_SELECTION.runDomAcceptance();
     return result("Select entities with a pointer rectangle", audit.ok, `Expected roots=${audit.expected.join(",")}; selected roots=${audit.selected.join(",")}.`);
   }
-
   if (step === "keymap-editor") {
     const audit = await keymapEditor.runDomAcceptance();
     return result("Edit shortcuts with collision recovery", audit.ok, `Collision issues=${audit.issues.length}; defaults restored before capture.`);
   }
-
   if (step === "frame-summary") {
     await selectElement(activeTree.hostFrameId);
     fitView();
     const summary = document.querySelector(".frame-inventory")?.textContent || "";
-    const ok = ["Goal:", "CSF:", "NC:", "Frames:", "Links:"].every((label) => summary.includes(label));
-    return result("Semantic Goal Tree summary", ok, "Selecting Goal Tree exposes type, frame and internal-link counts.");
+    const frame = activeCanvas.frames.find((candidate) => candidate.parentFrameId === activeTree.hostFrameId && candidate.nodeIds.length);
+    replaceSelection(frame.id);
+    visualTestState.focusReturn = { zoom: zoomLevel, pan: { ...viewportState }, activeFrameId, selectedElementId };
+    enterSelectedFrame();
+    await waitFor(() => frameFocus.currentFrameId() === frame.id && document.querySelector("[aria-current='page']"));
+    const summaryOk = ["Goal:", "CSF:", "NC:", "Frames:", "Links:"].every((label) => summary.includes(label));
+    const focusOk = document.querySelectorAll(".tree-node").length < activeTree.nodes.length
+      && Boolean(document.querySelector(".frame-focus-breadcrumbs") && document.querySelector(".minimap") && document.querySelector(".inspector"));
+    return result("Semantic summary and full-screen frame focus", summaryOk && focusOk, `Goal Tree summary complete=${summaryOk}; focused ${frame.name} with breadcrumbs, minimap and inspector=${focusOk}.`, focusOk ? "clean" : "needs work");
   }
 
   if (step === "frame-minimized") {
+    exitFrameFocus(null);
+    const focusRestored = await waitFor(() => !frameFocus.currentFrameId() && zoomLevel === visualTestState.focusReturn.zoom
+      && Math.abs(viewportState.left - visualTestState.focusReturn.pan.left) < 1 && Math.abs(viewportState.top - visualTestState.focusReturn.pan.top) < 1
+      && activeFrameId === visualTestState.focusReturn.activeFrameId && selectedElementId === visualTestState.focusReturn.selectedElementId);
     const frame = activeCanvas.frames.find(
       (candidate) =>
         candidate.parentFrameId === activeTree.hostFrameId &&
@@ -5839,8 +5839,8 @@ window.__ltpVisualTestStep = async (step) => {
     fitView();
     return result(
       "Minimize a frame as one visual entity",
-      completed && box.width === 190 && box.height === 76 && descendantsHidden && internalLinksHidden && externalLinksProjected && issues.length === 0,
-      `Compact=${box.width}x${box.height}; descendants hidden=${descendantsHidden}; internal links hidden=${internalLinksHidden}; external links projected=${externalLinksProjected}; geometry issues=${issues.length}.`
+      focusRestored && completed && box.width === 190 && box.height === 76 && descendantsHidden && internalLinksHidden && externalLinksProjected && issues.length === 0,
+      `Focus restored=${focusRestored}; compact=${box.width}x${box.height}; descendants hidden=${descendantsHidden}; internal links hidden=${internalLinksHidden}; external links projected=${externalLinksProjected}; geometry issues=${issues.length}.`
     );
   }
 

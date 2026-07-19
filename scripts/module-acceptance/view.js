@@ -5,6 +5,7 @@ const { capture } = require("../../src/renderer/subgraph-clipboard");
 const { selectContained } = require("../../src/renderer/rectangle-selection");
 const { resolveCommand, validateKeymap } = require("../../src/core/keymap");
 const { COMMAND_CATALOG, DEFAULT_KEYMAP } = require("../../src/core/keymap-defaults");
+const frameFocus = require("../../src/core/frame-focus");
 const { expectCode, loadMigratedFixture } = require("./helpers");
 
 const run = async () => {
@@ -34,6 +35,9 @@ const run = async () => {
   const keymap = validateKeymap(DEFAULT_KEYMAP, COMMAND_CATALOG);
   assert.equal(keymap.ok, true);
   assert.equal(resolveCommand({ key: "h", metaKey: false, ctrlKey: false, altKey: false, shiftKey: false }, keymap.keymap.bindings), "showHints");
+  const focus = frameFocus.enter(frameFocus.emptySession(), canvas.frames[1].id, first, canvas.frames, { rootFrameId: canvas.rootFrameId });
+  assert.equal(focus.ok, true);
+  assert.deepEqual(frameFocus.exit(focus.session).restoreView, first);
   await expectCode(() => Promise.resolve(resolveDocument(workspace, "missing")), "DOCUMENT_NOT_FOUND");
 };
 

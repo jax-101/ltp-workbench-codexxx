@@ -1,9 +1,9 @@
 # LTP Workbench - Session Context
 
-Updated: 2026-07-18
-Current build: `3C.16c` - Editable Scoped Keymap
+Updated: 2026-07-19
+Current build: `3D.1` - Full-screen Frame Focus
 Architecture: strict modular monolith with a headless core
-Current scope progress: `65.5%` estimated weighted scope
+Current scope progress: `75.6%` estimated weighted scope
 
 Read this file at the start of every long AI session. It is the short recovery
 point for the project. `ARCHITECTURE.md` is the normative design document;
@@ -21,7 +21,7 @@ Long-term requirements include local projects, multiple documents and views,
 headless automation, and optional LLM assistance. Electron, CLI and future MCP
 or LLM adapters must use the same application service and domain rules.
 
-Repository: `jax-101/ltp-workbench`
+Repository: `jax-101/ltp-workbench-codexxx`
 Active development branch: `iteration-3c-minimized-frames`
 
 ## Architecture
@@ -63,6 +63,8 @@ Goal Tree, CRT, FRT and EC are definition packages, not independent code paths.
 - `src/core/keymap.js`: scoped shortcut validation, collision detection and event resolution.
 - `src/adapters/keymap-store.js`: atomic user keymap persistence and last-known-good recovery.
 - `src/renderer/keymap-editor.js`: keyboard-accessible shortcut editor and capture workflow.
+- `src/core/frame-focus.js`: nested ephemeral focus sessions, visible closure and exact LIFO restoration.
+- `src/renderer/frame-focus-view.js` and `frame-focus-breadcrumbs.js`: scoped projection and accessible focus navigation.
 - `src/main.js` and `src/preload.js`: Electron adapter and IPC composition.
 - `src/renderer/`: current UI and interaction layer.
 - `scripts/ltp-cli.js`: headless CLI adapter.
@@ -159,7 +161,7 @@ Working:
 - Keyboard-first navigation, hints, multi-selection and Assumption Workbench.
 - Automated core, semantic, layout, randomized, visual and shortcut suites.
 - Executable ownership, cross-module import, browser-global and IPC inventory.
-- Eight machine-readable module charters and 16 versioned public contracts.
+- Eight machine-readable module charters and 19 versioned public contracts.
 - Seven independent black-box module acceptance suites; Diagram Studio remains planned.
 - Canonical 16-stage roadmap with an exact generated Markdown projection.
 - GitHub CI blocks functional regression until architecture and module UAT pass.
@@ -171,10 +173,11 @@ Working:
 - Cmd/Ctrl+C and Cmd/Ctrl+V copy and paste closed semantic subgraphs atomically, preserving n-ary relations, assumptions and relative geometry.
 - Pointer rectangles select only fully enclosed entities, normalize nested frames to semantic roots and support additive Command/Shift selection.
 - A versioned user keymap can be edited in-app or as JSON, uses explicit scopes, blocks physical shortcut collisions and recovers the last valid artifact.
+- Frames can be focused recursively without persisting temporary zoom, pan or selection; breadcrumbs, inspector, hints and minimap remain available and the general view restores exactly.
 
 Next architectural work:
 
-- Implement full-screen frame focus with independent temporary view state in P55.
+- Group and inspect external connections through shared focus/minimization portals in P56.
 - Extract a neutral layout compiler from `composed-layout.js`.
 - Move remaining renderer mutations behind application commands.
 - Split renderer state, interaction, projection and rendering.
@@ -223,6 +226,7 @@ Relevant references:
 - `outputs/Atomic-Subgraph-Clipboard-P52.md`
 - `outputs/Rectangle-Selection-P53.md`
 - `outputs/Editable-Keymap-P54.md`
+- `outputs/Full-Screen-Frame-Focus-P55.md`
 - `outputs/Plan-Status.md`
 - `outputs/Decision-Log.md`
 - `outputs/Engineering-Lessons-Log.md`

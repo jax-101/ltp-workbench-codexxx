@@ -1,7 +1,7 @@
 # Scope and Effort Baseline
 
-Updated: 2026-07-18  
-Baseline build: `3C.16c`
+Updated: 2026-07-19
+Baseline build: `3D.1`
 Machine-readable register: `planning/work-packages.json`
 Actual-effort ledger: `planning/effort-log.json`  
 Unknown register: `planning/unknowns.json`
@@ -55,17 +55,17 @@ its calibration class.
 | Measure | Value |
 | --- | ---: |
 | Known packages | 78 |
-| Completed packages | 56 |
+| Completed packages | 57 |
 | Partially completed packages | 1 |
-| Planned packages | 21 |
+| Planned packages | 20 |
 | Total estimated scope | 5,981,000 tokens |
-| Earned effort | 3,919,750 tokens |
-| Remaining effort | 2,061,250 tokens |
-| **Weighted scope complete** | **65.5%** |
+| Earned effort | 4,519,750 tokens |
+| Remaining effort | 1,461,250 tokens |
+| **Weighted scope complete** | **75.6%** |
 
 `P18` is credited at 85%; its remaining nested-frame optimization is represented
 again only where it becomes distinct advanced layout work, avoiding double
-counting. The next active package is `P55`, full-screen frame focus.
+counting. The next active package is `P56`, portal grouping and inspection.
 
 ## Portfolio View
 
@@ -78,7 +78,7 @@ counting. The next active package is `P55`, full-screen frame focus.
 | Modular due diligence | P45-P47 | 360k | 360k |
 | Definition Runtime | P48-P51 | 975k | 975k |
 | Interaction backlog | P52-P54 | 732k | 732k |
-| Frame focus | P55-P57 | 693k | 0 |
+| Frame focus | P55-P57 | 693k | 600k |
 | Modular extraction | P58-P62 | 380k | 0 |
 | Workspace UX | P63-P65 | 200k | 0 |
 | Layout maturity | P66 | 75k | 0 |
@@ -172,6 +172,16 @@ Known scope rises by `545k`; after completing P54, weighted progress is `65.5%`.
 Actual coverage is `9/57` started packages (`15.8%`) with `3,290,647`
 runtime-reported tokens recorded.
 
+P55 records `439,645` runtime-reported tokens and 1,344 seconds from the goal
+attached to the continuation that completed and verified the package. The
+copied worktree already contained an earlier, unfinished P55 prefix whose
+runtime total was not retained. Event `E0022` therefore marks `412,018` as a
+partial actual instead of claiming it as the complete package cost. Completing
+the revised `600k` package raises weighted scope to `75.6%`; fully measured
+coverage remains `9/58` packages (`15.5%`) and total recorded actuals, including
+the honest P55 partial, are `3,730,292` tokens. U015 records a separate reporting
+issue in the calibration ratio; it is not silently fixed or added to P55.
+
 For every subsequent package, cumulative runtime usage is recorded as an
 append-only snapshot:
 
@@ -217,11 +227,12 @@ the denominator from that point onward.
 | U012 | First hosted CI execution | Resolved | Two hosted Quality Gate runs passed with functional regression gated by architecture |
 | U013 | Definition v1 official-package expressiveness | Resolved | P50 proves exact semantic, compatibility and fixture parity without privileged paths |
 | U014 | GitHub Actions v4 Node 20 runtime deprecation | Assessed | Upgrade actions and reverify within existing P75 hardening scope |
+| U015 | Partial actuals distort the measured calibration ratio | Open | Registered for an explicit scope decision after P55 |
 
-Current register: 14 unknowns; five converted, three assessed, two mitigated and
-four resolved. There are no untriaged open unknowns today. This does not
-imply that future unknowns do not exist; it states only what has been
-discovered.
+Current register: 15 unknowns; one open, five converted, three assessed, two
+mitigated and four resolved. U015 is intentionally untriaged: P55 records its
+partial actual honestly but does not silently expand into scope-governance
+maintenance.
 
 ## Work Packages
 
@@ -285,7 +296,7 @@ completion percentage, and `Planned` packages receive no credit.
 | P52 | Copy and paste n-ary subgraphs | Done | 100% | 32k |
 | P53 | Rectangle selection | Done | 100% | 18k -> 200k |
 | P54 | Editable keymap and collision detection | Done | 100% | 32k -> 500k |
-| P55 | Full-screen frame focus | Planned | 0% | 55k -> 600k |
+| P55 | Full-screen frame focus | Done | 100% | 55k -> 600k |
 | P56 | Portal grouping and inspection | Planned | 0% | 45k |
 | P57 | External search, preview and connection while focused | Planned | 0% | 48k |
 | P58 | Application facade and removal of direct renderer writes | Planned | 0% | 85k |

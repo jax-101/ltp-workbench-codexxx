@@ -984,3 +984,16 @@ Razon: los atajos son preferencias personales de interaccion, no semantica del
 sistema analizado. Mantenerlos fuera del workspace evita diffs y conflictos
 entre colaboradores, mientras el contrato puro permite que UI, tests y futuros
 adaptadores resuelvan exactamente las mismas teclas.
+
+### D-123: El foco de frame es una pila efimera de vistas
+
+Decision: entrar en foco captura una instantanea serializable de zoom, pan,
+seleccion, frame activo, modo, hints y paneles. Cada nivel anidado conserva su
+propia instantanea y solo proyecta el cierre descendiente del frame. Salir
+restaura en orden LIFO antes de renderizar y nunca escribe el foco temporal en
+el estado persistido del canvas.
+
+Razon: persistir el foco mezclaria una sesion de navegacion con el documento y
+haría que dos vistas del mismo diagrama dejaran de ser independientes. La pila
+permite subir por breadcrumbs o teclado, recuperar exactamente cada contexto y
+compartir en P56 la misma frontera visible con los frames minimizados.

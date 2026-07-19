@@ -22,10 +22,10 @@
       "id": "view.interactions.v1",
       "version": 1,
       "status": "target",
-      "operations": ["transitionView", "selectionClosure", "validateKeymap", "resolveShortcut", "captureClosedSubgraph", "selectByRectangle", "toApplicationIntent", "projectCanvas"],
+      "operations": ["transitionView", "enterFrameFocus", "exitFrameFocus", "selectionClosure", "validateKeymap", "resolveShortcut", "captureClosedSubgraph", "selectByRectangle", "toApplicationIntent", "projectCanvas"],
       "inputs": ["view state", "interaction event", "canvas read model"],
       "outputs": ["next view state", "selection", "application intent", "canvas projection"],
-      "errors": ["VIEW_EVENT_INVALID", "KEYMAP_VERSION_UNSUPPORTED", "SHORTCUT_COLLISION", "INTERACTION_SCOPE_INVALID"]
+      "errors": ["VIEW_EVENT_INVALID", "VIEW_FOCUS_INVALID", "VIEW_FOCUS_OUTSIDE", "VIEW_FOCUS_INACTIVE", "VIEW_FOCUS_PATH_INVALID", "KEYMAP_VERSION_UNSUPPORTED", "SHORTCUT_COLLISION", "INTERACTION_SCOPE_INVALID"]
     }
   ],
   "acceptance": { "status": "implemented", "command": "node scripts/module-acceptance/view.js" }

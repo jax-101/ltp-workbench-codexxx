@@ -1,0 +1,50 @@
+.frame-focus-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.frame-focus-breadcrumbs button {
+  min-height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 7px;
+  background: var(--white);
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.frame-focus-breadcrumbs button:hover,
+.frame-focus-breadcrumbs button:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid rgba(15, 107, 104, 0.2);
+}
+
+.frame-focus-breadcrumbs [aria-current="page"] {
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: var(--accent);
+  color: var(--white);
+  font-weight: 900;
+}
+
+.breadcrumb-separator {
+  color: #9b958a;
+}
+
+.prototype-main.frame-focus-active .prototype-topbar {
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
+.prototype-main.frame-focus-active .canvas-status {
+  left: 0;
+}
+
+.tree-frame.focus-root {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px rgba(15, 107, 104, 0.16), 0 8px 28px rgba(37, 43, 42, 0.12);
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "unit": "runtime_reported_tokens",
-  "updated": "2026-07-18",
+  "updated": "2026-07-19",
   "policy": {
     "actualDefinition": "Cumulative token usage reported by the execution runtime for work attributable to one package.",
     "historicalStatus": "unavailable",
@@ -245,6 +245,24 @@
       "actualTokens": null,
       "source": "codex-goal-delta",
       "note": "P55 starts at cumulative goal checkpoint 2201056 tokens; final actual will be measured as the later goal total minus this checkpoint."
+    },
+    {
+      "id": "E0022",
+      "packageId": "P55",
+      "recordedAt": "2026-07-19T15:44:10.711Z",
+      "status": "partial",
+      "actualTokens": 412018,
+      "source": "codex-goal",
+      "note": "Final usage of the current P55 goal; earlier copied P55 work predates this goal and has no recoverable runtime total, so 412018 is an honest partial actual rather than a fabricated package total."
+    },
+    {
+      "id": "E0023",
+      "packageId": "P55",
+      "recordedAt": "2026-07-19T15:46:15.229Z",
+      "status": "partial",
+      "actualTokens": 439645,
+      "source": "codex-goal",
+      "note": "Final closed-goal usage for the current P55 continuation: 439645 tokens over 1344 seconds. Earlier copied P55 work remains unavailable, so the package total is still honestly partial."
     }
   ],
   "estimateRevisions": [

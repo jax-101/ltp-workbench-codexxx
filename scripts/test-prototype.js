@@ -67,6 +67,11 @@ const steps = [
     args: ["run", "test:keymap"]
   },
   {
+    name: "Test reversible full-screen frame focus",
+    command: "npm",
+    args: ["run", "test:frame-focus"]
+  },
+  {
     name: "Test native CRT vertical",
     command: "npm",
     args: ["run", "test:crt"]

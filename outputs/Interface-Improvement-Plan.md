@@ -881,6 +881,11 @@ Esta iteracion usa una misma infraestructura de proyeccion para representar cone
 
 ### 3D.1: jerarquia y navegacion de foco
 
+Estado: implementado como build `3D.1` y validado automaticamente y
+visualmente. El foco es estado efimero de View: puede anidarse, no se persiste
+en el workspace y restaura exactamente zoom, pan, seleccion, frame activo,
+hints y paneles al subir o salir.
+
 Incluye:
 
 - F-017: arbol de frames, breadcrumbs y navegacion padre/hijo.
@@ -891,6 +896,10 @@ Criterios de aceptacion:
 - Entrar en foco dedica el canvas al frame y conserva inspector, hints y minimapa.
 - Breadcrumbs permiten subir o salir sin perder el contexto exterior.
 - Zoom y pan de la vista general se restauran al cerrar el foco.
+
+Evidencia: `outputs/Full-Screen-Frame-Focus-P55.md`, prueba de contrato
+`test:frame-focus`, UAT visual en `outputs/test-evidence/3D.1` y auditoria
+completa de teclado en `outputs/shortcut-audit/3D.1`.
 
 ### 3D.2: minimizacion y portales de conexion
 
